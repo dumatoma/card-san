@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "販促アイテム",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "u-swiper": "/uni_modules/uview-ui/components/u-swiper/u-swiper",
+    "u-textarea": "/uni_modules/uview-ui/components/u-textarea/u-textarea",
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button",
+    "u-picker": "/uni_modules/uview-ui/components/u-picker/u-picker"
+  }
+}

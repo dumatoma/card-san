@@ -1,0 +1,215 @@
+@charset "UTF-8";
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.details {
+  border-top: 2rpx solid #D2D2D7;
+  border-bottom: 2rpx solid #D2D2D7;
+  margin-top: 78rpx;
+}
+.details .detail_item {
+  padding: 20rpx 0;
+  display: flex;
+  align-items: center;
+}
+.details .detail_item .item_left {
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+}
+.details .detail_item .item_right {
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+}
+.pd {
+  box-sizing: border-box;
+  padding-left: 52rpx;
+  padding-right: 52rpx;
+}
+.itemName {
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  text-align: center;
+}
+.download {
+  background: #FFFFFF;
+  box-shadow: 0px 6rpx 12rpx 2rpx rgba(0, 0, 0, 0.16);
+  box-sizing: border-box;
+  padding: 40rpx 48rpx;
+}
+.download .d_item {
+  margin-bottom: 62rpx;
+}
+.download .d_item .item_logo {
+  width: 324rpx;
+  height: 96rpx;
+  text-align: center;
+  margin: 26rpx auto 0;
+}
+.download .d_item .item_logo image {
+  width: 100%;
+  height: 100%;
+}
+.download .des {
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  margin: 40rpx 0 80rpx 0;
+}
+.download .downname {
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  text-align: center;
+  margin-top: 10rpx;
+}
+.download .downloadLogo {
+  width: 120rpx;
+  height: 120rpx;
+  margin: 0 auto;
+}
+.download .downloadLogo image {
+  width: 100%;
+  height: 100%;
+}
+.content {
+  background: #f9f9f9;
+  box-sizing: border-box;
+  padding: 40rpx 32rpx 0 32rpx;
+}
+.content .logo {
+  box-sizing: border-box;
+  text-align: center;
+  padding-bottom: 32rpx;
+}
+.content .logo image {
+  height: 100rpx;
+}
+.content .container {
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0px 40px 80px 2px rgba(0, 0, 0, 0.07);
+  box-sizing: border-box;
+  padding: 80rpx;
+}
+.content .container .title1 {
+  text-align: center;
+  font-size: 36rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+}
+.content .container .title2 {
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  text-align: center;
+  margin: 80rpx 0 32rpx;
+}
+.content .container .title3 {
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  text-align: center;
+}
+.content .container .caution {
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+  margin-top: 80rpx;
+}
+.content .container .tip {
+  background: rgba(26, 115, 232, 0.1);
+  box-sizing: border-box;
+  padding: 40rpx;
+  margin-top: 80rpx;
+  display: flex;
+  margin-bottom: 120rpx;
+}
+.content .container .tip .tipRight {
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #174A84;
+  line-height: 36rpx;
+  margin-left: 20rpx;
+}
+.content .container .inp {
+  border-radius: 20rpx;
+  border: 2rpx solid #0A4B6D;
+  height: 88rpx;
+  text-align: center;
+  line-height: 88rpx;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 0 20rpx;
+  margin-top: 20rpx;
+}
+.content .container .progressName {
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #AAAAAA;
+  text-align: center;
+}
+.content .container .progress {
+  width: 100%;
+  height: 16rpx;
+  border-radius: 0px 0px 0px 0px;
+  opacity: 1;
+  border: 2rpx solid #AAAAAA;
+  margin-top: 28rpx;
+}
+.content .container .progress .progressInner {
+  width: 33%;
+  height: 100%;
+  background: #AAAAAA;
+}
+.content .container .title {
+  margin: 60rpx 0 80rpx;
+  text-align: center;
+  font-size: 36rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #0A4B6D;
+}
+.content .container .ipName {
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #0A4B6D;
+}
+

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "会員登録情報",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "u-switch": "/uni_modules/uview-ui/components/u-switch/u-switch"
+  }
+}

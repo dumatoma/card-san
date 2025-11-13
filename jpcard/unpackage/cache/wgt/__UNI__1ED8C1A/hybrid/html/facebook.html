@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Line Login</title>
+    <meta charset="UTF-8">
+    <style type="text/css" media="screen">
+        hr {
+            border: none;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+    <script type="text/javascript" src="https://js.cdn.aliyun.dcloud.net.cn/dev/uni-app/uni.webview.1.5.2.js"></script>
+</head>
+
+<body>
+<script>
+    document.addEventListener('UniAppJSBridgeReady', function() {
+        location.href = "https://www.facebook.com/v12.0/dialog/oauth?client_id=882975196208949&redirect_uri=http://api.card-san.jp/api/member/api_login_redirect/facebook"
+    })
+</script>
+</body>
+
+</html>
+

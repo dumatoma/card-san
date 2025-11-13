@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "店舗名店舗名",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "color-picker": "/pages/settings/membershipCard/chooseColor/chooseColor"
+  }
+}

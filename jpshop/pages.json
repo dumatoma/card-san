@@ -1,0 +1,1286 @@
+{
+    "pages": [
+        //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+        {
+            "path": "pages/index/index",
+            "style": {
+                "navigationStyle": "custom",
+                "navigationBarTitleText": "CardSan管理"
+            }
+        },
+        {
+            "path": "pages/login/login",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/setting/setting",
+            "style": {
+               "navigationStyle": "custom",
+               "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/account/account",
+            "style": {
+               "navigationStyle": "custom",
+               "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/help/help",
+            "style": {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/confirm/confirm",
+            "style": {
+               "navigationBarTitleText": "電話番号入力",
+               "enablePullDownRefresh": false,
+               "app-plus": {
+                   "titleNView": {
+                       "splitLine": {
+                           "color": "#EEEEEE"
+                       }
+                   }
+               }
+            }
+        },
+        {
+            "path": "pages/phoneCode/phoneCode",
+            "style": {
+                // "navigationBarTitleText": "認証コードを入力",
+                // "enablePullDownRefresh": false,
+                // "navigationBarBackgroundColor": "#fff"
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/mailCode/mailCode",
+            "style": {
+                // "navigationBarTitleText": "認証コードを入力",
+                // "enablePullDownRefresh": false,
+                // "navigationBarBackgroundColor": "#fff"
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/QRcode/QRcode",
+            "style": {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/appDownload/appDownload",
+            "style": {
+               "navigationStyle": "custom",
+               "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/customer/customer",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": true
+            }
+        },
+        {
+            "path": "pages/customer/csv/csv",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/customer/csv/birthday/birthday",
+            "style": {
+                "navigationBarTitleText": "誕生月",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/customer/csv/sex/sex",
+            "style": {
+                "navigationBarTitleText": "性別",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/customer/csv/time/time",
+            "style": {
+                "navigationBarTitleText": "来店期間",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/customer/csv/times/times",
+            "style": {
+                "navigationBarTitleText": "来店回数",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/customer/detail/detail",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/customer/edit/edit",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/customer/cards/cards",
+            "style": {
+                "navigationBarTitleText": "登録カード一覧",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/customer/previewImg/previewImg",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/customer/record/record",
+            "style": {
+                "navigationBarTitleText": "来店履歴",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/customer/cards/intergrate/intergrate",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/customer/cards/seal/seal",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/message/message",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": true
+            }
+        },
+        {
+            "path": "pages/message/chat/chat",
+            "style": {
+                "navigationBarTitleText": "name",
+                "enablePullDownRefresh": true,
+                "app-plus": {
+                    "popGesture": "none" // 禁用侧滑
+                }
+            }
+        },
+        {
+            "path": "pages/message/setting/setting",
+            "style": {
+                "navigationBarTitleText": "メッセージ設定",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/message/userInfo/userInfo",
+            "style": {
+                "navigationBarTitleText": "メッセージアカウント情報",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/message/userInfo/preview/preview",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/message/userInfo/edit/edit",
+            "style": {
+                "navigationBarTitleText": "予約確認",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/message/notice/notice",
+            "style": {
+                "navigationBarTitleText": "メッセージ一覧",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/message/notice/detail/detail",
+            "style": {
+                "navigationBarTitleText": "詳細",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/message/notice/edit/edit",
+            "style": {
+                "navigationStyle": "custom"
+                // "navigationBarTitleText": "メッセージ作成・編集",
+                // "enablePullDownRefresh": false,
+                // "app-plus": {
+                //     "titleNView": {
+                //         "splitLine": {
+                //             "color": "#EEEEEE"
+                //         },
+                //         "buttons": [{
+                //             "text": "\uea53",
+                //             "fontSrc": "/static/iconfont/iconfont.ttf",
+                //             "fontSize": "30px",
+                //             "float": "right",
+                //             "width": "46px"
+                //         }]
+                //     }
+                // }
+            }
+        },
+        {
+            "path": "pages/message/notice/setting/setting",
+            "style": {
+                "navigationBarTitleText": "配信設定",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/message/notice/setting/birthday/birthday",
+            "style": {
+                "navigationBarTitleText": "誕生月",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/message/notice/setting/sex/sex",
+            "style": {
+                "navigationBarTitleText": "性別",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/message/notice/setting/time/time",
+            "style": {
+                "navigationBarTitleText": "来店期間",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/message/notice/setting/times/times",
+            "style": {
+                "navigationBarTitleText": "来店回数",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/notice/notice",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/notice/setting/setting",
+            "style": {
+                "navigationBarTitleText": "お知らせ設定",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        },
+                        "buttons": [{
+                            "text": "保存",
+                            "fontSize": "16px",
+                            "float": "right",
+                            "width": "46px",
+                            "color": "#1A73E8"
+                        }]
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/notice/edit/edit",
+            "style": {
+                "navigationStyle": "custom"
+                // "navigationBarTitleText": "クーポン作成",
+                // "enablePullDownRefresh": false,
+                // "app-plus": {
+                //     "titleNView": {
+                //         "splitLine": {
+                //             "color": "#EEEEEE"
+                //         },
+                //         "buttons": [{
+                //             "text": "\uea53",
+                //             "fontSrc": "/static/iconfont/iconfont.ttf",
+                //             "fontSize": "30px",
+                //             "float": "right",
+                //             "width": "46px"
+                //         }]
+                //     }
+                // }
+            }
+        },
+        {
+            "path": "pages/menu/menu",
+            "style": {
+                "navigationStyle": "custom",
+                "navigationBarTitleText": "メニュー",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/menu/add/add",
+            "style": {
+                "navigationStyle": "custom",
+                "navigationBarTitleText": "メニュー",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/appointment/appointment",
+            "style": {
+                "enablePullDownRefresh": true,
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/appointment/notice/notice",
+            "style": {
+                "enablePullDownRefresh": false,
+                "navigationBarTitleText": "予約通知",
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "components/progress/progress",
+            "style": {}
+        }, {
+            "path": "pages/appointment/notice/detail/detail",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/appointment/notice/detail/edit",
+            "style": {
+                "navigationBarTitleText": "予約内容",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/coupon/coupon",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/coupon/add/add",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/coupon/setting/setting",
+            "style": {
+                "navigationBarTitleText": "クーポン配信設定",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/calender/calender",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/calender/setting/setting",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/settings/shopInfo/shopInfo",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/settings/membershipCard/membershipCard",
+            "style": {
+                "navigationStyle": "custom"
+                // "navigationBarTitleText": "メンバーズカード",
+                // "enablePullDownRefresh": false,
+                // "app-plus": {
+                //     "titleNView": {
+                //         "splitLine": {
+                //             "color": "#EEEEEE"
+                //         }
+                //     }
+                // }
+            }
+
+        }, {
+            "path": "pages/settings/membershipCard/firstStep/firstStep",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/settings/membershipCard/secondStep/secondStep",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/settings/membershipCard/chooseColor/chooseColor",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/settings/store/store",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/settings/vipRegister/vipRegister",
+            "style": {
+                "navigationBarTitleText": "会員登録情報",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/settings/menu/menu",
+            "style": {
+                "navigationBarTitleText": "カテゴリー",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/settings/menu/link/link",
+            "style": {
+                "navigationBarTitleText": "外部リンク",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/settings/addStaff/addStaff",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/settings/addStaff/addNew/addNew",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/settings/Administrators/Administrators",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/settings/Administrators/addNew/addNew",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/settings/Administrators/addNew/jurisdiction",
+            "style": {
+                "navigationBarTitleText": "副管理者の編集",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/mannager/mannager",
+            "style": {
+                "navigationBarTitleText": "副管理者情報",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/admin/admin",
+            "style": {
+                "navigationBarTitleText": "オーナー情報",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/admin/changeInfo",
+            "style": {
+                "navigationBarTitleText": "編集",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/admin/changeMail",
+            "style": {
+                "navigationBarTitleText": "メールアドレス(ID)の変更",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/payment/payment",
+            "style": {
+                "navigationBarTitleText": "お支払い方法",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/payment/paylist",
+            "style": {
+                "navigationBarTitleText": "お支払い方法を選択",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/payment/payDetail",
+            "style": {
+                "navigationBarTitleText": "カード情報を編集",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/package/package",
+            "style": {
+                "navigationStyle": "custom"
+                // "navigationBarTitleText": "ご利用プラン",
+                // "enablePullDownRefresh": false,
+                // "app-plus": {
+                //   "titleNView": {
+                //     "buttons": [
+                //       {
+                //         "color": "#1A73E8",
+                //         "fontSize": "32rpx",
+                //         "text": "保存",
+                //         "fontWeight": "bold",
+                //         "right":"32upx"
+                //       }
+                //     ]
+                //   }
+                // }
+            }
+
+        }, {
+            "path": "pages/accounts/detailed/detailed",
+            "style": {
+                "navigationBarTitleText": "ご利用明細",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/sale/sale",
+            "style": {
+                "navigationBarTitleText": "販促アイテム一覧",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/sale/detail",
+            "style": {
+                "navigationBarTitleText": "販促アイテム",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/sale/secondStep",
+            "style": {
+                "navigationBarTitleText": "販促アイテム",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/sale/confirm/confirm",
+            "style": {
+                "navigationBarTitleText": "ご注文内容確認",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/sale/addAddress",
+            "style": {
+                "navigationBarTitleText": "配送先住所",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/notice/notice",
+            "style": {
+                "navigationBarTitleText": "運営からのお知らせ",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/accounts/rules/rules",
+            "style": {
+                "navigationBarTitleText": "利用規約・プライバシーポリシー",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/confirm/mailConfirm",
+            "style": {
+                // "navigationBarTitleText": "認証コードを入力",
+                // "enablePullDownRefresh": false
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/confirm/phoneConfirm",
+            "style": {
+                "navigationBarTitleText": "認証コードを入力",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        },
+        {
+            "path": "pages/coupon/setting/birthday/birthday",
+            "style": {
+                "navigationBarTitleText": "誕生月",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/coupon/setting/sex/sex",
+            "style": {
+                "navigationBarTitleText": "性別",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/coupon/setting/time/time",
+            "style": {
+                "navigationBarTitleText": "来店期間",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "path": "pages/coupon/setting/times/times",
+            "style": {
+                "navigationBarTitleText": "来店回数",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+        }, {
+            "path": "pages/coupon/setting/edit/edit",
+            "style": {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }, {
+            "path": "pages/coupon/edit/edit",
+            "style": {
+                "navigationStyle": "custom"
+            }
+
+        }, {
+            "path": "pages/webview/webview",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        },{
+            "path": "pages/payment/payment",
+            "style": {
+                "navigationBarTitleText": "お申し込み",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+
+        }
+        ,{
+            "path" : "pages/paySuccess/paySuccess",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/accounts/contract/contract",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "ご契約内容",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+            
+        }
+        ,{
+            "path" : "pages/pautextr/pautextr",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "components/alerts/pe1/pe1",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/accounts/detailed/seStep",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/accounts/detailed/pdf",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/deleteAccount/deleteAccount",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "アカウント削除",
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    "titleNView": {
+                        "splitLine": {
+                            "color": "#EEEEEE"
+                        }
+                    }
+                }
+            }
+            
+        }
+        ,{
+            "path" : "pages/listtest/listtest",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/menu/add/edit",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        } 
+        ,{
+            "path" : "pages/monthly/monthly",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "月の来店数",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/settings/membershipCard/editmembershipcard/editmembershipcard",
+            "style" :                                                                                    
+            {
+                "navigationStyle": "custom"
+            }
+            
+        },
+        {
+            "path" : "pages/settings/membershipCard/editSecondStep/editSecondStep",
+            "style" :                                                                                    
+            {
+                "navigationStyle": "custom"
+            }
+            
+        }
+        ,{
+            "path" : "pages/daily/daily",
+            "style" :                                                                                    
+            {
+               "navigationStyle": "custom"
+            }
+        }
+        ,{
+            "path" : "pages/outAppoint/outAppoint",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "予約機能外部LINK設定",
+                "enablePullDownRefresh": false
+            }
+            
+        },
+        {
+            "path" : "pages/accounts/breakoff/breakoff",
+            "style" : 
+            {
+                "navigationBarTitleText" : "解約手続き",
+                "enablePullDownRefresh" : false,
+                "navigationBarBackgroundColor": "#fbfbfd"
+            }
+        },
+        {
+            "path" : "pages/accounts/complete/complete",
+            "style" : 
+            {
+                "navigationBarTitleText" : "解約手続き完了",
+                "enablePullDownRefresh" : false,
+                "navigationBarBackgroundColor": "#fbfbfd"
+            }
+        },
+        {
+            "path" : "pages/message/reviewSetting/reviewSetting",
+            "style" : 
+            {
+                "navigationBarTitleText" : "レビューリンク",
+                "navigationBarBackgroundColor": "#fbfbfd"
+                
+            }
+        },
+        {
+            "path" : "pages/message/moduleSettin/moduleSettin",
+            "style" : 
+            {
+                "navigationBarTitleText" : ""
+            }
+        }
+    ],
+    "globalStyle": {
+        "navigationBarTextStyle": "black",
+        "navigationBarTitleText": "CardSan管理 ",
+        "navigationBarBackgroundColor": "#FBFBFD",
+        "backgroundColor": "#FBFBFD",
+        "app-plus": {
+            "softinputNavBar": "none",
+            "softinputMode": "adjustResize",
+            "popGesture": "none"
+        }
+    },
+    "uniIdRouter": {},
+    "tabBar": {
+        "color": "#7A7E83", // tab 上的文字默认颜色
+        "selectedColor": "#007AFF", // tab 上的文字选中时的颜色
+        "borderStyle": "black", // tabbar 上边框的颜色，可选值 black/white
+        "backgroundColor": "#1D1D1F", // tab 的背景色
+        "list": [{
+                // 最少2个、最多5个 tab
+                "pagePath": "pages/index/index", // 页面路径，必须在 pages 中先定义
+                "iconPath": "static/index/icon-1.png", // 图片路径，icon 大小限制为40kb，建议尺寸为 81px * 81px
+                "selectedIconPath": "static/index/icon-a1.png", // 选中时的图片路径
+                "text": "TOP" // tab 上按钮文字
+            },
+            {
+                "pagePath": "pages/setting/setting",
+                "iconPath": "static/index/icon-2.png",
+                "selectedIconPath": "static/index/icon-a2.png",
+                "text": "各種設定"
+            },
+            {
+                "pagePath": "pages/account/account",
+                "iconPath": "static/index/icon-4.png",
+                "selectedIconPath": "static/index/icon-a4.png",
+                "text": "アカウント"
+            },
+            {
+                "pagePath": "pages/help/help",
+                "iconPath": "static/index/icon-3.png",
+                "selectedIconPath": "static/index/icon-a3.png",
+                "text": "ヘルプ"
+            }
+        ]
+    },
+    "condition": { //模式配置，仅开发期间生效
+        "current": 0, //当前激活的模式(list 的索引项)
+        "list": [{
+            "name": "", //模式名称
+            "path": "", //启动页面，必选
+            "query": "" //启动参数，在页面的onLoad函数里面得到
+        }]
+    }
+}

@@ -1,0 +1,251 @@
+@charset "UTF-8";
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.con {
+  width: 750rpx;
+  display: flex;
+}
+.con .time {
+  box-sizing: border-box;
+  padding: 100rpx 0 0 30rpx;
+  position: relative;
+  top: -40rpx;
+}
+.con .time .timeItem {
+  height: 80rpx;
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  width: 130rpx;
+  line-height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+}
+.con .time .timeItem .timeName {
+  flex: 1;
+  text-align: center;
+}
+.con .time .timeItem .point {
+  width: 20rpx;
+  height: 2rpx;
+  background-color: #EAEAEA;
+}
+.manager {
+  width: 560rpx;
+  overflow-x: scroll;
+  display: flex;
+  border-top: none;
+  border-left: 2rpx solid #EAEAEA;
+}
+.manager .mItem {
+  width: 140rpx;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 0;
+  position: relative;
+}
+.manager .mItem .mContent {
+  width: 100%;
+  border-top: 2rpx solid #eaeaee;
+  position: relative;
+}
+.manager .mItem .mContent .dateItem {
+  width: 100%;
+  height: 80rpx;
+  box-sizing: border-box;
+  border: 2rpx solid #EAEAEA;
+  border-left: none;
+  border-top: none;
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+}
+.manager .mItem .mContent .dateItem .itemName {
+  box-sizing: border-box;
+  position: relative;
+  padding: 16rpx 8rpx 0;
+}
+.manager .mItem .mContent .dateItem .itemName .bd {
+  width: 100%;
+  height: 8rpx;
+  border-radius: 8rpx;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.manager .mItem .mContent .dateItem .itemEvent {
+  box-sizing: border-box;
+  padding: 0 8rpx;
+}
+.manager .mItem .mTop {
+  height: 100rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  left: 0;
+}
+.manager .mItem .mTop .pe {
+  width: 100%;
+  text-align: center;
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #86868B;
+  margin-bottom: 6rpx;
+}
+.manager .mItem .mTop .pecolor {
+  width: 128rpx;
+  height: 8rpx;
+  border-radius: 8rpx;
+  margin: 0 auto;
+  position: absolute;
+  bottom: 16rpx;
+  left: 6rpx;
+}
+
+@charset "UTF-8";
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.askForName {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  overflow-x: scroll;
+  box-sizing: border-box;
+  padding: 40rpx 0 40rpx 40rpx;
+  background: rgba(249, 249, 249, 0.94);
+}
+.askForName .name_item {
+  padding: 8rpx 16rpx;
+  border: 2rpx solid #AAAAAA;
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #AAAAAA;
+  flex-shrink: 0;
+  border-radius: 8rpx;
+  margin-right: 20rpx;
+}
+.askForName .active {
+  background: rgba(26, 115, 232, 0.1);
+  color: #007AFF;
+  border: 2rpx solid #1A73E8;
+}
+.top {
+  box-sizing: border-box;
+  padding: 40rpx 32rpx;
+  background: #F5F5F7;
+}
+.top .topContent {
+  background-color: #fff;
+  border: 2rpx solid #d2d2d7;
+  border-radius: 20rpx;
+}
+.top .topContent .content_item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 40rpx 34rpx;
+}
+.top .topContent .content_item .bk {
+  background-color: #1A73E8;
+  color: #fff !important;
+}
+.top .topContent .content_item .item_right {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  color: #1D1D1F;
+  text-align: center;
+  line-height: 60rpx;
+}
+.top .topContent .content_item:first-child {
+  border-bottom: 2rpx solid #d2d2d7;
+}
+.content {
+  background: #fff;
+}
+.content .tabs {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 40rpx 26rpx;
+}
+.content .tabs .tab {
+  display: flex;
+  align-items: center;
+  background: #EAEAEA;
+  border-radius: 16rpx;
+}
+.content .tabs .tab .tab_item {
+  box-sizing: border-box;
+  padding: 20rpx 0;
+  border-radius: 16rpx;
+  flex: 1;
+  text-align: center;
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+}
+.content .tabs .tab .active {
+  background: #fff;
+  box-shadow: 0px 6rpx 16rpx 2rpx rgba(0, 0, 0, 0.16);
+  color: #1A73E8 !important;
+}
+

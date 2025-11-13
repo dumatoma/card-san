@@ -1,0 +1,13 @@
+{
+  "enablePullDownRefresh": false,
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
+    "week": "/components/week/week",
+    "lx-calendar": "/components/lx-calendar/lx-calendar",
+    "progres": "/components/progress/progress",
+    "setting": "/components/appointment/add",
+    "setting-detail": "/components/appointment/addDetail",
+    "new-appoint": "/components/appointment/new"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "navigationBarTitleText": "クーポン作成",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "u-input": "/uni_modules/uview-ui/components/u-input/u-input",
+    "u-textarea": "/uni_modules/uview-ui/components/u-textarea/u-textarea",
+    "u-switch": "/uni_modules/uview-ui/components/u-switch/u-switch",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button",
+    "u-popup": "/uni_modules/uview-ui/components/u-popup/u-popup",
+    "u-swiper": "/uni_modules/uview-ui/components/u-swiper/u-swiper",
+    "u-read-more": "/uni_modules/uview-ui/components/u-read-more/u-read-more"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "お支払い方法",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "mod": "/components/mod"
+  }
+}

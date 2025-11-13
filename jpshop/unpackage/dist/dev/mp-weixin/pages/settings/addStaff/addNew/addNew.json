@@ -1,0 +1,10 @@
+{
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
+    "u-input": "/uni_modules/uview-ui/components/u-input/u-input",
+    "u-textarea": "/uni_modules/uview-ui/components/u-textarea/u-textarea",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button"
+  }
+}

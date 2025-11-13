@@ -1,0 +1,7 @@
+{
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "choose-color": "/components/holy-colorPicker/colorPicker"
+  }
+}

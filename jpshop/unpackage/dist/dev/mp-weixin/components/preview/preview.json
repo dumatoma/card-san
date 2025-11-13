@@ -1,0 +1,9 @@
+{
+  "component": true,
+  "usingComponents": {
+    "u-swiper": "/uni_modules/uview-ui/components/u-swiper/u-swiper",
+    "u-popup": "/uni_modules/uview-ui/components/u-popup/u-popup",
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon",
+    "u-overlay": "/uni_modules/uview-ui/components/u-overlay/u-overlay"
+  }
+}

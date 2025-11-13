@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "電話番号入力",
+  "enablePullDownRefresh": false,
+  "navigationBarBackgroundColor": "#fff",
+  "usingComponents": {
+    "u--input": "/uni_modules/uview-ui/components/u--input/u--input",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button"
+  }
+}

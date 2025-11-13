@@ -1,0 +1,49 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/index/index",
+			"style": {
+			    "navigationStyle": "custom",
+			    "enablePullDownRefresh": false
+			}
+		}
+	    ,{
+            "path" : "pages/menu/menu",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/yuYue/yuYue",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/AppointmentConfirmation/AppointmentConfirmation",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/completed/completed",
+           "style": {
+               "navigationStyle": "custom",
+               "enablePullDownRefresh": false
+           }  
+        }
+    ],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "ご予約",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"uniIdRouter": {}
+}

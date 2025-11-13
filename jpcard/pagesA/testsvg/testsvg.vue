@@ -1,0 +1,34 @@
+<template>
+	<view>
+		<view :style="`backgroundImage: url(${svgData})`" class="icon"></view>
+	</view>
+</template>
+
+<script>
+	import svg from '../../static/svgjs/sv_01.js'
+	
+	export default{
+		data(){
+			return {
+				svgData:'"' + svg + '"',//需要在字符串前后加上一对引号（非常关键！）
+			}
+		},
+		created(){
+			this.svgData = this.changeColor(this.svgData,'#9fc5e8');
+		},
+        methods:{
+           changeColor(url,color){
+            	let res = url.replace(/%23[a-zA-Z0-9]{6}/g, color.replace("#", "%23"));//转义后的#等于%23，利用正则表达式，替换所有%23后6位为新的十六进制六位数。
+            	return res;
+            }
+        }
+	}
+</script>
+<style scoped>
+	.icon{
+		background-size: cover;
+		display: inline-block;
+		width: 170rpx;
+		height: 170rpx;
+	}
+</style>

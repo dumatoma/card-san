@@ -1,0 +1,293 @@
+{
+    "pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+        {
+            "path": "pages/index/index",
+            "style": {
+                "navigationStyle": "custom",
+                "navigationBarBackgroundColor": "#fff",
+                "enablePullDownRefresh": true
+            }
+        },
+        {
+            "path": "pages/login/login",
+            "style": {
+                "navigationStyle": "custom" //default是默认uniapp原生的顶部导航栏
+            }
+        }, {
+            "path": "pages/register/register",
+            "style": {
+                "navigationStyle": "custom" //default是默认uniapp原生的顶部导航栏
+            }
+
+        }, {
+            "path": "pages/sendCode/sendCode",
+            "style": {
+                "navigationStyle": "custom" //default是默认uniapp原生的顶部导航栏
+                // "navigationBarTitleText": "電話番号入力",
+                // "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/code/code",
+            "style": {
+                "navigationBarTitleText": "認証番号を入力",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
+            "path": "pages/changeMethod/changeMethod",
+            "style": {
+                "navigationBarTitleText": "サインイン方法の変更",
+                "enablePullDownRefresh": false
+            }
+
+        }
+    ],
+    "globalStyle": {
+        "navigationBarTextStyle": "black",
+        "navigationBarTitleText": "uni-app",
+        "navigationBarBackgroundColor": "#FFF",
+        "backgroundColor": "#FFFF",
+        "app-plus": {
+            "softinputNavBar": "none",
+            "softinputMode": "adjustResize",
+            "popGesture": "none"
+        }
+    },
+    "subPackages": [{
+        "root": "pagesA",
+        "pages": [{
+                "path": "Collection/Collection",
+                "style": {
+                    "navigationStyle": "custom",
+                    "navigationBarBackgroundColor": "#fff"
+                }
+
+            }, {
+                "path": "search/search",
+                "style": {
+                    "navigationStyle": "custom",
+                    "navigationBarBackgroundColor": "#fff",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "accountInformation/accountInformation",
+                "style": {
+                    "navigationStyle": "custom",
+                    "navigationBarBackgroundColor": "#fff",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "ModifyInformation/ModifyInformation",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "AvatarReplacement/AvatarReplacement",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "addCard/addCard",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "setting/setting",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "commonProblem/commonProblem",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "notice/notice",
+                "style": {
+                    "navigationBarTitleText": "運営からのお知らせ",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "privacyPolicy/privacyPolicy",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "shopDetails/shopDetails",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": true
+                }
+
+            }, {
+                "path": "PersonalInformation/PersonalInformation",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "BindCard/BindCard",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "storeInformation/storeInformation",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "couponList/couponList",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "couponDetail/couponDetail",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "notification/notification",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "menu/menu",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "yuYue/yuYue",
+                "style": {
+                    // "navigationStyle": "custom",
+                    "enablePullDownRefresh": true,
+                    "navigationBarTitleText": "予約日時選択"
+                }
+
+            }, {
+                "path": "AppointmentConfirmation/AppointmentConfirmation",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "completed/completed",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "shop/shop",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": true
+                }
+
+
+            }, {
+                "path": "message/message",
+                "style": {
+                    "navigationBarTitleText": "",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "message/chat",
+                "style": {
+                    // "navigationStyle": "custom",
+                    "navigationBarTitleText": "",
+                    "enablePullDownRefresh": true
+                }
+
+            }, {
+                "path": "maps/maps",
+                "style": {
+                    "navigationBarTitleText": "",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "calen/calen",
+                "style": {
+                    "navigationBarTitleText": "",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "calender/calender",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "webLogin/webLogin",
+                "style": {
+                    "navigationBarTitleText": "",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "facelogin/facelogin",
+                "style": {
+                    "navigationBarTitleText": "",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "webins/webins",
+                "style": {
+                    "navigationBarTitleText": "",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "testsvg/testsvg",
+                "style": {
+                    "navigationBarTitleText": "",
+                    "enablePullDownRefresh": false
+                }
+
+            },
+            {
+                "path": "indexInfo/indexInfo",
+                "style": {
+                    "navigationBarTitleText": "",
+                    "enablePullDownRefresh": false,
+                    "navigationStyle": "custom"
+                }
+            }
+        ]
+    }],
+    "uniIdRouter": {}
+}

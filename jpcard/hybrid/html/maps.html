@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport"
+            content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+        <title></title>
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+        <script
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOQupmIQwbcpUgbLGynK3IwWxNzFDcQRI&callback=initMap&libraries=&v=weekly"
+            defer>
+        </script>
+        <style type="text/css">
+            #map {
+                height: 100%;
+                width: 100%;
+            }
+
+            html,
+            body {
+                height: 100%;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+    </body>
+</html>
+<script>
+    document.addEventListener('UniAppJSBridgeReady', function() {
+        uni.postMessage({
+            data: {
+                action: 'message'
+            }
+        });
+        uni.getEnv(function(res) {
+            console.log('当前环境：' + JSON.stringify(res));
+        });
+    });
+</script>
+<script>
+    var map = null
+    //  $.ajax({
+    //     // url: "https://maps.googleapis.com/maps/api/geocode/json?address="+JSON.parse(decodeURIComponent(GetUrlParam('address')))+"&key=AIzaSyAOQupmIQwbcpUgbLGynK3IwWxNzFDcQRI",
+    //     url: "https://hyk.ljcyh.com/api/google/map",
+    //     method: "get",
+    //     success:function(res){
+    //         console.log(res)
+    //     }
+    // })
+    function initMap() {
+        //页面传过来的参数arr
+        var mapPointResult = JSON.parse(decodeURIComponent(GetUrlParam('arr')))
+        var centerPoint = {
+            lat: mapPointResult[0].lat,
+            lng: mapPointResult[0].lng,
+        };
+        //新建map
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 16,
+            center: centerPoint,
+        });
+        var places = [];
+
+        for (var j = 0; j < mapPointResult.length; j++) {
+            places.push(new google.maps.LatLng(mapPointResult[j].lat, mapPointResult[j].lng));
+        }
+
+        for (var i = 0; i < places.length; i++) {
+            // Creating a new marker
+            var marker = new google.maps.Marker({
+                position: places[i],
+                map: map,
+                title: 'Place number ' + i,
+                icon: {
+                    url: 'https://now.guua.com/attachs/default/location_shop.png',
+                    scaledSize: new google.maps.Size(30, 30),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(0, 0)
+                }
+            });
+        }
+    }
+
+    // 处理URL参数
+    function GetUrlParam(paraName) {
+        var url = window.location.href;
+        var arrObj = url.split("?");
+        if (arrObj.length > 1) {
+            var arrPara = arrObj[1].split("&");
+            var arr;
+            for (var i = 0; i < arrPara.length; i++) {
+                arr = arrPara[i].split("=");
+                if (arr != null && arr[0] == paraName) {
+                    return arr[1];
+                }
+            }
+            return "";
+        } else {
+            return "";
+        }
+    }
+</script>

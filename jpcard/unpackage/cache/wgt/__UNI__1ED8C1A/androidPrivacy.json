@@ -1,0 +1,27 @@
+{
+    "version" : "1.0.2",
+    "prompt" : "none",
+    "title" : "プライバシーポリシーと利用規約",
+    "message" : "　　お客様の個人情報の取り扱いについて、「利用規約」と「プライバシーポリシー」の内容に同意いただく必要があります。<br/>　　<a href=\"https://api.card-san.jp/api/yhxy_yh\">「利用規約」</a>と<a href=\"https://api.card-san.jp/api/yszc_yh\">「プライバシーポリシー」</a>に同意する。",
+    "buttonAccept" : "同意する",
+    "buttonRefuse" : "同意しない",
+    "second" : {
+        "title" : "ご利用にあたって",
+        "message" : "　　本サービスのご利用いただくには、<a href=\"https://api.card-san.jp/api/yhxy_yh\">「利用規約」</a>と<a href=\"https://api.card-san.jp/api/yszc_yh\">「プライバシーポリシー」</a>に同意していただき、チェックをした上で同意するボタンを押してください。",
+        "buttonAccept" : "同意する",
+        "buttonRefuse" : "同意しない"
+    },
+    "styles" : {
+        "backgroundColor" : "#aaa",
+        "borderRadius" : "5px",
+        "title" : {
+            "color" : "#000"
+        },
+        "buttonAccept" : {
+            "color" : "#4395ff"
+        },
+        "buttonRefuse" : {
+            "color" : "#333"
+        }
+    }
+}

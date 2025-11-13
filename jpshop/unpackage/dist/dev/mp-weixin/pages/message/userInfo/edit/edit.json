@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "予約確認",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "u-input": "/uni_modules/uview-ui/components/u-input/u-input",
+    "u--textarea": "/uni_modules/uview-ui/components/u--textarea/u--textarea",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button"
+  }
+}

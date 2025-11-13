@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
+    "u-switch": "/uni_modules/uview-ui/components/u-switch/u-switch"
+  }
+}

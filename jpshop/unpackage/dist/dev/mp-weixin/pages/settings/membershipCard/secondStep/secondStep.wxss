@@ -1,0 +1,805 @@
+@charset "UTF-8";
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.resultContent {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 0 32rpx;
+}
+.resultContent .result {
+  width: 164rpx;
+  height: 164rpx;
+  border-radius: 20rpx;
+  flex-shrink: 0;
+  margin-right: 46rpx;
+}
+.resultContent .colorList {
+  display: flex;
+  flex-wrap: wrap;
+  padding-bottom: 40rpx;
+}
+.resultContent .colorList .colorItem {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  margin-right: 44rpx;
+  box-sizing: border-box;
+  padding: 8rpx;
+}
+.resultContent .colorList .colorItem .colorSelected {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+.resultContent .colorList .colorItem:nth-child(1) {
+  margin-bottom: 44rpx;
+}
+.resultContent .colorList .colorItem:nth-child(5n) {
+  margin-right: 0;
+}
+
+@charset "UTF-8";
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.tCode {
+  width: 460rpx;
+  height: 102rpx;
+  margin: 48rpx auto 20rpx;
+}
+.tCode image {
+  width: 100%;
+  height: 100%;
+}
+.maskContent {
+  background: #fff;
+  position: absolute;
+  bottom: 0;
+}
+.mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.8);
+  width: 100vw;
+  height: 100vh;
+}
+.sv {
+  -webkit-transform: translate(-111220px);
+          transform: translate(-111220px);
+  -webkit-filter: drop-shadow(111220px 0 0 yellow);
+          filter: drop-shadow(111220px 0 0 yellow);
+}
+.ptitle {
+  display: flex;
+  padding: 20rpx 30rpx;
+  position: relative;
+  border-top-left-radius: 20rpx;
+  border-top-right-radius: 20rpx;
+}
+.pName {
+  position: absolute;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+          transform: translateX(-50%);
+  top: 20rpx;
+}
+.myPoints {
+  display: flex;
+  align-items: center;
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  justify-content: center;
+  padding-bottom: 80rpx;
+}
+.myPoints .points {
+  font-size: 48rpx;
+  font-family: Hiragino Sans-W6, Hiragino Sans;
+  font-weight: normal;
+  color: rgba(217, 48, 37, 0.65);
+  margin-left: 66rpx;
+}
+.containe {
+  width: 100%;
+  height: 80vh;
+  overflow-y: scroll;
+}
+.containe .usersName {
+  text-align: center;
+  font-size: 48rpx;
+  font-family: Hiragino Sans-W6, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+}
+.containe .userCode {
+  width: 300rpx;
+  height: 300rpx;
+  margin: 48rpx auto 32rpx;
+}
+.containe .userCode image {
+  width: 100%;
+  height: 100%;
+}
+.containe .cardNo {
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  text-align: center;
+  padding-bottom: 80rpx;
+}
+.containe .storeName {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 36rpx 0;
+  font-size: 40rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  text-align: center;
+  border-top: 2rpx solid #d2d2d7;
+}
+.pTitle {
+  position: relative;
+  height: 111rpx;
+  background: #FBFBFD;
+  border-radius: 32rpx;
+}
+.pTitle .pt {
+  width: 100%;
+  text-align: center;
+  font-size: 40rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  line-height: 111rpx;
+}
+.pTitle .closeImage {
+  width: 60rpx;
+  height: 60rpx;
+  position: absolute;
+  top: 26rpx;
+  left: 32rpx;
+}
+.pTitle .closeImage image {
+  width: 100%;
+  height: 100%;
+}
+.userInfo {
+  border-top: 2rpx solid #d2d2d7;
+  border-bottom: 2rpx solid #d2d2d7;
+  box-sizing: border-box;
+  padding: 32rpx 40rpx 12rpx;
+}
+.special {
+  background: #FFFFFF;
+  box-shadow: 0px 0px 10rpx 2rpx rgba(29, 29, 31, 0.16);
+  box-sizing: border-box;
+  padding: 40rpx 0;
+}
+.special .remark {
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  box-sizing: border-box;
+  padding: 58rpx 40rpx 40rpx;
+}
+.special .specialTitle {
+  width: 144rpx;
+  height: 60rpx;
+  background: #D93025;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W4, Hiragino Sans;
+  font-weight: normal;
+  color: #FFFFFF;
+  line-height: 60rpx;
+  text-align: center;
+  position: relative;
+  left: 46rpx;
+  margin-bottom: 20rpx;
+}
+.appoint {
+  box-sizing: border-box;
+  padding: 32rpx 46rpx;
+  box-shadow: 0px 0px 10rpx 2rpx rgba(0, 0, 0, 0.16);
+  margin-top: 40rpx;
+  margin-bottom: 40rpx;
+}
+.appoint .appointTitle {
+  width: 144rpx;
+  height: 60rpx;
+  background: #1A73E8;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #FFFFFF;
+  text-align: center;
+  line-height: 60rpx;
+}
+.appoint .appointItem {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 32rpx;
+}
+.appoint .appointItem .aItem {
+  display: flex;
+}
+.appoint .appointItem .aItem .aItemImage {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 20rpx;
+}
+.appoint .appointItem .aItem .aItemImage image {
+  width: 100%;
+  height: 100%;
+}
+.cardInfo {
+  box-sizing: border-box;
+  padding: 40rpx 18rpx 0;
+  box-shadow: 0px 0px 12rpx 2rpx rgba(0, 0, 0, 0.16);
+  background: #fff;
+  z-index: 99;
+}
+.cardInfo .cardTitle {
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  text-align: center;
+  width: 100%;
+}
+.cardInfo .cardInfos {
+  margin-top: 40rpx;
+  box-sizing: border-box;
+  padding: 0 32rpx 40rpx;
+  background: #fff;
+}
+.cardInfo .cardInfos .ciItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.cardInfo .cardInfos .ciItem .ciLeft {
+  width: 144rpx;
+  height: 60rpx;
+  background: #F5F5F7;
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+  text-align: center;
+  line-height: 60rpx;
+  margin-right: 28rpx;
+}
+.cardInfo .cardInfos .ciItem .ciRight {
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+}
+.cardInfo .cardY {
+  width: 100%;
+  height: 398rpx;
+  background: #53B1AF;
+  box-shadow: 0px 0px 10rpx 2rpx rgba(0, 0, 0, 0.16);
+  border-radius: 12rpx;
+  margin-top: 20rpx;
+  box-sizing: border-box;
+  padding: 36rpx;
+}
+.cardInfo .cardY .cardInner {
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  display: flex;
+  flex-wrap: wrap;
+}
+.cardInfo .cardY .cardInner .seal {
+  width: 20%;
+  height: 50%;
+  box-sizing: border-box;
+  border-right: 2rpx solid #eaeaea;
+  border-bottom: 2rpx solid #eaeaea;
+  text-align: center;
+  position: relative;
+}
+.cardInfo .cardY .cardInner .seal .sealed {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 32rpx;
+}
+.cardInfo .cardY .cardInner .seal .sealed image {
+  width: 80rpx;
+  height: 80rpx;
+}
+.cardInfo .cardY .cardInner .seal .sealed .sealTime {
+  font-size: 20rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+  text-align: center;
+}
+.cardInfo .cardY .cardInner .seal text {
+  font-size: 48rpx;
+  font-family: Hiragino Sans-W6, Hiragino Sans;
+  font-weight: normal;
+  color: #EAEAEA;
+  line-height: 170rpx;
+}
+.infoItem {
+  display: flex;
+  align-items: center;
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  margin-bottom: 20rpx;
+}
+.infoItem .itemname {
+  color: #707070;
+  margin-right: 70rpx;
+  width: 128rpx;
+}
+.infoItem .itemValue {
+  color: #1D1D1F;
+}
+.btn {
+  width: 480rpx;
+  height: 100rpx;
+  border-radius: 20rpx;
+}
+.btip {
+  width: 100%;
+  background: rgba(143, 168, 248, 0.2);
+  border-radius: 20rpx;
+  color: #007AFF;
+  box-sizing: border-box;
+  padding: 24rpx 20rpx;
+}
+.inpItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 60rpx;
+}
+.inpItem .inps {
+  width: 200rpx;
+  height: 88rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid #d2d2d7;
+  margin-right: 20rpx;
+}
+.inpItem .inps input {
+  width: 100%;
+  height: 100%;
+  text-align: center;
+}
+.caution {
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  text-align: center;
+  margin: 40rpx 10rpx 20rpx;
+}
+.newItem {
+  display: flex;
+  margin-bottom: 84rpx;
+}
+.newItem .newLeft {
+  margin-right: 20rpx;
+}
+.newItem .newRight .rightTitle {
+  margin-bottom: 24rpx;
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #AAAAAA;
+}
+.inp {
+  box-sizing: border-box;
+  padding: 0 54rpx;
+  margin-bottom: 80rpx;
+}
+.inp .inpTitle {
+  margin-bottom: 10rpx;
+  color: #86868B;
+}
+.swit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 44rpx 36rpx;
+}
+.addImage {
+  width: 480rpx;
+  height: 96rpx;
+  background: #F5F5F7;
+  border: 2rpx solid #707070;
+  text-align: center;
+  line-height: 96rpx;
+  margin: 0 auto 98rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+}
+.addImage text {
+  font-size: 60rpx;
+  margin-right: 26rpx;
+  position: relative;
+  top: -5rpx;
+}
+.topImage {
+  box-sizing: border-box;
+  padding-top: 40rpx;
+  display: flex;
+  overflow-x: scroll;
+}
+.topImage .bannerItem {
+  width: 514rpx;
+  height: 344rpx;
+  flex-shrink: 0;
+  margin-right: 46rpx;
+  position: relative;
+}
+.topImage .bannerItem .close {
+  width: 52rpx;
+  height: 52rpx;
+  position: absolute;
+  right: 14rpx;
+  top: 14rpx;
+  z-index: 999;
+}
+.topImage .bannerItem .close image {
+  width: 100%;
+  height: 100%;
+}
+.topImage .bannerItem image {
+  width: 100%;
+  height: 100%;
+}
+.can {
+  width: 600rpx;
+  height: 80rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  border: 2rpx solid #aaa;
+  overflow: hidden;
+  margin: 10rpx 0 60rpx;
+}
+.can .canLeft {
+  background: #EAEAEA;
+  text-align: center;
+  border-right: 2rpx solid #aaa;
+  height: 100%;
+  line-height: 80rpx;
+  width: 80rpx;
+  box-sizing: border-box;
+  padding-left: 8rpx;
+}
+.newContent {
+  background: #fff;
+  box-sizing: border-box;
+  padding: 10rpx 32rpx;
+}
+.newContent .fuTitle {
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+  margin-bottom: 40rpx;
+}
+.balnk {
+  height: 40rpx;
+}
+.selfImage {
+  display: flex;
+  align-items: center;
+}
+.selfImage .fileName {
+  color: #1A73E8;
+  text-decoration: underline;
+  margin-right: 40rpx;
+}
+.blank {
+  height: 80rpx;
+  border-bottom: 2rpx solid #d2d2d7;
+}
+.picker {
+  width: 300rpx;
+  height: 80rpx;
+  background: #F5F5F7;
+  border-radius: 20rpx;
+  opacity: 1;
+  border: 2rpx solid #AAAAAA;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0 20rpx;
+  margin-right: 20rpx;
+}
+.picker text {
+  flex: 1;
+  text-align: center;
+}
+.pd {
+  position: relative;
+  left: 64rpx;
+}
+.self {
+  box-sizing: border-box;
+  padding: 64rpx 0 160rpx;
+}
+.logoList {
+  display: flex !important;
+  margin-top: 80rpx;
+  overflow-x: scroll;
+}
+.logoList .logoItem {
+  margin-right: 60rpx;
+}
+.logoList .logoItem .logoImage {
+  width: 160rpx;
+  height: 160rpx;
+}
+.logoList .logoItem .logoImage image {
+  width: 100%;
+  height: 100%;
+}
+.logoList .logoItem .selectContents {
+  margin: 40rpx auto 0;
+  display: flex;
+  justify-content: center;
+}
+.selectContent {
+  display: flex;
+  align-items: center;
+}
+.selectContent .selectName {
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: rgba(29, 29, 31, 0.9);
+}
+.selectContent .select {
+  width: 40rpx;
+  height: 40rpx;
+  border: 2rpx solid #1A73E8;
+  border-radius: 8rpx;
+  margin-right: 20rpx;
+}
+.selectContent .select image {
+  width: 100%;
+  height: 100%;
+}
+.showY {
+  box-sizing: border-box;
+  padding: 60rpx 28rpx;
+}
+.showY .logoContent {
+  width: 240rpx;
+  height: 240rpx;
+  background: #FFFFFF;
+  box-shadow: 0px 0px 10rpx 2rpx rgba(0, 0, 0, 0.16);
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin: 0 auto 80rpx;
+}
+.showY .logoContent image {
+  width: 100%;
+  height: 100%;
+}
+.tips {
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+}
+.tips text {
+  color: #D93025;
+}
+.chooseContent {
+  display: flex;
+  align-items: center;
+  margin-top: 80rpx;
+}
+.chooseContent .chooseLeft {
+  margin-right: 20rpx;
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: rgba(29, 29, 31, 0.9);
+}
+.chooseContent .chooseRight {
+  display: flex;
+  align-items: center;
+}
+.chooseContent .colorSqu {
+  width: 200rpx;
+  height: 80rpx;
+  box-shadow: 0px 0px 12rpx 2rpx rgba(0, 0, 0, 0.16);
+  border-radius: 12rpx;
+}
+.insertContent {
+  margin-top: 60rpx;
+}
+.insertTitle {
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+  margin-bottom: 10rpx;
+}
+.tableContent {
+  height: 360rpx;
+  overflow-y: scroll;
+}
+.tableContent .contentItem {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 20rpx 0;
+  border-bottom: 2rpx dashed #d2d2d7;
+}
+.tableContent .contentItem .tableItem {
+  flex: 1;
+  font-size: 25rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  text-align: center;
+  flex-shrink: 0;
+}
+.tableContent .contentItem .set {
+  width: 42rpx;
+  height: 42rpx;
+}
+.cardTitle {
+  display: flex;
+  align-items: center;
+  border-bottom: 2rpx solid #d2d2d7;
+  box-sizing: border-box;
+  padding: 29rpx 0 10rpx;
+}
+.cardTitle .tableItem {
+  flex: 1;
+  text-align: center;
+  font-size: 25rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+}
+.cardTitle .tableItem .set {
+  width: 42rpx;
+  height: 42rpx;
+}
+.content {
+  box-sizing: border-box;
+  padding: 40rpx 18rpx;
+}
+.title {
+  box-sizing: border-box;
+  padding: 40rpx 36rpx;
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: rgba(29, 29, 31, 0.9);
+  background: #F5F5F7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pdn {
+  padding-top: none !important;
+}
+.cardY {
+  width: 100%;
+  box-shadow: 0px 0px 10rpx 2rpx rgba(0, 0, 0, 0.16);
+  border-radius: 12rpx;
+  box-sizing: border-box;
+  padding: 36rpx;
+}
+.cardY .cardTable {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  box-sizing: border-box;
+  padding: 0 8rpx;
+}
+.cardY .cardInner {
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  display: flex;
+  flex-wrap: wrap;
+}
+.cardY .cardInner .seal {
+  width: 20%;
+  height: 50%;
+  box-sizing: border-box;
+  border-right: 2rpx solid #eaeaea;
+  border-bottom: 2rpx solid #eaeaea;
+  text-align: center;
+  position: relative;
+}
+.cardY .cardInner .seal .sealed {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 32rpx;
+}
+.cardY .cardInner .seal .sealed image {
+  width: 80rpx;
+  height: 80rpx;
+}
+.cardY .cardInner .seal .sealed .sealTime {
+  font-size: 20rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+  text-align: center;
+}
+.cardY .cardInner .seal text {
+  font-size: 48rpx;
+  font-family: Hiragino Sans-W6, Hiragino Sans;
+  font-weight: normal;
+  color: #EAEAEA;
+  line-height: 170rpx;
+}
+

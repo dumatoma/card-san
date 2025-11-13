@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "運営からのお知らせ",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "u-textarea": "/uni_modules/uview-ui/components/u-textarea/u-textarea"
+  }
+}

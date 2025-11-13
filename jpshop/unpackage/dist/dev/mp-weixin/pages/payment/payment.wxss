@@ -1,0 +1,198 @@
+@charset "UTF-8";
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.detaTitle {
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+  padding-bottom: 20rpx;
+}
+.tips {
+  box-sizing: border-box;
+  padding: 0 58rpx;
+  margin: 80rpx auto;
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #0A4B6D;
+}
+.pd {
+  box-sizing: border-box;
+  padding: 48rpx;
+}
+.deta {
+  display: flex;
+  justify-content: space-between;
+  padding: 28rpx 0;
+  border-top: 2rpx solid #D2D2D7;
+}
+.deta .deta_item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding-left: 36rpx;
+  margin-top: 20rpx;
+}
+.deta .detaItem {
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+}
+.applePay {
+  width: 94rpx;
+  height: 60rpx;
+}
+.applePay image {
+  width: 100%;
+  height: 100%;
+}
+.googlePay {
+  width: 124rpx;
+  height: 60rpx;
+}
+.googlePay image {
+  width: 100%;
+  height: 100%;
+}
+.selectContent {
+  width: 32rpx;
+  height: 32rpx;
+  box-sizing: border-box;
+  padding: 6rpx;
+  border: 2rpx solid #1A73E8;
+  border-radius: 50%;
+  margin-right: 10rpx;
+}
+.selectContent .selectInner {
+  width: 100%;
+  height: 100%;
+  background: #1A73E8;
+  border-radius: 50%;
+}
+.paymethod .payItem {
+  box-sizing: border-box;
+  padding: 48rpx;
+  border-bottom: 2rpx solid #D2D2D7;
+}
+.paymethod .payItem .cardsInfo {
+  margin-top: 80rpx;
+}
+.paymethod .payItem .cardsInfo .info_item {
+  margin-top: 60rpx;
+  flex: 1;
+}
+.paymethod .payItem .cardsInfo .info_item .info_name {
+  font-size: 24rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #707070;
+}
+.paymethod .payItem .pTop {
+  display: flex;
+  align-items: center;
+}
+.paymethod .payItem .pTop .payName {
+  font-size: 32rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+}
+.paymethod .payItem .cards {
+  width: 413rpx;
+  height: 60rpx;
+  margin-top: 20rpx;
+}
+.paymethod .payItem .cards image {
+  width: 100%;
+  height: 100%;
+}
+.container {
+  background-color: #fff;
+  box-sizing: border-box;
+  padding: 0 32rpx;
+}
+.checkMore {
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1A73E8;
+  text-align: right;
+}
+.list_item {
+  display: flex;
+  box-sizing: border-box;
+  padding: 40rpx 32rpx;
+  border-bottom: 2rpx solid #D2D2D7;
+  align-items: center;
+}
+.list_item .selectTime {
+  width: 15%;
+}
+.list_item .selectPrice {
+  width: 45%;
+}
+.list_item .selectDisccount {
+  flex: 1;
+  color: #D93025 !important;
+}
+.item {
+  box-shadow: 0px 0px 20rpx 2rpx rgba(0, 0, 0, 0.07);
+  margin-top: 60rpx;
+}
+.item .item_title {
+  box-sizing: border-box;
+  padding: 24rpx 46rpx;
+  background: rgba(26, 115, 232, 0.1);
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+}
+.item .item_detail {
+  box-sizing: border-box;
+  padding: 40rpx;
+}
+.item .item_detail .detail_item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+.item .item_detail .detail_item .detail_item_left {
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W3, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+}
+.item .item_detail .detail_item .detail_item_right {
+  font-size: 28rpx;
+  font-family: Hiragino Sans-W5, Hiragino Sans;
+  font-weight: normal;
+  color: #1D1D1F;
+}
+

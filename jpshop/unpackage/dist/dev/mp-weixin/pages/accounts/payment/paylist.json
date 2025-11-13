@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "お支払い方法を選択",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon"
+  }
+}

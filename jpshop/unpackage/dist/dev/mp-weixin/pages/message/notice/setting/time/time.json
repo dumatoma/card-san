@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "来店期間",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "u-action-sheet": "/uni_modules/uview-ui/components/u-action-sheet/u-action-sheet"
+  }
+}

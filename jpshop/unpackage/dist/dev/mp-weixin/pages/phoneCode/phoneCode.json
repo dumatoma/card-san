@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "認証コードを入力",
+  "enablePullDownRefresh": false,
+  "navigationBarBackgroundColor": "#fff",
+  "usingComponents": {
+    "u-code-input": "/uni_modules/uview-ui/components/u-code-input/u-code-input",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button"
+  }
+}

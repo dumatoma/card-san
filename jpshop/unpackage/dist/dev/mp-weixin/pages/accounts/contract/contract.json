@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "ご契約内容",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "u-popup": "/uni_modules/uview-ui/components/u-popup/u-popup",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button",
+    "peiconfirm": "/components/alerts/you1/you1"
+  }
+}

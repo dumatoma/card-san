@@ -1,0 +1,12 @@
+{
+  "navigationBarTitleText": "カテゴリー",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon",
+    "u-swipe-action": "/uni_modules/uview-ui/components/u-swipe-action/u-swipe-action",
+    "u-swipe-action-item": "/uni_modules/uview-ui/components/u-swipe-action-item/u-swipe-action-item",
+    "u-popup": "/uni_modules/uview-ui/components/u-popup/u-popup",
+    "u-input": "/uni_modules/uview-ui/components/u-input/u-input",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button"
+  }
+}

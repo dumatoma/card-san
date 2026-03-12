@@ -13,8 +13,6 @@
         <view>
             <view class="search" style="position: fixed;top: 56;left: 0;z-index: 999 !important;">
                 <view class="sear" @click="search()">
-                <!--    <u-search placeholder="お店を探す" v-model="keyword" :disabled="true" bgColor=" background: #767680 " :showAction="false">
-                    </u-search> -->
                     <u-icon name="search" size="18"></u-icon>
                     <view class="">お店を探す</view>
                 </view>
@@ -26,8 +24,7 @@
             <view class="swiper">
                 <view class="sort1" id="sort1">
                     <view class="sort-item" v-for="(item,index) in cardList" :key="index"
-                        @longpress="deleShow(index,item.id,item)" @click.stop="toDetail(item.sid,item.id)">
-                        <!-- @touchend="ltouchend" @touchstart="ltouchstart" -->
+                        @longpress="deleShow(index,item.id,item)" @click.stop="toDetail(item.sid,item.id)" @touchend="ltouchend" @touchstart="ltouchstart">
                         <view class="unread" v-text="item.unread_num" v-if="item.unread_num > 0"></view>
                         <image :src="item.image" mode="aspectFill" class="big-img"></image>
                         <view class="title" v-if="!item.check">{{item.shop_name}}</view>
@@ -162,7 +159,6 @@
                 setTimeout(() => {
                     this.isLongPress = false;
                 }, 500)
-
             },
             makecall(e) {
                 console.log(e)
@@ -222,7 +218,7 @@
                     that.cardList.forEach((item, index) => {
                         console.log(index)
                         if (index == i) {
-                            console.log(i)
+                            console.log("i",i)
                             that.$set(that.cardList[index], 'check', true)
                         } else {
                             that.$set(item, 'check', false)
@@ -480,7 +476,11 @@
 <script module='sortable' lang="renderjs">
     export default {
         mounted() {
-            this.initSortable()
+            let that = this 
+            setTimeout(function() {
+                that.initSortable()
+            }, 2500);
+            
         },
         methods: {
             initSortable() {
@@ -491,6 +491,7 @@
                     script.src = 'https://cdn.bootcdn.net/ajax/libs/Sortable/1.15.0/Sortable.min.js'
                     script.onload = this.setSortable.bind(this)
                     document.head.appendChild(script)
+                    
 
                 }
             },

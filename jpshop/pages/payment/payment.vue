@@ -478,8 +478,12 @@
             },
             toSuccess1() {
                 let that = this
-                if(that.using.card_type == 1){
-                    // Stripe ユーザーはモバイルからプラン変更不可、PCブラウザを案内
+                // Stripe (card_type==1) でも、サブスクリプションが失効・解約済みの場合は
+                // ネイティブ決済で再購読を許可する。ブロックするのは有効なStripe契約がある場合のみ。
+                const hasActiveStripe = that.using.card_type == 1
+                    && that.vips.length > 0
+                    && that.vips[0].cancel_time == 0
+                if(hasActiveStripe){
                     that.show = true
                     that.title = 'プラン・支払い周期の変更について'
                     that.content = 'お手数ではございますが、PCブラウザよりCard-Sanウェブサイトにログインしてプラン変更をお願いします。'

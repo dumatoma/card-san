@@ -204,3 +204,15 @@
 | `jpshop/pages/payment/payment.vue:433` | `querySku` 失敗時に `uni.hideLoading()` がなく UI がフリーズ | 失敗ブランチ先頭に `uni.hideLoading()` を追加 |
 | `jpshop/pages/payment/payment.vue:413` | Google Pay 成功後の遷移が `uni.switchTab` / 2500ms、Apple は `uni.reLaunch` / 2000ms と不統一 | Google Pay も `uni.reLaunch` / 2000ms に統一 |
 | `jpshop/pages/payment/payment.vue:data` | 支払いボタン連打で `requestPayment` が複数起動する競合状態 | `paying` フラグを追加し `pay()` 入口でガード、`complete` コールバックでリセット |
+
+---
+
+### 10. サブスクリプション終了後に再購読できない（支払い方法変更不可）
+
+**影響：** Stripe（card_type=1）で契約していたユーザーがサブスクリプション期限切れ後にモバイルアプリから再購読しようとすると、「PCブラウザでお手続きください」と表示されて再購読できない
+
+**根本原因：** `toSuccess1()` の Stripe ブロック条件が `that.using.card_type == 1` のみで、サブスクリプションが有効かどうかを判定していなかった。`that.using`（= `shop_info.vip`）は期限切れ後も前回の `card_type=1` を保持し続けるため、失効済みユーザーも誤ってブロックされていた
+
+| 修正箇所 | 問題 | 修正内容 |
+|----------|------|----------|
+| `jpshop/pages/payment/payment.vue:481` | `card_type == 1` だけでブロック判定 → 期限切れStripeユーザーが再購読できない | `vips.length > 0 && vips[0].cancel_time == 0`（有効な契約が存在する）を条件に追加。期限切れ・解約済みはネイティブ決済での再購読を許可 |

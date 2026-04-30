@@ -90,8 +90,7 @@
                             if (res.data.code == 200) {
                                 that.code = res.data.data.code
                                 uni.showToast({
-                                    // title: res.data.message,
-                                    title:code,
+                                    title: that.code,
                                     icon: "none",
                                     duration: 2000
                                 })

@@ -31,9 +31,14 @@ const store = new Vuex.Store({
                 this.state.is_open_socket = is_open_socket;
                 // 注：只有连接正常打开中 ，才能正常收到消息
                 this.state.socketTask.onMessage((res) => {
-                    console.log("收到服务器内容：", JSON.parse(res.data));
-                    const result = JSON.parse(res.data)
-                    if(result.type == "connect" && result.data.client_id){
+                    let result
+                    try {
+                        result = JSON.parse(res.data)
+                    } catch(e) {
+                        console.log("WebSocket消息解析失败", e)
+                        return
+                    }
+                    if(result.type == "connect" && result.data && result.data.client_id){
                         bindSocket(result.data.client_id).then((res) => {
                             console.log("bind",res)
                             if(res.code != 200){

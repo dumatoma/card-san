@@ -25,8 +25,8 @@ service.interceptors.request.use(config => {
     }
     // 注意使用 token 的时候需要引入 cookie 方法或者用本地 localStorage 等方法，推荐 js-cookie
     let token = uni.getStorageSync("token") // 这里取 token 之前，你肯定需要先拿到 token, 存一下
-    let info = uni.getStorageSync("user")
-    let uuid = info.uuid
+    let info = uni.getStorageSync("user") || {}
+    let uuid = info.uuid || ''
     if(token){
         // config.params = {'token':token} // 如果要求携带在参数中
         // 如果要求携带在请求头中
@@ -39,7 +39,7 @@ service.interceptors.request.use(config => {
     return config
 }, error => {
     console.log("errora",error)
-    Promise.reject(error)
+    return Promise.reject(error)
 })
 
 axios.defaults.adapter = function(config) {
@@ -106,47 +106,47 @@ service.interceptors.response.use(response => {
 
         switch (error.response.status) {
             case 400:
-                error.message = '错误请求'
+                error.message = 'リクエストエラー'
                 break;
             case 401:
-                error.message = '未授权，请重新登录'
-                localStorage.removeItem('Authorization');
-                localStorage.removeItem('homeowner');
-                localStorage.removeItem('userInfo');
+                error.message = '認証エラー、再度ログインしてください'
+                uni.removeStorageSync('Authorization');
+                uni.removeStorageSync('homeowner');
+                uni.removeStorageSync('userInfo');
                 break;
             case 403:
-                error.message = '拒绝访问'
+                error.message = 'アクセスが拒否されました'
                 break;
             case 404:
-                error.message = '请求错误,未找到该资源'
+                error.message = 'リソースが見つかりません'
                 // window.location.href = "/NotFound"
                 break;
             case 405:
-                error.message = '请求方法未允许'
+                error.message = 'リクエストメソッドが許可されていません'
                 break;
             case 408:
-                error.message = '请求超时'
+                error.message = 'リクエストがタイムアウトしました'
                 break;
             case 500:
-                error.message = '服务器端出错'
+                error.message = 'サーバーエラーが発生しました'
                 break;
             case 501:
-                error.message = '网络未实现'
+                error.message = 'ネットワーク未実装'
                 break;
             case 502:
-                error.message = '网络错误'
+                error.message = 'ネットワークエラー'
                 break;
             case 503:
-                error.message = '服务不可用'
+                error.message = 'サービスを利用できません'
                 break;
             case 504:
-                error.message = '网络超时'
+                error.message = 'ネットワークタイムアウト'
                 break;
             case 505:
-                error.message = 'http版本不支持该请求'
+                error.message = 'HTTPバージョンがサポートされていません'
                 break;
             default:
-                error.message = `连接错误${error.response.status}`
+                error.message = `接続エラー ${error.response.status}`
         }
     } else {
         // 超时处理
@@ -158,7 +158,7 @@ service.interceptors.response.use(response => {
     // Message.error(error.message)
     /***** 处理结束 *****/
     // 如果不需要错误处理，以上的处理过程都可省略
-    return Promise.resolve(error.response)
+    return Promise.reject(error)
 })
 //4.导入文件
 export default service

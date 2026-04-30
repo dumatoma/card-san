@@ -954,23 +954,11 @@ export const buyPlans = (data) => {
     })
 }
 
-// 额外使用次数下单
-export const buyextras = (data) => {
-    return request({
-        url: '/api/shop/vip_count',
-        method: 'post',
-        data:data
-    })
-}
+// 额外使用次数下单 (alias of getExtra)
+export const buyextras = getExtra
 
-// 额外使用次数支付
-export const buyextra = (data) => {
-    return request({
-        url: '/api/shop/vip_count/to_pay',
-        method: 'post',
-        data:data
-    })
-}
+// 额外使用次数支付 (alias of payExtra)
+export const buyextra = payExtra
 
 // 删除聊天记录
 export const delMsg = (data) => {

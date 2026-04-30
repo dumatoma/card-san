@@ -122,8 +122,7 @@ class socketIO {
 		//停止发送心跳
 		clearInterval(this.heartbeatInterval)
 		//如果不是人为关闭的话，进行重连
-		if (!this.is_open_socket && (this.traderDetailIndex == 2 || this.accountStateIndex == 0 || this
-			.followFlake)) {
+		if (!this.is_open_socket) {
 			this.reconnectTimeOut = setInterval(() => {
 				this.connectSocketInit(this.data);
 			}, 5000)

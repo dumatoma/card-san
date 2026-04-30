@@ -231,3 +231,17 @@
 | 2 | `jpcard/App.vue:198` `jpshop/App.vue:233` | `getConnect()` も同様に `info.uuid` で未ログイン時クラッシュ → WebSocket bind も失敗 | 同上 |
 | 3 | `jpcard/App.vue:98` | `onHide` でも `info.uuid` クラッシュ → バッジ数更新処理が毎回エラー | 同上 |
 | 4 | `jpcard/App.vue:17-41` `jpshop/App.vue:17-41` | iOS は `click` のみ・Android は `receive` のみ監視。**Android はバックグラウンド時の通知タップ（`click`）を拾えず画面遷移しない。iOS はフォアグラウンド受信（`receive`）を拾えず通知が無視される** | `click` と `receive` を両方登録する共通ハンドラ関数 `handlePushMessage` に統一 |
+
+---
+
+### 12. 投稿した「お知らせ」が Card-San App に反映されない
+
+**影響：** jpshop で投稿したお知らせが jpcard のお知らせタブに一切表示されない
+
+**根本原因：**
+
+| # | 修正箇所 | 問題 | 修正内容 |
+|---|----------|------|----------|
+| 1 | `jpcard/pagesA/notification/notification.vue:157` | `that.type = res.data.shop.notice_type` がコード確認（`if res.code == 200`）の**前**に実行される。API失敗時は `res.data.shop` が undefined → TypeError でクラッシュし、`getList()` が永遠に呼ばれない | `that.type` の代入を `if (res.code == 200)` ブロック内に移動 |
+| 2 | `jpcard/pagesA/notification/notification.vue:159` | `notice_type` が未設定（null/0）のショップは `type == 1` が false → お知らせリストが非表示。設定ページで「保存」を一度も押していないショップが全員この状態 | `res.data.shop.notice_type \|\| 1` でデフォルト値 1 を保証。未設定ショップでもお知らせを表示 |
+| 3 | `jpcard/pagesA/notification/notification.vue:197` | `getShopNotice()` の Promise に `.catch()` なし → ネットワーク異常時に Unhandled Promise Rejection | `.catch()` を追加 |

@@ -183,3 +183,24 @@
 | 修正箇所 | 問題 | 修正内容 |
 |----------|------|----------|
 | `jpshop/store/index.js` | `bindSocket()` の呼び出しに `.catch()` がなく、失敗時に Unhandled Promise Rejection が発生 | `.catch((err) => { console.log(...) })` を追加 |
+
+---
+
+### 9. ネイティブ決済（Apple IAP / Google Pay）の複数バグ
+
+**影響：** 漏単（課金済みなのにプランが付与されない）・クラッシュ・二重支払い・UI フリーズが発生する可能性があった
+
+| 修正箇所 | 問題 | 修正内容 |
+|----------|------|----------|
+| `jpshop/pages/payment/payment.vue:265` | Apple IAP の `buyPlans()` に `.catch()` がなく、ネットワーク異常時に loading が永久に表示されたまま漏単が発生 | `.catch()` を追加し `uni.hideLoading()` とエラートースト表示 |
+| `jpshop/pages/payment/payment.vue:406` | Google Pay の `buyPlans()` も同様に `.catch()` なし | 同上 |
+| `jpshop/pages/payment/payment.vue:398` | Google Pay の `payAll` コールバックで `e.msg != 'success'` 時に何もしない（ユーザーに無反応） | `else` ブランチを追加してエラートーストを表示 |
+| `jpshop/pages/payment/payment.vue:382` | `subscriptionOfferDetails[1]` を決め打ちで参照（要素が 1 件のとき `undefined` → クラッシュ） | `[1]` を廃止し `basePlanId` による `forEach` 照合に統一。一致なしの場合は `[0]` にフォールバック |
+| `jpshop/pages/payment/payment.vue:402` | `e.data[0].original.purchaseToken` を配列長チェックなしで参照（空配列でクラッシュ） | `e.data` の長さと `e.data[0].original` の存在を確認してからアクセス |
+| `jpshop/pages/payment/payment.vue:400` | Google Pay が `transaction_id` を後端に送らず、Apple IAP との整合性がなく対帳不能 | `e.data[0].original.orderId` を `da.transaction_id` に追加 |
+| `jpshop/pages/payment/payment.vue:286` | Apple IAP の `fail` コールバックで Error オブジェクトをそのまま `content` に渡し `[object Object]` 表示 | 固定の日本語メッセージに変更 |
+| `jpshop/pages/payment/payment.vue:241` | `requestOrder` のエラータイトルが英語 `"warning"` | 日本語 `"エラー"` に変更、`content` も `errormsg.message` を優先する日本語表記に |
+| `jpshop/pages/payment/payment.vue:330` | `restoreComplateRequest` の `finishTransaction` 失敗コールバックが完全に空（iOS で未完了取引が蓄積する恐れ） | `console.log` によるエラーロギングを追加 |
+| `jpshop/pages/payment/payment.vue:433` | `querySku` 失敗時に `uni.hideLoading()` がなく UI がフリーズ | 失敗ブランチ先頭に `uni.hideLoading()` を追加 |
+| `jpshop/pages/payment/payment.vue:413` | Google Pay 成功後の遷移が `uni.switchTab` / 2500ms、Apple は `uni.reLaunch` / 2000ms と不統一 | Google Pay も `uni.reLaunch` / 2000ms に統一 |
+| `jpshop/pages/payment/payment.vue:data` | 支払いボタン連打で `requestPayment` が複数起動する競合状態 | `paying` フラグを追加し `pay()` 入口でガード、`complete` コールバックでリセット |

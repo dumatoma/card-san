@@ -172,7 +172,8 @@
                 ids: ['premium_halfyear', 'premium_month', 'standard_halfyear','standard_month','light_halfyear','light_months'],
                 endDate:"",
                 timestamp:"",
-                refreshTime:""
+                refreshTime:"",
+                paying: false
             }
         },
         onLoad(options) {
@@ -237,10 +238,9 @@
                     },
                     (errormsg) => {
                         uni.hideLoading()
-                        // plus.nativeUI.alert(errormsg, function(e) {}, "warning");
                         uni.showModal({
-                            title:"warning",
-                            content:JSON.stringify(errormsg)
+                            title: "エラー",
+                            content: errormsg && errormsg.message ? errormsg.message : "決済環境の取得に失敗しました。再度お試しください。"
                         })
                     }
                 )
@@ -249,6 +249,8 @@
             // 调起支付
             pay() {
                 let that = this
+                if (that.paying) return
+                that.paying = true
                 uni.requestPayment({
                     provider: 'appleiap',
                     orderInfo: {
@@ -281,22 +283,26 @@
                                     icon: "none"
                                 })
                             }
-                        })   
+                        }).catch((err) => {
+                            uni.hideLoading()
+                            uni.showToast({
+                                title: "通信エラーが発生しました。サポートにお問い合わせください。",
+                                icon: "none",
+                                duration: 3000
+                            })
+                            console.log("buyPlans(Apple) error", err)
+                        })
                     },
                     fail: (e) => {
                         uni.showModal({
-                            content: e,
+                            content: "支払いに失敗しました。再度お試しください。",
                             showCancel: false
                         })
-                        // uni.showModal({
-                        //     content: "支払いに失敗しました。再度お試しください。",
-                        //     showCancel: false
-                        // })
                         this.restoreComplateRequest();
                     },
                     complete: () => {
                         this.loading = false;
-                        
+                        that.paying = false
                     }
                 })
             },
@@ -328,22 +334,18 @@
             
             
             restoreComplateRequest() {
-                let that = this 
+                let that = this
                 this.iap.restoreComplateRequest({
                     manualFinishTransaction: true
                 }, results => {
-                    // results 格式为数组存放恢复的IAP商品交易信息对象 IAPTransaction，通用需将返回的支付凭证传给后端进行二次认证  
-                    // console.log('restoreComplateRequest-results---', results)
-                    
                     for(let i = 0;i < results.length;i++){
                         that.iap.finishTransaction(results[i], (success) => {
-                            }, (fail) => {
-                            });
+                        }, (fail) => {
+                            console.log("finishTransaction失敗", fail)
+                        });
                     }
-                    
-                   
                 }, e => {
-                    // 错误回调
+                    console.log("restoreComplateRequest失敗", e)
                 });
             },
             toxie(){
@@ -377,18 +379,21 @@
                                        if (e.list.length > 0) {
                                            var pd = e.list[0];
                                            var offerToken = '';
-                                           if (pd.subscriptionOfferDetails && pd.subscriptionOfferDetails
-                                               .length > 0) {
-                                               offerToken = pd.subscriptionOfferDetails[1].offerToken;
-                                               pd.subscriptionOfferDetails.forEach((v, i) => {
+                                           if (pd.subscriptionOfferDetails && pd.subscriptionOfferDetails.length > 0) {
+                                               // Bug Fix: 不要な [1] 決め打ちを削除し、basePlanId で正確に照合
+                                               pd.subscriptionOfferDetails.forEach((v) => {
                                                    if (v.basePlanId == res.data.product_id) {
                                                        offerToken = v.offerToken
                                                    }
                                                })
+                                               // basePlanId が一致しない場合は先頭を使用
+                                               if (!offerToken) {
+                                                   offerToken = pd.subscriptionOfferDetails[0].offerToken
+                                               }
                                            }
-                               
+
                                            googlePay.payAll({
-                                                   productId: pId, // 产品id
+                                                   productId: pId,
                                                    offerToken,
                                                    oldPurchaseToken: res.data.google_data.oldPurchaseToken,
                                                    replacementMode: res.data.google_data.replacementMode,
@@ -397,9 +402,15 @@
                                                },
                                                (e) => {
                                                    if (e.msg == 'success') {
+                                                       // Bug Fix: e.data 配列の存在チェック
+                                                       if (!e.data || e.data.length === 0 || !e.data[0].original) {
+                                                           uni.showToast({ title: "支払いデータの取得に失敗しました", icon: "none" })
+                                                           return
+                                                       }
                                                        let da = {}
                                                        da.svid = res.data.svid
                                                        da.pay_token = e.data[0].original.purchaseToken
+                                                       da.transaction_id = e.data[0].original.orderId || ''
                                                        uni.showLoading({
                                                            title:"読み込み中"
                                                        })
@@ -411,35 +422,51 @@
                                                                    duration:2500
                                                                })
                                                                setTimeout(() => {
-                                                                   uni.switchTab({
+                                                                   uni.reLaunch({
                                                                        url:"/pages/index/index"
                                                                    })
-                                                               },2500)
+                                                               },2000)
                                                            } else {
                                                                uni.showToast({
                                                                    title: re.message,
                                                                    icon: "none"
                                                                })
                                                            }
+                                                       }).catch((err) => {
+                                                           uni.hideLoading()
+                                                           uni.showToast({
+                                                               title: "通信エラーが発生しました。サポートにお問い合わせください。",
+                                                               icon: "none",
+                                                               duration: 3000
+                                                           })
+                                                           console.log("buyPlans(Google) error", err)
                                                        })
+                                                   } else {
+                                                       uni.showToast({
+                                                           title: "支払いに失敗しました。再度お試しください。",
+                                                           icon: "none",
+                                                           duration: 3000
+                                                       })
+                                                       console.log("Google Pay failed", e)
                                                    }
                                                }
                                            );
                                        } else {
                                            uni.showToast({
-                                               title: "no Goods"
+                                               title: "商品情報が見つかりませんでした",
+                                               icon: "none"
                                            })
                                        }
                                    } else {
-                                       //查询失败
+                                       uni.hideLoading()
                                        console.log(e)
                                        uni.showToast({
-                                           title: 'querySku fail,' + JSON.stringify(e),
+                                           title: "商品情報の取得に失敗しました。再度お試しください。",
                                            icon:"none"
                                        })
                                    }
                                }
-                           ); 
+                           );
                         }
                     } else {
                         uni.showToast({

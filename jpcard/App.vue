@@ -12,35 +12,23 @@
                 });
             }, 500)
             
-            uni.getSystemInfo({
-                success(res) {
-                    if (res.osName == 'ios') {
-                        plus.push.addEventListener('click', function(message) {
-                           if(message.payload.type == 'message'){
-                               uni.navigateTo({
-                                   url: "/pagesA/message/chat?sid=" + message.payload.id + "&name=" + message.payload.name
-                               })
-                           }else if(message.payload.type == 'coupon'){
-                               uni.navigateTo({
-                                   url:"/pagesA/shop/shop?source=push&id=" + message.payload.id + "&cid="+ message.payload.cid
-                               })
-                           }
-                        });
-                    } else {
-                        plus.push.addEventListener('receive', function(message) {
-                           if(message.payload.type == 'message'){
-                               uni.navigateTo({
-                                   url: "/pagesA/message/chat?sid=" + message.payload.id + "&name=" + message.payload.name
-                               })
-                           }else if(message.payload.type == 'coupon'){
-                               uni.navigateTo({
-                                   url:"/pagesA/shop/shop?source=push&id=" + message.payload.id + "&cid="+ message.payload.cid
-                               })
-                           }
-                        });
-                    }
+            // push 通知イベント処理
+            // click: 通知バーをタップした時（バックグラウンド→フォアグラウンド遷移）
+            // receive: アプリがフォアグラウンドで通知を受信した時
+            function handlePushMessage(message) {
+                if (!message.payload) return
+                if (message.payload.type == 'message') {
+                    uni.navigateTo({
+                        url: "/pagesA/message/chat?sid=" + message.payload.id + "&name=" + message.payload.name
+                    })
+                } else if (message.payload.type == 'coupon') {
+                    uni.navigateTo({
+                        url: "/pagesA/shop/shop?source=push&id=" + message.payload.id + "&cid=" + message.payload.cid
+                    })
                 }
-            })
+            }
+            plus.push.addEventListener('click', handlePushMessage)
+            plus.push.addEventListener('receive', handlePushMessage)
             this.connectSocket()
             this.connectPush()
             switch (uni.getSystemInfoSync().platform) {
@@ -92,11 +80,9 @@
             // this.$store.commit('connectSocketInit', true)
         },
         onHide: function() {
-            // this.scoketClose()
-            // this.socketIo.traderDetailIndex = 100 // 初始化 tabIndex
             let token = uni.getStorageSync("token")
-            let info = uni.getStorageSync("user")
-            let uuid = info.uuid
+            let info = uni.getStorageSync("user") || {}
+            let uuid = info.uuid || ''
             console.log('App Hide')
             uni.request({
                 url: this.$baseUrl + "/api/member/member?request_type=unread_num",
@@ -120,8 +106,8 @@
             connectPush() {
                 let that = this
                 let token = uni.getStorageSync("token")
-                let info = uni.getStorageSync("user")
-                let uuid = info.uuid
+                let info = uni.getStorageSync("user") || {}
+                let uuid = info.uuid || ''
                 let client_id = uni.getStorageSync("cid")
                 if (token && uuid && client_id) {
                     let d2 = {}
@@ -196,8 +182,8 @@
             getConnect() {
                 let that = this
                 let token = uni.getStorageSync("token")
-                let info = uni.getStorageSync("user")
-                let uuid = info.uuid
+                let info = uni.getStorageSync("user") || {}
+                let uuid = info.uuid || ''
                 let client_id = uni.getStorageSync("client_id")
                 if (token && uuid && client_id) {
                     let d2 = {}

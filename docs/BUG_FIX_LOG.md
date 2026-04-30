@@ -216,3 +216,18 @@
 | 修正箇所 | 問題 | 修正内容 |
 |----------|------|----------|
 | `jpshop/pages/payment/payment.vue:481` | `card_type == 1` だけでブロック判定 → 期限切れStripeユーザーが再購読できない | `vips.length > 0 && vips[0].cancel_time == 0`（有効な契約が存在する）を条件に追加。期限切れ・解約済みはネイティブ決済での再購読を許可 |
+
+---
+
+### 11. アプリ Push 通知が一切届かない（メッセージ・クーポン共通）
+
+**影響：** jpcard（消費者）・jpshop（店舗）ともに push 通知が動作しない。ユーザーが通知を受け取れず、メッセージ・予約・クーポン配信の機能が無効状態
+
+**根本原因：**
+
+| # | 修正箇所 | 問題 | 修正内容 |
+|---|----------|------|----------|
+| 1 | `jpcard/App.vue:123` `jpshop/App.vue:163` | `connectPush()` 内で `uni.getStorageSync("user")` が未ログイン時 `null` を返し、`info.uuid` で **TypeError クラッシュ**。関数が即座に落ちるため `setTimeout` による再試行も実行されず、push token の bind が**永遠に成功しない** | `|| {}` と `|| ''` でデフォルト値を保証 |
+| 2 | `jpcard/App.vue:198` `jpshop/App.vue:233` | `getConnect()` も同様に `info.uuid` で未ログイン時クラッシュ → WebSocket bind も失敗 | 同上 |
+| 3 | `jpcard/App.vue:98` | `onHide` でも `info.uuid` クラッシュ → バッジ数更新処理が毎回エラー | 同上 |
+| 4 | `jpcard/App.vue:17-41` `jpshop/App.vue:17-41` | iOS は `click` のみ・Android は `receive` のみ監視。**Android はバックグラウンド時の通知タップ（`click`）を拾えず画面遷移しない。iOS はフォアグラウンド受信（`receive`）を拾えず通知が無視される** | `click` と `receive` を両方登録する共通ハンドラ関数 `handlePushMessage` に統一 |

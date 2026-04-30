@@ -11,36 +11,23 @@
             }, 500)
             this.connectSocket()
             this.connectPush()
-            uni.getSystemInfo({
-                success(res) {
-                    if (res.osName == 'ios') {
-                        plus.push.addEventListener('click', function(message) {
-                            if (message.payload.type == 'message') {
-                                uni.navigateTo({
-                                    url: "/pages/message/message"
-                                })
-                            } else if (message.payload.type == 'order') {
-                                uni.navigateTo({
-                                    url: "/pages/appointment/appointment"
-                                })
-                            }
-                        });
-                    } else {
-                        plus.push.addEventListener('receive', function(message) {
-                            if (message.payload.type == 'message') {
-                                uni.navigateTo({
-                                    url: "/pages/message/chat/chat?uid=" + message.payload
-                                        .id + "&name=" + message.payload.name
-                                })
-                            } else if (message.payload.type == 'order') {
-                                uni.navigateTo({
-                                    url: "/pages/appointment/appointment"
-                                })
-                            }
-                        });
-                    }
+            // push 通知イベント処理
+            // click: 通知バーをタップした時（バックグラウンド→フォアグラウンド遷移）
+            // receive: アプリがフォアグラウンドで通知を受信した時
+            function handlePushMessage(message) {
+                if (!message.payload) return
+                if (message.payload.type == 'message') {
+                    uni.navigateTo({
+                        url: "/pages/message/chat/chat?uid=" + message.payload.id + "&name=" + message.payload.name
+                    })
+                } else if (message.payload.type == 'order') {
+                    uni.navigateTo({
+                        url: "/pages/appointment/appointment"
+                    })
                 }
-            })
+            }
+            plus.push.addEventListener('click', handlePushMessage)
+            plus.push.addEventListener('receive', handlePushMessage)
             uni.setStorageSync("ale", "aviliable")
             uni.setStorageSync("socketStatus", "unconnect")
             uni.request({
@@ -156,11 +143,10 @@
         methods: {
 
             connectPush() {
-                // console.log("puishconnect")
                 let that = this
                 let token = uni.getStorageSync("token")
-                let info = uni.getStorageSync("admin")
-                let uuid = info.uuid
+                let info = uni.getStorageSync("admin") || {}
+                let uuid = info.uuid || ''
                 let client_id = uni.getStorageSync("cid")
                 if (token && uuid && client_id) {
                     let d2 = {}
@@ -230,8 +216,8 @@
             getConnect() {
                 let that = this
                 let token = uni.getStorageSync("token")
-                let info = uni.getStorageSync("admin")
-                let uuid = info.uuid
+                let info = uni.getStorageSync("admin") || {}
+                let uuid = info.uuid || ''
                 let client_id = uni.getStorageSync("client_id")
                 if (token && uuid && client_id) {
                     let d2 = {}

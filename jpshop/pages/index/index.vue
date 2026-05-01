@@ -755,13 +755,13 @@
                 if (e == 'confirm') {
                     this.showModule = false
                 } else {
+                    this.showModule = false
                     uni.clearStorageSync()
                     uni.clearStorage()
-                    uni.closeSocket();
-                    uni.redirectTo({
-                        url: "../login/login"
+                    try { uni.closeSocket() } catch (err) {}
+                    uni.reLaunch({
+                        url: "/pages/login/login"
                     })
-
                 }
             },
             tom() {

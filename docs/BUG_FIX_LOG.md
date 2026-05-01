@@ -245,3 +245,18 @@
 | 1 | `jpcard/pagesA/notification/notification.vue:157` | `that.type = res.data.shop.notice_type` がコード確認（`if res.code == 200`）の**前**に実行される。API失敗時は `res.data.shop` が undefined → TypeError でクラッシュし、`getList()` が永遠に呼ばれない | `that.type` の代入を `if (res.code == 200)` ブロック内に移動 |
 | 2 | `jpcard/pagesA/notification/notification.vue:159` | `notice_type` が未設定（null/0）のショップは `type == 1` が false → お知らせリストが非表示。設定ページで「保存」を一度も押していないショップが全員この状態 | `res.data.shop.notice_type \|\| 1` でデフォルト値 1 を保証。未設定ショップでもお知らせを表示 |
 | 3 | `jpcard/pagesA/notification/notification.vue:197` | `getShopNotice()` の Promise に `.catch()` なし → ネットワーク異常時に Unhandled Promise Rejection | `.catch()` を追加 |
+
+---
+
+### 13. iOS の CardSan 管理 App（jpshop）でログアウトできない
+
+**影響：** iOS 端末でログアウトボタンを押しても画面が変わらず、アプリが操作不能になる
+
+**根本原因：**
+
+| # | 修正箇所 | 問題 | 修正内容 |
+|---|----------|------|----------|
+| 1 | `jpshop/pages/index/index.vue:758` | ログアウト確定後に `uni.redirectTo` を使用。iOS では root ページからの `redirectTo` がページスタック管理の都合でサイレントに失敗することがある。ログアウト後はページスタックを完全にリセットすべきところ、`redirectTo` は現在ページを置き換えるだけ | `uni.reLaunch({ url: "/pages/login/login" })` に変更。絶対パスでページスタックを完全クリア |
+| 2 | `jpshop/pages/index/index.vue:758` | ログアウトブランチで `this.showModule = false` を呼ばない。`reLaunch` が失敗した際にオーバーレイが残り画面操作が完全に不能になる | ログアウトブランチの先頭に `this.showModule = false` を追加 |
+| 3 | `jpshop/pages/index/index.vue:760` | `uni.closeSocket()` が iOS で WebSocket 未接続状態（接続中・切断中）のときに例外を投げる場合があり、後続の `reLaunch` が実行されない | `try { uni.closeSocket() } catch (err) {}` でラップ |
+| 4 | `jpshop/utils/request.js:87` | 401 レスポンス時の自動ログアウトで相対パス `"../login/login"` を使用。axios インターセプターはどのページから呼ばれるかわからないため相対パスが正しく解決されない | 絶対パス `"/pages/login/login"` に変更。また `clearStorageSync()` も追加してトークンを確実に削除 |

@@ -77,18 +77,17 @@ service.interceptors.response.use(response => {
         let data = response.data;
         // console.log("data.code",data.data.code)
         if(data.code == 401) {
-            // Message.error(data.message)
-			uni.showToast({
+            uni.showToast({
 				title: data.message,
 				duration:1500,
                 icon:"none"
 			})
 			setTimeout(function() {
-				uni.redirectTo({
-				    url: "../login/login"
+				uni.clearStorageSync()
+				uni.reLaunch({
+				    url: "/pages/login/login"
 				})
 			}, 1500);
-           
             return false
         }
         if(data.code == 400){

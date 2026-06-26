@@ -208,7 +208,6 @@
                 title:'読み込み中',
                 mask:true
             })
-            console.log(options)
             that.query = options
             that.titles = decodeURIComponent(options.name) 
             that.getUserInfo()
@@ -217,8 +216,6 @@
         methods: {
             checkMust() {
                 let that = this
-                console.log("arr1",that.ass)
-                console.log("arr2",that.as)
                 const isInclude = (arr1, arr2) => arr2.every((val) => arr1.includes(val))
                 if (isInclude(that.ass, that.as)) {
                     that.insertAll = true
@@ -228,7 +225,6 @@
             },
             addressChange(e) {
                 let that = this
-                console.log("e="+e)
                 if(e != '' && that.model1.userInfo.zipCode != ''){
                     that.ass[5] = "address"
                 }else{
@@ -277,13 +273,10 @@
             },
             getShopInfo(id) {
                 let that = this
-                console.log("id=",id)
                 getShopInfo(id).then((res) => {
-                    console.log('res', res)
                     uni.hideLoading()
                     if (res.code == 200) {
                         that.as = res.data.shop.member_register_field
-                        console.log(that.as)
                         if (res.data.shop.member_register_field.includes("name")) {
                             that.must1 = true
                         }
@@ -304,7 +297,7 @@
                         }
                         that.checkMust()
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             getUserInfo() {
                 let that = this
@@ -360,13 +353,12 @@
                         } else {
                             that.ass[5] = "0"
                         }
-                       
+
                         that.checkMust()
                     }
-                })
+                }).catch(() => {})
             },
             sexSelect(e) {
-                console.log("sexchange")
                 this.model1.userInfo.sexName = e.name
                 this.model1.userInfo.sex = e.sex
                 this.ass[3] = "sex"
@@ -385,7 +377,7 @@
                         that.addressChange(res.data.address.address1)
                         that.checkMust()
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             confirmm(){
                 uni.redirectTo({
@@ -441,7 +433,7 @@
                                 icon: "none"
                             })
                         }
-                    })
+                    }).catch(() => { uni.hideLoading() })
                 }
 
             },

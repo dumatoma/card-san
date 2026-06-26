@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# 构建产物
+**/unpackage/dist/
+**/unpackage/cache/
+**/unpackage/release/
+**/unpackage/debug/
+
+# 证书 & 密钥（安全敏感）
+*.keystore
+*.p12
+*.mobileprovision
+*.pem
+
+# 内部记忆文件
+memory/
+
+# 文档生成产物
+docs/*.pdf
+docs/*_style.css

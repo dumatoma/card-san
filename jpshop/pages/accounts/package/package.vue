@@ -167,6 +167,48 @@
 
                     <view class="pItem">
                         <view class="p1 normalWord">
+                            Googleビジネス<br />連携
+                        </view>
+                        <view class="p2">
+                            <view class="pItemD">
+                                <image src="../../../static/images/circle.png" mode=""></image>
+                            </view>
+                        </view>
+                        <view class="p3">
+                            <view class="pItemD">
+                                <image src="../../../static/images/circle.png" mode=""></image>
+                            </view>
+                        </view>
+                        <view class="p4">
+                            <view class="pItemD">
+                                <image src="../../../static/images/circle.png" mode=""></image>
+                            </view>
+                        </view>
+                    </view>
+
+                    <view class="pItem">
+                        <view class="p1 normalWord">
+                            Googleクチコミ<br />管理
+                        </view>
+                        <view class="p2">
+                            <view class="pItemD">
+                                <image src="../../../static/images/wrong.png" mode=""></image>
+                            </view>
+                        </view>
+                        <view class="p3">
+                            <view class="pItemD">
+                                <image src="../../../static/images/circle.png" mode=""></image>
+                            </view>
+                        </view>
+                        <view class="p4">
+                            <view class="pItemD">
+                                <image src="../../../static/images/circle.png" mode=""></image>
+                            </view>
+                        </view>
+                    </view>
+
+                    <view class="pItem">
+                        <view class="p1 normalWord">
                             メッセージ<br />
                             チャット
                         </view>
@@ -305,6 +347,9 @@
             that.getShopInfo()
             that.getpackage()
         },
+        onShow() {
+            this.getShopInfo()
+        },
         methods: {
             formatPriceWithCommas(price) {
               return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -313,10 +358,12 @@
                 let that = this
                 getShopInfo().then((res) => {
                     if (res.code == 200) {
-                        that.info = res.data.shop_info.vip
-                        that.info1 = res.data.shop_info.last_vip
-                        that.current = res.data.shop_info.vip.type * 1 - 1
-                        let date = new Date(res.data.shop_info.vip.end_time * 1000)
+                        const vip = res.data.shop_info.vip || {}
+                        that.info = vip
+                        that.info1 = res.data.shop_info.last_vip || {}
+                        const vipType = vip.type * 1
+                        that.current = vipType > 0 ? vipType - 1 : -1
+                        let date = new Date((vip.end_time || 0) * 1000)
                         const Y = date.getFullYear()
                         const M = date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1
                         const D = date.getDate() < 10 ? '0' + date.getDate() : date.getDate()

@@ -156,7 +156,7 @@
                         that.info.shopName = res.data.owner.shop_name
                         that.info.province = res.data.owner.province
                     }
-                })
+                }).catch(() => {})
             },
             searchAddress() {
                 let that = this
@@ -174,7 +174,7 @@
                         })
                     }
                     uni.hideLoading()
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             confirm(e) {
                 this.info.province = e.value[0]
@@ -202,16 +202,15 @@
                         })
                         setTimeout(function() {
                             let pages = getCurrentPages();
-                            let currPage = pages[pages.length - 1] //当前页面
-                            let prePage = pages[pages.length - 2] //上一个页面
-                            //调用上一页拉取数据的方法
+                            let currPage = pages[pages.length - 1]
+                            let prePage = pages[pages.length - 2]
                             if (prePage.route == "pages/accounts/admin/admin") {
                                 prePage.$vm.getOwnerInformation()
                             }
                             uni.navigateBack({})
                         }, 1500)
                     }
-                })
+                }).catch(() => {})
             }
         }
     }

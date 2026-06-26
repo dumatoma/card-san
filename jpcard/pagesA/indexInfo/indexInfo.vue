@@ -375,7 +375,6 @@
                         let dat = new Date()
                         let idx = dat.getDate()
                         that.todayTime = res.data.day_business[idx]
-                        console.log("i", res.data.day_business[idx])
                         that.bsTime = res.data.day_business[idx].business_time
                     } else {
                         uni.showToast({
@@ -383,7 +382,7 @@
                             icon: "none"
                         })
                     }
-                })
+                }).catch(() => {})
             },
             // 〒606-0816  京都府京都市左京区下鴨松ノ木町53 加茂みたらし茶屋
             toMap() {
@@ -397,7 +396,6 @@
             getShopInfo() {
                 let that = this
                 getShopInfo(that.sid).then((res) => {
-                    console.log(1113333,res)
                     if (res.code == 200) {
                         that.shopInfo = res.data.shop
                         that.staff = res.data.admin3
@@ -415,7 +413,7 @@
                             }
                         })
                     }
-                })
+                }).catch(() => {})
             },
             closeCal() {
                 this.show = false

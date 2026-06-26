@@ -195,7 +195,6 @@
                 obj.date = that.fulldate
                 obj.business = that.open
                 obj.business_time = that.openArr
-                console.log("obj",obj)
                 setBusinessHours(obj).then((res) => {
                     if (res.code == 200) {
                         uni.showToast({
@@ -249,7 +248,6 @@
                 getCalendar(data).then((res) => {
                     let that = this
                     if (res.code == 200) {
-                        console.log("calcn",res)
                         let temp = []
                         that.days = res.data.day_business
                         res.data.rest_days.forEach((value, index) => {

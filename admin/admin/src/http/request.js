@@ -17,7 +17,8 @@ service.interceptors.request.use(config => {
   config.data = JSON.stringify(config.data)
   config.headers = {
     'Content-Type': 'application/json;charset=UTF-8',
-    'client':'pc'
+    'client':'pc',
+    'api': '1'
   }
   let token = localStorage.getItem("token")
 

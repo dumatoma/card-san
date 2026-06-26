@@ -134,7 +134,6 @@
                             }
                         })
                         that.array = res.data.notices
-                        console.log("notice",res.data.notices)
                     }
                 })
             },

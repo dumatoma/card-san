@@ -11,9 +11,21 @@
                 </image>
             </view>
         </u-navbar>
+        <!-- スタッフルームセクション -->
+        <view class="staffRoomSection" v-if="staffRoomOn && staffRoomJoin" @click="toGroupChat">
+            <view class="srLeft">
+                <image :src="staffRoomAvatar || '../../static/images/avatar.png'" class="srAvatar" mode="aspectFill"></image>
+                <view class="srInfo">
+                    <view class="srName">{{ staffRoomName }}</view>
+                    <view class="srSub">スタッフルーム</view>
+                </view>
+            </view>
+            <view class="srBadge" v-if="groupUnread > 0">{{ groupUnread }}</view>
+        </view>
         <view class="con">
             <view class="search">
-                <u--input placeholder="名前、電話番号、IDで検索" prefixIcon="search" prefixIconStyle="font-size: 22px;color: #aaa">
+                <u--input placeholder="名前、電話番号、IDで検索" prefixIcon="search" prefixIconStyle="font-size: 22px;color: #aaa"
+                    v-model="keywords">
                 </u--input>
             </view>
             <view class="total">
@@ -57,7 +69,9 @@
     import {
         getMessageList,
         bindSocket,
-        getAdminDetail
+        getAdminDetail,
+        getStaffRoom,
+        getStaffRoomUnread
     } from "@/api/index.js"
     import permission from "@/components/permission/permission.vue"
     export default {
@@ -67,13 +81,28 @@
         data() {
             return {
                 showpermission:false,
+                staffRoomOn: false,
+                staffRoomJoin: false,
+                staffRoomName: '',
+                staffRoomAvatar: '',
+                groupUnread: 0,
                 options1: [{
                     text: '削除',
                     style: {
                         backgroundColor: '#D93025'
                     }
                 }],
-                array: []
+                keywords: "",
+                allMessages: []
+            }
+        },
+        computed: {
+            array() {
+                if (!this.keywords.trim()) return this.allMessages
+                const kw = this.keywords.trim().toLowerCase()
+                return this.allMessages.filter(item => {
+                    return (item.name || '').toLowerCase().includes(kw)
+                })
             }
         },
         onUnload() {
@@ -89,13 +118,13 @@
         },
         onShow() {
             this.getList()
+            this.loadStaffRoom()
         },
         onPullDownRefresh() {
             uni.showLoading({
                 title:"Loading...",
                 mask:true
             })
-            console.log("pull")
             this.getList()
         },
         methods: {
@@ -128,7 +157,7 @@
                             } else {
                                 this.getList()
                             }
-                        })
+                        }).catch(() => {})
                     }
                     if (result.type == "message") {
 
@@ -164,12 +193,28 @@
                         }else{
                             that.showpermission = true
                         }
-                    })
+                    }).catch(() => { uni.hideLoading() })
                 }else{
                     uni.navigateTo({
                         url: "../message/setting/setting"
                     })
                 }   
+            },
+            loadStaffRoom() {
+                getStaffRoom().then(res => {
+                    if (res.code == 200) {
+                        this.staffRoomOn    = res.data.room.is_on == 1
+                        this.staffRoomJoin  = res.data.my_join == 1
+                        this.staffRoomName  = res.data.room.name
+                        this.staffRoomAvatar = res.data.room.avatar
+                    }
+                }).catch(() => {})
+                getStaffRoomUnread().then(res => {
+                    if (res.code == 200) this.groupUnread = res.data.group_unread
+                }).catch(() => {})
+            },
+            toGroupChat() {
+                uni.navigateTo({ url: '../message/staffRoom/groupChat' })
             },
             goIndex() {
                 uni.switchTab({
@@ -187,14 +232,14 @@
                     uni.hideLoading()
                     uni.stopPullDownRefresh()
                     if (res.code == 200) {
-                        that.array = res.data.messages
+                        that.allMessages = res.data.messages
                     } else {
                         uni.showToast({
                             title: res.message,
                             icon: "none"
                         })
                     }
-                })
+                }).catch(() => { uni.hideLoading(); uni.stopPullDownRefresh() })
             },
             showTimePipe(unix_stamp) { // unix_stamp 精确到微秒
                 var _today_obj = new Date(),
@@ -287,6 +332,46 @@
 </script>
 
 <style lang="scss">
+    .staffRoomSection {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 28upx 32upx;
+        background: #fff;
+        border-bottom: 2upx solid #f0f0f0;
+        .srLeft {
+            display: flex;
+            align-items: center;
+        }
+        .srAvatar {
+            width: 90upx;
+            height: 90upx;
+            border-radius: 50%;
+            margin-right: 24upx;
+        }
+        .srName {
+            font-size: 32upx;
+            font-weight: bold;
+            color: #1D1D1F;
+        }
+        .srSub {
+            font-size: 24upx;
+            color: #86868B;
+            margin-top: 6upx;
+        }
+        .srBadge {
+            min-width: 44upx;
+            height: 44upx;
+            background: #D93025;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 44upx;
+            font-size: 24upx;
+            color: #fff;
+            padding: 0 10upx;
+        }
+    }
+
     .userName {
         font-size: 32upx;
         font-family: Hiragino Sans-W6, Hiragino Sans;

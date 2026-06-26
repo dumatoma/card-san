@@ -612,32 +612,29 @@
                 getStaffList(data).then((res) => {
                     if (res.code == 200) {
                         if (source == 1) {
-                            let temp = {}
-                            res.data.admins.forEach((v,i) => {
-                                console.log(v)
-                                console.log(that.todaystaff.id)
-                                if(v.id == that.todaystaff.id){
-                                    temp['color'] = v.color || "rgb(26, 115, 232)"
-                                    temp['id'] = v.id
-                                    temp['name'] = v.name
-                                    v.checked = true
-                                    // throw new Error("Loop terminated"); // 抛出异常终止循环
-                                }else{
-                                    temp['color'] = v.color || "rgb(26, 115, 232)"
-                                    temp['id'] = res.data.admins[0].id
-                                    temp['name'] = res.data.admins[0].name
-                                    temp['checked'] = false
-                                    v.checked = false
-                                }
+                            let matched = res.data.admins.find(v => v.id == that.todaystaff.id)
+                            res.data.admins.forEach((v, i) => {
                                 v.color = v.color || "rgb(26, 115, 232)"
-                                
-                                if(v.is_appoint == 1){
+                                v.checked = (v.id == that.todaystaff.id)
+                                if (v.is_appoint == 1) {
                                     ar.push(v)
                                 }
                             })
-                            console.log("p2",that.p2)
-                            that.todaystaff = temp
-                            that.p2  = ar
+                            if (matched) {
+                                that.todaystaff = {
+                                    color: matched.color || "rgb(26, 115, 232)",
+                                    id: matched.id,
+                                    name: matched.name
+                                }
+                            } else if (res.data.admins.length > 0) {
+                                let first = res.data.admins[0]
+                                that.todaystaff = {
+                                    color: first.color || "rgb(26, 115, 232)",
+                                    id: first.id,
+                                    name: first.name
+                                }
+                            }
+                            that.p2 = ar
                         } else {
                             let t = {}
                             let obb = []

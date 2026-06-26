@@ -2,14 +2,25 @@
     "name" : "CardSan管理",
     "appid" : "__UNI__40CEDE2",
     "description" : "",
-    "versionName" : "1.0.22",
-    "versionCode" : 1070,
+    "versionName" : "1.0.31",
+    "versionCode" : 1081,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
         "usingComponents" : true,
         "nvueStyleCompiler" : "uni-app",
         "compilerVersion" : 3,
+        "statusbar" : {
+            "background" : "#FBFBFD",
+            "immersed" : "supportedDevice",
+            "style" : "dark"
+        },
+        "safearea" : {
+            "background" : "#1D1D1F",
+            "bottom" : {
+                "offset" : "auto"
+            }
+        },
         "splashscreen" : {
             "alwaysShowBeforeRender" : true,
             "waiting" : false,
@@ -135,12 +146,12 @@
                 "androidStyle" : "default",
                 "iosStyle" : "storyboard",
                 "android" : {
-                    "hdpi" : "C:/Users/Administrator/Desktop/qidongtu/480_762.png",
-                    "xhdpi" : "C:/Users/Administrator/Desktop/qidongtu/720_1242.png",
-                    "xxhdpi" : "C:/Users/Administrator/Desktop/qidongtu/1080_1882.png"
+                    "hdpi" : "",
+                    "xhdpi" : "",
+                    "xxhdpi" : ""
                 },
                 "ios" : {
-                    "storyboard" : "C:/Users/Administrator/Desktop/qidongtu/店铺.zip"
+                    "storyboard" : "static/splash/LaunchScreen.zip"
                 },
                 "useOriginalMsgbox" : true
             },

@@ -111,6 +111,18 @@
             </view>
             <view class="itemRight"></view>
         </view>
+
+        <view class="settingItem" @click="toNext(9)">
+            <view class="itemLeft">
+                <view class="itemIcon">
+                    <image src="../../static/svg/setting_gbp.svg" mode="widthFix"></image>
+                </view>
+                <view class="itemName">
+                    Googleビジネス連携
+                </view>
+            </view>
+            <view class="itemRight"></view>
+        </view>
         <permission :show="showpermission" @close='showpermission = false'></permission>
     </view>
 </template>
@@ -227,7 +239,15 @@
                                 uni.navigateTo({
                                     url:"../settings/Administrators/Administrators"
                                 })
-                            }    
+                            }else if(e == 9){
+                                if(res.data.admin.privileges.includes(16)){
+                                    uni.navigateTo({
+                                        url:"../settings/gbp/gbp"
+                                    })
+                                }else{
+                                    that.showpermission = true
+                                }
+                            }
                         }
                     })
                 }else{
@@ -267,9 +287,13 @@
                         uni.navigateTo({
                             url:"../settings/Administrators/Administrators"
                         })
+                    }else if(e == 9){
+                        uni.navigateTo({
+                            url:"../settings/gbp/gbp"
+                        })
                     }
                 }
-                
+
             },
             changeMenuStatus(){
                 this.showMenu = !this.showMenu

@@ -16,7 +16,7 @@ Card-Sanは現在、Instagram連携・Googleマップ表示・チャット機能
 | 1 | Google Business Profile（GBP）データ連動 | jpshop |
 | 2 | Googleマップ クチコミ管理 | jpshop |
 | 3 | Instagram × GBP 投稿連動 | jpshop |
-| 4 | チャット AIカスタマーサービス | jpshop / jpcard |
+| 4 | スタッフルームチャット | jpshop |
 
 ---
 
@@ -29,7 +29,10 @@ Card-Sanは現在、Instagram連携・Googleマップ表示・チャット機能
 | Instagram OAuthフロー（`getInsUrl` → `bindIns`） | GBP OAuthも同パターンで実装 |
 | WebView容器（`webins.vue`） | GBP投稿プレビュー・Instagram投稿表示 |
 | WebSocket通知（`wss://wss.card-san.jp/wss`） | 新着クチコミのリアルタイム通知 |
-| チャット `messageType`（1=テキスト/2=画像/3=リンク） | type=4 でAIメッセージを追加 |
+| チャット `messageType`（1=テキスト/2=画像/3=リンク） | スタッフルームでも同じtype体系を流用 |
+| `pages/message/chat/chat.vue` | グループチャット・1対1チャット画面のベースとして流用 |
+| `pages/message/message.vue` | 上部にスタッフルームセクションを追加 |
+| `pages/message/userInfo/userInfo.vue` | 参加ON/OFF・1対1許可ON/OFF設定を追加 |
 | `reviewSetting.vue` | GBPクチコミ管理タブを統合 |
 | `shopInfo.vue` | GBP連携ボタンを追加 |
 
@@ -278,145 +281,121 @@ export const updateIntegrationSettings = (data) => request({ url: '/api/shop/goo
 
 ---
 
-### 機能4: チャット AIカスタマーサービス
+### 機能4: スタッフルームチャット
 
 #### 3.4.1 概要
 
-既存のチャット機能にAIを統合し、店舗側の応答効率と顧客満足度を向上させる。店舗側にはAI返信候補の提示と自動返信機能を、顧客側にはAI対応のUI表示を提供する。
+CardSan管理App（jpshop）の管理者・副管理者間の業務連絡専用グループチャット。LINEの職場利用問題（情報漏洩・ハラスメントリスク・心理的負担）を解決することを目的とする。
 
 #### 3.4.2 ユーザーストーリー
 
-- 店舗オーナー/スタッフとして、顧客からのよくある質問にはAIが返信候補を自動提示してほしい。候補を選んで少し編集するだけで素早く返信できる
-- 店舗オーナーとして、営業時間外の顧客メッセージにはAIが自動返信してほしい
-- 顧客として、AIが返信した場合はそれとわかるように表示してほしい
+- 店舗オーナーとして、スタッフとの業務連絡をCard-Sanアプリ内で完結させ、プライベートなLINEを使わずに済むようにしたい
+- 副管理者として、グループ全体への連絡と、必要に応じた1対1の業務連絡の両方を行いたい
+- 店舗オーナーとして、スタッフが1対1トークを許可するかどうかを各自で設定できるようにして、プライバシーを守りたい
 
-#### 3.4.3 機能詳細（jpshop 店舗側）
+#### 3.4.3 確定済み仕様
 
-**AI返信候補機能**
-
-| 要素 | 説明 |
+| 項目 | 仕様 |
 |-----|------|
-| AIボタン | チャット入力エリア横に「AI」アイコンボタンを配置 |
-| 候補表示 | 会話履歴を元にAIが3案を提示、ボトムシートで表示 |
-| 候補選択 | タップで入力エリアにコピー → 編集 → 送信 |
-| ローディング | AI生成中はスピナー表示（最大5秒） |
+| 1対1トーク送受信 | 送信者・受信者の**両者ともON**の場合のみ送信可能。片方がOFFの場合はボタンをグレーアウト |
+| 画像送信 | JPG/PNG・5MB上限・保存期間180日 |
+| テキスト保存期間 | 1年（既存個別チャットと同じ） |
+| 件数上限 | 無制限（既存個別チャットと同じ） |
+| 退職者のチャット履歴 | 副管理者アカウント削除と同時にチャット履歴も削除 |
 
-**AI自動返信機能**
+#### 3.4.4 対象ユーザーと権限
 
-| 要素 | 説明 |
-|-----|------|
-| 自動返信ON/OFF | チャット設定画面（`message/setting/setting.vue`）にトグル追加 |
-| 時間帯設定 | 「常時」「営業時間外のみ」「カスタム時間帯」 |
-| 待機時間設定 | スタッフが未読の場合、X分後に自動返信（5/10/30分） |
-| AI学習データ | 店舗情報・メニュー・営業時間・FAQ（設定から入力） |
-
-**AI FAQ管理**（新規設定画面）
-
-| 要素 | 説明 |
-|-----|------|
-| よくある質問登録 | 質問例と回答を自由に追加（最大50件） |
-| 自動取得 | 店舗情報・メニューからAIが自動でFAQ候補を生成 |
-| 有効/無効 | 各FAQのON/OFF切り替え |
-
-#### 3.4.4 機能詳細（jpcard 会員側）
-
-**AIメッセージ表示**
-
-- 既存の `messageType` を拡張（type=4 = AIメッセージ）
-- AIが返信したメッセージに「AI」バッジを表示
-- バッジデザイン：グレー背景に「AI」テキスト
-
-**AIクイックリプライ**
-
-- チャット画面に「AIに質問する」ショートカットボタンを常時表示
-- タップで「予約したい」「メニューを知りたい」「営業時間は？」等のクイックリプライ選択肢を表示
-- 選択するとそのままチャットに送信
+| ロール | 権限 |
+|------|------|
+| 主管理者 | スタッフルームの作成・ON/OFF・ルーム名・アイコン設定。参加・1対1設定も可 |
+| 副管理者 | スタッフルームへの参加ON/OFF・1対1トーク許可ON/OFFのみ設定可 |
 
 #### 3.4.5 UI要件
 
-**jpshop チャット画面改修** (`pages/message/chat/chat.vue`)
+**UI-1: メッセージ設定画面**（`pages/message/setting/setting.vue` 改修）
+- 主管理者のみ「スタッフルーム」メニュー項目を表示
 
-```
-[テキスト入力エリア] [AI] [画像] [送信]
-                     ↑
-                  AIアイコンボタン（新規追加）
-```
+**UI-2: スタッフルーム作成画面**（新規: `pages/message/staffRoom/staffRoom.vue`）
+- スタッフルームを設定するON/OFFトグル（デフォルトON）
+- アイコン設定（未設定時はデフォルトグループアイコン表示）
+- ルーム名入力
+- 保存ボタン
 
-AIボトムシート表示:
-```
-┌──────────────────────────────┐
-│ AI返信候補                    │
-├──────────────────────────────┤
-│ ① ご来店ありがとうございます…  │ ← タップで選択
-│ ② お問い合わせいただき…       │
-│ ③ 承知いたしました…           │
-└──────────────────────────────┘
-```
+**UI-3: メッセージアカウント情報画面**（`pages/message/userInfo/userInfo.vue` 改修）
+- 「スタッフルームチャット設定」セクションを追加
+- 「スタッフルームに参加する」ON/OFF（デフォルトON）
+- 「1対1のトークを許可する」ON/OFF（デフォルトOFF）
 
-**jpshop チャット設定画面改修** (`pages/message/setting/setting.vue`)
+**UI-4: メッセージ一覧画面**（`pages/message/message.vue` 改修）
+- スタッフルームON時、一覧上部に「スタッフルーム」セクションを表示
+- グループルーム行：アイコン・ルーム名・参加人数・最新メッセージ・未読バッジ
+- 1対1トーク行：相手アイコン・名前・最新メッセージ
 
-```
-AI自動返信             [ON ●]
- └ 対応時間帯          [営業時間外のみ ▼]
- └ 自動返信まで        [10分後 ▼]
+**UI-5: グループチャット画面**（`pages/message/chat/chat.vue` ベースに流用）
+- 全参加メンバーのグループチャット
+- テキスト・画像（カメラ/ライブラリ）送信
+- ヘッダー右の「…」ボタンでメンバー一覧へ遷移
 
-AI FAQ管理             [設定する >]
-```
+**UI-6: メンバー一覧画面**（新規: `pages/message/staffRoom/members.vue`）
+- 「あなた」（自分）セクション
+- 「グループメンバー」セクション：参加中の他メンバー一覧
+- 各メンバーに1対1チャットボタン（相手がOFFの場合はグレーアウト）
 
-**jpcard チャット画面改修** (`pagesA/message/chat.vue`)
+**UI-7: 1対1アテンション確認ダイアログ**
+- 「この人に1対1メッセージを送りますか？」確認モーダル
+- 「業務連絡のみに使用してください。不要な使用は禁止されています。」の注意文
+- 「1対1メッセージを送る」「キャンセル」ボタン
 
-```
-[AIに質問する ✦]                ← 常時表示ボタン
-
-── AI返信メッセージ例 ──
-[AI] ご予約は毎日9:00〜19:00...
-```
+**UI-8: 1対1チャット画面**（`pages/message/chat/chat.vue` ベースに流用）
+- 送信後、メッセージ一覧のスタッフルームセクションに相手との履歴が表示される
 
 #### 3.4.6 必要なAPI（後端追加）
 
 | メソッド | パス | 説明 |
 |---------|-----|------|
-| POST | `/api/shop/ai/suggest_reply` | AI返信候補生成（会話履歴を送信） |
-| GET/PUT | `/api/shop/ai/settings` | AI自動返信設定の取得/保存 |
-| GET | `/api/shop/ai/faq` | FAQ一覧取得 |
-| POST | `/api/shop/ai/faq` | FAQ追加 |
-| PUT | `/api/shop/ai/faq/{id}` | FAQ編集 |
-| DELETE | `/api/shop/ai/faq/{id}` | FAQ削除 |
-| POST | `/api/member/ai/quick_reply` | クイックリプライ選択肢取得 |
+| GET/PUT | `/api/shop/staff_room/settings` | スタッフルーム設定の取得・保存（主管理者） |
+| GET | `/api/shop/staff_room/members` | メンバー一覧取得 |
+| GET/PUT | `/api/shop/staff_room/my_settings` | 自分の参加・1対1設定の取得・保存 |
+| GET | `/api/shop/staff_room/messages` | グループチャット履歴取得 |
+| POST | `/api/shop/staff_room/messages` | グループチャットメッセージ送信 |
+| GET | `/api/shop/staff_room/dm` | 1対1チャット履歴取得 |
+| POST | `/api/shop/staff_room/dm` | 1対1メッセージ送信 |
 
-#### 3.4.7 フロントエンド追加API
-
-**jpshop/api/index.js**
+#### 3.4.7 フロントエンド追加API（`jpshop/api/index.js`）
 
 ```js
-export const getAISuggestReply = (data) => request({ url: '/api/shop/ai/suggest_reply', method: 'post', data })
-export const getAISettings = () => request({ url: '/api/shop/ai/settings', method: 'get' })
-export const updateAISettings = (data) => request({ url: '/api/shop/ai/settings', method: 'put', data })
-export const getAIFaqList = () => request({ url: '/api/shop/ai/faq', method: 'get' })
-export const addAIFaq = (data) => request({ url: '/api/shop/ai/faq', method: 'post', data })
-export const editAIFaq = (id, data) => request({ url: `/api/shop/ai/faq/${id}`, method: 'put', data })
-export const deleteAIFaq = (id) => request({ url: `/api/shop/ai/faq/${id}`, method: 'delete' })
+export const getStaffRoomSettings = () => request({ url: '/api/shop/staff_room/settings', method: 'get' })
+export const updateStaffRoomSettings = (data) => request({ url: '/api/shop/staff_room/settings', method: 'put', data })
+export const getStaffRoomMembers = () => request({ url: '/api/shop/staff_room/members', method: 'get' })
+export const getMyStaffRoomSettings = () => request({ url: '/api/shop/staff_room/my_settings', method: 'get' })
+export const updateMyStaffRoomSettings = (data) => request({ url: '/api/shop/staff_room/my_settings', method: 'put', data })
+export const getStaffRoomMessages = (params) => request({ url: '/api/shop/staff_room/messages', method: 'get', params })
+export const sendStaffRoomMessage = (data) => request({ url: '/api/shop/staff_room/messages', method: 'post', data })
+export const getStaffRoomDM = (params) => request({ url: '/api/shop/staff_room/dm', method: 'get', params })
+export const sendStaffRoomDM = (data) => request({ url: '/api/shop/staff_room/dm', method: 'post', data })
 ```
 
-**jpcard/api/index.js**
-
-```js
-export const getAIQuickReplies = (sid) => request({ url: `/api/member/ai/quick_reply?sid=${sid}`, method: 'get' })
-```
-
-#### 3.4.8 AIメッセージWebSocket通知フォーマット
+#### 3.4.8 WebSocket通知フォーマット（スタッフルーム新着）
 
 ```json
 {
-  "type": "message",
+  "type": "staff_room_message",
   "data": {
-    "message_type": 4,
-    "content": "ご質問ありがとうございます。営業時間は...",
-    "is_ai": true,
-    "created_at": "2026-04-24T10:00:00Z"
+    "room_type": "group",
+    "sender_name": "管理者",
+    "content": "明日のスケジュールを確認してください",
+    "created_at": "2026-05-08T10:00:00Z"
   }
 }
 ```
+
+#### 3.4.9 実装方針（流用 vs 新規）
+
+| 区分 | 内容 |
+|-----|------|
+| 流用 | WebSocket接続・`chat.vue`チャットUI・画像アップロード・UniPush通知 |
+| 改修 | `message.vue`（スタッフルームセクション追加）・`setting.vue`（入口追加）・`userInfo.vue`（設定追加） |
+| 新規 | `staffRoom.vue`（ルーム設定）・`members.vue`（メンバー一覧）|
 
 ---
 
@@ -427,7 +406,8 @@ export const getAIQuickReplies = (sid) => request({ url: `/api/member/ai/quick_r
 | jpshop | `pages/settings/gbpSetting/gbpSetting.vue` | GBP連携設定 | 新規 |
 | jpshop | `pages/message/gbpReviews/gbpReviews.vue` | GBPクチコミ管理 | 新規 |
 | jpshop | `pages/settings/socialMedia/socialMedia.vue` | SNS統合管理・投稿 | 新規 |
-| jpshop | `pages/message/aiFaqSetting/aiFaqSetting.vue` | AI FAQ管理 | 新規 |
+| jpshop | `pages/message/staffRoom/staffRoom.vue` | スタッフルーム設定 | 新規 |
+| jpshop | `pages/message/staffRoom/members.vue` | スタッフルームメンバー一覧 | 新規 |
 
 ---
 
@@ -447,19 +427,18 @@ export const getAIQuickReplies = (sid) => request({ url: `/api/member/ai/quick_r
 ## 6. 優先度・フェーズ計画
 
 ### フェーズ1（最優先）
-- **機能4**: チャット AI返信候補（jpshop）
-- **機能4**: AIメッセージバッジ表示（jpcard）
-- 理由: 既存チャットへの追加のため影響範囲が小さく、効果が即時
+- **機能4**: スタッフルームグループチャット（基本機能）
+- 理由: 既存WebSocket・チャットUIを流用でき、影響範囲が限定的
 
 ### フェーズ2
+- **機能4**: 1対1チャット機能
 - **機能1**: GBP OAuth連携・基本情報同期
 - **機能2**: GBPクチコミ一覧・返信
 - 理由: GBP OAuth実装後にクチコミ機能を追加できる
 
 ### フェーズ3
 - **機能3**: Instagram × GBP 投稿連動
-- **機能4**: AI自動返信・FAQ管理
-- 理由: 依存機能（GBP OAuth・AI基礎）の完成後に実装
+- 理由: 依存機能（GBP OAuth）の完成後に実装
 
 ---
 
@@ -471,6 +450,6 @@ export const getAIQuickReplies = (sid) => request({ url: `/api/member/ai/quick_r
 |-------------|------|
 | Google OAuth 2.0 クライアント | GBP連携用（`business.manage`スコープ） |
 | Google My Business API クライアント | 店舗情報・クチコミ・投稿の読み書き |
-| AIサービス連携 | LLM API（例: OpenAI GPT / Claude API）との統合 |
+| スタッフルームメッセージ管理 | グループ・1対1メッセージの保存・配信・未読管理 |
 | クチコミWebhook | GBPの新着クチコミをWebSocketで配信する仕組み |
-| トークン暗号化保存 | GBP・Instagram・AI APIキーの安全な管理 |
+| トークン暗号化保存 | GBP・Instagram APIキーの安全な管理 |

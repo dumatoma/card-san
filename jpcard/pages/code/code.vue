@@ -46,7 +46,6 @@
             },
             finish(e) {
                 this.dis = false
-                console.log("e",e)
             },
             toRegister() {
                 let that = this

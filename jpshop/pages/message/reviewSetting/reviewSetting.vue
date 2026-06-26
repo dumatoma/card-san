@@ -36,6 +36,18 @@
                 </view>
             </view>
             
+            <!-- GBPクチコミ管理リンク -->
+            <view class="gbpSection" @click="toGBPReviews">
+                <view class="gbpRow">
+                    <image src="../../../static/svg/google_g.svg" class="gbpIcon" mode="aspectFit"></image>
+                    <view class="gbpText">
+                        <view class="gbpTitle">Googleクチコミを管理</view>
+                        <view class="gbpSub">返信・統計の確認ができます</view>
+                    </view>
+                    <text class="gbpArrow">›</text>
+                </view>
+            </view>
+
             <view class="secondPart">
                 <view class="fptitle">
                     お店のGoogleビジネスプロフィールのレビュー用リンクURLを貼り付けてください
@@ -73,13 +85,15 @@
             getShop(){
                 let that = this
                 getShopInfo().then((res) => {
-                    console.log(res)
                     if(res.code == 200){
                         that.current = res.data.shop_info.comment_button_style * 1 - 1
                         that.image = res.data.shop_info.comment_button_style2_image
                         that.des = res.data.shop_info.comment_button_url
                     }
-                })
+                }).catch(() => {})
+            },
+            toGBPReviews() {
+                uni.navigateTo({ url: '/pages/message/gbpReviews/gbpReviews' })
             },
             openURL() {
                 // #ifdef APP-PLUS
@@ -107,7 +121,7 @@
                             icon:"none"
                         })
                     }
-                })
+                }).catch(() => {})
             },
             chooseImage() {
                 let that = this
@@ -137,6 +151,29 @@
 </script>
 
 <style lang="scss">
+    .gbpSection {
+        margin: 40rpx 46rpx 0;
+        background: #fff;
+        border-radius: 16rpx;
+        border: 2rpx solid #E8F0FE;
+        overflow: hidden;
+    }
+    .gbpRow {
+        display: flex;
+        align-items: center;
+        padding: 30rpx;
+    }
+    .gbpIcon {
+        width: 56rpx;
+        height: 56rpx;
+        margin-right: 20rpx;
+        flex-shrink: 0;
+    }
+    .gbpText { flex: 1; }
+    .gbpTitle { font-size: 30rpx; color: #1D1D1F; margin-bottom: 6rpx; }
+    .gbpSub { font-size: 24rpx; color: #86868B; }
+    .gbpArrow { font-size: 36rpx; color: #ccc; }
+
     .inner{
         width: 100%;
         height: 100%;

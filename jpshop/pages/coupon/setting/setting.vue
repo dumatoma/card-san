@@ -9,6 +9,14 @@
                     <text>{{searchNumber}}</text>/{{totalMember}}
                 </view>
             </view>
+            <view class="memCount" style="margin-top: 12upx;">
+                <view class="mem1">
+                    配信数
+                </view>
+                <view class="mem2" :style="couponUsedCount >= couponMaxCount ? 'color:#D93025' : ''">
+                    <text>{{couponUsedCount}}</text>/{{couponMaxCount}}
+                </view>
+            </view>
             <view class="appointSet">
                 <view>予約配信</view>
                 <u-switch v-model="value" activeColor="#34C759"></u-switch>
@@ -74,8 +82,32 @@
         </u-datetime-picker>
         <mod v-if="showModule" @getStatus="getStatus" :config="configs"></mod>
         <aleOne v-if="show1" :sendDate="date+time" :isToday="value" :number="searchNumber"></aleOne>
-        <aleTwo v-if="show2" :dates="date+time" :isToday="value" @confirm="buythis" @cancel="canThis"
-            :number="searchNumber"></aleTwo>
+        <aleTwo v-if="show2" @confirm="buythis" @cancel="canThis"></aleTwo>
+        <!-- Stripe契約者向け：アプリ内課金不可のため案内パネル -->
+        <view class="infoOverlay" v-if="showStripeInfo">
+            <view class="infoPanel">
+                <view class="infoPanelTitle">お支払いについて</view>
+                <scroll-view scroll-y="true" class="infoPanelScroll">
+                    <view class="infoPanelWarn">
+                        配信上限を超過しています。PCブラウザよりCard-Sanにログインしてお支払いをお願いします。[アカウント]→[ご契約]ページからお手続きが可能です。
+                    </view>
+                    <view class="infoPanelBtn" @click="showStripeInfo = false">上記内容を確認しました</view>
+                </scroll-view>
+            </view>
+        </view>
+        <!-- #ifdef H5 -->
+        <view class="infoOverlay" v-if="showAppInfo">
+            <view class="infoPanel">
+                <view class="infoPanelTitle">お支払いについて</view>
+                <view style="box-sizing:border-box;padding:40upx 34upx;">
+                    <view class="infoPanelWarn">
+                        Card-San管理アプリからご契約時の決済方法でお支払いをお願いします。
+                    </view>
+                    <view class="infoPanelBtn" @click="showAppInfo = false">上記内容を確認しました</view>
+                </view>
+            </view>
+        </view>
+        <!-- #endif -->
     </view>
 </template>
 
@@ -151,7 +183,12 @@
                 ids: ['premium_halfyear', 'premium_month', 'standard_halfyear', 'standard_month', 'light_halfyear',
                     'light_months', 'coupon'
                 ],
-                orid: ""
+                orid: "",
+                couponUsedCount: 0,
+                couponMaxCount: 3000,
+                vipCardType: 0,
+                showStripeInfo: false,
+                showAppInfo: false
             }
         },
 
@@ -222,15 +259,13 @@
         onShow() {
             let that = this
             getShopInfo().then((res) => {
-                let status = uni.getStorageSync("ale")
                 uni.hideLoading()
-                console.log(res)
                 if (res.code == 200) {
-                    that.smsid = res.data.vip_coupon_config.product_id
-                } else {
-
+                    that.couponUsedCount = res.data.coupon_count.coupon_count || 0
+                    that.couponMaxCount = res.data.vip_coupon_config.count || 3000
+                    that.vipCardType = (res.data.shop_info.vip && res.data.shop_info.vip.card_type) ? res.data.shop_info.vip.card_type : 0
                 }
-            })
+            }).catch(() => { uni.hideLoading() })
             that.sceenMember()
             getConfig().then((res) => {
                 if (res.code == 200) {
@@ -241,7 +276,7 @@
                         that.pid = res.data.config.vip_count.coupon.product_id[3]
                     }
                 }
-            })
+            }).catch(() => {})
             let csvData = uni.getStorageSync("csvData")
             if (csvData.birthday_month) {
                 that.tabs[0].title = csvData.birthday_month1
@@ -256,7 +291,7 @@
             }
 
             if (csvData.shop_time && csvData.shop_time_desc != 3) {
-                that.tabs[2].title = '前回来店から' + csvData.shop_time / 86400 + '日' + (csvData.shop_time_desc == 2 ?
+                that.tabs[2].title = '前回来店から' + csvData.shop_time / 86400 + '日' + (csvData.shop_time_desc == 1 ?
                     '以上経過' : '以内')
             } else {
                 that.tabs[2].title = '来店期間を設定'
@@ -330,7 +365,7 @@
                                     icon: "none"
                                 })
                             }
-                        })
+                        }).catch(() => { uni.hideLoading() })
                     },
                     fail: (e) => {
                         uni.showModal({
@@ -390,7 +425,6 @@
                     }
                 }
                 let smonths = months.join()
-                console.log("smonths", smonths)
                 if (csvData) {
                     data['birthday_month'] = smonths || ''
                     data['sex'] = csvData.sex || ''
@@ -414,7 +448,7 @@
                     if (res.code == 200) {
                         that.searchNumber = res.data.total
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             getAllmember() {
                 let that = this
@@ -435,67 +469,61 @@
                             that.totalMember = res.data.total
                         }
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             buythis(e) {
                 let that = this
-                uni.showLoading({
-                    title: "読み込み中"
-                })
+                that.show2 = false
+
+                // 副管理者は支払い不可
+                let admin = uni.getStorageSync("admin")
+                if (admin.admin_type == 2) {
+                    uni.showToast({ title: "実行する権限がありません", icon: "none" })
+                    return
+                }
+
+                // #ifdef APP-PLUS
+                // Stripe契約者はアプリ内課金不可
+                if (that.vipCardType == 1) {
+                    that.showStripeInfo = true
+                    return
+                }
+                // Apple/Google IAP
+                uni.showLoading({ title: "購入処理実施中..." })
                 let plat = uni.getStorageSync("platform")
                 if (plat != "ios") {
                     var pId = that.pid;
-                    let platform = plat == 'ios' ? 2 : 3
                     let orid = ''
                     let data = {}
                     data.type = 2
-                    data.card_type = platform
+                    data.card_type = 3
                     buyextras(data).then((res) => {
                         if (res.code == 200) {
                             orid = res.data.order_no
-                            googlePay.querySku({
-                                    inapp: [pId]
-                                },
-                                (e) => {
-                                    if (e.code == 0) {
-                                        googlePay.pay({
-                                                productId: pId, // 产品id
-                                            },
-                                            (e) => {
-                                                if (e.msg == 'success') {
-                                                    let da = {}
-                                                    da.order_no = orid
-                                                    da.pay_token = e.data[0].original.purchaseToken
-                                                    da.product_id = pId
-                                                    buyextra(da).then((re) => {
-                                                        uni.hideLoading()
-                                                        if (re.code == 200) {
-                                                            uni.showToast({
-                                                                title: re.message,
-                                                                duration: 2500,
-                                                                icon: "none"
-                                                            })
-                                                            that.show2 = false
-                                                        } else {
-                                                            uni.showToast({
-                                                                title: re.message,
-                                                                icon: "none"
-                                                            })
-                                                        }
-                                                    })
+                            googlePay.querySku({ inapp: [pId] }, (e) => {
+                                if (e.code == 0) {
+                                    googlePay.pay({ productId: pId }, (e) => {
+                                        if (e.msg == 'success') {
+                                            let da = {}
+                                            da.order_no = orid
+                                            da.pay_token = e.data[0].original.purchaseToken
+                                            da.product_id = pId
+                                            buyextra(da).then((re) => {
+                                                uni.hideLoading()
+                                                if (re.code == 200) {
+                                                    uni.showToast({ title: re.message, duration: 2500, icon: "none" })
+                                                } else {
+                                                    uni.showToast({ title: re.message, icon: "none" })
                                                 }
-                                            }
-                                        );
-                                    } else {
-                                        //查询失败
-                                        uni.showToast({
-                                            title: 'querySku fail,' + e
-                                        })
-                                    }
+                                            }).catch(() => { uni.hideLoading() })
+                                        }
+                                    })
+                                } else {
+                                    uni.showToast({ title: 'querySku fail,' + e })
                                 }
-                            );
+                            })
                         }
-                    })
+                    }).catch(() => { uni.hideLoading() })
                 } else {
                     let data = {}
                     data.type = 2
@@ -505,9 +533,34 @@
                             that.getChannels()
                             that.orid = res.data.order_no
                         }
-                    })
+                    }).catch(() => { uni.hideLoading() })
                 }
+                // #endif
 
+                // #ifdef H5
+                if (that.vipCardType == 1) {
+                    // Stripe: 発注してStripe決済URLへリダイレクト
+                    uni.showLoading({ title: "処理中..." })
+                    let data = {}
+                    data.type = 2
+                    data.card_type = 1
+                    buyextras(data).then((res) => {
+                        if (res.code == 200) {
+                            payExtra({ order_no: res.data.order_no }).then((payRes) => {
+                                uni.hideLoading()
+                                if (payRes.code == 200 && payRes.data.url) {
+                                    window.location.href = payRes.data.url
+                                }
+                            })
+                        } else {
+                            uni.hideLoading()
+                        }
+                    })
+                } else {
+                    // アプリ決済契約者はアプリから支払い
+                    that.showAppInfo = true
+                }
+                // #endif
             },
             canThis(e) {
                 this.show2 = false
@@ -536,7 +589,6 @@
 
                     let config = uni.getStorageSync("csvData")
                     let info = uni.getStorageSync("couponInfo")
-                    console.log("co", config)
                     let birthday = config.birthday_month
                     let sexStr = config.sex
                     //  if(config.birthday_month){
@@ -608,7 +660,7 @@
                                     icon: "none"
                                 })
                             }
-                        })
+                        }).catch(() => {})
                     } else {
                         addCoupon(data).then((res) => {
                             if (res.code == 200) {
@@ -632,7 +684,7 @@
                                     icon: "none"
                                 })
                             }
-                        })
+                        }).catch(() => {})
                     }
                 }
             },
@@ -721,7 +773,7 @@
                     if (res.code == 200) {
                         that.member = res.data.total
                     }
-                })
+                }).catch(() => {})
 
             }
         }
@@ -911,6 +963,64 @@
             margin-top: 40upx;
             border-bottom: 2upx solid #d2d2d7;
             padding-bottom: 22upx;
+        }
+    }
+
+    .infoOverlay {
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 999;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .infoPanel {
+        width: 100vw;
+        height: 90vh;
+        background: #fff;
+
+        .infoPanelTitle {
+            width: 100%;
+            height: 112upx;
+            background: #eaeaea;
+            text-align: center;
+            line-height: 112upx;
+            font-size: 32rpx;
+            font-weight: bold;
+            color: #1D1D1F;
+        }
+
+        .infoPanelScroll {
+            height: calc(90vh - 112upx);
+            box-sizing: border-box;
+            padding: 40upx 34upx;
+        }
+
+        .infoPanelWarn {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 32upx;
+            font-size: 32rpx;
+            font-weight: bold;
+            color: #1D1D1F;
+            background: rgba(230, 191, 24, 0.5);
+        }
+
+        .infoPanelBtn {
+            width: 100%;
+            height: 112upx;
+            line-height: 112upx;
+            background: #06C755;
+            border-radius: 56rpx;
+            text-align: center;
+            color: #fff;
+            font-size: 40rpx;
+            font-weight: bold;
+            margin-top: 100upx;
         }
     }
 </style>

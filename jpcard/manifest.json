@@ -2,8 +2,8 @@
     "name" : "Card-San",
     "appid" : "__UNI__1ED8C1A",
     "description" : "Card-San",
-    "versionName" : "1.1.1",
-    "versionCode" : 1066,
+    "versionName" : "1.1.2",
+    "versionCode" : 1067,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
@@ -78,6 +78,7 @@
             },
             /* ios打包配置 */
             "ios" : {
+                "bundleId" : "com.cardsan.customer",
                 "dSYMs" : false,
                 "idfa" : false,
                 "privacyDescription" : {
@@ -114,7 +115,8 @@
                 "share" : {},
                 "push" : {
                     "unipush" : {
-                        "offline" : false,
+                        "offline" : true,
+                        "fcm" : {},
                         "icons" : {
                             "small" : {
                                 "ldpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/用户端 icon/Card-San App_icon_ios/16x16.png",
@@ -172,14 +174,14 @@
             "splashscreen" : {
                 "androidStyle" : "default",
                 "android" : {
-                    "hdpi" : "F:/桌面文件/qidongtu/480_762-1.png",
-                    "xhdpi" : "F:/桌面文件/qidongtu/720_1242-1.png",
-                    "xxhdpi" : "F:/桌面文件/qidongtu/1080_1882-1.png"
+                    "hdpi" : "static/splash/480_762.png",
+                    "xhdpi" : "static/splash/720_1242.png",
+                    "xxhdpi" : "static/splash/1080_1882.png"
                 },
                 "useOriginalMsgbox" : false,
                 "iosStyle" : "storyboard",
                 "ios" : {
-                    "storyboard" : "F:/桌面文件/日本最新启动/启动图/用户/用户.zip"
+                    "storyboard" : "static/splash/LaunchScreen.zip"
                 }
             }
         },

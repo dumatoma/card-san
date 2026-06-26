@@ -219,7 +219,7 @@
                                 }
                             })
                         }
-                    })
+                    }).catch(() => {})
                 }
             },
             getDate() {
@@ -235,7 +235,7 @@
                     if (res.code == 200) {
                         that.user = res.data.member
                     }
-                })
+                }).catch(() => {})
             },
             isCheck() {
                 if (this.checked == true) {
@@ -262,7 +262,6 @@
                 data.said = that.query.staff * 1
                 data.remark = that.text
                 setOrder(data).then((res) => {
-                    console.log("resk", res)
                     if (res.code == 200) {
 
                         uni.removeStorageSync("orderTime")
@@ -281,7 +280,7 @@
                             icon: "none"
                         })
                     }
-                })
+                }).catch(() => { that.loads = false })
 
                 // uni.navigateTo({
                 //     url: '../../pagesA/completed/completed'

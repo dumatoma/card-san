@@ -113,9 +113,9 @@
                     if (res.code == 200) {
                         that.getList()
                     } else {
-                       
+                        uni.hideLoading()
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             swapArrayElements(arr, indexA, indexB) {
                 const temp = arr[indexA];
@@ -133,7 +133,7 @@
                     if (res.code == 200) {
                         that.array = res.data.cates
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             addMenu() {
                 this.source = "add"
@@ -155,7 +155,7 @@
                             icon: "none"
                         })
                     }
-                })
+                }).catch(() => {})
             },
             edit(id,name){
               let that = this
@@ -183,7 +183,7 @@
                                 icon: "none"
                             })
                         }
-                    })
+                    }).catch(() => {})
                 }else if(that.source == "edit"){
                     let data = {}
                     data._method = "put"
@@ -198,7 +198,7 @@
                             })
                             that.getList()
                         }
-                    })
+                    }).catch(() => {})
                 }
                 
             }

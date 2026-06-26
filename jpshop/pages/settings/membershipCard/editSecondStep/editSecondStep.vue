@@ -1126,7 +1126,7 @@
                             icon:"none"
                         })
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
 
         }

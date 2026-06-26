@@ -205,7 +205,6 @@
                             return
                         }
                         menuList(data).then((result) => {
-                            console.log("result",result)
                             let a1 = []
                             res.data.cates.forEach((val, index) => {
                                 let obj = {}

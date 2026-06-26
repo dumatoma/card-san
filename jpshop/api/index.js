@@ -305,7 +305,7 @@ export const getAdminDetail = (id) => {
 export const eidtAdmin = (data, id) => {
     return request({
         url: "/api/shop/admin/" + id,
-        method: "post",
+        method: "put",
         data: data
     })
 }
@@ -1001,4 +1001,54 @@ export const reviewSetting = (data) => {
         data:data
     })
 }
+
+// ===== スタッフルーム =====
+export const getStaffRoom = () => {
+    return request({ url: "/api/shop/staff_room", method: "get" })
+}
+export const updateStaffRoomSettings = (data) => {
+    return request({ url: "/api/shop/staff_room/room", method: "post", data })
+}
+export const updateStaffRoomMember = (data) => {
+    return request({ url: "/api/shop/staff_room/member", method: "put", data })
+}
+export const getStaffRoomMessages = (params) => {
+    return request({ url: "/api/shop/staff_room/messages", method: "get", data: params })
+}
+export const sendStaffRoomMessage = (data) => {
+    return request({ url: "/api/shop/staff_room/messages", method: "post", data })
+}
+export const readStaffRoomMessages = () => {
+    return request({ url: "/api/shop/staff_room/messages/read", method: "post" })
+}
+export const getStaffDmMessages = (adminId, params) => {
+    return request({ url: "/api/shop/staff_room/dm/" + adminId, method: "get", data: params })
+}
+export const sendStaffDm = (data) => {
+    return request({ url: "/api/shop/staff_room/dm", method: "post", data })
+}
+export const readStaffDm = (data) => {
+    return request({ url: "/api/shop/staff_room/dm/read", method: "post", data })
+}
+export const getStaffRoomUnread = () => {
+    return request({ url: "/api/shop/staff_room/unread", method: "get" })
+}
+
+// ===== Google Business Profile =====
+export const getGBPAuthUrl = () => request({ url: '/api/shop/google_business/get_auth_url', method: 'get' })
+export const bindGBP = (data) => request({ url: '/api/shop/google_business/create_access_token', method: 'post', data })
+export const getGBPStatus = () => request({ url: '/api/shop/google_business/status', method: 'get' })
+export const disconnectGBP = () => request({ url: '/api/shop/google_business/disconnect', method: 'delete' })
+export const getGBPInfo = () => request({ url: '/api/shop/google_business/info', method: 'get' })
+export const updateGBPSettings = (data) => request({ url: '/api/shop/google_business/settings', method: 'put', data })
+export const getGBPReviews = (data) => request({ url: '/api/shop/google_business/reviews', method: 'get', data })
+export const getGBPReviewStats = () => request({ url: '/api/shop/google_business/reviews/stats', method: 'get' })
+export const replyGBPReview = (id, data) => request({ url: '/api/shop/google_business/reviews/' + id + '/reply', method: 'post', data })
+export const deleteGBPReply = (id) => request({ url: '/api/shop/google_business/reviews/' + id + '/reply', method: 'delete' })
+export const getGBPPosts = (data) => request({ url: '/api/shop/google_business/posts', method: 'get', data })
+export const createGBPPost = (data) => request({ url: '/api/shop/google_business/posts', method: 'post', data })
+export const deleteGBPPost = (id) => request({ url: '/api/shop/google_business/posts/' + id, method: 'delete' })
+export const syncInsToGBP = (data) => request({ url: '/api/shop/google_business/posts/sync_instagram', method: 'post', data })
+export const getIntegrationSettings = () => request({ url: '/api/shop/google_business/integration/settings', method: 'get' })
+export const updateIntegrationSettings = (data) => request({ url: '/api/shop/google_business/integration/settings', method: 'put', data })
 

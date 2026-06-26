@@ -25,7 +25,7 @@
                     </view>
                     <view class="cTop" v-if="isexpire == false">
                         ご利用中のプラン：<text class="bd"
-                            style="font-size: 32upx;">{{vip.type == 1?"ライト" : vip.type == 2?"スタンダード" : vip.type == 3?"プレミアム":''}}</text>
+                            style="font-size: 32upx;">{{(vip||{}).type == 1?"ライト" : (vip||{}).type == 2?"スタンダード" : (vip||{}).type == 3?"プレミアム":''}}</text>
                     </view>
                     <view class="cBottom bl" @click="changeT">
                         プランを変更
@@ -44,7 +44,7 @@
                         お支払い周期：<text class="bd">{{vips[0].month}}ヶ月</text>
                     </view>
                     <view class="cTop" v-else>
-                        お支払い周期：<text class="bd">{{vip.month}}ヶ月</text>
+                        お支払い周期：<text class="bd">{{(vip||{}).month}}ヶ月</text>
                     </view>
                     <view class="cBottom bl" @click="changeZ">
                         お支払い周期を変更
@@ -84,7 +84,7 @@
                         お支払い方法
                     </view>
                     <view class="cBottom" style="text-align: left !important;"
-                        v-text="vips[0].is_try == 1?'-':'App 課金'"></view>
+                        v-text="vips[0].is_try == 1 ? '-' : vips[0].card_type == 1 ? 'クレジットカード' : vips[0].card_type == 2 ? 'Apple App Store' : 'Google Play'"></view>
                 </view>
                 <view class="citem" v-else>
                     <view class="cTop">
@@ -178,7 +178,7 @@
                     })
                 }else{
                     uni.navigateTo({
-                        url: "/pages/payment/payment?type="+this.vip.type
+                        url: "/pages/payment/payment?type="+((this.vip||{}).type||1)
                     })
                 }
             },
@@ -294,7 +294,7 @@
                         that.vip = res.data.shop_info.last_vip
                     }
                     uni.hideLoading()
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             tobuy() {
                 uni.navigateTo({

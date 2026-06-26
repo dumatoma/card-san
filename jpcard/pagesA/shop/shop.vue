@@ -262,29 +262,26 @@
             }else{
                 that.current = 'My Card'
             }
-            console.log("options",options)
             let query = options
-            
+
             that.query = query
             setTimeout(() => {
                  that.getInfo()
             },500)
             getUnreadNum(query.id).then((res) => {
-               
                 if(res.code == 200){
                     if(res.data.unread_num < 100){
                         that.number = res.data.unread_num
                     }else{
                         that.number = "99+"
                     }
-                    
                 }
-            })
+            }).catch(() => {})
             getMewCoupon(query.id).then((res) => {
                 if(res.code == 200){
                     that.number1 = res.data.count
                 }
-            })  
+            }).catch(() => {})
         },
         onPageScroll(res) {
             // uni.$emit('onPageScroll', res.scrollTop);//传递参数
@@ -306,7 +303,6 @@
                 this.bottom = 25
                 // 获取店铺信息
                 getShopInfo(that.query.id).then((res) => {
-                    console.log("info",res)
                     if (res.code == 200) {
                         let temp = []
                         let notice = {
@@ -375,16 +371,16 @@
                                         uni.setStorageSync("inslist",result.data.medias.length)
                                     }
                                 }
-                            })
+                            }).catch(() => {})
                         }else{
                             getNewNotice(that.query.id).then((res) => {
                                 if(res.code == 200){
                                     that.number2 = res.data.count
                                 }
-                            })
-                        }   
+                            }).catch(() => {})
+                        }
                     }
-                })
+                }).catch(() => {})
             },
             changeTas(e) {
                 let that = this
@@ -405,9 +401,7 @@
             },
             changeTab(item) {
                 let that = this
-                console.log("tab",item)
                 if(item == 'メニュー'){
-                    console.log(that.shopInfo)
                     let ar = that.shopInfo.out_url.split("!@")
                     if(ar[1] == 1){
                         uni.navigateTo({

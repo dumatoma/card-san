@@ -59,7 +59,7 @@
                                 icon:"none"
                             })
                         }
-                    })
+                    }).catch(() => { that.btnloading = false })
                 }else{
                     let data = {}
                     data.phone = that.value
@@ -71,6 +71,7 @@
                                 url: "../code/code?source=" + that.query.source + "&phone=" + that.value+"&code="+res.data.code
                             })
                         }else{
+                            that.btnloading = false
                             uni.showToast({
                                 title:res.message,
                                 icon:"none",
@@ -80,7 +81,7 @@
                                 uni.navigateBack()
                             },1500)
                         }
-                    })
+                    }).catch(() => { that.btnloading = false })
                 } 
             }
         },

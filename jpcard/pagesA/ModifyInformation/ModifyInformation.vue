@@ -204,11 +204,10 @@
        let that = this
        // let user = uni.getStorageSync("user")
        getUserInfos().then((res) => {
-           console.log('inofs',res)
            if(res.code == 200){
                that.userinfo = res.data.user
            }
-       }) 
+       }).catch(() => {})
        let token = uni.getStorageSync("token")
        if(token){
            that.haslog = true
@@ -247,8 +246,7 @@
             uni.clearStorage()
             uni.removeStorageSync("token")
             uni.removeStorageSync("user")
-            localStorage.clear();
-            sessionStorage.clear();
+            uni.clearStorageSync();
             // JYGoogleSignin.jy_logout(res=> {
             // //  不会返回数据，调用就成功
             // })
@@ -267,9 +265,6 @@
                             icon:"none",
                             duration:2500
                         })
-                        // JYGoogleSignin.jy_logout(res=> {
-                        // //  不会返回数据，调用就成功
-                        // })
                         setTimeout(() => {
                             uni.redirectTo({
                                 url:"../../pages/login/login"
@@ -281,7 +276,7 @@
                             icon:"none"
                         })
                     }
-                })
+                }).catch(() => {})
             }else{
               that.showAlert1 = false
             }
@@ -292,7 +287,7 @@
                 if(res.code == 200){
                     that.userinfo = res.data.user
                 }
-            })
+            }).catch(() => {})
         },
         deleteAccount(){
           let that = this
@@ -326,7 +321,7 @@
             if(res.code == 200){
                 that.userinfo = res.data.user
             }
-        })
+        }).catch(() => {})
       },
       leftClick() {
         uni.navigateBack()
@@ -347,14 +342,14 @@
                     if(res.code == 200){
                         that.userinfo = res.data.user
                     }
-                })
+                }).catch(() => {})
             }else{
                 uni.showToast({
                     title:res.message,
                     icon:"none"
                 })
             }
-        })
+        }).catch(() => {})
       },
       timeConfirm(type, value) {
 
@@ -378,7 +373,7 @@
                  that.userinfo.province = res.data.address.address1
                  that.userinfo.address1 = res.data.address.address2 + res.data.address.address3
              }
-         })
+         }).catch(() => { uni.hideLoading() })
       }
     }
   }

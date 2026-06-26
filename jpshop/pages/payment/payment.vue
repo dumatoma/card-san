@@ -172,7 +172,8 @@
                 ids: ['premium_halfyear', 'premium_month', 'standard_halfyear','standard_month','light_halfyear','light_months'],
                 endDate:"",
                 timestamp:"",
-                refreshTime:""
+                refreshTime:"",
+                paying: false
             }
         },
         onLoad(options) {
@@ -188,7 +189,6 @@
                 googlePay.init({}, (e) => {
                     if (e.code == 0) {
                         // 初始化成功
-                        console.log("初始化成功")
                     } else {
                         // 初始化失败
                     }
@@ -201,7 +201,7 @@
                     that.timestamp = res.data.config.timestamp
                     that.getShopInfo()
                 }
-            })
+            }).catch(() => {})
         },
         methods: {
             formatPriceWithCommas(price) {
@@ -237,10 +237,9 @@
                     },
                     (errormsg) => {
                         uni.hideLoading()
-                        // plus.nativeUI.alert(errormsg, function(e) {}, "warning");
                         uni.showModal({
-                            title:"warning",
-                            content:JSON.stringify(errormsg)
+                            title: "エラー",
+                            content: errormsg && errormsg.message ? errormsg.message : "決済環境の取得に失敗しました。再度お試しください。"
                         })
                     }
                 )
@@ -249,6 +248,8 @@
             // 调起支付
             pay() {
                 let that = this
+                if (that.paying) return
+                that.paying = true
                 uni.requestPayment({
                     provider: 'appleiap',
                     orderInfo: {
@@ -281,22 +282,25 @@
                                     icon: "none"
                                 })
                             }
-                        })   
+                        }).catch((err) => {
+                            uni.hideLoading()
+                            uni.showToast({
+                                title: "通信エラーが発生しました。サポートにお問い合わせください。",
+                                icon: "none",
+                                duration: 3000
+                            })
+                        })
                     },
                     fail: (e) => {
                         uni.showModal({
-                            content: e,
+                            content: "支払いに失敗しました。再度お試しください。",
                             showCancel: false
                         })
-                        // uni.showModal({
-                        //     content: "支払いに失敗しました。再度お試しください。",
-                        //     showCancel: false
-                        // })
                         this.restoreComplateRequest();
                     },
                     complete: () => {
                         this.loading = false;
-                        
+                        that.paying = false
                     }
                 })
             },
@@ -328,22 +332,16 @@
             
             
             restoreComplateRequest() {
-                let that = this 
+                let that = this
                 this.iap.restoreComplateRequest({
                     manualFinishTransaction: true
                 }, results => {
-                    // results 格式为数组存放恢复的IAP商品交易信息对象 IAPTransaction，通用需将返回的支付凭证传给后端进行二次认证  
-                    // console.log('restoreComplateRequest-results---', results)
-                    
                     for(let i = 0;i < results.length;i++){
                         that.iap.finishTransaction(results[i], (success) => {
-                            }, (fail) => {
-                            });
+                        }, (fail) => {
+                        });
                     }
-                    
-                   
                 }, e => {
-                    // 错误回调
                 });
             },
             toxie(){
@@ -353,6 +351,14 @@
             },
             changeS(e) {
                 let that = this
+                that.show = false
+                // Stripeユーザーの降级/同等プランはアプリ内課金不可（PCブラウザ誘導のみ）
+                // 升级の場合はバックエンドがStripeキャンセル+返金するため許可
+                const hasActiveStripe = that.using.card_type == 1
+                    && that.vips.length > 0
+                    && that.vips[0].cancel_time == 0
+                const isUpgrade = Number(that.type) > Number(that.vips[0] ? that.vips[0].type : 0)
+                if (hasActiveStripe && !isUpgrade) return
                 let platform = uni.getStorageSync("platform")
                 let data = {}
                 data['type'] = that.type
@@ -368,7 +374,6 @@
                            var pId = res.data.parent_product_id;
                            let tep = []
                            tep.push(pId)
-                           console.log('pid=',tep)
                            googlePay.querySku({
                                    subs: tep
                                },
@@ -377,18 +382,21 @@
                                        if (e.list.length > 0) {
                                            var pd = e.list[0];
                                            var offerToken = '';
-                                           if (pd.subscriptionOfferDetails && pd.subscriptionOfferDetails
-                                               .length > 0) {
-                                               offerToken = pd.subscriptionOfferDetails[1].offerToken;
-                                               pd.subscriptionOfferDetails.forEach((v, i) => {
+                                           if (pd.subscriptionOfferDetails && pd.subscriptionOfferDetails.length > 0) {
+                                               // Bug Fix: 不要な [1] 決め打ちを削除し、basePlanId で正確に照合
+                                               pd.subscriptionOfferDetails.forEach((v) => {
                                                    if (v.basePlanId == res.data.product_id) {
                                                        offerToken = v.offerToken
                                                    }
                                                })
+                                               // basePlanId が一致しない場合は先頭を使用
+                                               if (!offerToken) {
+                                                   offerToken = pd.subscriptionOfferDetails[0].offerToken
+                                               }
                                            }
-                               
+
                                            googlePay.payAll({
-                                                   productId: pId, // 产品id
+                                                   productId: pId,
                                                    offerToken,
                                                    oldPurchaseToken: res.data.google_data.oldPurchaseToken,
                                                    replacementMode: res.data.google_data.replacementMode,
@@ -397,9 +405,15 @@
                                                },
                                                (e) => {
                                                    if (e.msg == 'success') {
+                                                       // Bug Fix: e.data 配列の存在チェック
+                                                       if (!e.data || e.data.length === 0 || !e.data[0].original) {
+                                                           uni.showToast({ title: "支払いデータの取得に失敗しました", icon: "none" })
+                                                           return
+                                                       }
                                                        let da = {}
                                                        da.svid = res.data.svid
                                                        da.pay_token = e.data[0].original.purchaseToken
+                                                       da.transaction_id = e.data[0].original.orderId || ''
                                                        uni.showLoading({
                                                            title:"読み込み中"
                                                        })
@@ -411,35 +425,48 @@
                                                                    duration:2500
                                                                })
                                                                setTimeout(() => {
-                                                                   uni.switchTab({
+                                                                   uni.reLaunch({
                                                                        url:"/pages/index/index"
                                                                    })
-                                                               },2500)
+                                                               },2000)
                                                            } else {
                                                                uni.showToast({
                                                                    title: re.message,
                                                                    icon: "none"
                                                                })
                                                            }
+                                                       }).catch((err) => {
+                                                           uni.hideLoading()
+                                                           uni.showToast({
+                                                               title: "通信エラーが発生しました。サポートにお問い合わせください。",
+                                                               icon: "none",
+                                                               duration: 3000
+                                                           })
+                                                       })
+                                                   } else {
+                                                       uni.showToast({
+                                                           title: "支払いに失敗しました。再度お試しください。",
+                                                           icon: "none",
+                                                           duration: 3000
                                                        })
                                                    }
                                                }
                                            );
                                        } else {
                                            uni.showToast({
-                                               title: "no Goods"
+                                               title: "商品情報が見つかりませんでした",
+                                               icon: "none"
                                            })
                                        }
                                    } else {
-                                       //查询失败
-                                       console.log(e)
+                                       uni.hideLoading()
                                        uni.showToast({
-                                           title: 'querySku fail,' + JSON.stringify(e),
+                                           title: "商品情報の取得に失敗しました。再度お試しください。",
                                            icon:"none"
                                        })
                                    }
                                }
-                           ); 
+                           );
                         }
                     } else {
                         uni.showToast({
@@ -447,12 +474,17 @@
                             icon: "none"
                         })
                     }
-                })
+                }).catch(() => {})
             },
             toSuccess1() {
                 let that = this
-                if(that.using.card_type == 1){
-                    // Stripe ユーザーはモバイルからプラン変更不可、PCブラウザを案内
+                const hasActiveStripe = that.using.card_type == 1
+                    && that.vips.length > 0
+                    && that.vips[0].cancel_time == 0
+                const isUpgrade = Number(that.type) > Number(that.vips[0] ? that.vips[0].type : 0)
+                // Stripeユーザーでも升级（アップグレード）はアプリ内課金で可能
+                // 降级/同等プランの場合のみPCブラウザへ誘導する
+                if(hasActiveStripe && !isUpgrade){
                     that.show = true
                     that.title = 'プラン・支払い周期の変更について'
                     that.content = 'お手数ではございますが、PCブラウザよりCard-Sanウェブサイトにログインしてプラン変更をお願いします。'
@@ -484,7 +516,7 @@
                             that.inp4 = res.data.cards[0].name
                         }
                     }
-                })
+                }).catch(() => {})
             },
             getPlanList(type) {
                 let that = this
@@ -495,7 +527,7 @@
                         that.price2 = res.data.vip_contract[type - 1].price[1]
                         that.price3 = res.data.vip_contract[type - 1].price[2]
                     }
-                })
+                }).catch(() => {})
             },
             chooseTime(e) {
                 let that = this
@@ -510,7 +542,6 @@
             calculateTime(newDate){
                 let that = this 
                 let dates = new Date(newDate)
-                console.log('dates',dates)
                 let result
                 if(that.current == 12){
                    result = dates.setFullYear(dates.getFullYear() + 1);
@@ -520,7 +551,6 @@
                     result = dates.setMonth(dates.getMonth() + 1);
                 }
                 that.refreshTime = that.getHalfYearLater(result)
-                console.log("result",result)
             },
             
             getShopInfo() {
@@ -533,10 +563,9 @@
                         that.calculateTime(res.data.shop_info.vips[0].end_timestamp * 1000)
                     }else{
                         that.endDate = ""
-                        console.log(333,that.timestamp*1000)
                         that.calculateTime(that.timestamp*1000)
                     }
-                })
+                }).catch(() => {})
             },
             // 计算半年后的日期
             getHalfYearLater(timestamp) {
@@ -548,7 +577,6 @@
               const minutes = date.getMinutes();
               const seconds = date.getSeconds();
               const formattedDate = `${year}年${month}月${day}日`;
-              console.log("formattedDate",formattedDate)
               return formattedDate;
             },
         }

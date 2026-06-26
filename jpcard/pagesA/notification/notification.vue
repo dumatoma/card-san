@@ -110,7 +110,6 @@
             let that = this
             that.svgData30 = that.changeColor(that.svgData30, that.color);
             that.getInfo()
-            console.log("noshow")
         },
         methods: {
             getMore() {
@@ -147,39 +146,36 @@
                             that.afrt = result.data.after
                             that.insList = [...that.insList, ...result.data.medias]
                         }
-                    })
+                    }).catch(() => { uni.hideLoading() })
                 }
 
             },
             getInfo() {
                 let that = this
                 getShopInfo(that.sid).then((res) => {
-                    that.type = res.data.shop.notice_type
                     if (res.code == 200) {
-                        if (res.data.shop.notice_type == 1) {
+                        // notice_type が未設定(null/0)のショップはデフォルトでお知らせ表示
+                        const noticeType = res.data.shop.notice_type || 1
+                        that.type = noticeType
+                        if (noticeType == 1) {
                             that.getList()
                         }
-                        if (res.data.shop.notice_type == 2) {
+                        if (noticeType == 2) {
                             let data = {}
                             data.sid = that.sid
                             data.after = that.afrt
                             getInsList(data).then((result) => {
-                                console.log("INS", result)
                                 if (result.code == 200) {
                                     that.afrt = result.data.after
-                                    // uni.setStorageSync("inslist", result.data.medias.length)
                                     that.insList = [...that.insList, ...result.data.medias]
-                                    // that.$emit("getInsNew", 1)
-                                    // if (number < result.data.medias.length) {
-                                    //     that.insList = result.data.medias
-
-                                    // } else {
-
-                                    // }
                                 }
-                            })
+                            }).catch(() => {})
                         }
                     }
+                }).catch((err) => {
+                    // API失敗時はデフォルトでお知らせ表示を試みる
+                    that.type = 1
+                    that.getList()
                 })
             },
             toInsDetai(e) {
@@ -200,6 +196,7 @@
                     if (res.code == 200) {
                         that.list = res.data.notices
                     }
+                }).catch((err) => {
                 })
             },
             chooseItem(e) {

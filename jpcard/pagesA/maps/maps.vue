@@ -20,7 +20,6 @@
                 that.src = that.$baseUrl+"/api/google/map?address="+encodeURI(options.address)  
             },2500)
             
-            console.log(that.src)
         },
         methods: {}
     };

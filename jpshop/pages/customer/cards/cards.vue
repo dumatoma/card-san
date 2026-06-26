@@ -103,7 +103,6 @@
                          
                           for (let i = 0; i < that.array.length; i++) {
                               if (that.delInfo.id == that.array[i].id) {
-                                   console.log(12312313)
                                   that.array[i].checked = true
                               } else {
                                   that.array[i].checked = false
@@ -119,7 +118,6 @@
               }
             },
             change(e) {
-                console.log(e)
                 let that = this
                 let config = {}
                 config.title = e.name + '<br/>にカードを変更しますか？'

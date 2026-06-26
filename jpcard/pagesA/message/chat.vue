@@ -97,7 +97,6 @@
             },
         },
         created() {
-            console.log("created")
             this.getWebsocketData()
             this.myid = admin.id
             uni.onKeyboardHeightChange(res => {
@@ -132,7 +131,7 @@
 
         onUnload() {
             let that = this
-            hasRead(that.sid).then((res) => {})
+            hasRead(that.sid).then((res) => {}).catch(() => {})
         },
         onHide() {},
         onPageScroll(e) {
@@ -185,7 +184,7 @@
                                 title: res.message
                             })
                         }
-                    })
+                    }).catch(() => {})
                 } else {
                     this.delshow = false
                 }
@@ -206,7 +205,6 @@
                 that.delshow = true
             },
             toLink(e) {
-                console.log(e)
             },
             formattedText(e) {
                 // 使用正则表达式找到所有的网址  
@@ -226,7 +224,6 @@
                 }
             },
             emitFocus(e) {
-                console.log(e)
                 let that = this
                 that.insert = true
                 setTimeout(() => {
@@ -255,15 +252,11 @@
                     //         }
                     //     })
                     // }
-                    console.log("收到的消息result1", result)
                     if (result.type == "message" && result.data[0].sid == that.sid) {
-                        console.log(123123123213213123213213213213213123213123123213123)
                         if (result.data[0].sender == 2) {
                             if (result.data[0].id == that.msid) {
-                                console.log("m,", result.data[0].id)
                                 that.msid = 0
                             } else {
-                                console.log("m,1", result.data[0].id)
                                 that.msid = result.data[0].id
                             }
                         } else {
@@ -341,7 +334,6 @@
                             }
                         })
                         that.history = res.data.messages.data.reverse()
-                        console.log('hjhs', that.history)
                         let currentMessages = that.currentMessages
                         that.messageArr = [...that.history, ...currentMessages]
                         for (let i = 0; i < that.messageArr.length; i++) {
@@ -365,7 +357,7 @@
                             uni.hideLoading()
                         }, 50)
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             jumpUrl(e) {
                 if (e == "") {
@@ -423,7 +415,7 @@
                         }
                         uni.stopPullDownRefresh()
                     }
-                })
+                }).catch(() => { uni.stopPullDownRefresh() })
             },
             previewImage(e) {
                 let that = this
@@ -466,7 +458,7 @@
                                             } else {
                                                 that.msid = res.data.message_id
                                             }
-                                        })
+                                        }).catch(() => {})
                                     }
                                 }
                             }
@@ -501,7 +493,7 @@
                                             } else {
                                                 that.msid = res.data.message_id
                                             }
-                                        })
+                                        }).catch(() => {})
                                     }
                                 }
                             }
@@ -544,7 +536,7 @@
                             }
 
                         }
-                    })
+                    }).catch(() => {})
                 }
             }
         }

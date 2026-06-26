@@ -79,7 +79,7 @@
                         that.showErr = true
                         that.errortitle = res.message
                     }
-                })
+                }).catch(() => { that.logStatus = false })
             },
 
             toFu() {

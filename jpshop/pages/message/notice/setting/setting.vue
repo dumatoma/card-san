@@ -9,6 +9,14 @@
                     <text>{{searchNumber}}</text>/{{totalMember}}
                 </view>
             </view>
+            <view class="memCount" style="margin-top: 12upx;">
+                <view class="mem1">
+                    配信数
+                </view>
+                <view class="mem2" :style="messageUsedCount >= messageMaxCount ? 'color:#D93025' : ''">
+                    <text>{{messageUsedCount}}</text>/{{messageMaxCount}}
+                </view>
+            </view>
             <view class="appointSet">
                 <view>予約配信</view>
                 <u-switch v-model="value" activeColor="#34C759"></u-switch>
@@ -76,8 +84,33 @@
         <mod v-if="showModule" @getStatus="getStatus" :config="configs"></mod>
         <confirms :dates="value == true?todayDate +' '+ nowTime: '今すぐ'" v-if="show6 == true" :number="searchNumber"
             @confirm="saveData" @cancel="show6 = false"></confirms>
-        <pays :dates="value == true?todayDate +' '+ nowTime: '今すぐ'" v-if="show7 == true" :number="searchNumber"
-            @confirm="goPay" @cancel="show7 = false"></pays>
+        <pays v-if="show7 == true" @confirm="goPay" @cancel="show7 = false"></pays>
+        <!-- Stripe契約者向け：アプリ内課金不可のため案内パネル -->
+        <view class="infoOverlay" v-if="showStripeInfo">
+            <view class="infoPanel">
+                <view class="infoPanelTitle">お支払いについて</view>
+                <scroll-view scroll-y="true" class="infoPanelScroll">
+                    <view class="infoPanelWarn">
+                        配信上限を超過しています。PCブラウザよりCard-Sanにログインしてお支払いをお願いします。[アカウント]→[ご契約]ページからお手続きが可能です。
+                    </view>
+                    <view class="infoPanelBtn" @click="showStripeInfo = false">上記内容を確認しました</view>
+                </scroll-view>
+            </view>
+        </view>
+        <!-- #ifdef H5 -->
+        <!-- アプリ契約者がウェブからアクセスした場合：アプリでの支払い案内 -->
+        <view class="infoOverlay" v-if="showAppInfo">
+            <view class="infoPanel">
+                <view class="infoPanelTitle">お支払いについて</view>
+                <view style="box-sizing:border-box;padding:40upx 34upx;">
+                    <view class="infoPanelWarn">
+                        Card-San管理アプリからご契約時の決済方法でお支払いをお願いします。
+                    </view>
+                    <view class="infoPanelBtn" @click="showAppInfo = false">上記内容を確認しました</view>
+                </view>
+            </view>
+        </view>
+        <!-- #endif -->
     </view>
 </template>
 
@@ -94,7 +127,8 @@
         sceneMember,
         buyextras,
         buyextra,
-        getConfig
+        getConfig,
+        getShopInfo
     } from "@/api/index.js"
     export default {
         components: {
@@ -119,6 +153,11 @@
                 showModule: false,
                 todayDate: '',
                 nowTime: "",
+                messageUsedCount: 0,
+                messageMaxCount: 3000,
+                vipCardType: 0,
+                showStripeInfo: false,
+                showAppInfo: false,
                 toweek: "",
                 num: 102,
                 query: {},
@@ -203,7 +242,13 @@
                     } else {
                         that.pid = res.data.config.vip_count.message.product_id[3]
                     }
-
+                }
+            })
+            getShopInfo().then((res) => {
+                if (res.code == 200) {
+                    that.messageUsedCount = res.data.message_count.message_count || 0
+                    that.messageMaxCount = res.data.vip_message_config.count || 3000
+                    that.vipCardType = (res.data.shop_info.vip && res.data.shop_info.vip.card_type) ? res.data.shop_info.vip.card_type : 0
                 }
             })
             that.sceenMember()
@@ -221,7 +266,7 @@
             }
 
             if (csvData.shop_time && csvData.shop_time_desc != 3) {
-                that.tabs[2].title = '前回来店から' + csvData.shop_time / 86400 + '日' + (csvData.shop_time_desc == 2 ?
+                that.tabs[2].title = '前回来店から' + csvData.shop_time / 86400 + '日' + (csvData.shop_time_desc == 1 ?
                     '以上経過' : '以内')
             } else {
                 that.tabs[2].title = '来店期間を設定'
@@ -380,61 +425,55 @@
             },
             goPay() {
                 let that = this
-                uni.showLoading({
-                    title: "購入処理実施中..."
-                })
+                that.show7 = false
+
+                // 副管理者は支払い不可
+                let admin = uni.getStorageSync("admin")
+                if (admin.admin_type == 2) {
+                    uni.showToast({ title: "実行する権限がありません", icon: "none" })
+                    return
+                }
+
+                // #ifdef APP-PLUS
+                // Stripe契約者はアプリ内課金不可
+                if (that.vipCardType == 1) {
+                    that.showStripeInfo = true
+                    return
+                }
+                // Apple/Google IAP
+                uni.showLoading({ title: "購入処理実施中..." })
                 let plat = uni.getStorageSync("platform")
                 if (plat != 'ios') {
                     var pId = that.pid;
-                    let platform = plat == 'ios' ? 2 : 3
                     let orid = ''
                     let data = {}
                     data.type = 1
-                    data.card_type = platform
+                    data.card_type = 3
                     buyextras(data).then((res) => {
                         if (res.code == 200) {
                             orid = res.data.order_no
-                            googlePay.querySku({
-                                    inapp: [pId]
-                                },
-                                (e) => {
-                                    if (e.code == 0) {
-                                        googlePay.pay({
-                                                productId: pId, // 产品id
-                                            },
-                                            (e) => {
-                                                if (e.msg == 'success') {
-                                                    let da = {}
-                                                    da.order_no = orid
-                                                    da.pay_token = e.data[0].original.purchaseToken
-                                                    da.product_id = pId
-                                                    buyextra(da).then((re) => {
-                                                        uni.hideLoading()
-                                                        if (re.code == 200) {
-                                                            uni.showToast({
-                                                                title: re.message,
-                                                                duration: 2500,
-                                                                icon: "none"
-                                                            })
-                                                            that.show7 = false
-                                                        } else {
-                                                            uni.showToast({
-                                                                title: re.message,
-                                                                icon: "none"
-                                                            })
-                                                        }
-                                                    })
+                            googlePay.querySku({ inapp: [pId] }, (e) => {
+                                if (e.code == 0) {
+                                    googlePay.pay({ productId: pId }, (e) => {
+                                        if (e.msg == 'success') {
+                                            let da = {}
+                                            da.order_no = orid
+                                            da.pay_token = e.data[0].original.purchaseToken
+                                            da.product_id = pId
+                                            buyextra(da).then((re) => {
+                                                uni.hideLoading()
+                                                if (re.code == 200) {
+                                                    uni.showToast({ title: re.message, duration: 2500, icon: "none" })
+                                                } else {
+                                                    uni.showToast({ title: re.message, icon: "none" })
                                                 }
-                                            }
-                                        );
-                                    } else {
-                                        //查询失败
-                                        uni.showToast({
-                                            title: 'querySku fail,' + e
-                                        })
-                                    }
+                                            })
+                                        }
+                                    })
+                                } else {
+                                    uni.showToast({ title: 'querySku fail,' + e })
                                 }
-                            );
+                            })
                         }
                     })
                 } else {
@@ -448,7 +487,32 @@
                         }
                     })
                 }
+                // #endif
 
+                // #ifdef H5
+                if (that.vipCardType == 1) {
+                    // Stripe: 発注してStripe決済URLへリダイレクト
+                    uni.showLoading({ title: "処理中..." })
+                    let data = {}
+                    data.type = 1
+                    data.card_type = 1
+                    buyextras(data).then((res) => {
+                        if (res.code == 200) {
+                            payExtra({ order_no: res.data.order_no }).then((payRes) => {
+                                uni.hideLoading()
+                                if (payRes.code == 200 && payRes.data.url) {
+                                    window.location.href = payRes.data.url
+                                }
+                            })
+                        } else {
+                            uni.hideLoading()
+                        }
+                    })
+                } else {
+                    // アプリ決済契約者はアプリから支払い
+                    that.showAppInfo = true
+                }
+                // #endif
             },
             toSceen(e) {
                 if (e == 0) {
@@ -763,6 +827,64 @@
             margin-top: 40upx;
             border-bottom: 2upx solid #d2d2d7;
             padding-bottom: 22upx;
+        }
+    }
+
+    .infoOverlay {
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 999;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .infoPanel {
+        width: 100vw;
+        height: 90vh;
+        background: #fff;
+
+        .infoPanelTitle {
+            width: 100%;
+            height: 112upx;
+            background: #eaeaea;
+            text-align: center;
+            line-height: 112upx;
+            font-size: 32rpx;
+            font-weight: bold;
+            color: #1D1D1F;
+        }
+
+        .infoPanelScroll {
+            height: calc(90vh - 112upx);
+            box-sizing: border-box;
+            padding: 40upx 34upx;
+        }
+
+        .infoPanelWarn {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 32upx;
+            font-size: 32rpx;
+            font-weight: bold;
+            color: #1D1D1F;
+            background: rgba(230, 191, 24, 0.5);
+        }
+
+        .infoPanelBtn {
+            width: 100%;
+            height: 112upx;
+            line-height: 112upx;
+            background: #06C755;
+            border-radius: 56rpx;
+            text-align: center;
+            color: #fff;
+            font-size: 40rpx;
+            font-weight: bold;
+            margin-top: 100upx;
         }
     }
 </style>

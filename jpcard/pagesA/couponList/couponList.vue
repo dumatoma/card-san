@@ -101,7 +101,6 @@
             },
             leftClick() {
                 uni.navigateBack()
-                console.log(123)
             },
             seed(e) {
                 this.caiDanShow = false

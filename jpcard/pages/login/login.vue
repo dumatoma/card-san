@@ -61,14 +61,9 @@
 
         },
         created() {
-            console.log(JYGoogleSignin)
             JYGoogleSignin.jy_init({
-                //  安卓的client_id应该是谷歌开发者后台默认Web应用的；iOS的client_id应该是谷歌开发者后台iOS对应的  
-                // client_id: "653081471652-e7f6bu17gcp0p0mku61qdg8am5fcriv1.apps.googleusercontent.com" //安卓的client_id
-                client_id: "653081471652-tq9goiocjd1q4snjllaapu8uo90rtcau.apps.googleusercontent.com" //苹果的client_id
+                client_id: "653081471652-tq9goiocjd1q4snjllaapu8uo90rtcau.apps.googleusercontent.com"
             }, res => {
-                //    这里不会有返回数据
-                console.log('初始化成功')
             })
             this.env = uni.getStorageSync("env")
             let flag = false
@@ -85,7 +80,6 @@
                         getLineInfo(code).then((result) => {
                             uni.hideLoading()
                             if (result.code == 200) {
-                                // flag = false
                                 uni.showToast({
                                     title: result.message,
                                     duration: 2000,
@@ -105,7 +99,7 @@
                                     icon: 'none'
                                 })
                             }
-                        })
+                        }).catch(() => { uni.hideLoading() })
                     }
 
                 } else {
@@ -154,15 +148,12 @@
                                                 icon: 'none'
                                             })
                                         }
-                                    })
+                                    }).catch(() => {})
                                 // // 获取用户信息成功, info.authResult保存用户信息
                             }
                         })
                     },
                     fail: function(err) {
-                        // 登录授权失败  
-                        // err.code是错误码
-                        console.log(err)
                         uni.showToast({
                             title: "サインインできませんでした",
                             icon: "none"
@@ -178,7 +169,7 @@
                             url: "../../pagesA/webLogin/webLogin?url=" + res.data.url
                         })
                     }
-                })
+                }).catch(() => {})
             },
 
             // getUrlGoogle() {
@@ -235,8 +226,6 @@
                         uni.login({
                             provider: 'google',
                             success: function(loginRes) {
-                                // 登录成功 res.data.token
-                                console.log("step1",loginRes)
                                 uni.getUserInfo({
                                     provider: 'google',
                                     success: function(info) {
@@ -247,7 +236,6 @@
                                             data['openid'] = info.userInfo.openid
                                             data['google_email'] = info.userInfo.email
                                             setGoogleLogin(data).then((result) => {
-                                                console.log("step3",result)
                                                 if (result.code == 200) {
                                                     uni.showToast({
                                                         title: result.message,
@@ -256,9 +244,6 @@
                                                     })
                                                     uni.setStorageSync("token",result.data.token)
                                                     uni.setStorageSync("user",result.data.user)
-                                                    let token = uni.getStorageSync("token")
-                                                    let info = uni.getStorageSync("user")
-                                                    let uuid = info.uuid
                                                     setTimeout(function() {
                                                         uni.redirectTo({
                                                             url: "../index/index"
@@ -270,7 +255,7 @@
                                                         icon: 'none'
                                                     })
                                                 }
-                                            })
+                                            }).catch(() => {})
                                         }else{
                                             uni.showToast({
                                                 title:"1"+info.errMsg,
@@ -299,14 +284,12 @@
                             icon: 'none'
                         })
                     }
-                })
+                }).catch(() => {})
             },
             copyTextToClipboard(text) {
                 uni.setClipboardData({
                     data: text,
                     success: function() {
-                        console.log('copy success');
-                        // 可以添加用户友好的提示，例如使用uni.showToast提示复制成功
                         uni.showToast({
                             title: 'copy success',
                             icon: 'success',
@@ -314,8 +297,6 @@
                         });
                     },
                     fail: function() {
-                        console.log('copy failed');
-                        // 可以添加提示复制失败的逻辑处理
                     }
                 });
             },

@@ -117,7 +117,7 @@
           }
           
           if(csvData.shop_time && csvData.shop_time_desc != 3){
-              that.tabs[2].title = '前回来店から'+ csvData.shop_time / 86400+'日' + (csvData.shop_time_desc == 2?'以上経過':'以内')
+              that.tabs[2].title = '前回来店から'+ csvData.shop_time / 86400+'日' + (csvData.shop_time_desc == 1?'以上経過':'以内')
           }else{
               that.tabs[2].title = '来店期間を設定'
           }

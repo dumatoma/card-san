@@ -172,7 +172,6 @@
                     if(res.code == 200){
                         if(that.type == 4){
                             if(res.data.shop_info.thanks_message.length > 0){
-                                console.log(res.data.shop_info.thanks_message[3])
                                 that.name = res.data.shop_info.thanks_message[0]
                                 that.edit1 = res.data.shop_info.thanks_message[1]
                                 that.edit2 = res.data.shop_info.thanks_message[2]
@@ -209,7 +208,7 @@
                             }
                         }
                     }
-                })
+                }).catch(() => {})
             },
             save(){
                 let that = this
@@ -233,14 +232,13 @@
                 data.order_cancel_message = temp
                 data.thanks_message = temp
                 data.order_update_message = temp
-                console.log(data)
                 changeChatInfo(data).then((res) => {
                     if(res.code == 200){
                         uni.showToast({
                             title:res.message,
                             duration:2000
                         })
-                        
+
                         setTimeout(() => {
                             uni.navigateBack()
                         },2000)
@@ -249,9 +247,9 @@
                            title:res.message,
                            duration:2000,
                            icon:"none"
-                       }) 
+                       })
                     }
-                })
+                }).catch(() => {})
             }
         }
     }

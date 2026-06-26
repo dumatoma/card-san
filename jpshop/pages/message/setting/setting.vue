@@ -20,6 +20,30 @@
                     レビューリンク
                 </view>
             </view>
+            <view class="settingItem" @click="toStaffRoom" v-if="isOwner">
+                <view class="icon">
+                    <image src="../../../static/icons/buser.png" mode=""></image>
+                </view>
+                <view>
+                    スタッフルーム設定
+                </view>
+            </view>
+            <view class="settingItem" @click="toGBPSetting" v-if="isOwner">
+                <view class="icon">
+                    <image src="../../../static/svg/google_g.svg" mode="aspectFit"></image>
+                </view>
+                <view>
+                    Google Business設定
+                </view>
+            </view>
+            <view class="settingItem" @click="toSocialMedia" v-if="isOwner">
+                <view class="icon">
+                    <image src="../../../static/svg/google_g.svg" mode="aspectFit"></image>
+                </view>
+                <view>
+                    SNS・投稿管理
+                </view>
+            </view>
         </view>
         <view class="setTitle">
             メッセージテンプレート設定
@@ -111,12 +135,14 @@
                 value2: false,
                 value3: false,
                 value4: false,
-                value5: false
+                value5: false,
+                isOwner: false,
             }
         },
         created() {
-            let that = this
-            that.getInfo()
+            let admin = uni.getStorageSync('admin')
+            this.isOwner = admin.admin_type == 1
+            this.getInfo()
         },
         methods: {
             tomodule(e){
@@ -135,6 +161,15 @@
                     url: "../userInfo/userInfo"
                 })
             },
+            toStaffRoom() {
+                uni.navigateTo({ url: "../staffRoom/staffRoom" })
+            },
+            toGBPSetting() {
+                uni.navigateTo({ url: '/pages/settings/gbpSetting/gbpSetting' })
+            },
+            toSocialMedia() {
+                uni.navigateTo({ url: '/pages/settings/socialMedia/socialMedia' })
+            },
             
             toDeset(){
               uni.navigateTo({
@@ -152,7 +187,7 @@
                         that.value4 = res.data.shop_info.thanks_on == 1 ? true : false
                         that.value5 = res.data.shop_info.order_update_on == 1 ? true : false
                     }
-                })
+                }).catch(() => {})
             },
 
             changeValue1(e) {
@@ -194,7 +229,7 @@
                             icon:"none"
                         })
                     }
-                })
+                }).catch(() => {})
             },
 
             toOne(e) {

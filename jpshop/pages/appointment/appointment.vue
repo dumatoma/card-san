@@ -257,7 +257,6 @@
                 data.date = this.getToday()
                 data.type = "day"
                 getCalendar(data).then((res) => {
-                    console.log("ca",res)
                     uni.hideLoading()
                     if(res.code == 200){
                         if(res.data.week_business.length == 0){
@@ -272,12 +271,12 @@
                                 })
                             },3000)
                         }else{
-                          that.cinfo = res.data  
+                          that.cinfo = res.data
                           that.getList(that.getToday())
                           that.getStaffData()
-                        } 
+                        }
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             toout(){
               uni.navigateTo({
@@ -315,7 +314,6 @@
             getLists(){
                 let that = this 
               getAppointNoticeList(1).then((res) => {
-                  console.log("Res",res)
                   if(res.code == 200){
                       that.totalNum = res.data.unread_count
                       that.todayNum = res.data.today_count
@@ -325,7 +323,7 @@
                           icon:"none"
                       })
                   }
-              })  
+              }).catch(() => {})
             },
             getStaffData() {
                 let that = this
@@ -335,7 +333,6 @@
                 data.start_time = ""
                 data.end_time = ""
                 getStaffList(data).then((res) => {
-                    console.log("staff",res)
                     if (res.code == 200) {
                         if(res.data.admins.length > 0){
                             let data = []
@@ -359,14 +356,14 @@
                                icon:"none"
                            })
                         }
-                       
+
                     }else{
                       uni.showToast({
                           title:res.message,
                           icon:"none"
                       })
                   }
-                })
+                }).catch(() => {})
             },
             // 获取本周日期
             getWeekDate(dms) {
@@ -406,7 +403,7 @@
                         if(res.code == 200){
                             that.cinfo = res.data
                         }
-                    })
+                    }).catch(() => {})
                 } else {
                     that.getList(e.fulldate)
                 }
@@ -415,21 +412,26 @@
             toSet() {
                 let that = this
                 let array = that.manager
-                console.log("ar",array)
                 that.managers = array
             },
             // 获取今日日期
             getToday() {
-                let that = this
                 let temdate = uni.getStorageSync("today")
-                let date = new Date(temdate)
+                let date
+                if (temdate) {
+                    // iOS doesn't parse "YYYY-MM-DD HH:mm:ss" — extract date part and use / separator
+                    let dateStr = String(temdate).split(' ')[0].replace(/-/g, '/')
+                    date = new Date(dateStr)
+                }
+                if (!date || isNaN(date.getTime())) {
+                    date = new Date()
+                }
                 let year = date.getFullYear()
                 let month = date.getMonth() + 1
                 let day = date.getDate()
-                month = (month > 9) ? month : ("0" + month);
-                day = (day < 10) ? ("0" + day) : day;
-                let today = year + "-" + month + "-" + day
-                 return today
+                month = (month > 9) ? month : ("0" + month)
+                day = (day < 10) ? ("0" + day) : day
+                return year + "-" + month + "-" + day
             },
             // 颜色转换
             hexToRgba(hex) {
@@ -468,12 +470,10 @@
                 data.id = 0
                 data.type = "day"
                 getAppointmentList(data).then((res) => {
-                    console.log("co",res)
                     if (res.code == 200) {
                         let tem = []
                         let timeArr = JSON.parse(JSON.stringify(that.times))
                         res.data.admins.forEach((val, index) => {
-                            console.log("val",val)
                             if(val.is_appoint == 1){
                                 let obj = {}
                                 obj.name = val.name
@@ -500,10 +500,9 @@
                                 })
                                 tem.push(obj)
                             }
-                            
+
                         })
                         that.manager = tem
-                        console.log("manager",that.manager)
                         that.toSet()
                     }else{
                       uni.showToast({
@@ -511,7 +510,7 @@
                           icon:"none"
                       })
                   }
-                })
+                }).catch(() => {})
             },
             // 获取每周预约列表
             getWeekList(date) {
@@ -532,14 +531,13 @@
                             val.times = that.times
                         })
                         that.weekData = array
-                        console.log("weekarray",array)
                     }else{
                       uni.showToast({
                           title:res.message,
                           icon:"none"
                       })
                   }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             // 切换员工
             changeName(e, index) {
@@ -564,7 +562,7 @@
                         }else{
                             that.showpermission = true
                         }
-                    })
+                    }).catch(() => { uni.hideLoading() })
                 } else{
                     that.setting = true
                 }    
@@ -603,7 +601,6 @@
             addNewAppointment(e) {
                 this.ctime = e.time
                 this.aptype = e.aptype
-                console.log("e",e)
                 if(e.aptype == 'week'){
                      this.adid = this.staffId
                      this.dDate = e.dat

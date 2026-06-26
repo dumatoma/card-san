@@ -109,7 +109,6 @@
       let that = this
       that.getInfo()
       let shou = uni.getSystemInfoSync()
-      console.log("show1",shou)
       that.version = shou.appWgtVersion + ' '+ shou.appVersionCode
     },
     methods: {

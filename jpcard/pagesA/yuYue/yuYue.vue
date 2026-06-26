@@ -17,7 +17,7 @@
         </view>
         <view class="content">
             <view class="askForName" v-if="info.is_appoint == 1">
-                <view class="name_item" :class="current == 0? 'active' : ''" @click="changeName(0,0,0)">指名なし</view>
+                <view class="name_item" v-if="no_appoint == 1" :class="current == 0? 'active' : ''" @click="changeName(0,0,0)">指名なし</view>
                 <view class="name_item" :class="current == index + 1? 'active' : ''"
                     @click="changeName(item.id,index+1,item.appoint_price)" v-for="(item,index) in staff" v-text="item.name"></view>
             </view>
@@ -94,8 +94,9 @@
                 setting: false, //设置
                 current: 0,
                 staffId: 0,
+                no_appoint: 0,
                 showDetail: false, // 设置详情
-                addNew: false, // 新增预约
+                addNew: false, // 新増预约
                 info: {},
                 times: [
                     {
@@ -193,7 +194,6 @@
             
         },
         onLoad(options) {
-            console.log(80*27)
             let that = this
             that.getInfo(options.id)
             let query = options
@@ -221,7 +221,8 @@
         },
         methods: {
             formatNumberWithCommas(number) {
-              return new Intl.NumberFormat().format(number);
+                if (!number && number !== 0) return '';
+                return String(parseInt(number)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
             },
             getInfo(e){
                 getShopInfo(e).then((res) => {
@@ -229,7 +230,7 @@
                         this.info = res.data.shop
                         // console.log(111111,res.data.shop.day_business["202303"])
                     }
-                })
+                }).catch(() => {})
             },
             toChat(){
                 let that = this 
@@ -252,8 +253,8 @@
                 data.id = orderitem.id
                 data.sid = that.query.id
                 getStaffList(data).then((res) => {
-                    console.log("sdasdasdasdasd",res)
                     if (res.code == 200) {
+                        that.no_appoint = res.data.no_appoint || 0
                         if(res.data.admin3s.length > 0){
                             let t = []
                             res.data.admin3s.forEach((v,i) => {
@@ -261,7 +262,7 @@
                                     t.push(v)
                                 }
                             })
-                            
+
                             that.staff = t
                         }else{
                             uni.showToast({
@@ -273,9 +274,9 @@
                                 uni.navigateBack()
                             },3000)
                         }
-                        
+
                     }
-                })
+                }).catch(() => {})
             },
             addNewAppointment(e) {
                 let that = this
@@ -382,7 +383,7 @@
                         })
                         that.weekData = array
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             // 切换员工
             changeName(e, index,price) {
@@ -466,7 +467,10 @@
         box-sizing: border-box;
         padding: 20upx 16upx;
         background: #fff;
+        align-items: flex-start;
         .staffDetail {
+            flex: 1;
+            min-width: 0;
             .staffName {
                 font-size: 32upx;
                 font-family: Hiragino Sans-W6, Hiragino Sans;
@@ -480,6 +484,10 @@
                 font-weight: normal;
                 color: rgba(29, 29, 31, 0.9);
                 margin: 20upx 0;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                flex-wrap: wrap;
             }
     
             .staffIntro {

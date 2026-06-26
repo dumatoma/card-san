@@ -129,11 +129,10 @@
             this.getList()
             this.getNearby()
             getAllUnread().then((res) => {
-                console.log(res)
                 if (res.code == 200) {
                     plus.runtime.setBadgeNumber(res.data.unread_num * 1);
                 }
-            })
+            }).catch(() => {})
         },
         onPullDownRefresh() {
            uni.showLoading({
@@ -149,7 +148,6 @@
             ltouchstart() {
                 this.longPressTimeout = setTimeout(() => {
                     this.isLongPress = true;
-                    console.log(this.isLongPress)
                 }, 200); // 设置500毫秒的长按触发阈值
 
             },
@@ -161,7 +159,6 @@
                 }, 500)
             },
             makecall(e) {
-                console.log(e)
                 uni.makePhoneCall({
                     phoneNumber: e //仅为示例
                 });
@@ -170,20 +167,17 @@
                 this.showInfo = false
             },
             toCa(e) {
-                console.log(e)
                 uni.navigateTo({
                     url: "../../pagesA/calender/calender?sid=" + e
                 })
             },
             toMap(e) {
-                console.log(e)
                 uni.navigateTo({
                     url: "../../pagesA/maps/maps?address=〒" + e.zip_code + " " + e.address
                 })
             },
             toDetail(id, cid) {
                 let that = this
-                console.log("按住", that.isLongPress)
                 if (that.isLongPress == false) {
                     uni.navigateTo({
                         url: "../../pagesA/shop/shop?id=" + id + "&cid=" + cid
@@ -199,7 +193,6 @@
             },
             deleShow(i, id, e) {
                 let that = this
-                console.log(e)
                 if (this.isLongPress == true) {
                     that.cardname = e.shop_name
                     let platform = uni.getSystemInfoSync().platform
@@ -216,9 +209,7 @@
                     }
                     // #endif
                     that.cardList.forEach((item, index) => {
-                        console.log(index)
                         if (index == i) {
-                            console.log("i",i)
                             that.$set(that.cardList[index], 'check', true)
                         } else {
                             that.$set(item, 'check', false)
@@ -300,7 +291,7 @@
                             that.alrArray = res.data.cards
                             setTimeout(() => {
                                 that.showAle = true
-                            },1000) 
+                            },1000)
                         }
                     } else if (res.data.code == 401) {
                         uni.showToast({
@@ -315,7 +306,7 @@
                         }, 2500)
 
                     }
-                })
+                }).catch(() => {})
             },
             closeAle() {
                 let that = this
@@ -337,14 +328,12 @@
                     method: "get",
                     success: function(res) {
                         uni.hideLoading()
-                       
                         if (res.data.code == 200) {
                             that.cardList = []
                             setTimeout(() => {
-                                 uni.stopPullDownRefresh()
+                                uni.stopPullDownRefresh()
                                 that.cardList = res.data.data.members
-                            },500)
-                            
+                            }, 500)
                         } else if (res.data.code == 401) {
                             uni.showToast({
                                 title: res.data.message,
@@ -356,13 +345,16 @@
                                     url: "/pages/login/login"
                                 })
                             }, 2500)
-
                         } else {
                             uni.showToast({
                                 title: res.data.message,
                                 icon: "none"
                             })
                         }
+                    },
+                    fail: function() {
+                        uni.hideLoading()
+                        uni.stopPullDownRefresh()
                     }
                 })
             },
@@ -389,7 +381,7 @@
                             icon: "none"
                         })
                     }
-                })
+                }).catch(() => {})
             },
 
             search() {
@@ -412,12 +404,10 @@
                         uni.showLoading({
                             title: "読み込み中"
                         })
-                        console.log('result', result)
                         if (result.id) {
                             scanCode(result.id).then((res) => {
                                 uni.hideLoading()
                                 if (res.code == 200) {
-                                    console.log("sacncode", res)
                                     if (res.data.member == 0) {
                                         uni.navigateTo({
                                             url: "../../pagesA/BindCard/BindCard?id=" + res
@@ -431,7 +421,7 @@
                                         })
                                     }
                                 }
-                            })
+                            }).catch(() => { uni.hideLoading() })
                         }
                     }
                 })

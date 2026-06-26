@@ -13,13 +13,24 @@
                 <u-input v-model="name" placeholder="担当者を入力してください"></u-input>
             </view>
         </view>
+        <view class="sectionTitle">スタッフルーム</view>
+        <view class="switchItem">
+            <view class="switchLabel">参加する</view>
+            <u-switch v-model="staffRoomJoin" activeColor="#33C75A" @change="saveMemberFlags"></u-switch>
+        </view>
+        <view class="switchItem">
+            <view class="switchLabel">1対1チャットを許可</view>
+            <u-switch v-model="staffRoomDm" activeColor="#33C75A" @change="saveMemberFlags"></u-switch>
+        </view>
         <u-button class="btn" type="primary" :plain="true" @click="save">保存</u-button>
     </view>
 </template>
 <script>
     import {
         getShopInfo,
-        changeChatInfo
+        changeChatInfo,
+        getStaffRoom,
+        updateStaffRoomMember
     } from "@/api/index.js"
     export default {
         data() {
@@ -27,7 +38,9 @@
                 name: "",
                 show: false,
                 info:{},
-                avatar:""
+                avatar:"",
+                staffRoomJoin: true,
+                staffRoomDm: true,
             }
         },
         created() {
@@ -36,6 +49,7 @@
            that.name = userInfo.message_name == ''?userInfo.name : userInfo.message_name
            that.avatar = userInfo.avatar
            that.getUserInfo()
+           that.loadStaffRoomFlags()
         },
         onShow() {
             
@@ -85,7 +99,21 @@
                     if(res.code == 200){
                         that.info = res.data.shop_info
                     }
-                })
+                }).catch(() => {})
+            },
+            loadStaffRoomFlags() {
+                getStaffRoom().then(res => {
+                    if (res.code == 200) {
+                        this.staffRoomJoin = res.data.my_join == 1
+                        this.staffRoomDm   = res.data.my_dm == 1
+                    }
+                }).catch(() => {})
+            },
+            saveMemberFlags() {
+                updateStaffRoomMember({
+                    staff_room_join: this.staffRoomJoin ? 1 : 0,
+                    staff_room_dm:   this.staffRoomDm   ? 1 : 0,
+                }).catch(() => {})
             },
             save(){
                 let that = this
@@ -107,7 +135,7 @@
                            uni.navigateBack()
                        },2000)
                    }
-               })
+               }).catch(() => {})
             }
         }
     }
@@ -146,7 +174,25 @@
         .btn {
             width: 480upx;
             height: 96upx;
-            margin-top: 398upx;
+            margin-top: 60upx;
         }
+    }
+    .sectionTitle {
+        font-size: 28rpx;
+        color: #86868B;
+        font-weight: bold;
+        padding: 40rpx 0 20rpx;
+        border-bottom: 2rpx solid #d2d2d7;
+    }
+    .switchItem {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 30rpx 0;
+        border-bottom: 2rpx solid #d2d2d7;
+    }
+    .switchLabel {
+        font-size: 30rpx;
+        color: #1D1D1F;
     }
 </style>

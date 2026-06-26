@@ -298,6 +298,38 @@
             }
         },
         {
+            "path": "pages/message/staffRoom/staffRoom",
+            "style": {
+                "navigationBarTitleText": "スタッフルーム設定",
+                "enablePullDownRefresh": false,
+                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+            }
+        },
+        {
+            "path": "pages/message/staffRoom/groupChat",
+            "style": {
+                "navigationBarTitleText": "スタッフルーム",
+                "enablePullDownRefresh": true,
+                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+            }
+        },
+        {
+            "path": "pages/message/staffRoom/memberList",
+            "style": {
+                "navigationBarTitleText": "メンバー一覧",
+                "enablePullDownRefresh": false,
+                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+            }
+        },
+        {
+            "path": "pages/message/staffRoom/dm",
+            "style": {
+                "navigationBarTitleText": "メッセージ",
+                "enablePullDownRefresh": true,
+                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+            }
+        },
+        {
             "path": "pages/message/notice/notice",
             "style": {
                 "navigationBarTitleText": "メッセージ一覧",
@@ -620,6 +652,27 @@
                 "enablePullDownRefresh": false
             }
 
+        }, {
+            "path": "pages/settings/gbpSetting/gbpSetting",
+            "style": {
+                "navigationBarTitleText": "Googleビジネス連携",
+                "enablePullDownRefresh": false,
+                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+            }
+        }, {
+            "path": "pages/message/gbpReviews/gbpReviews",
+            "style": {
+                "navigationBarTitleText": "Googleクチコミ管理",
+                "enablePullDownRefresh": true,
+                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+            }
+        }, {
+            "path": "pages/settings/socialMedia/socialMedia",
+            "style": {
+                "navigationBarTitleText": "SNS・投稿管理",
+                "enablePullDownRefresh": false,
+                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+            }
         }, {
             "path": "pages/settings/vipRegister/vipRegister",
             "style": {

@@ -1014,12 +1014,13 @@
                             })
                         },2000)
                     }else{
+                        uni.hideLoading()
                         uni.showToast({
                             title:res.message,
                             icon:"none"
                         })
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
 
         }

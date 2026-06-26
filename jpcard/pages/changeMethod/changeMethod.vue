@@ -55,9 +55,7 @@
                }, [])
                const apple = servies[provide.indexOf("apple")]
                apple.logout(res => {
-                   console.log("注销成功")
                }, err => {
-                   console.log("注销失败", JSON.stringify(err))
                })
            })
         },

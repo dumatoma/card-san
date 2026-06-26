@@ -1,39 +1,21 @@
 <template>
     <view class="containp">
         <view class="tipContent">
-            <view class="tipTitle">
-                クーポンを配信
+            <view class="tipRedTitle">
+                クーポン配信数超過のお知らせ
+            </view>
+            <view class="tipinfo" style="margin-top: 30upx;">
+                今月の無料配信数（3,000通/月）を超過しています。
             </view>
             <view class="tipinfo">
-                このクーポンは
-            </view>
-            <view class="tipinfo" v-if="isToday">
-                {{dates}}
-            </view>
-            <view class="tipinfo" v-if="isToday">
-                {{number}}人に配信されます。
-            </view>
-            <view class="tipinfo" v-if="!isToday">
-                今すぐ{{number}}人に配信されます。
-            </view>
-            <view class="tipwarning">
-                配信上限数を超過しています。
+                追加料¥1,200のお支払いで、更に3,000通の
             </view>
             <view class="tipinfo">
-                このクーポンを配信するには、
-            </view>
-            <view class="tipinfo">
-                 追加料(¥1,200)のお支払いで、
-            </view>
-            <view class="tipinfo">
-                更に3,000通のクーポンを配信できます。
-            </view>
-            <view class="tipinfo">
-                配信しますか？
+                クーポンを配信できます。
             </view>
             <view class="buttons">
-                <u-button type="error" text="配信する" class="btn1" @click="fasong('confirm')"></u-button>
-                <u-button text="キャンセル" class="btn2" @click="fasong('cancel')"></u-button>
+                <view class="payBtn" @click="fasong('confirm')">お支払い</view>
+                <view class="cancelBtn" @click="fasong('cancel')">キャンセル</view>
             </view>
         </view>
     </view>
@@ -41,38 +23,15 @@
 
 <script>
     export default {
-        props: {
-            // 标记的日期
-            number: {
-                type: Number,
-                default: () => {
-                    return [];
-                }
-            },
-            dates:{
-                type: String,
-                default: () => {
-                    return "";
-                }
-            },
-            isToday:{
-                type: Boolean,
-                default: () => {
-                    return true;
-                }
-            }
-        },
         data() {
-            return {
-                
-            };
+            return {};
         },
         methods:{
             fasong(e){
                 if(e == 'confirm'){
-                    this.$emit("confirm",111)
+                    this.$emit("confirm", 111)
                 }else{
-                    this.$emit("cancel",222)
+                    this.$emit("cancel", 222)
                 }
             }
         }
@@ -89,52 +48,58 @@
         left: 0;
         z-index: 999 !important;
     }
-    
-    .tipwarning{
-        color: #d93025;
-        font-family: Hiragino Sans-W3, Hiragino Sans;
-        font-weight: normal;
-        text-align: center;
-        margin: 40upx 0;
-        font-size: 28upx;
-    }
-    
-    .btn1{
-        width: 480upx;
-        height: 96upx;
-        margin: 120upx auto 60upx;
-    }
-    
-    .btn2{
-        width: 480upx;
-        height: 96upx;
-        background: #EAEAEA;
-        color: #707070;
-    }
-    
-    .tipTitle{
-        font-size: 32upx;
+
+    .tipRedTitle{
+        font-size: 36upx;
         font-family: Hiragino Sans-W5, Hiragino Sans;
-        font-weight: normal;
-        color: #1D1D1F;
+        font-weight: bold;
+        color: #D93025;
         text-align: center;
-        margin-bottom: 60upx;
+        margin-bottom: 20upx;
+        padding-bottom: 30upx;
+        border-bottom: 2upx solid #EAEAEA;
     }
-    
+
+    .payBtn{
+        width: 480upx;
+        height: 96upx;
+        line-height: 96upx;
+        background: #1A73E8;
+        border-radius: 48upx;
+        text-align: center;
+        color: #fff;
+        font-size: 36upx;
+        font-weight: bold;
+        margin: 80upx auto 30upx;
+    }
+
+    .cancelBtn{
+        width: 480upx;
+        height: 96upx;
+        line-height: 96upx;
+        background: #EAEAEA;
+        border-radius: 48upx;
+        text-align: center;
+        color: #707070;
+        font-size: 36upx;
+        margin: 0 auto;
+    }
+
     .tipinfo{
         font-size: 28upx;
         font-family: Hiragino Sans-W3, Hiragino Sans;
         font-weight: normal;
         color: #707070;
         text-align: center;
+        line-height: 48upx;
     }
-    
+
     .tipContent{
         width: 690upx;
         background: #fff;
         border-radius: 20upx;
         box-sizing: border-box;
-        padding: 60upx 20upx;
+        padding: 60upx 20upx 50upx;
         position: absolute;
         left: 50%;
         top: 50%;

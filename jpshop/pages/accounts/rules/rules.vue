@@ -38,11 +38,10 @@
                 let that = this
                 getConfig().then((res) => {
                     if(res.code == 200){
-                        console.log("config",res.data.config)
                         that.i1 = res.data.config.shop_privacy_policy
                         that.i2 = res.data.config.shop_service_regulations
                     }
-                })
+                }).catch(() => {})
             }
         }
     }

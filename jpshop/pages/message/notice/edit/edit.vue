@@ -174,13 +174,12 @@
             let that = this
             let query = options
             getShopInfo().then((res) => {
-                console.log(res)
                 if (res.code == 200) {
                     that.module1 = res.data.shop_info.timing_message_tpl1
                     that.module2 = res.data.shop_info.timing_message_tpl2
                     that.previewImage = res.data.shop_info.comment_button_style_image
                 }
-            })
+            }).catch(() => {})
             that.query = query
             if (query.source == "edit") {
                 that.getDetail(query.id)
@@ -231,7 +230,7 @@
                             icon: "none"
                         })
                     }
-                })
+                }).catch(() => {})
             },
 
             close() {

@@ -112,6 +112,11 @@
                                 name: "予約管理",
                                 checked: false,
                                 val:7
+                            },
+                            {
+                                name: "クチコミ管理",
+                                checked: false,
+                                val:14
                             }
                         ]
                     },
@@ -147,6 +152,11 @@
                                 name: "スタッフ登録",
                                 checked: false,
                                 val:13
+                            },
+                            {
+                                name: "Googleビジネス連携",
+                                checked: false,
+                                val:15
                             }
                         ]
                     },
@@ -262,8 +272,7 @@
                 }else if(that.query.type == "edit"){
                     let that = this
                     let data = {}
-                    data._method = "put"
-                    data.name = that.name 
+                    data.name = that.name
                     data.phone = that.phone
                     data.privileges = temp
                     eidtAdmin(data,that.query.id).then((res) => {

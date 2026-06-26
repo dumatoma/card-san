@@ -62,7 +62,6 @@
             }
             
             getShopInfo().then((res) => {
-                console.log(res)
                 if(options.type == 1){
                     if(res.data.shop_info.timing_message_tpl1.length > 0){
                         that.val1 = res.data.shop_info.timing_message_tpl1[0]
@@ -74,7 +73,7 @@
                         that.val2 = res.data.shop_info.timing_message_tpl2[1]
                     }
                 }
-            }) 
+            }).catch(() => {})
         },
         methods:{
             goback(){
@@ -92,7 +91,6 @@
                 data.timing_message_tpl2.push(that.val1)
                 data.timing_message_tpl2.push(that.val2)
                 changeChatInfo(data).then((res) => {
-                    console.log(res)
                     if(res.code == 200){
                         uni.showToast({
                             title:res.message
@@ -103,7 +101,7 @@
                             icon:'none'
                         })
                     }
-                })
+                }).catch(() => {})
             }
         }
     }

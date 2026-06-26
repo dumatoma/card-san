@@ -251,10 +251,8 @@
             },
             refresh:function(newVal, oldVal) {
                 let that = this
-                console.log("newr",newVal)
                 if(newVal == true){
                     getCardInfo(this.id).then((res) => {
-                        console.log("d",res)
                         if (res.code == 200) {
                             if(res.data.member.seals.length == res.data.member.card.count && res.data.member.card.type != 3){
                                 that.manShow = true
@@ -268,7 +266,6 @@
                             res.data.member.seals.forEach((val, index) => {
                                 val.sealed = true
                                let t1 = val.seal_icon
-                               console.log("t1",t1)
                                if (t1.includes('sv_01')) {
                                    that.iconNum = 1
                                } else if (t1.includes('sv_02')) {
@@ -286,7 +283,6 @@
                                } else if (t1.includes('sv_08')) {
                                    that.iconNum = 8
                                }
-                               console.log('num',that.iconNum)
                                that.svgData1 = that.changeColor(that.svgData1, val.seal_color);
                                that.svgData2 = that.changeColor(that.svgData2, val.seal_color);
                                that.svgData3 = that.changeColor(that.svgData3, val.seal_color);
@@ -305,12 +301,11 @@
                                 array.push(obj)
                             }
                             that.info.seals = array
-                            console.log("cccccc",that.color)
                             if(that.color != '#000'){
                                 that.svgData30 = that.changeColor(that.svgData30, that.color);
                             }
                         }
-                    })
+                    }).catch(() => {})
                 }
             }
         },
@@ -318,7 +313,6 @@
             let that = this
 
             getCardInfo(this.id).then((res) => {
-                console.log("d",res)
                 if (res.code == 200) {
                     if(res.data.member.seals.length == res.data.member.card.count && res.data.member.card.type != 3){
                         that.manShow = true
@@ -334,7 +328,6 @@
                         val.sealed = true
                         val.sealed = true
                         let t1 = val.seal_icon
-                        console.log("t1",t1)
                         if (t1.includes('sv_01')) {
                             that.iconNum = 1
                         } else if (t1.includes('sv_02')) {
@@ -352,7 +345,6 @@
                         } else if (t1.includes('sv_08')) {
                             that.iconNum = 8
                         }
-                        console.log('num',that.iconNum)
                         that.svgData1 = that.changeColor(that.svgData1, val.seal_color);
                         that.svgData2 = that.changeColor(that.svgData2, val.seal_color);
                         that.svgData3 = that.changeColor(that.svgData3, val.seal_color);
@@ -371,12 +363,11 @@
                         array.push(obj)
                     }
                     that.info.seals = array
-                    console.log("cccccc",that.color)
                     if(that.color != '#000'){
                         that.svgData30 = that.changeColor(that.svgData30, that.color);
                     }
                 }
-            })
+            }).catch(() => {})
              // this.svgData30 = that.changeColor(that.svgData30, that.color);
         },
         // watch:{

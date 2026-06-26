@@ -266,7 +266,6 @@
         },
         created() {
             let that = this
-            console.log("color",that.color)
             that.getShopInfo()
             that.today = that.getToday()
             that.getDay()
@@ -304,7 +303,6 @@
                     url:that.$baseUrl+"/api/google/geocode?address=〒"+that.shopInfo.zip_code+' '+that.shopInfo.address1+that.shopInfo.address2,
                     method:"get",
                     success:(res) => {
-                        console.log(res)
                         if(res.data.code == 200){
                             latLng = res.data.data.lat + ","+res.data.data.lng
                             // 应用地址
@@ -454,7 +452,6 @@
                         let dat = new Date()
                         let idx = dat.getDate()
                         that.todayTime = res.data.day_business[idx]
-                        console.log("i", res.data.day_business[idx])
                         that.bsTime = res.data.day_business[idx].business_time
                     } else {
                         uni.showToast({
@@ -462,7 +459,7 @@
                             icon: "none"
                         })
                     }
-                })
+                }).catch(() => {})
             },
             toMap() {
                 let that = this
@@ -474,7 +471,6 @@
                 let that = this
                 getShopInfo(that.sid).then((res) => {
                     if (res.code == 200) {
-                        console.log("staffshow",res)
                         that.shopInfo = res.data.shop
                         that.staff = res.data.admin3
                         uni.request({
@@ -491,7 +487,7 @@
                             }
                         })
                     }
-                })
+                }).catch(() => {})
             },
             closeCal() {
                 this.show = false

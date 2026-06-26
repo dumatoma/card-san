@@ -94,9 +94,9 @@
         onShow() {
           let that = this
           let csvData = uni.getStorageSync("csvData") 
-          if(csvData.shop_time_desc == 2){
+          if(csvData.shop_time_desc == 1){
               that.current = 0
-          }else if(csvData.shop_time_desc == 1){
+          }else if(csvData.shop_time_desc == 2){
               that.current = 1
           }else{
               that.current = 3
@@ -124,10 +124,10 @@
                     this.current = e
                     let csvData = uni.getStorageSync("csvData")
                     if(csvData){
-                        csvData['shop_time_desc'] = e == 0?2:1
+                        csvData['shop_time_desc'] = e == 0?1:2
                     }else{
                         csvData = {}
-                        csvData['shop_time_desc'] = e == 0?2:1
+                        csvData['shop_time_desc'] = e == 0?1:2
                     }
                      uni.setStorageSync("csvData",csvData)
                 }

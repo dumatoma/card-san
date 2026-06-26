@@ -83,16 +83,14 @@
                 that.swapArrayElements(ar, index * 1 - 1, index)
                 let data = {}
                 data.ids = ar
-                console.log("ar",data)
                 staffSort(data).then((res) => {
-                    console.log("res",res)
                     if (res.code == 200) {
-                         uni.hideLoading()
+                        uni.hideLoading()
                         that.getList()
                     } else {
-                       
+                        uni.hideLoading()
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             swapArrayElements(arr, indexA, indexB) {
                 const temp = arr[indexA];
@@ -134,7 +132,7 @@
                             icon:"none"
                         })
                     }
-                })
+                }).catch(() => {})
             },
             delItem(index){
                 this.current  = index
@@ -160,7 +158,7 @@
                                 icon:"none"
                             })
                         }
-                    })
+                    }).catch(() => {})
                 }
                 that.show = false
             },

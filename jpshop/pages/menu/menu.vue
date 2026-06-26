@@ -82,7 +82,6 @@
         methods: {
             sort(item,ite,index){
                 let that = this
-                 console.log(item)
                let ar = []
                item.items.forEach((v, i) => {
                    ar.push(v.id)

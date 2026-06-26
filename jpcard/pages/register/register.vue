@@ -96,7 +96,7 @@
                                           icon:'none'
                                       })
                                   }
-                              })
+                              }).catch(() => {})
                                // 获取用户信息成功, info.authResult保存用户信息
                            }
                        })
@@ -119,15 +119,11 @@
                             url:"../../pagesA/webLogin/webLogin?url="+res.data.url
                         })
                     }
-                })
+                }).catch(() => {})
             },
             
             faceLogin(){
                 getFacebookUrl().then((res) => {
-                    // console.log("dag",res)
-                    // uni.navigateTo({
-                    //     url:"../../pagesA/facelogin/facelogin"
-                    // })
                     if(res.code == 200){
                         uni.navigateTo({
                             url:"../../pagesA/facelogin/facelogin?url="+res.data.url
@@ -135,7 +131,6 @@
                         uni.login({
                             provider: 'facebook',
                             success: function (loginRes) {
-                                // 登录成功 res.data.token
                                 uni.getUserInfo({
                                     provider: 'google',
                                     success: function(info) {
@@ -163,9 +158,8 @@
                                                        icon:'none'
                                                    })
                                                }
-                                            })
+                                            }).catch(() => {})
                                         }
-                                        // 获取用户信息成功, info.authResult保存用户信息
                                     }
                                 })
                             },
@@ -173,7 +167,7 @@
                             }
                         });
                     }
-                }) 
+                }).catch(() => {})
             },
             
             getUrlGoogle(){
@@ -182,7 +176,6 @@
                         uni.login({
                             provider: 'google',
                             success: function (loginRes) {
-                                // 登录成功 res.data.token
                                 uni.getUserInfo({
                                     provider: 'google',
                                     success: function(info) {
@@ -210,9 +203,8 @@
                                                        icon:'none'
                                                    })
                                                }
-                                            })
+                                            }).catch(() => {})
                                         }
-                                        // 获取用户信息成功, info.authResult保存用户信息
                                     }
                                 })
                             },
@@ -220,7 +212,7 @@
                             }
                         });
                     }
-                })  
+                }).catch(() => {})
             },
         }
     }

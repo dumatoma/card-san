@@ -79,13 +79,13 @@
                     お知らせ
                 </view>
             </view>
-            <view class="indexItem" hover-class="click-hover" @click="toMenu">
+            <view class="indexItem" hover-class="click-hover" @click="toReview">
                 <view class="itemMask" v-if="shopInfo.vip.type == 1" @click.stop="maskClick"></view>
                 <view class="itemTop">
-                    <image src="../../static/index/Menu_icon.svg" mode="aspectFill"></image>
+                    <image src="../../static/index/Review_icon.svg" mode="aspectFill"></image>
                 </view>
                 <view class="itemBot">
-                    メニュー
+                    クチコミ
                 </view>
             </view>
             <view class="indexItem" hover-class="click-hover" @click="toAppointmeng">
@@ -253,6 +253,18 @@
                 <view>実行する権限がありません</view>
             </view>
         </view>
+        <!-- Stripe契約者向けSMS超額案内パネル -->
+        <view class="infoOverlay" v-if="showSmsStripeInfo">
+            <view class="infoPanel">
+                <view class="infoPanelTitle">お支払いについて</view>
+                <scroll-view scroll-y="true" class="infoPanelScroll">
+                    <view class="infoPanelWarn">
+                        SMS配信上限を超過しています。PCブラウザよりCard-Sanにログインしてお支払いをお願いします。[アカウント]→[ご契約]ページからお手続きが可能です。
+                    </view>
+                    <view class="infoPanelBtn" @click="showSmsStripeInfo = false">上記内容を確認しました</view>
+                </scroll-view>
+            </view>
+        </view>
         <mod v-if="showModule" @getStatus="getStatus" :config="configs"></mod>
         <mod v-if="showModule1" @getStatus="getStatus1" :config="configs1"></mod>
         <permission :show="showpermission" @close='showpermission = false'></permission>
@@ -291,6 +303,7 @@
                 smsprice: "",
                 smscount: "",
                 smsid: [],
+                showSmsStripeInfo: false,
                 gtype: 1,
                 showModule: false,
                 showModule1: false,
@@ -403,12 +416,11 @@
                         that.showalert = true
                     }
                 }
-            })
+            }).catch(() => {})
             getShopInfo().then((res) => {
                 let status = uni.getStorageSync("ale")
                 uni.hideLoading()
                 if (res.code == 200) {
-                    console.log(123123123123123213213213213123123123213,res)
                     that.shopInfo = res.data.shop_info
                     that.day_order_count = res.data.day_order_count
                     that.member_count = res.data.member_count
@@ -439,7 +451,7 @@
                 } else {
 
                 }
-            })
+            }).catch(() => { uni.hideLoading() })
             setTimeout(() => {
                 let that = this
                 plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1);
@@ -501,9 +513,7 @@
                         da.order_no = that.orid
                         da.pay_token = e.transactionReceipt
                         da.transaction_id = e.transactionIdentifier
-                        console.log("da",da)
                         buyextra(da).then((re) => {
-                            console.log("re",re)
                             uni.hideLoading()
                             if (re.code == 200) {
                                 uni.showToast({
@@ -518,7 +528,7 @@
                                     icon: "none"
                                 })
                             }
-                        })
+                        }).catch(() => { uni.hideLoading() })
                     },
                     fail: (e) => {
                         uni.showModal({
@@ -588,10 +598,22 @@
             buysms() {
                 let that = this
                 let platform = uni.getStorageSync("platform")
+
+                // 副管理者は支払い不可
                 if (that.admin_type == 2) {
                     that.kjgu = true
+                    return
                 }
-                
+
+                // #ifdef APP-PLUS
+                // Stripe契約者はアプリ内課金不可
+                if (that.shopInfo && that.shopInfo.vip && that.shopInfo.vip.card_type == 1) {
+                    that.sms = false
+                    that.showSmsStripeInfo = true
+                    return
+                }
+                // #endif
+
                 if (that.admin_type == 1) {
                     uni.showLoading({
                         title: "読み込み中",
@@ -612,7 +634,7 @@
                                     (e) => {
                                         if (e.code == 0) {
                                             googlePay.pay({
-                                                    productId: pId, // 产品id
+                                                    productId: pId,
                                                 },
                                                 (e) => {
                                                     if (e.msg == 'success') {
@@ -635,12 +657,11 @@
                                                                     icon: "none"
                                                                 })
                                                             }
-                                                        })
+                                                        }).catch(() => { uni.hideLoading() })
                                                     }
                                                 }
                                             );
                                         } else {
-                                            //查询失败
                                             uni.showToast({
                                                 title: 'querySku fail,' + e
                                             })
@@ -648,17 +669,17 @@
                                     }
                                 );
                             }
-                        })
+                        }).catch(() => { uni.hideLoading() })
                     }else{
                         let data = {}
                         data.type = 3
                         data.card_type = 2
                         buyextras(data).then((res) => {
                             if (res.code == 200) {
-                                 that.getChannels()
+                                that.getChannels()
                                 that.orid = res.data.order_no
                             }
-                        })
+                        }).catch(() => { uni.hideLoading() })
                     }
                 }
             },
@@ -755,13 +776,13 @@
                 if (e == 'confirm') {
                     this.showModule = false
                 } else {
+                    this.showModule = false
                     uni.clearStorageSync()
                     uni.clearStorage()
-                    uni.closeSocket();
-                    uni.redirectTo({
-                        url: "../login/login"
+                    try { uni.closeSocket() } catch (err) {}
+                    uni.reLaunch({
+                        url: "/pages/login/login"
                     })
-
                 }
             },
             tom() {
@@ -840,7 +861,7 @@
                             duration: 2500
                         })
                     }
-                })
+                }).catch(() => {})
             },
             getLists() {
                 let that = this
@@ -849,7 +870,7 @@
                         that.value2 = res.data.unread_count
                         plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1);
                     }
-                })
+                }).catch(() => {})
             },
             getUnread() {
                 let that = this
@@ -867,7 +888,7 @@
                         that.value = number
                         plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1);
                     }
-                })
+                }).catch(() => {})
             },
             toCoupon() {
                 uni.navigateTo({
@@ -904,7 +925,7 @@
                                                         that.banner = res.data.coupon.images
                                                         that.info = res.data.coupon
                                                     }
-                                                })
+                                                }).catch(() => {})
                                             } else {
                                                 uni.navigateTo({
                                                     url: "../customer/cards/intergrate/intergrate?id=" + temp[1] +
@@ -917,14 +938,15 @@
                             }else{
                                 that.showpermission = true
                             }
+                        }else{
+                            uni.hideLoading()
                         }
-                    })
+                    }).catch(() => { uni.hideLoading() })
                 }else{
                     uni.scanCode({
                         autoDecodeCharset: true,
                         onlyFromCamera: true,
                         success: function(res) {
-                            console.log(res)
                             if (res.scanType == 'QR_CODE') {
                                 let resu = JSON.parse(res.result)
                                 uni.navigateTo({
@@ -934,7 +956,6 @@
                                 let temp = res.result.split("-")
                                 if (temp[0] == 'member_coupon') {
                                     getCouponINfo(temp[1]).then((res) => {
-                                        console.log("res",res)
                                         if (res.code == 200) {
                                             that.show = true
                                             that.banner = res.data.coupon.images
@@ -945,7 +966,7 @@
                                                 icon:'none'
                                             })
                                         }
-                                    })
+                                    }).catch(() => {})
                                 } else {
                                     uni.navigateTo({
                                         url: "../customer/cards/intergrate/intergrate?id=" + temp[1] +
@@ -955,7 +976,7 @@
                             }
                         }
                     })
-                }    
+                }
             },
             toApp() {
                 let that = this 
@@ -975,8 +996,10 @@
                             }else{
                                 that.showpermission = true
                             }
+                        }else{
+                            uni.hideLoading()
                         }
-                    })
+                    }).catch(() => { uni.hideLoading() })
                 }else{
                     uni.navigateTo({
                         url: "../appDownload/appDownload"
@@ -996,6 +1019,11 @@
             toMenu() {
                 uni.navigateTo({
                     url: "../menu/menu"
+                })
+            },
+            toReview() {
+                uni.navigateTo({
+                    url: "../message/reviewSetting/reviewSetting"
                 })
             },
             toAppointmeng() {
@@ -1549,6 +1577,64 @@
             .m {
                 color: #1D1D1F;
             }
+        }
+    }
+
+    .infoOverlay {
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .infoPanel {
+        width: 100vw;
+        height: 90vh;
+        background: #fff;
+
+        .infoPanelTitle {
+            width: 100%;
+            height: 112upx;
+            background: #eaeaea;
+            text-align: center;
+            line-height: 112upx;
+            font-size: 32rpx;
+            font-weight: bold;
+            color: #1D1D1F;
+        }
+
+        .infoPanelScroll {
+            height: calc(90vh - 112upx);
+            box-sizing: border-box;
+            padding: 40upx 34upx;
+        }
+
+        .infoPanelWarn {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 32upx;
+            font-size: 32rpx;
+            font-weight: bold;
+            color: #1D1D1F;
+            background: rgba(230, 191, 24, 0.5);
+        }
+
+        .infoPanelBtn {
+            width: 100%;
+            height: 112upx;
+            line-height: 112upx;
+            background: #06C755;
+            border-radius: 56rpx;
+            text-align: center;
+            color: #fff;
+            font-size: 40rpx;
+            font-weight: bold;
+            margin-top: 100upx;
         }
     }
 </style>

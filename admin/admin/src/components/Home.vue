@@ -109,9 +109,9 @@
         that.dates = year + "年" + month + "月" + da + "日"
       },
       formatNumber(e){
-          let num = e * 1
-          let result = num.toFixed(2)
-          return result
+          let num = parseFloat(e)
+          if (isNaN(num)) return '0.00'
+          return num.toFixed(2)
       },
     }
   }

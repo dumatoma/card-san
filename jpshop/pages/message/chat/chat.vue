@@ -103,7 +103,7 @@
             let that = this
             let hasReadData = {}
             hasReadData.uid = that.query.uid
-            hasRead(hasReadData).then((res) => {})
+            hasRead(hasReadData).then((res) => {}).catch(() => {})
             this.scoketClose()
             this.socketIo.traderDetailIndex = 100
         },
@@ -116,8 +116,6 @@
                 title: "読み込み中"
             })
             let query = options
-            
-            console.log("adasdasdasdasdasdasd",options)
             
             that.query = query
             that.getHistory()
@@ -193,7 +191,7 @@
                                 title: res.message
                             })
                         }
-                    })
+                    }).catch(() => {})
                 } else {
                     this.delshow = false
                 }
@@ -264,7 +262,6 @@
                 // this.socketIo.connectSocketInit()
                 // 接收数据
                 uni.$on("getPositonsOrder", (result) => {
-                    console.log("result", result)
                     that.connect = true
                     if (result.type == 'connect') {
                         bindSocket(result.data.client_id).then((res) => {
@@ -275,7 +272,7 @@
                                 })
 
                             }
-                        })
+                        }).catch(() => {})
                     }
                     // let that = this
 
@@ -384,7 +381,7 @@
                         hasReadData.uid = that.query.uid
                         // hasRead(hasReadData).then((res) => {})
                     }
-                })
+                }).catch(() => { uni.hideLoading() })
             },
             jumpUrl(e) {
                 if (e == "") {
@@ -436,7 +433,7 @@
                         }
                         uni.stopPullDownRefresh()
                     }
-                })
+                }).catch(() => { uni.stopPullDownRefresh() })
             },
             previewImage(e) {
                 let that = this
@@ -478,7 +475,7 @@
                                             } else {
                                                 that.msid = res.data.message_id
                                             }
-                                        })
+                                        }).catch(() => {})
                                     } else if (res.code == 4003) {
 
                                     }
@@ -519,7 +516,7 @@
                                                 }
                                             }, 1000)
 
-                                        })
+                                        }).catch(() => {})
                                     }
                                 }
                             }
@@ -566,9 +563,9 @@
                             }
                             let hasReads = {}
                             hasReads.uid = that.query.uid
-                            hasRead(hasReads).then((res) => {})
+                            hasRead(hasReads).then((res) => {}).catch(() => {})
                         }
-                    })
+                    }).catch(() => {})
                 }
             }
         }

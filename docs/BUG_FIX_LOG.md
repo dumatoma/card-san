@@ -814,4 +814,108 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 |------|----------|
 | `app/Services/StripeService.php` | `notifyUpdateSubscriptions()` 内で、元注文の `subscription_id` が `plink_` の場合に限り実際の Stripe Sub ID（`$object->id`）で上書き更新するよう修正 |
 
+---
+
+## 2026-06-30
+
+### 48. バグ修正：SMS 予約確認通知が届かない（webサイト予約時）
+
+**概要：** webサイト（order.card-san.jp）から予約した際、SMS 確認通知が届かない問題。
+
+**根本原因：** `AlibabaCloudSms::send()` で電話番号を `'81' . $phoneNumbers` と結合していたが、日本の電話番号（例：`09012345678`）の先頭の `0` を除去せずに国番号を付与していたため、`8109012345678` という無効な番号になっていた。正しくは `819012345678`。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `app/Libs/AlibabaCloudSms.php`（サーバー） | `'To' => '81' . ltrim(preg_replace('/[^0-9]/', '', $phoneNumbers), '0')` に修正。非数字文字（ハイフン等）除去＋先頭ゼロ除去 |
+
+**日付：** 2026-06-30
+
+---
+
+### 49. バグ修正：店舗情報「友達に共有」ボタンのリンク先が間違い（google.com を参照）
+
+**概要：** Card-San App の店舗情報画面「アプリダウンロードリンクをコピー」ボタンが `http://www.google.com` をコピーしていた。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jpcard/pagesA/storeInformation/storeInformation.vue` | プラットフォーム検出で Android/iOS 別ストアリンクを使用。バックエンドから `member_app_download_url` を受け取り、設定済みの場合はそちらを優先 |
+| `app/Http/Controllers/Api/Member/ShopController.php`（サーバー） | `GET /api/member/shop/:id` レスポンスに `member_app_download_url`（`webConfig()->download_url`）を追加 |
+
+**日付：** 2026-06-30
+
+---
+
+### 50. バグ修正：チャットメッセージの改行が入力できない
+
+**概要：** チャット画面の入力欄が `<input>` 単行テキストフィールドのため改行を入力できなかった。表示側はすでに `white-space: pre-wrap` で対応済みだったが、入力側が未対応。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jpcard/pagesA/message/chat.vue` | `<input>` を `<textarea>` に変更（`auto-height`、最大高さ 160upx） |
+| `jpshop/pages/message/chat/chat.vue` | 同上 |
+
+**日付：** 2026-06-30
+
+---
+
+### 51. 新機能：チャット画像の端末保存機能を追加
+
+**概要：** チャット画面で受信した画像を長押しすると端末の写真ライブラリに保存できるようにした。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jpcard/pagesA/message/chat.vue` | 画像に `@longpress="saveImage()"` を追加、`uni.saveImageToPhotosAlbum` で保存 |
+| `jpshop/pages/message/chat/chat.vue` | 同上 |
+
+**日付：** 2026-06-30
+
+---
+
+### 52. バグ修正：メニュー画像の Pinch In/Out（ズーム）に対応
+
+**概要：** メニュー画像ポップアップのスワイパー内で画像をタップすると `uni.previewImage` が開き、ピンチ操作でズームできるようになった。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jpcard/pagesA/menu/menu.vue` | スワイパー内の `<image>` に `@click="openPreview(idx)"` を追加、`openPreview()` メソッドで `uni.previewImage` を呼び出す |
+
+**日付：** 2026-06-30
+
+---
+
+### 53. バグ修正：Instagram 連携時の動画コンテンツでヘッダー・フッターが隠れる問題
+
+**概要：** お知らせページで Instagram 動画を表示する際、uni-app の `<video>` タグが iOS でネイティブレイヤーとしてレンダリングされ、`u-navbar` ヘッダーや `<list>` フッターの上に重なって隠れていた。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jpcard/pagesA/notification/notification.vue` | `<video>` タグを削除し、サムネイル画像＋再生ボタンアイコンのオーバーレイに変更。タップで Instagram 詳細ページへ遷移する既存の動作を維持 |
+
+**日付：** 2026-06-30
+
+---
+
+### 54. バグ修正：お知らせ入力の文字数制限（140文字上限）を撤廃
+
+**概要：** uView UI の `u-textarea` コンポーネントのデフォルト `maxlength` が 140 に設定されており、お知らせ本文やその他テキストエリアに文字数制限が掛かっていた。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jpshop/uni_modules/uview-ui/libs/config/props/textarea.js` | `maxlength: 140` → `maxlength: -1`（無制限）に変更 |
+| `jpcard/uni_modules/uview-ui/libs/config/props/textarea.js` | 同上 |
+
+**日付：** 2026-06-30
+
+---
+
+### 55. バグ修正：管理WEBサイト「ご利用プラン」ページが空白になる
+
+**概要：** card-san.jp の管理画面で「ご利用プラン」を選択しても何も表示されない問題。`GET /api/shop/vip` が利用可能なプラン設定（`vip_contract`/`vip_function`）のみを返し、ショップの現在の契約情報（`current_vip`）を返していなかった。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `app/Http/Controllers/Api/Shop/VipController.php`（サーバー） | `index()` メソッドに現在有効な `ShopVipModel` レコードを `current_vip` として追加返却 |
+
+**日付：** 2026-06-30
+
 **日付：** 2026-06-18

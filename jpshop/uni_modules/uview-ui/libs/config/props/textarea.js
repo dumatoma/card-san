@@ -29,7 +29,7 @@ export default {
 		adjustPosition: true,
 		disableDefaultPadding: false,
 		holdKeyboard: false,
-		maxlength: 140,
+		maxlength: -1,
 		border: 'surround',
 		formatter: null
 	}

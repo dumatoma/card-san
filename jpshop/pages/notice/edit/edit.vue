@@ -28,7 +28,7 @@
             <view class="inpTitle">
                 詳細
             </view>
-            <u-textarea height="200" v-model="details"
+            <u-textarea height="200" v-model="details" :maxlength="-1"
                 placeholder="詳細を入力">
             </u-textarea>
         </view>

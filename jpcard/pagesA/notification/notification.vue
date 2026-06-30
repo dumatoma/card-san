@@ -40,8 +40,10 @@
                 <view class="insImage" v-if="item.media_type == 'IMAGE'">
                     <image :src="item.media_url" mode="aspectFill"></image>
                 </view>
-                <view class="insImage" v-if="item.media_type == 'VIDEO'">
-                    <video :src="item.media_url" mode="aspectFit"></video>
+                <view class="insImage insVideoThumb" v-if="item.media_type == 'VIDEO'">
+                    <image v-if="item.thumbnail_url" :src="item.thumbnail_url" mode="aspectFill" style="width:100%;height:100%;"></image>
+                    <view v-else class="videoPlaceholder"></view>
+                    <view class="playIcon">▶</view>
                 </view>
                 <view class="insImage" v-if="item.media_type == 'CAROUSEL_ALBUM'">
                     <u-swiper interval="6000" :indicator="true" indicatorActiveColor="#1A73E8" height="400"
@@ -275,10 +277,25 @@
             width: 100%;
             height: 100%;
         }
+    }
 
-        video {
+    .insVideoThumb {
+        position: relative;
+        background: #000;
+
+        .videoPlaceholder {
             width: 100%;
             height: 100%;
+            background: #1a1a1a;
+        }
+
+        .playIcon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80rpx;
+            color: rgba(255, 255, 255, 0.85);
         }
     }
 

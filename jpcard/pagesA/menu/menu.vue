@@ -81,9 +81,9 @@
                     <u-icon name="close" color="#FFFFFF" size="16"></u-icon>
                 </view>
                 <swiper :indicator-dots="false" :autoplay="false" :duration="1000" :circular="true" @change="change">
-                    <swiper-item v-for="item in imgList" :key="item">
+                    <swiper-item v-for="(item,idx) in imgList" :key="item">
                         <view class="swiper-item">
-                            <image :src="item" mode="aspectFit" class="tu-img"></image>
+                            <image :src="item" mode="aspectFit" class="tu-img" @click="openPreview(idx)"></image>
                         </view>
                     </swiper-item>
                 </swiper>
@@ -239,6 +239,13 @@
             heJiShow(index, idx) {
                 this.imgList = this.menuList[index].menus[idx].image
                 this.imgListShow = true
+                this.sum = 1
+            },
+            openPreview(idx) {
+                uni.previewImage({
+                    current: idx,
+                    urls: this.imgList
+                })
             },
             change(e) {
                 this.sum = e.detail.current + 1

@@ -17,7 +17,7 @@
                                 style="white-space: pre-wrap;"></text>
                         </view>
                         <view v-if="item.type == 2" class="msgDetailImage">
-                            <image @click="previewImage(item.message)" :src="item.message" mode="widthFix"></image>
+                            <image @click="previewImage(item.message)" @longpress="saveImage(item.message)" :src="item.message" mode="widthFix"></image>
                         </view>
                         <view v-if="item.type == 3" class="msgDetailImage" style="height: 120rpx;overflow: hidden">
                             <image @click="openURL(item.url)" :src="item.message" style="height: 120rpx;width: 100%;" mode="aspectFill"></image>
@@ -41,9 +41,9 @@
                 </image>
             </view>
             <view class="boxRight" style="flex: 1;">
-                <input placeholder="メッセージを入力"
-                    style="border: 2upx solid #999;height:65upx;border-radius: 30upx;box-sizing: border-box;padding: 0 15upx;"
-                    v-model="sendMessage" adjust-position="false" @focus="emitFocus" @blur="blur"></input>
+                <textarea placeholder="メッセージを入力"
+                    style="border: 2upx solid #999;min-height:65upx;max-height:160upx;border-radius: 30upx;box-sizing: border-box;padding: 10upx 15upx;width:100%;"
+                    v-model="sendMessage" adjust-position="false" auto-height @focus="emitFocus" @blur="blur"></textarea>
             </view>
             <view class="boxRights" v-if="sendMessage != ''">
                 <image src="../../static/image/send.png" mode="" @touchend.prevent="send" v-if="msid == 0"></image>
@@ -424,6 +424,27 @@
                 uni.previewImage({
                     current: 0,
                     urls: tem
+                })
+            },
+            saveImage(url) {
+                uni.showActionSheet({
+                    itemList: ['画像を保存'],
+                    success: (res) => {
+                        if (res.tapIndex === 0) {
+                            uni.downloadFile({
+                                url: url,
+                                success: (res) => {
+                                    if (res.statusCode === 200) {
+                                        uni.saveImageToPhotosAlbum({
+                                            filePath: res.tempFilePath,
+                                            success: () => uni.showToast({ title: '保存しました', icon: 'success' }),
+                                            fail: () => uni.showToast({ title: '保存に失敗しました', icon: 'none' })
+                                        })
+                                    }
+                                }
+                            })
+                        }
+                    }
                 })
             },
             formatTime() {

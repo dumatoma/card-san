@@ -250,6 +250,7 @@
                 sum: 1,
                 imgList: [],
                 shopInfo: {},
+                memberAppDownloadUrl: "",
                 staff: [],
                 today: {},
                 todayTime: {},
@@ -398,14 +399,19 @@
             },
             copy() {
                 let that = this
+                let downloadUrl = that.memberAppDownloadUrl
+                if (!downloadUrl) {
+                    const platform = uni.getSystemInfoSync().platform
+                    downloadUrl = platform === 'android'
+                        ? 'https://play.google.com/store/apps/details?id=com.cardsan.customer'
+                        : 'https://apps.apple.com/jp/app/cardsan/id6445853601'
+                }
                 uni.setClipboardData({
-                    data: "http://www.google.com", //要被复制的内容
-                    success: () => { //复制成功的回调函数
-                    uni.hideToast()
+                    data: downloadUrl,
+                    success: () => {
+                        uni.hideToast()
                         that.showA = true
-                        setTimeout(() => {
-                            that.showA = false
-                        },2000)
+                        setTimeout(() => { that.showA = false }, 2000)
                     }
                 })
             },
@@ -472,6 +478,7 @@
                 getShopInfo(that.sid).then((res) => {
                     if (res.code == 200) {
                         that.shopInfo = res.data.shop
+                        that.memberAppDownloadUrl = res.data.member_app_download_url || ""
                         that.staff = res.data.admin3
                         uni.request({
                             url: "https://maps.googleapis.com/maps/api/geocode/json?address=〒" + that

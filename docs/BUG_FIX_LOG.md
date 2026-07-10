@@ -908,6 +908,255 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 
 ---
 
+### 60. jppc 追加バグ修正（4回目のソースコードレビュー・全ファイル横断監査）
+
+全 view ファイル（約60本）を5グループに分けて監査し、以下の真正バグを修正。誤検出（`registration.vue` の `endTIme` は `api.js` の `getStaffList` 定義と一致するため正常／`editFirst.vue` の未 import `changeDefault` は到達不能なデッドコード／`coupon.vue` の `item.indate`・`appointmentSetting.vue` の sex 型・`deputyAdministrator.vue` の -1 変換は API 仕様依存でリスクあり）は対象外とした。
+
+#### 60-1. 予約管理：未収藏アイコンのクリックが効かない
+**概要：** `appointment.vue` のお気に入りアイコンで `@clic.stop`（`k` 抜けタイプミス）。`is_collect == 0` の通知をお気に入りに追加できない。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/appointment.vue`（94行） | `@clic.stop` → `@click.stop` |
+
+#### 60-2. 予約管理：予約削除ボタンが無反応（メソッド空実装）
+**概要：** 削除確認ダイアログの「削除」ボタンが呼ぶ `deletenoticeAppointment()` の中身が空。予約削除機能が完全に動かない。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/appointment.vue` | 既存の `deleteOrder()` に倣い `deleteAppointment(that.orderInfo.id)` を呼び、成功時 `delShow` を閉じ `getNoticeList()` で再取得する実装を追加 |
+
+#### 60-3. 予約管理：スタッフ列が同一 `times` 配列参照を共有
+**概要：** `getList()`（1597行）と `getWeekList()`（1534行）で全スタッフ列の `times` に `that.times` の同一参照を代入。子コンポーネントが1列を変更すると全列が汚染される。`getList` には深コピー用 `timeArr`（1592行）が用意済みだが未使用だった。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/appointment.vue` | 両箇所を `JSON.parse(JSON.stringify(that.times))` で列ごとに深コピー |
+
+#### 60-4. 予約管理：`is_collect` の型が真偽値に化ける
+**概要：** `collectNotice()` で `is_collect = !is_collect` とし、バックエンドの 0/1 数値が `true/false` に化ける（テンプレートの緩い比較で辛うじて動作するが型不整合）。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/appointment.vue`（1385行） | `= !...` → `= ... == 1 ? 0 : 1` で数値のまま切替 |
+
+#### 60-5. 予約設定・メニュー一覧：ネスト回調で誤ったレスポンスを判定
+**概要：** `appointmentSetting.vue`・`menuList.vue` とも `getMenuList().then((result) => { if(res.code == 200) ... })` と外側の `res` を判定。`getMenuList` が失敗すると `result.data.menus` が undefined となり `.forEach` で TypeError。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/appointmentSetting.vue`（331行） | `if(res.code == 200)` → `if(result.code == 200)` |
+| `jppc/.../views/variousSet/menuList.vue`（165行） | 同上 |
+
+#### 60-6. 解約完了ページに遷移しない（変数名タイプミス）
+**概要：** `terminationFulfil.vue` の `offf()` で解約成功時 `this.setp = 2`（正しくは `step`）。存在しないフィールドに代入するため、テンプレートの `step == 1 / v-else` が切り替わらず「解約手続き完了」画面が永遠に表示されない。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/plan/terminationFulfil.vue`（80行） | `this.setp = 2` → `this.step = 2` |
+
+#### 60-7. プラン購入判定で比較のつもりが代入
+**概要：** `content.vue` の `buyPlan()` 回調で `if (res.code = 200)`（代入）。常に真となり、失敗レスポンスも成功扱いされる。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/plan/content.vue`（272行） | `if (res.code = 200)` → `if (res.code == 200)` |
+
+#### 60-8. メッセージ作成の入力チェックが演算子優先順位で誤動作
+**概要：** `deliveryHistory.vue` の `nextStep()` で `if((that.title != '' && that.txt) != '' || ...)` と括弧位置が誤り、「タイトルとテキスト両方入力」の判定が意図通りにならない。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/deliveryHistory.vue`（658行） | `(that.title != '' && that.txt) != ''` → `(that.title != '' && that.txt != '')` |
+
+#### 60-9. CSV ファイル名が10月・10日でゼロ埋め誤り
+**概要：** `download.vue` で `(month) > 10 ? month : '0'+month` と書かれており、値がちょうど 10 のとき `'010'` になる（10月・10日でファイル名が壊れる）。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/download.vue`（430-431行） | 月・日とも `> 10` → `>= 10` |
+
+#### 60-10. 誕生月・性別の選択入力が `v-model` にメソッド呼び出しをバインド
+**概要：** `download.vue`・`foundCoupon.vue` の絞り込み入力で `v-model="array.join()"` のように代入不可能な式に双方向バインド。書き戻しセッターが不正になる。これらは実際にはクリックでポップアップを開く表示専用フィールド。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/download.vue`（31・51行） | `v-model="months.join()"`/`"sexs.join()"` → `readonly :value="..."` |
+| `jppc/.../views/foundCoupon.vue`（344・383行） | `v-model="array.join()"`/`"array1.join()"` → `readonly :value="..."` |
+
+#### 60-11. 商品詳細→注文遷移で URL 未エンコード
+**概要：** `projectDetail.vue` の `order()` で `goodsInfo` を `JSON.stringify` して未エンコードのまま query に連結。説明文に `&`・`#`・改行等が含まれると `/order` 側の `JSON.parse(query.info)` が SyntaxError。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/projectDetail.vue`（84行） | `JSON.stringify(that.goodsInfo)` → `encodeURIComponent(JSON.stringify(that.goodsInfo))` |
+
+#### 60-12. 営業カレンダー：`days`/`pickerArr` 未初期化でクラッシュ
+**概要：** `calendar.vue` で `days`・`pickerArr` が `data()` に未宣言。`selectDay()` の `that.days[index].business_time`、`else` 分岐の `that.pickerArr`（undefined）、および `addTime()` の `this.openArr.length` が状況次第で TypeError を起こす。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/variousSet/calendar.vue` | `data()` に `days:[]`・`pickerArr:[]` を追加 |
+
+#### 60-13. 無効な CSS カラー値でアイコン色が反映されない
+**概要：** 4ファイルの「登録」系アイコンで `color: #1a73e8k`（末尾に不要な `k`、7桁）。ブラウザに無視され青色にならない。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/variousSet/{typeRegister,menuList,deputyLook,registration}.vue` | `#1a73e8k` → `#1a73e8` |
+
+**日付：** 2026-07-11
+
+---
+
+### 57. jppc 複数バグ修正（ソースコード取得後の対応）
+
+#### 57-1. リクエストエラーが握りつぶされる
+**概要：** `request.js` の axios インターセプターで、エラー時に `return` が欠落、かつ `Promise.resolve(error.response)` でエラーを正常扱いしていた。ネットワークエラー時に `undefined` が返り、呼び出し側が `res.code` を参照するとクラッシュ。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/jp-card-pc/src/http/request.js` | リクエストインターセプターに `return` を追加。レスポンスエラーハンドラを `Promise.resolve(error.response)` → `Promise.reject(error)` に変更 |
+
+#### 57-2. 来店履歴 API URL のタイポ
+**概要：** `getComeList` の URL で `&date"+data.date` となっており `=` が欠落。`?type=come&date20260707&mid=123` のような壊れたクエリが送信されていた。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/jp-card-pc/src/http/api.js` | `&date"+data.date` → `&date="+data.date` |
+
+#### 57-3. ご利用プランページで機能リストが共有参照になるバグ
+**概要：** `getList()` で `arr` を各プランの `items` に代入する際、同一配列参照を全プランに割り当てていた。1つのプランで機能詳細を開くと、全プランで同じ機能が開いてしまう。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/plan/utilizePlan.vue` | `val.items = arr` → `val.items = arr.map(v => ({...v}))` |
+| `jppc/.../views/plan/planconfirm.vue` | 同上 |
+
+#### 57-4. プラン確認ページの契約更新日計算が常に現在時刻基準になる
+**概要：** `cycleClick()` 内で `that.endTIme` と誤記（正しくは `that.endDate`）。`endTIme` は常に `undefined` のため、既存契約の終了日ではなく現在時刻から更新日を計算していた。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/plan/planconfirm.vue` | `endTIme` → `endDate`（2 箇所） |
+
+#### 57-5. お知らせ編集で保存ボタンが表示されず、表示されても保存しない
+**概要：** `contribution.vue` で `info` フラグが編集時に `true` に設定されないため、「保存」ボタン（`v-if="info"`）が常に非表示。また「保存」ボタンのクリックハンドラが `releaseShow = true`（ポップアップ表示のみ）で、実際の保存 API を呼び出していなかった。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/contribution.vue` | 編集モード（`id != "000"`）時に `that.info = true` を追加 |
+| `jppc/.../views/contribution.vue` | 保存ボタンの `@click.stop="releaseShow = true"` → `@click.stop="releaseClick()"` に変更 |
+
+**日付：** 2026-07-07
+
+---
+
+### 58. jppc 追加バグ修正（2回目のソースコードレビュー）
+
+#### 58-1. 住所検索後に `uni.nav` が残っておりエラーになる
+**概要：** `address.vue` の `searchAddress()` 内に uni-app 固有の `uni.nav` が残存。web 環境では `uni` は未定義のため `ReferenceError` が発生し、住所自動入力後の処理がクラッシュする。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/address.vue` | `uni.nav` 1行を削除 |
+
+#### 58-2. お知らせ設定で `uni.showToast` が残っておりエラーになる
+**概要：** `noticeSet.vue` の `connectIns()` 内、Instagram 連携 API がエラーを返したときの処理で `uni.showToast({...})` が呼ばれている。web 環境では `uni` が未定義のためエラーとなり、エラーメッセージが一切表示されない。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/noticeSet.vue` | `uni.showToast({title: res.message, icon: "none"})` → `this.$message.error(res.message)` |
+
+#### 58-3. メンバー情報編集の画像アップロードで成功判定変数が誤っている
+**概要：** `editinfo.vue` の `handleAvatarSuccess()` 内で `uploadMemberImage` の結果を `result` に受け取るが、成功判定で `if(res.code == 200)` と書かれており（`res` はファイルアップロードのレスポンス）、`uploadMemberImage` API の成功/失敗が正しく判定されない。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/editinfo.vue` | `if(res.code == 200)` → `if(result.code == 200)` |
+
+#### 58-4. メッセージテンプレート保存で両テンプレートが同じ内容で上書きされる
+**概要：** `moduleSetting.vue` の `saveData()` で、テンプレート1を編集しているときもテンプレート2のデータに同じ `title`/`content` を push している。保存するたびに使用中でないテンプレートも上書きされる。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/moduleSetting.vue` | 編集中テンプレートのみ新内容を設定し、未編集側は保存済みの `that.m1`/`that.m2` を維持する分岐に変更 |
+
+#### 58-5. レビューリンク設定でカスタム画像が保存されずブラウザを閉じると消える
+**概要：** `reviewSetting.vue` の `handleAvatarSuccess()` で、アップロード成功後に `URL.createObjectURL(file.raw)`（ローカル blob URL）を `this.image` にセットしており、ページリロード後に画像が消える。また `that.admin.avatar` というこのコンポーネントに存在しないプロパティを更新している。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/reviewSetting.vue` | `that.admin.avatar = res.data.path` + `URL.createObjectURL(file.raw)` → `that.image = res.data.path` に統合 |
+
+**日付：** 2026-07-10
+
+---
+
+### 59. jppc 追加バグ修正（3回目のソースコードレビュー）
+
+#### 59-1. お知らせ設定で Instagram ラジオボタンをクリックしても選択されない
+**概要：** `noticeSet.vue` の Instagram 連携ラジオボタンに `@click` ハンドラが欠落しており、クリックしても `type` が 2 に切り替わらない。保存しても「お知らせ投稿機能」のままになる。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/noticeSet.vue` | Instagram ラジオボタンの `div` に `@click="setClick(2)"` を追加 |
+
+#### 59-2. 自動メッセージのプレビューでサンキューメッセージ表示が崩れる
+**概要：** `automaticSetting.vue` のプレビューダイアログで、`v-show="title != 'サンキューメッセージ'"` と書かれており、`title` は常に `""` のため、サンキューメッセージ編集中でも予約情報ブロックが非表示にならない。正しくは `titles`（編集中のメッセージ種別を保持する変数）。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/automaticSetting.vue` | プレビュー内の `v-show="title != '..."` を `v-show="titles != '..."` に修正（2箇所） |
+
+#### 59-3. メッセージ配信・編集で `editItem()` がクラッシュする
+**概要：** `mass.vue` の `editItem()` 末尾に未定義変数 `data` を参照する孤立コードが残っており（`data['order_time'] = tempDate + " " + tempTime` 等）、`ReferenceError: data is not defined` が発生する。配信履歴から「編集」を開くたびにクラッシュする。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/mass.vue` | `editItem()` 末尾の孤立コード3行（`data['order_time']`・`data['birthday_month']`・`data['sex']`）を削除 |
+
+#### 59-4. 予約管理で通知削除後にリストが更新されない
+**概要：** `appointment.vue` の `deleteNotice()` で通知削除成功後に `that.tongList.split(index, 1)` を呼び出しているが、配列に `.split()` メソッドは存在しない（文字列の `.split()` と混同）。削除しても UI 上のリストから消えない。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/appointment.vue` | `that.tongList.split(index, 1)` → `that.tongList.splice(index, 1)` |
+
+#### 59-5. 店舗情報の「業種」が毎回未選択になる・保存で空値が送られる
+**概要：** `storeInfo.vue` の `getInfo()` が `shopInfo.shop_cate` を数値キーから業種名文字列（例："美容院"）に上書きしており、`getConfig()` で `array["美容院" * 1]`（= `array[NaN]`）を参照して `TypeError` が発生。業種ドロップダウンが常に未選択状態になる。さらに `conserveClick()` が `that.industry`（ドロップダウン変更時のみ更新）で保存するため、業種を変更しないと空値 `""` が API に送られ既存設定が上書きされる。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jppc/.../views/variousSet/storeInfo.vue` | `getInfo()`：誤った名前文字列代入 → `String(shop_cate)` でキー文字列に変換 |
+| `jppc/.../views/variousSet/storeInfo.vue` | `getConfig()`：クラッシュする `array[shop_cate*1].value` 代入行を削除 |
+| `jppc/.../views/variousSet/storeInfo.vue` | `conserveClick()`：`that.industry` → `that.shopInfo.shop_cate` に変更 |
+
+**日付：** 2026-07-10
+
+---
+
+### 56. バグ修正：画像付きお知らせを開くとアプリが Loading のまま固まる
+
+**概要：** jpcard の「お知らせ」タブで、画像付きの投稿が1件でも存在する場合、画面を開いた瞬間に Loading インジケーター（mask: true）が表示されたままアプリが操作不能になる。テキストのみの投稿では発生しない。
+
+**根本原因：**
+1. `shop.vue` の `onReachBottom()` ページライフサイクルが `uni.$emit('onReachBottom')` を発火する
+2. `notification.vue` の `mounted()` がこのイベントを `uni.$on` でリッスンし、`getMore()` を呼び出す
+3. `getMore()` は type を確認せず無条件に `uni.showLoading({ mask: true })` を呼び出す
+4. その後 `getInsLists()` を呼ぶが、`uni.hideLoading()` は `if (that.type == 2)` ブロック内にのみ存在する
+5. type==1（お知らせモード）では `hideLoading` が一切呼ばれず、Loading オーバーレイが永続 → 全操作ブロック
+
+画像付き投稿の場合、`u-swiper` の初期化が引き起こすレイアウト変化が `onReachBottom` の早期発火を招く。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `jpcard/pagesA/notification/notification.vue` | `getMore()` の先頭に `if (this.type !== 2) return` を追加し、type==1 では Loading 表示・API 呼び出し両方をスキップ |
+
+**日付：** 2026-07-06
+
+---
+
 ### 55. バグ修正：管理WEBサイト「ご利用プラン」ページが空白になる
 
 **概要：** card-san.jp の管理画面で「ご利用プラン」を選択しても何も表示されない問題。`GET /api/shop/vip` が利用可能なプラン設定（`vip_contract`/`vip_function`）のみを返し、ショップの現在の契約情報（`current_vip`）を返していなかった。

@@ -115,6 +115,7 @@
         },
         methods: {
             getMore() {
+                if (this.type !== 2) return
                 uni.showLoading({
                     title: "Loading...",
                     mask: true

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="20" height="20" viewBox="0 0 20 20">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="矩形_2340" data-name="矩形 2340" width="20" height="20" transform="translate(942 20)" fill="#fff"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <path id="路径_12243" data-name="路径 12243" d="M14.306,5.142A5.142,5.142,0,1,1,9.164,0h0A5.141,5.141,0,0,1,14.306,5.142Z" fill="#fff"/>
+    </clipPath>
+    <clipPath id="clip-path-3">
+      <path id="路径_12245" data-name="路径 12245" d="M13.686,8.444a7.555,7.555,0,0,1-7.583,0A6.327,6.327,0,0,0,1.08,14.367v3.522H18.708v-3.5A6.331,6.331,0,0,0,13.686,8.444Z" fill="#fff"/>
+    </clipPath>
+  </defs>
+  <g id="蒙版组_48" data-name="蒙版组 48" transform="translate(-942 -20)" clip-path="url(#clip-path)">
+    <g id="グループ_9223" transform="translate(1462.139 4692.727)">
+      <g id="グループ_3138" transform="translate(-519.299 -4672.728)">
+        <path id="パス_2935" d="M14.306,5.142A5.142,5.142,0,1,1,9.164,0h0A5.141,5.141,0,0,1,14.306,5.142Z" fill="#fff"/>
+        <g id="组_9223" data-name="组 9223">
+          <path id="路径_12242" data-name="路径 12242" d="M14.306,5.142A5.142,5.142,0,1,1,9.164,0h0A5.141,5.141,0,0,1,14.306,5.142Z" fill="#fff"/>
+          <g id="グループ_3137" clip-path="url(#clip-path-2)">
+            <g id="グループ_3136" transform="translate(-5.869 -6.076)">
+              <rect id="長方形_1212" width="63.989" height="63.969" transform="translate(-19.449 -24.311)" fill="#fff"/>
+              <rect id="長方形_1213" width="63.989" height="63.969" transform="translate(-19.449 -24.311)" fill="#fff"/>
+            </g>
+          </g>
+        </g>
+      </g>
+      <g id="グループ_3142" transform="translate(-520.033 -4670.616)">
+        <path id="パス_2937" d="M13.686,8.444a7.555,7.555,0,0,1-7.583,0A6.327,6.327,0,0,0,1.08,14.367v3.522H18.708v-3.5A6.331,6.331,0,0,0,13.686,8.444Z" fill="#fff"/>
+        <g id="组_9224" data-name="组 9224">
+          <path id="路径_12244" data-name="路径 12244" d="M13.686,8.444a7.555,7.555,0,0,1-7.583,0A6.327,6.327,0,0,0,1.08,14.367v3.522H18.708v-3.5A6.331,6.331,0,0,0,13.686,8.444Z" fill="#fff"/>
+          <g id="グループ_3141" clip-path="url(#clip-path-3)">
+            <g id="グループ_3140" transform="translate(-4.987 -8.281)">
+              <rect id="長方形_1214" width="62.608" height="63.969" transform="translate(-18.849 -24.671)" fill="#fff"/>
+              <rect id="長方形_1215" width="62.608" height="63.969" transform="translate(-18.849 -24.671)" fill="#fff"/>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -14,7 +14,8 @@
             // push 通知イベント処理
             // click: 通知バーをタップした時（バックグラウンド→フォアグラウンド遷移）
             // receive: アプリがフォアグラウンドで通知を受信した時
-            function handlePushMessage(message) {
+            // 通知タップ時：該当画面へ遷移
+            function handlePushClick(message) {
                 if (!message.payload) return
                 if (message.payload.type == 'message') {
                     uni.navigateTo({
@@ -34,8 +35,24 @@
                     })
                 }
             }
-            plus.push.addEventListener('click', handlePushMessage)
-            plus.push.addEventListener('receive', handlePushMessage)
+            // フォアグラウンド受信時：システムは自動で通知バーに出さないため手動でローカル通知を作成し、バッジも更新
+            function handlePushReceive(message) {
+                var payload = message.payload || {}
+                try {
+                    var title = payload.title || 'Card-San'
+                    var content = payload.content || message.content || '新しい通知があります'
+                    plus.push.createMessage(content, JSON.stringify(payload), {
+                        title: title
+                    })
+                } catch (e) {}
+                try {
+                    if (payload.badge != null) {
+                        plus.runtime.setBadgeNumber(Number(payload.badge))
+                    }
+                } catch (e) {}
+            }
+            plus.push.addEventListener('click', handlePushClick)
+            plus.push.addEventListener('receive', handlePushReceive)
             uni.setStorageSync("ale", "aviliable")
             uni.setStorageSync("socketStatus", "unconnect")
             uni.request({

@@ -119,7 +119,7 @@
                 showSex: false,
                 title: 'アカウント情報の更新',
                 content: 'アカウント情報を更新しました',
-                ass: [0,0,0,0,0],
+                ass: [0,0,0,0,0,0],
                 as: [],
                 city: [
                     ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都',
@@ -348,8 +348,8 @@
                             that.ass[3] = "0"
                         }
 
-                        if (res.data.user.address) {
-                            that.ass[5] = "address1"
+                        if (res.data.user.zip_code && res.data.user.province && res.data.user.address1) {
+                            that.ass[5] = "address"
                         } else {
                             that.ass[5] = "0"
                         }

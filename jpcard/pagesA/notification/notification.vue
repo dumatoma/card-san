@@ -58,7 +58,8 @@
                     </view>
                     <view class="timestamps" v-text="item.datetime"></view>
                     <view class="des">
-                        {{item.caption}}
+                        <text>{{ (item.showAllCaption || !isLongCaption(item.caption)) ? item.caption : (item.caption.slice(0, 85) + '…') }}</text>
+                        <text v-if="isLongCaption(item.caption) && !item.showAllCaption" class="readmore" @click.stop="expandCaption(index)">続きを読む</text>
                     </view>
                     <view class="tps">
                         Synced from Instagram
@@ -185,6 +186,12 @@
                 uni.navigateTo({
                     url: "../webins/webins?link=" + e
                 })
+            },
+            isLongCaption(caption) {
+                return !!caption && caption.length > 85
+            },
+            expandCaption(index) {
+                this.$set(this.insList[index], 'showAllCaption', true)
             },
             leftClick() {
                 let that = this
@@ -383,6 +390,11 @@
                     font-size: 28rpx;
                     color: #707070;
                     white-space: pre-wrap;
+
+                    .readmore {
+                        color: #1A73E8;
+                        margin-left: 6rpx;
+                    }
                 }
             }
         }

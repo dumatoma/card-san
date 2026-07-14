@@ -908,6 +908,37 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 
 ---
 
+### 61. QA一括対応（クライアント報告19件・2026-07-14）
+
+顧客からの不具合/要望19件を報告順に対応。サーバー(api.card-san.jp)/jppc(Web)は即デプロイ済、jpcard/jpshopはソース修正済でHBuilderXビルド＆配布待ち。
+
+| # | 対象 | 修正内容 | 反映 |
+|---|------|----------|------|
+| ① | サーバー ShopController | vip(機能ゲーティング)が有効契約vipsの最上位typeを下回らない補正追加(Premium契約→Light表示の不整合防止)。php-fpm graceful reload済 | **本番済** |
+| ② | jpcard BindCard.vue | 会員登録: ass配列5→6要素、存在しないuser.address判定→zip_code&&province&&address1、キー統一。住所必須で登録ボタン永久無効を解消 | 要ビルド |
+| ③ | jpcard shop.vue | フッター背景page_footer_color undefined→透明を`||`で解消、page_footer_icon.forEach防御、アイコン色フォールバック、changeColorガード | 要ビルド |
+| ④ | jpcard notification.vue | 画像付きお知らせLoading固まりは#56(getMore type!=2 return)で修正済。1067未反映が原因 | 要ビルド |
+| ⑤ | jpcard/jpshop App.vue | push receive/click分離、フォアグラウンドでcreateMessage手動通知+badge反映。残:サーバーpayload+DCloud設定+実機テスト | 要ビルド/連携 |
+| ⑥ | jppc mass/download/foundCoupon | 来店期間の以上経過↔以内が逆(jpshop正解に統一) | **本番済** |
+| ⑦ | jppc appointment.vue | 新規予約ボタン「保存」→「この内容で予約する」 | **本番済** |
+| ⑧⑨ | jpcard/jpshop chat.vue | メッセージ入力欄: .sendBox固定height→min-height(改行時の崩れ解消)+上部padding、textarea max-height 160→400upx | 要ビルド |
+| ⑩ | jpcard img-viewer.vue(新規)+chat.vue | 受信画像フルスクリーン(pinch)+DLアイコン+saveImageToPhotosAlbum+「保存しました」 | 要ビルド |
+| ⑪ | サーバー(調査のみ) | 自動返信SMSはハードコード本文+Alibaba国際SMSが改行除去。実SMS検証必要のため本番未変更(要方針決定) | 要判断 |
+| ⑫ | jpcard ModifyInformation/accountInformation | ログアウト: redirectTo→reLaunch(遷移確実化+キャッシュ氏名クリア)、user削除 | 要ビルド |
+| ⑬ | jpshop notice/setting/setting.vue | お知らせ設定onLoadのsetTimeout 2000ms人為的遅延を撤去(約3秒→~1秒) | 要ビルド |
+| ⑭ | jppc noticeSet.vue | Instagramラジオ選択不可(#60-1で修正済) | **本番済(7/11)** |
+| ⑮ | jpcard menu.vue | メニュー画像pinchはopenPreviewが既にuni.previewImage使用(ネイティブpinch)。1067未反映が原因 | 要ビルド |
+| ⑯ | jpcard notification.vue | Instagram: 動画はサムネイル方式でz-index回避済、caption 85文字カット+「続きを読む」実装 | 要ビルド |
+| ⑰ | jpshop edit.vue / jppc appointment.vue | 終了時間編集: showEndのmenu.id==0制限撤去(通常メニューも編集可)+end>start検証。jppcはeditKeepに検証追加 | jpshop要ビルド/jppc本番済 |
+| ⑱ | jpshop | UIアイコン差替+プラン説明追加はFigma素材が必要(未着手) | 要素材 |
+| ⑲ | jpshop | チャットルーム機能はFigma仕様が必要・大型(未着手) | 要仕様 |
+
+版号更新: jpcard 1.1.2(1067)→1.1.3(1068)、jpshop 1.0.32(1082)→1.0.33(1083)。
+
+**日付：** 2026-07-14
+
+---
+
 ### 60. jppc 追加バグ修正（4回目のソースコードレビュー・全ファイル横断監査）
 
 全 view ファイル（約60本）を5グループに分けて監査し、以下の真正バグを修正。誤検出（`registration.vue` の `endTIme` は `api.js` の `getStaffList` 定義と一致するため正常／`editFirst.vue` の未 import `changeDefault` は到達不能なデッドコード／`coupon.vue` の `item.indate`・`appointmentSetting.vue` の sex 型・`deputyAdministrator.vue` の -1 変換は API 仕様依存でリスクあり）は対象外とした。

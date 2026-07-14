@@ -431,20 +431,20 @@
             </div>
             <div
               class="radius m-l-30"
-              :class="{ radiusCss: couponInfo.shop_time_desc == 2 }"
-              @click.stop="oneClick(2)"
-            >
-              <div class="blue_dot" v-if="couponInfo.shop_time_desc == 2"></div>
-            </div>
-            <div style="color: #707070; margin-right: 19px" :style="couponInfo.shop_time_desc == 2?'color:#1d1d1f' : ''">以上経過</div>
-            <div
-              class="radius"
               :class="{ radiusCss: couponInfo.shop_time_desc == 1 }"
               @click.stop="oneClick(1)"
             >
               <div class="blue_dot" v-if="couponInfo.shop_time_desc == 1"></div>
             </div>
-            <div style="color: #707070" :style="couponInfo.shop_time_desc == 1?'color:#1d1d1f' : ''">以内</div>
+            <div style="color: #707070; margin-right: 19px" :style="couponInfo.shop_time_desc == 1?'color:#1d1d1f' : ''">以上経過</div>
+            <div
+              class="radius"
+              :class="{ radiusCss: couponInfo.shop_time_desc == 2 }"
+              @click.stop="oneClick(2)"
+            >
+              <div class="blue_dot" v-if="couponInfo.shop_time_desc == 2"></div>
+            </div>
+            <div style="color: #707070" :style="couponInfo.shop_time_desc == 2?'color:#1d1d1f' : ''">以内</div>
           </div>
 
           <div class="tit_info">来店回数</div>
@@ -644,7 +644,7 @@ export default {
           birthday_month:"",
           sex:"",
           shop_time:"",
-          shop_time_desc:2,
+          shop_time_desc:1,
           shop_count:"",
           shop_count_desc:2,
          
@@ -864,7 +864,7 @@ export default {
           birthday_month:"",
           sex:"",
           shop_time:"",
-          shop_time_desc:2,
+          shop_time_desc:1,
           shop_count:"",
           shop_count_desc:2
       }

@@ -82,14 +82,14 @@
                         </el-select>
                     </div>
 
-                    <div class="radius shou" :class="{ radiusCss: oneShow == 2 }" @click.stop="oneClick(2)">
-                        <div class="blue_dot" v-if="oneShow == 2"></div>
-                    </div>
-                    <div style="color: #707070; margin-right: 19px" :style="oneShow == 2?'color:#1d1d1f' : ''">以上経過</div>
-                    <div class="radius shou" :class="{ radiusCss: oneShow == 1}" @click.stop="oneClick(1)">
+                    <div class="radius shou" :class="{ radiusCss: oneShow == 1 }" @click.stop="oneClick(1)">
                         <div class="blue_dot" v-if="oneShow == 1"></div>
                     </div>
-                    <div style="color: #707070" :style="oneShow == 1?'color:#1d1d1f' : ''">以内</div>
+                    <div style="color: #707070; margin-right: 19px" :style="oneShow == 1?'color:#1d1d1f' : ''">以上経過</div>
+                    <div class="radius shou" :class="{ radiusCss: oneShow == 2}" @click.stop="oneClick(2)">
+                        <div class="blue_dot" v-if="oneShow == 2"></div>
+                    </div>
+                    <div style="color: #707070" :style="oneShow == 2?'color:#1d1d1f' : ''">以内</div>
                 </div>
 
                 <div class="tit_info">来店回数</div>

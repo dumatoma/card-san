@@ -114,7 +114,8 @@
     methods: {
         logout(){
            uni.removeStorageSync("token")
-           uni.redirectTo({
+           uni.removeStorageSync("user")
+           uni.reLaunch({
                url:"/pages/login/login"
            })
         },

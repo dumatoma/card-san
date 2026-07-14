@@ -86,12 +86,11 @@
         },
         onLoad() {
             let that = this
-            setTimeout(() => {
-                if(that.current != 2){
-                   that.getShopInfo()
-                }else{
-                }
-            },2000)
+            // 以前は setTimeout 2000ms の人為的な遅延があり、選択状態の反映が約3秒遅れていた。
+            // 遅延を撤去して即座に現在の設定値を取得する。
+            if (that.current != 2) {
+                that.getShopInfo()
+            }
         },
         methods: {
             toShou() {

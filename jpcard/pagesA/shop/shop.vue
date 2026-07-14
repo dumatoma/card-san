@@ -17,7 +17,7 @@
             :bgColor="shopInfo.page_header_color || '#fff'"></menus>
         <view :style="`height:${bottom}px`"></view>
         <view class="tabbar"
-            :style="`padding-bottom:${bottom}px;background:${shopInfo.page_footer_color == ''?'#f4f4f7':shopInfo.page_footer_color};padding-top:20upx`">
+            :style="`padding-bottom:${bottom}px;background:${shopInfo.page_footer_color || '#f4f4f7'};padding-top:20upx`">
             <view class="tabItem" @click="changeTab(tabs[0].name)">
                 <view class="tabIcon" v-if="current != tabs[0].name">
                     <view :style="`backgroundImage: url(${svgData1})`" class="icon"></view>
@@ -26,7 +26,7 @@
                     <view :style="`backgroundImage: url(${svgData11})`" class="icon"></view>
                 </view>
                 <view class="tabName" v-text="tabs[0].name"
-                    :style="`color:${current == tabs[0].name?'#1A73E8':shopInfo.page_footer_icon_color}`"></view>
+                    :style="`color:${current == tabs[0].name?'#1A73E8':(shopInfo.page_footer_icon_color || '#707070')}`"></view>
             </view>
             <view class="tabItem" @click="changeTab(tabs[1].name)">
                 <view class="tabIcon" v-if="current != tabs[1].name">
@@ -36,7 +36,7 @@
                     <view :style="`backgroundImage: url(${svgData12})`" class="icon"></view>
                 </view>
                 <view class="tabName" v-text="tabs[1].name"
-                    :style="`color:${current == tabs[1].name?'#1A73E8':shopInfo.page_footer_icon_color}`"></view>
+                    :style="`color:${current == tabs[1].name?'#1A73E8':(shopInfo.page_footer_icon_color || '#707070')}`"></view>
             </view>
             <view class="tabItem" @click="changeTab(changable[0].name)" v-if="changable[0].name">
                 <view class="tabIcon" v-if="current != changable[0].name">
@@ -66,7 +66,7 @@
                     </view>
                 </view>
                 <view class="tabName" v-text="changable[0].name"
-                    :style="`color:${current == changable[0].name?'#1A73E8' : shopInfo.page_footer_icon_color}`"></view>
+                    :style="`color:${current == changable[0].name?'#1A73E8' : (shopInfo.page_footer_icon_color || '#707070')}`"></view>
             </view>
             <view class="tabItem" @click="changeTab(changable[1].name)" v-if="changable[1].name">
                 <view class="tabIcon" v-if="current != changable[1].name">
@@ -95,7 +95,7 @@
                        <view class="blue" v-if="number1 > 0" v-text="number1"></view>
                    </view>
                </view>
-                <view class="tabName" v-text="changable[1].name" :style="`color:${current == changable[1].name?'#1A73E8' : shopInfo.page_footer_icon_color}`">
+                <view class="tabName" v-text="changable[1].name" :style="`color:${current == changable[1].name?'#1A73E8' : (shopInfo.page_footer_icon_color || '#707070')}`">
                 </view>
             </view>
             <view class="tabItem" @click="changeTab(changable[2].name)" v-if="changable[2].name">
@@ -125,7 +125,7 @@
                         <view class="blue" v-if="number1 > 0" v-text="number1"></view>
                     </view>
                 </view>
-                <view class="tabName" v-text="changable[2].name" :style="`color:${current == changable[2].name?'#1A73E8' : shopInfo.page_footer_icon_color}`">
+                <view class="tabName" v-text="changable[2].name" :style="`color:${current == changable[2].name?'#1A73E8' : (shopInfo.page_footer_icon_color || '#707070')}`">
                 </view>
             </view>
             <view class="tabItem" @click="changeTab(changable[3].name)" v-if="changable[3].name">
@@ -155,7 +155,7 @@
                         <view class="blue" v-if="number1 > 0" v-text="number1"></view>
                     </view>
                 </view>
-                <view class="tabName" v-text="changable[3].name" :style="`color:${current == changable[3].name?'#1A73E8' : shopInfo.page_footer_icon_color}`">
+                <view class="tabName" v-text="changable[3].name" :style="`color:${current == changable[3].name?'#1A73E8' : (shopInfo.page_footer_icon_color || '#707070')}`">
                 </view>
             </view>
         </view>
@@ -291,6 +291,7 @@
         },
         methods: {
             changeColor(url, color) {
+                if (!color) color = "#707070"; // page_footer_icon_color が未設定でも落ちないようにする
                 let res = url.replace(/%23[a-zA-Z0-9]{6}/g, color.replace("#",
                     "%23")); //转义后的#等于%23，利用正则表达式，替换所有%23后6位为新的十六进制六位数。
                 return res;
@@ -323,7 +324,10 @@
                         }
                         that.shopInfo = res.data.shop
                         // that.mid = res.data.
-                        res.data.shop.page_footer_icon.forEach((val, index) => {
+                        let footerIcons = res.data.shop.page_footer_icon
+                        if (typeof footerIcons === 'string') footerIcons = footerIcons.split(',').filter(Boolean)
+                        if (!Array.isArray(footerIcons)) footerIcons = []
+                        footerIcons.forEach((val, index) => {
                             if (val == 'notice') {
                                 temp.push(notice)
                             } else if (val == 'menu') {

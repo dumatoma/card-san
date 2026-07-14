@@ -43,7 +43,7 @@
             </view>
             <view class="boxRight" style="flex: 1;">
                 <textarea placeholder="メッセージを入力"
-                    style="border: 2upx solid #999;min-height:65upx;max-height:160upx;border-radius: 30upx;box-sizing: border-box;padding: 10upx 15upx;width:100%;"
+                    style="border: 2upx solid #999;min-height:65upx;max-height:400upx;border-radius: 30upx;box-sizing: border-box;padding: 10upx 15upx;width:100%;"
                     v-model="sendMessage" adjust-position="false" auto-height @focus="emitFocus" @blur="blur"></textarea>
             </view>
             <view class="boxRights" v-if="sendMessage != ''">
@@ -698,14 +698,14 @@
 
         .sendBox {
             width: 100vw;
-            height: 122upx;
+            min-height: 122upx;
             background: #F9F9F9;
             box-shadow: 0px -1upx 0px 2upx rgba(0, 0, 0, 0.3);
             opacity: 0.93;
             display: flex;
             align-items: center;
             box-sizing: border-box;
-            padding: 0 32upx 32upx;
+            padding: 20upx 32upx 32upx;
             flex-shrink: 0;
             position: fixed;
             bottom: 0;

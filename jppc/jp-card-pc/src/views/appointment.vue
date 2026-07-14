@@ -399,7 +399,7 @@
                 <div class="btn-sf">
                     <!-- <div class="le bts shou" @click="yueEditShow = false">戻　る</div> -->
                     <div class="ri bts shou" style="margin: 0 auto" @click="showale1 = true">
-                        保　存
+                        この内容で予約する
                     </div>
                 </div>
             </div>
@@ -1730,6 +1730,15 @@
             },
             editKeep() {
                 let that = this
+                // 終了時間が開始時間より前（または同じ）にならないよう検証
+                if (that.startTime && that.endTime && that.endTime <= that.startTime) {
+                    that.$message({
+                        message: '終了時間は開始時間より後に設定してください',
+                        type: 'error',
+                        offset: 400
+                    })
+                    return
+                }
                 let data = {}
                 data['_method'] = 'put'
                 data['mid'] = that.orderDetail.mid

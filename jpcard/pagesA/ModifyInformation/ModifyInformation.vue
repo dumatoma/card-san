@@ -232,8 +232,9 @@
               JYGoogleSignin.jy_logout(res=> {
               //  不会返回数据，调用就成功
               })
-              uni.redirectTo({
-                  url:"../../pages/login/login"
+              // reLaunch: 全ページを破棄してログイン画面へ（tabBar/非tabBar両対応・キャッシュされた氏名も消える）
+              uni.reLaunch({
+                  url:"/pages/login/login"
               })
           }else{
               that.showAlert = false
@@ -250,9 +251,9 @@
             // JYGoogleSignin.jy_logout(res=> {
             // //  不会返回数据，调用就成功
             // })
-           uni.redirectTo({
+           uni.reLaunch({
                url:"/pages/login/login"
-           }) 
+           })
         },
         changeStatus1(e){
             let that = this

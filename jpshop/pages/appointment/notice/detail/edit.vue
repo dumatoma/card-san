@@ -640,9 +640,9 @@
 
             showEnd() {
                 let that = this
-                if(that.menu.id == 0){
-                    that.endShow = true
-                }
+                // 通常メニュー・お休み/勤務時間外のいずれでも終了時間を編集できるようにする
+                // （開始編集時の所要時間による自動計算は維持したまま、終了の手動調整を可能にする）
+                that.endShow = true
             },
             // 选择开始时间
             selectStart(e) {
@@ -657,7 +657,16 @@
             // 选择结束时间
             selectEnd(e) {
                 let that = this
-                that.info.end = e.value[0] + ":" + e.value[1]
+                let end = e.value[0] + ":" + e.value[1]
+                // 終了時間が開始時間より前（または同じ）にならないよう検証
+                if (that.info.start && end <= that.info.start) {
+                    uni.showToast({
+                        title: '終了時間は開始時間より後に設定してください',
+                        icon: 'none'
+                    })
+                    return
+                }
+                that.info.end = end
                 that.endShow = false
             },
             // 查看顾客详情

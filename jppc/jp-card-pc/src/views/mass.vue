@@ -266,20 +266,20 @@
                 <div class="le-right">
                     <div
                       class="radius"
-                      :class="{ radiusCss: storeTime == 2 }"
-                      @click.stop="oneClick(2)"
-                    >
-                      <div class="blue_dot" v-if="storeTime == 2"></div>
-                    </div>
-                    <div style="color: #707070; margin-right: 19px" :style="storeTime == 2?'color:#1d1d1f' : ''">以上経過</div>
-                    <div
-                      class="radius"
                       :class="{ radiusCss: storeTime == 1 }"
                       @click.stop="oneClick(1)"
                     >
                       <div class="blue_dot" v-if="storeTime == 1"></div>
                     </div>
-                    <div style="color: #707070" :style="storeTime == 1?'color:#1d1d1f' : ''">以内</div>
+                    <div style="color: #707070; margin-right: 19px" :style="storeTime == 1?'color:#1d1d1f' : ''">以上経過</div>
+                    <div
+                      class="radius"
+                      :class="{ radiusCss: storeTime == 2 }"
+                      @click.stop="oneClick(2)"
+                    >
+                      <div class="blue_dot" v-if="storeTime == 2"></div>
+                    </div>
+                    <div style="color: #707070" :style="storeTime == 2?'color:#1d1d1f' : ''">以内</div>
                  <!-- <el-radio-group v-model="storeTime" @input="timechange">
                     <el-radio size="medium" :label="2">以上経過</el-radio>
 

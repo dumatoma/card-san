@@ -17,7 +17,7 @@
                                 style="white-space: pre-wrap;"></text>
                         </view>
                         <view v-if="item.type == 2" class="msgDetailImage">
-                            <image @click="previewImage(item.message)" @longpress="saveImage(item.message)" :src="item.message" mode="widthFix"></image>
+                            <image @click="openBigImg(item.message)" @longpress="saveImage(item.message)" :src="item.message" mode="widthFix"></image>
                         </view>
                         <view v-if="item.type == 3" class="msgDetailImage" style="height: 120rpx;overflow: hidden">
                             <image @click="openURL(item.url)" :src="item.message" style="height: 120rpx;width: 100%;" mode="aspectFill"></image>
@@ -42,7 +42,7 @@
             </view>
             <view class="boxRight" style="flex: 1;">
                 <textarea placeholder="メッセージを入力"
-                    style="border: 2upx solid #999;min-height:65upx;max-height:160upx;border-radius: 30upx;box-sizing: border-box;padding: 10upx 15upx;width:100%;"
+                    style="border: 2upx solid #999;min-height:65upx;max-height:400upx;border-radius: 30upx;box-sizing: border-box;padding: 10upx 15upx;width:100%;"
                     v-model="sendMessage" adjust-position="false" auto-height @focus="emitFocus" @blur="blur"></textarea>
             </view>
             <view class="boxRights" v-if="sendMessage != ''">
@@ -51,12 +51,15 @@
             </view>
         </view>
         <mod :config="config" @getStatus="confirm" v-if="delshow"></mod>
+        <!-- 受信画像のフルスクリーン表示（ピンチ拡大縮小＋ダウンロード） -->
+        <img-viewer :show.sync="bigImgShow" :src="bigImgSrc" @close="bigImgShow = false"></img-viewer>
     </view>
 </template>
 
 <script>
     let admin = uni.getStorageSync("user")
     import mod from "@/components/mod.vue"
+    import imgViewer from "@/components/img-viewer.vue"
     import {
         getMessageList,
         sendMessage,
@@ -67,10 +70,13 @@
     } from "@/api/index.js"
     export default {
         components: {
-            mod
+            mod,
+            imgViewer
         },
         data() {
             return {
+                bigImgShow: false,
+                bigImgSrc: "",
                 delshow: false,
                 messageArr: [],
                 query: {},
@@ -426,6 +432,10 @@
                     urls: tem
                 })
             },
+            openBigImg(url) {
+                this.bigImgSrc = url
+                this.bigImgShow = true
+            },
             saveImage(url) {
                 uni.showActionSheet({
                     itemList: ['画像を保存'],
@@ -685,14 +695,14 @@
 
         .sendBox {
             width: 100vw;
-            height: 120upx;
+            min-height: 120upx;
             background: #F9F9F9;
             box-shadow: 0px -1upx 0px 2upx rgba(0, 0, 0, 0.3);
             opacity: 0.93;
             display: flex;
             align-items: center;
             box-sizing: border-box;
-            padding: 0 32upx 32upx;
+            padding: 20upx 32upx 32upx;
             flex-shrink: 0;
             position: fixed;
             left: 0;

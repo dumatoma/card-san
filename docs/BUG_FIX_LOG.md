@@ -923,7 +923,7 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 | ⑦ | jppc appointment.vue | 新規予約ボタン「保存」→「この内容で予約する」 | **本番済** |
 | ⑧⑨ | jpcard/jpshop chat.vue | メッセージ入力欄: .sendBox固定height→min-height(改行時の崩れ解消)+上部padding、textarea max-height 160→400upx | 要ビルド |
 | ⑩ | jpcard img-viewer.vue(新規)+chat.vue | 受信画像フルスクリーン(pinch)+DLアイコン+saveImageToPhotosAlbum+「保存しました」 | 要ビルド |
-| ⑪ | サーバー(調査のみ) | 自動返信SMSはハードコード本文+Alibaba国際SMSが改行除去。実SMS検証必要のため本番未変更(要方針決定) | 要判断 |
+| ⑪ | サーバー AlibabaCloudSms.php | 自動返信SMSの改行消失=Alibaba国際SMS(SendMessageToGlobe)がLF除去。送信層で改行をCRLFに正規化(全改行→\r\n、3連続以上→2圧縮)。php-fpm reload済。要実機テスト確認、CRLFも除去なら国内SMSプロバイダ切替が根本解決 | **本番済/要確認** |
 | ⑫ | jpcard ModifyInformation/accountInformation | ログアウト: redirectTo→reLaunch(遷移確実化+キャッシュ氏名クリア)、user削除 | 要ビルド |
 | ⑬ | jpshop notice/setting/setting.vue | お知らせ設定onLoadのsetTimeout 2000ms人為的遅延を撤去(約3秒→~1秒) | 要ビルド |
 | ⑭ | jppc noticeSet.vue | Instagramラジオ選択不可(#60-1で修正済) | **本番済(7/11)** |

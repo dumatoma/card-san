@@ -107,7 +107,7 @@
             </view>
         </view>
         <view class="fix-btn-ok">
-            <view class="fix-b" hover-class="op" :style="checked?'' : 'opacity:0.6 !important'" @click="yuYue()">
+            <view class="fix-b" hover-class="op" :style="(checked && !isSubmitting)?'' : 'opacity:0.6 !important'" @click="yuYue()">
                 予約を確定する
             </view>
         </view>
@@ -125,6 +125,7 @@
             return {
                 text: '',
                 checked: false,
+                isSubmitting: false,
                 staff:{},
                 orderItem:{},
                 comeTime:"",
@@ -220,6 +221,9 @@
                    })
                     return
                 }
+                // Loading中の連打による予約重複を防止（送信中はボタンを非活性）
+                if (that.isSubmitting) return
+                that.isSubmitting = true
                 let data = {}
                 let date = uni.getStorageSync("orderTime")
                 data.start_time = that.comeTime
@@ -238,11 +242,14 @@
                             url:"../completed/completed?name="+res.data.order.name+"&order_no="+res.data.order.order_no+"&start_time="+res.data.order.start_time+"&amount="+res.data.order.amount+"&remark="+res.data.order.remark+"&appoint_name="+res.data.order.appoint_name+"&menu_name="+res.data.order.menu_name+"&id="+res.data.order.sid+'&phone='+res.data.order.phone+"&appoint_amount="+res.data.order.appoint_amount
                         })
                     }else{
+                        that.isSubmitting = false
                         uni.showToast({
                             title:res.message,
                             icon:"none"
                         })
                     }
+                }).catch(() => {
+                    that.isSubmitting = false
                 })
                 
                 // uni.navigateTo({

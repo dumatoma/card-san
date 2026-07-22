@@ -908,6 +908,38 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 
 ---
 
+### 62. スタッフルームチャット + 予約バグ一括対応（2026-07-15〜16）
+
+**スタッフルーム（P.1〜P.8、jpshop・要ビルド／サーバー反映済）**
+| 項目 | 対応 |
+|------|------|
+| P.1 | メッセージ設定: スタッフルーム設定アイコン差替(12249)、Google Business設定/SNS投稿管理の2項目削除 |
+| P.2 | userInfo: 保存ボタンをFigma塗り青(:plain除去+#1A73E8)、スタッフルーム項目の余白拡大 |
+| P.3 | message一覧: ルーム名に参加人数、最新メッセージ表示(サーバーindexにroom.last_message追加)。P.3(3)1対1相手一覧はDMスレッド一覧API要で保留 |
+| P.4-1 | groupChat: ヘッダーにルーム名+参加人数(getStaffRoom) |
+| P.4-2/P.6-2 | group/dmチャットをinput→textareaで改行対応(8行追従+スクロール) |
+| P.4-3 | メンバー一覧の1対1開始アイコンをGroup 63に |
+| P.4-4 | サーバーindexで admin_type!=3(スタッフ登録除外)→副管理者のみ表示 |
+| P.5 | 1対1確認ダイアログ: 文言変更+中央揃え |
+| P.6-1 | 1対1相手アイコン表示(フォールバック+memberListからavatar受渡し) |
+| P.7-5 | 送信内容の即時反映(楽観的追加+id重複除去) group/dm両方 |
+| P.8 | スタッフルーム設定画面: アイコン(Group59)、ラベル「スタッフルーム」、説明文+区切り線、余白50px、保存青 |
+| P.7-1/2 | バッジ/pushはクライアント側は⑤で対応済、残はサーバーpayload+DCloud設定 |
+
+**予約バグ（サーバー反映済 + jppcデプロイ済 + jpshop/outsite要ビルド）**
+| 項目 | 対応 |
+|------|------|
+| 予約[26] | サーバーOrderValidator: 通常メニューもclient指定end_timeを尊重(保存が反映されない根本修正) |
+| 予約[27] | jpshop getCate: 現在メニューを初期チェック(チェック外れ修正) |
+| 予約[29] | jppc huiYuan: 未使用getFuDetailラップ除去でメニュー選択画面が通常メニューでも開く |
+| 予約B[1] | サーバーgetStaffListがno_appoint返却+outsiteAppointmentにv-if追加(jpcardは既読対応)→指名なし表示の設定反映 |
+| 予約B[3/4] | サーバーtoday_count/order_todayにsmid!=0追加(お休み除外) |
+| 予約B[5] | outsiteAppointment確定ボタンをisSubmittingでLoading中連打ガード |
+
+**日付：** 2026-07-16
+
+---
+
 ### 61. QA一括対応（クライアント報告19件・2026-07-14）
 
 顧客からの不具合/要望19件を報告順に対応。サーバー(api.card-san.jp)/jppc(Web)は即デプロイ済、jpcard/jpshopはソース修正済でHBuilderXビルド＆配布待ち。

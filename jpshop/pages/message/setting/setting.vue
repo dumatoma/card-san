@@ -22,26 +22,10 @@
             </view>
             <view class="settingItem" @click="toStaffRoom" v-if="isOwner">
                 <view class="icon">
-                    <image src="../../../static/icons/buser.png" mode=""></image>
+                    <image src="../../../static/icons/staffroom.svg" mode="aspectFit"></image>
                 </view>
                 <view>
                     スタッフルーム設定
-                </view>
-            </view>
-            <view class="settingItem" @click="toGBPSetting" v-if="isOwner">
-                <view class="icon">
-                    <image src="../../../static/svg/google_g.svg" mode="aspectFit"></image>
-                </view>
-                <view>
-                    Google Business設定
-                </view>
-            </view>
-            <view class="settingItem" @click="toSocialMedia" v-if="isOwner">
-                <view class="icon">
-                    <image src="../../../static/svg/google_g.svg" mode="aspectFit"></image>
-                </view>
-                <view>
-                    SNS・投稿管理
                 </view>
             </view>
         </view>

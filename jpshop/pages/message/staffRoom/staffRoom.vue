@@ -1,16 +1,21 @@
 <template>
     <view class="container">
-        <view class="avatarWrap" @click="uploadImage">
-            <u-avatar :src="avatar" size="100" mode="aspectFill"></u-avatar>
-            <view class="editBadge">編集</view>
+        <view class="roomIcon">
+            <image src="/static/icons/staffroom_setting.svg" mode="aspectFit"></image>
         </view>
-        <view class="section">
+        <view class="section roomNameSection">
             <view class="label">ルーム名</view>
             <u-input v-model="name" placeholder="スタッフルーム名を入力"></u-input>
         </view>
-        <view class="section switchRow">
-            <view class="label">スタッフルームON/OFF</view>
+        <view class="switchRow">
+            <view class="switchLabel">スタッフルーム</view>
             <u-switch v-model="isOn" activeColor="#33C75A"></u-switch>
+        </view>
+        <view class="desc">
+            <view class="descTitle">スタッフルームについて</view>
+            <view class="descItem">・スタッフのみが利用できる業務連絡用のグループです。</view>
+            <view class="descItem">・プライベートな会話や業務外の話題は禁止しています。</view>
+            <view class="descItem">・1対1の個人チャットにも対応（選択可）。</view>
         </view>
         <u-button class="btn" type="primary" @click="save">保存</u-button>
     </view>
@@ -76,39 +81,64 @@
     padding: 60rpx 40rpx;
     border-top: 2upx solid #d2d2d7;
 }
-.avatarWrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 60rpx;
-    position: relative;
-    width: 200rpx;
+.roomIcon {
+    width: 160rpx;
+    height: 160rpx;
     margin: 0 auto 60rpx;
-}
-.editBadge {
-    font-size: 22rpx;
-    color: #007AFF;
-    margin-top: 12rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    image {
+        width: 160rpx;
+        height: 160rpx;
+    }
 }
 .section {
-    margin-bottom: 50rpx;
+    margin-bottom: 40rpx;
+}
+/* ルーム名入力欄とスタッフルーム項目の間に約50pxの余白 */
+.roomNameSection {
+    margin-bottom: 100rpx;
 }
 .switchRow {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
+.switchLabel {
+    font-size: 30rpx;
+    color: #1d1d1f;
+    font-weight: bold;
+}
 .label {
     font-size: 28rpx;
     color: #86868B;
     margin-bottom: 16rpx;
 }
+/* 説明文（上部に区切り線 D2D2D7） */
+.desc {
+    margin-top: 30rpx;
+    padding-top: 30rpx;
+    border-top: 2upx solid #D2D2D7;
+    .descTitle {
+        font-size: 28rpx;
+        color: #1d1d1f;
+        font-weight: bold;
+        margin-bottom: 16rpx;
+    }
+    .descItem {
+        font-size: 26rpx;
+        color: #86868B;
+        line-height: 40rpx;
+    }
+}
 .btn {
     width: 100%;
     height: 96upx;
-    background: #34C759;
+    background: #1A73E8;
     border-radius: 20upx;
-    margin-top: 60rpx;
+    /* 説明文と保存ボタンの間に約50pxの余白 */
+    margin-top: 100rpx;
     font-size: 32upx;
     color: #fff;
 }

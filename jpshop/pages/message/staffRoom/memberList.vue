@@ -10,7 +10,7 @@
             </view>
             <view class="right">
                 <view class="dmBtn" :class="{ disabled: !item.staff_room_dm || !myDm }" v-if="item.id != myId">
-                    <text>1対1</text>
+                    <image src="/static/icons/dm_add.svg" mode="aspectFit"></image>
                 </view>
             </view>
         </view>
@@ -18,8 +18,8 @@
         <!-- 1対1確認ダイアログ -->
         <view class="dialogMask" v-if="showDialog" @click.self="showDialog = false">
             <view class="dialog">
-                <view class="dialogTitle">{{ dialogTarget.name }} さんへ1対1チャット</view>
-                <view class="dialogSub">このメンバーと1対1チャットを開始しますか？</view>
+                <view class="dialogTitle">{{ dialogTarget.name }}さんと1対1のチャットを開始しますか？</view>
+                <view class="dialogSub">業務連絡のみに使用してください。不要な使用は禁止されています。</view>
                 <view class="dialogBtns">
                     <view class="dialogBtn cancel" @click="showDialog = false">キャンセル</view>
                     <view class="dialogBtn confirm" @click="goToDm">チャットする</view>
@@ -68,7 +68,7 @@
             goToDm() {
                 this.showDialog = false
                 uni.navigateTo({
-                    url: './dm?to_id=' + this.dialogTarget.id + '&name=' + encodeURIComponent(this.dialogTarget.name)
+                    url: './dm?to_id=' + this.dialogTarget.id + '&name=' + encodeURIComponent(this.dialogTarget.name) + '&avatar=' + encodeURIComponent(this.dialogTarget.avatar || '')
                 })
             }
         }
@@ -93,10 +93,9 @@
 .name { font-size: 30rpx; color: #1D1D1F; font-weight: bold; margin-bottom: 6rpx; }
 .tag { font-size: 22rpx; color: #007AFF; }
 .dmBtn {
-    background: #007AFF; color: #fff;
-    font-size: 24rpx; padding: 12rpx 28rpx;
-    border-radius: 30rpx;
-    &.disabled { background: #ccc; }
+    display: flex; align-items: center; justify-content: center;
+    image { width: 56rpx; height: 48rpx; }
+    &.disabled { opacity: 0.4; }
 }
 .dialogMask {
     position: fixed; top: 0; left: 0;
@@ -109,8 +108,8 @@
     background: #fff; border-radius: 20rpx;
     padding: 50rpx 40rpx; width: 600rpx;
 }
-.dialogTitle { font-size: 32rpx; font-weight: bold; color: #1D1D1F; margin-bottom: 16rpx; }
-.dialogSub { font-size: 28rpx; color: #86868B; margin-bottom: 50rpx; }
+.dialogTitle { font-size: 32rpx; font-weight: bold; color: #1D1D1F; margin-bottom: 24rpx; text-align: center; }
+.dialogSub { font-size: 26rpx; color: #86868B; margin-bottom: 50rpx; text-align: center; line-height: 38rpx; }
 .dialogBtns { display: flex; justify-content: space-between; }
 .dialogBtn {
     flex: 1; text-align: center; padding: 24rpx 0;

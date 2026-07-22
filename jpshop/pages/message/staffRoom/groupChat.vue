@@ -30,9 +30,9 @@
                 <image src="../../../static/images/showmore.png" mode="aspectFit" v-if="fs" @touchend.prevent="fs = false"></image>
             </view>
             <view class="boxRight">
-                <input placeholder="メッセージを入力"
-                    style="border: 2upx solid #999;height:65upx;border-radius:30upx;box-sizing:border-box;padding: 0 15upx;"
-                    v-model="inputText" adjust-position="false" @focus="onFocus" @blur="onBlur" />
+                <textarea placeholder="メッセージを入力"
+                    :style="'border: 2upx solid #999;min-height:65upx;max-height:400upx;overflow-y:auto;border-radius:30upx;box-sizing:border-box;padding: 10upx 15upx;width:100%;' + (taH ? 'height:' + taH + 'px;' : '')"
+                    v-model="inputText" adjust-position="false" @linechange="onLine" @focus="onFocus" @blur="onBlur"></textarea>
             </view>
             <view class="boxRights" v-if="inputText != ''">
                 <image src="../../../static/images/send.png" mode="" @touchend.prevent="sendMsg"></image>
@@ -62,6 +62,7 @@
                 defaultImage: '../../../static/images/avatar.png',
                 fs: false,
                 h: 0,
+                taH: 0,
             }
         },
         created() {
@@ -90,6 +91,12 @@
             uni.$off('getPositonsOrder', this._socketHandler)
         },
         methods: {
+            // 入力欄の高さを8行まで追従させ、それ以上は固定して内部スクロールに任せる
+            onLine(e) {
+                if (e.detail && e.detail.lineCount <= 8) {
+                    this.taH = e.detail.height
+                }
+            },
             listenSocket() {
                 this._socketHandler = (result) => {
                     if (result.type == 'staff_room_message') {
@@ -125,7 +132,15 @@
                 }).catch(() => { uni.stopPullDownRefresh() })
             },
             rebuildArr() {
-                let arr = [...this.history, ...this.currentMessages]
+                // id重複を除去（楽観的追加とソケットエコーの二重表示を防ぐ）
+                let merged = [...this.history, ...this.currentMessages]
+                let seen = {}
+                let arr = []
+                for (let m of merged) {
+                    if (m.id != null && seen[m.id]) continue
+                    if (m.id != null) seen[m.id] = true
+                    arr.push(m)
+                }
                 for (let i = 0; i < arr.length; i++) {
                     arr[i].Showdate = (i == 0 || arr[i].date != arr[i-1].date) ? arr[i].date : ''
                 }
@@ -135,7 +150,31 @@
                 if (!this.inputText.trim()) return
                 let text = this.inputText
                 this.inputText = ''
-                sendStaffRoomMessage({ type: 1, message: text }).catch(() => {})
+                this.taH = 0
+                let admin = uni.getStorageSync('admin')
+                let now = new Date()
+                let pad = n => n < 10 ? '0' + n : n
+                let date = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate())
+                let time = pad(now.getHours()) + ':' + pad(now.getMinutes())
+                let week = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()]
+                sendStaffRoomMessage({ type: 1, message: text }).then(res => {
+                    if (res.code == 200) {
+                        // 送信メッセージを即座に画面へ反映（ソケットのエコーを待たない）
+                        this.currentMessages.push({
+                            id: (res.data && res.data.id) ? res.data.id : ('local_' + now.getTime()),
+                            admin_id: this.myId,
+                            name: admin.message_name || admin.name,
+                            avatar: admin.avatar,
+                            type: 1,
+                            message: text,
+                            date: date,
+                            time: time,
+                            week: week
+                        })
+                        this.rebuildArr()
+                        this.scrollBottom()
+                    }
+                }).catch(() => {})
             },
             chooseImage() {
                 let that = this

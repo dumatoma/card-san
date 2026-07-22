@@ -1006,6 +1006,9 @@ export const reviewSetting = (data) => {
 export const getStaffRoom = () => {
     return request({ url: "/api/shop/staff_room", method: "get" })
 }
+export const getDmThreads = () => {
+    return request({ url: "/api/shop/staff_room/dm_threads", method: "get" })
+}
 export const updateStaffRoomSettings = (data) => {
     return request({ url: "/api/shop/staff_room/room", method: "post", data })
 }

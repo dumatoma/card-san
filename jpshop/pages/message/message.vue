@@ -22,6 +22,17 @@
             </view>
             <view class="srBadge" v-if="groupUnread > 0">{{ groupUnread }}</view>
         </view>
+        <!-- 1対1チャット一覧 -->
+        <view class="staffRoomSection" v-for="thread in dmThreads" :key="thread.to_id" @click="toDm(thread)">
+            <view class="srLeft">
+                <image :src="thread.avatar || '../../static/images/avatar.png'" class="srAvatar" mode="aspectFill"></image>
+                <view class="srInfo">
+                    <view class="srName">{{ thread.name }}</view>
+                    <view class="srSub">{{ thread.last_message }}</view>
+                </view>
+            </view>
+            <view class="srBadge" v-if="thread.unread > 0">{{ thread.unread }}</view>
+        </view>
         <view class="con">
             <view class="search">
                 <u--input placeholder="名前、電話番号、IDで検索" prefixIcon="search" prefixIconStyle="font-size: 22px;color: #aaa"
@@ -71,7 +82,8 @@
         bindSocket,
         getAdminDetail,
         getStaffRoom,
-        getStaffRoomUnread
+        getStaffRoomUnread,
+        getDmThreads
     } from "@/api/index.js"
     import permission from "@/components/permission/permission.vue"
     export default {
@@ -87,6 +99,7 @@
                 staffRoomAvatar: '',
                 staffRoomCount: 0,
                 staffRoomLastMessage: '',
+                dmThreads: [],
                 groupUnread: 0,
                 options1: [{
                     text: '削除',
@@ -216,9 +229,15 @@
                 getStaffRoomUnread().then(res => {
                     if (res.code == 200) this.groupUnread = res.data.group_unread
                 }).catch(() => {})
+                getDmThreads().then(res => {
+                    if (res.code == 200) this.dmThreads = res.data.threads || []
+                }).catch(() => {})
             },
             toGroupChat() {
                 uni.navigateTo({ url: '../message/staffRoom/groupChat' })
+            },
+            toDm(thread) {
+                uni.navigateTo({ url: '../message/staffRoom/dm?to_id=' + thread.to_id + '&name=' + encodeURIComponent(thread.name) + '&avatar=' + encodeURIComponent(thread.avatar || '') })
             },
             goIndex() {
                 uni.switchTab({

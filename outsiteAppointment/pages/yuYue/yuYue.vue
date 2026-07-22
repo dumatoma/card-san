@@ -19,7 +19,7 @@
         </view>
         <view class="content">
             <view class="askForName" v-if="info.is_appoint == 1">
-                <view class="name_item" :class="current == 0? 'active' : ''" @click="changeName(0,0,0)">指名なし</view>
+                <view class="name_item" v-if="no_appoint == 1" :class="current == 0? 'active' : ''" @click="changeName(0,0,0)">指名なし</view>
                 <view class="name_item" :class="current == index + 1? 'active' : ''"
                     @click="changeName(item.id,index+1,item.appoint_price)" v-for="(item,index) in staff" v-text="item.name"></view>
             </view>
@@ -94,6 +94,7 @@
                 showMenu:false,
                 setting: false, //设置
                 current: 0,
+                no_appoint: 0,
                 staffId: 0,
                 showDetail: false, // 设置详情
                 addNew: false, // 新增预约
@@ -285,6 +286,7 @@
                 data.sid = that.query.id
                 getStaffList(data).then((res) => {
                     if (res.code == 200) {
+                        that.no_appoint = res.data.no_appoint || 0
                         if(res.data.admin3s.length > 0){
                             that.staff = res.data.admin3s
                         }else{

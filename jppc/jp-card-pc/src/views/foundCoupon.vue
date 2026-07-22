@@ -644,9 +644,9 @@ export default {
           birthday_month:"",
           sex:"",
           shop_time:"",
-          shop_time_desc:1,
+          shop_time_desc:0,
           shop_count:"",
-          shop_count_desc:2,
+          shop_count_desc:0,
          
       },
       selectTime:"",
@@ -864,9 +864,9 @@ export default {
           birthday_month:"",
           sex:"",
           shop_time:"",
-          shop_time_desc:1,
+          shop_time_desc:0,
           shop_count:"",
-          shop_count_desc:2
+          shop_count_desc:0
       }
     };
   },

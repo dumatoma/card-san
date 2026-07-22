@@ -42,8 +42,8 @@
             </view>
             <view class="boxRight" style="flex: 1;">
                 <textarea placeholder="メッセージを入力"
-                    style="border: 2upx solid #999;min-height:65upx;max-height:400upx;border-radius: 30upx;box-sizing: border-box;padding: 10upx 15upx;width:100%;"
-                    v-model="sendMessage" adjust-position="false" auto-height @focus="emitFocus" @blur="blur"></textarea>
+                    :style="'border: 2upx solid #999;min-height:65upx;max-height:400upx;overflow-y:auto;border-radius: 30upx;box-sizing: border-box;padding: 10upx 15upx;width:100%;' + (taH ? 'height:' + taH + 'px;' : '')"
+                    v-model="sendMessage" adjust-position="false" @linechange="onLine" @focus="emitFocus" @blur="blur"></textarea>
             </view>
             <view class="boxRights" v-if="sendMessage != ''">
                 <image src="../../static/image/send.png" mode="" @touchend.prevent="send" v-if="msid == 0"></image>
@@ -77,6 +77,7 @@
             return {
                 bigImgShow: false,
                 bigImgSrc: "",
+                taH: 0,
                 delshow: false,
                 messageArr: [],
                 query: {},
@@ -435,6 +436,12 @@
             openBigImg(url) {
                 this.bigImgSrc = url
                 this.bigImgShow = true
+            },
+            // 入力欄の高さを8行まで追従させ、それ以上は固定して内部スクロールに任せる
+            onLine(e) {
+                if (e.detail && e.detail.lineCount <= 8) {
+                    this.taH = e.detail.height
+                }
             },
             saveImage(url) {
                 uni.showActionSheet({

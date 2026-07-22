@@ -188,8 +188,10 @@
             height: 50px;
             border-radius: 10px;
             font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            line-height: 50px;
             cursor: pointer;
         }
         

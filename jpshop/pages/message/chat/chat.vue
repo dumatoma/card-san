@@ -17,7 +17,7 @@
                                 style="white-space: pre-wrap;"></text>
                         </view>
                         <view v-if="item.type == 2" class="msgDetailImage">
-                            <image @click="previewImage(item.message)" @longpress="saveImage(item.message)" :src="item.message" mode="widthFix"></image>
+                            <image @click="openBigImg(item.message)" @longpress="saveImage(item.message)" :src="item.message" mode="widthFix"></image>
                         </view>
                         <view v-if="item.type == 3" class="msgDetailImage" style="height: 120rpx;overflow: hidden;">
                             <image @click="openURL(item.url)" :src="item.message" style="height: 120rpx;width: 100%;" mode="aspectFill"></image>
@@ -43,8 +43,8 @@
             </view>
             <view class="boxRight" style="flex: 1;">
                 <textarea placeholder="メッセージを入力"
-                    style="border: 2upx solid #999;min-height:65upx;max-height:400upx;border-radius: 30upx;box-sizing: border-box;padding: 10upx 15upx;width:100%;"
-                    v-model="sendMessage" adjust-position="false" auto-height @focus="emitFocus" @blur="blur"></textarea>
+                    :style="'border: 2upx solid #999;min-height:65upx;max-height:400upx;overflow-y:auto;border-radius: 30upx;box-sizing: border-box;padding: 10upx 15upx;width:100%;' + (taH ? 'height:' + taH + 'px;' : '')"
+                    v-model="sendMessage" adjust-position="false" @linechange="onLine" @focus="emitFocus" @blur="blur"></textarea>
             </view>
             <view class="boxRights" v-if="sendMessage != ''">
                 <image src="../../../static/images/send.png" mode="" @touchend.prevent="sendMessages" v-if="msid == 0">
@@ -53,6 +53,8 @@
             </view>
         </view>
         <mod :config="config" @getStatus="confirm" v-if="delshow"></mod>
+        <!-- 受信画像のフルスクリーン表示（ピンチ拡大縮小＋ダウンロード） -->
+        <img-viewer :show.sync="bigImgShow" :src="bigImgSrc" @close="bigImgShow = false"></img-viewer>
     </view>
 </template>
 
@@ -66,12 +68,17 @@
         delMsg
     } from "@/api/index.js"
     import mod from "@/components/mod.vue"
+    import imgViewer from "@/components/img-viewer.vue"
     export default {
         components: {
-            mod
+            mod,
+            imgViewer
         },
         data() {
             return {
+                taH: 0,
+                bigImgShow: false,
+                bigImgSrc: "",
                 myid: "",
                 fs: false,
                 messageArr: [],
@@ -236,6 +243,12 @@
                         that.h = res.safeAreaInsets.bottom + 'px'
                     }
                 })
+            },
+            // 入力欄の高さを8行まで追従させ、それ以上は固定して内部スクロールに任せる
+            onLine(e) {
+                if (e.detail && e.detail.lineCount <= 8) {
+                    this.taH = e.detail.height
+                }
             },
             emitFocus(e) {
                 let that = this
@@ -434,6 +447,10 @@
                         uni.stopPullDownRefresh()
                     }
                 }).catch(() => { uni.stopPullDownRefresh() })
+            },
+            openBigImg(url) {
+                this.bigImgSrc = url
+                this.bigImgShow = true
             },
             previewImage(e) {
                 let that = this

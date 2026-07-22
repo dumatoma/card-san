@@ -935,6 +935,11 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 | 予約B[1] | サーバーgetStaffListがno_appoint返却+outsiteAppointmentにv-if追加(jpcardは既読対応)→指名なし表示の設定反映 |
 | 予約B[3/4] | サーバーtoday_count/order_todayにsmid!=0追加(お休み除外) |
 | 予約B[5] | outsiteAppointment確定ボタンをisSubmittingでLoading中連打ガード |
+| 予約B[2] | サーバーgetStaffListの区間重複判定を境界厳密に修正(`start<end_time && end>start_time`)。隣接予約枠を重複と誤判定し空きスタッフを×表示していた不具合を解消 |
+
+**追加対応（2026-07-17）**
+- **P.3(3)** メッセージ一覧に1対1相手を表示: サーバーに`StaffRoomController@dmThreads`(自分が関わるDMテーブルを列挙し相手/最新/未読を返却)+ルート追加、jpshop message一覧にDMスレッド表示・dm遷移
+- **P.7-1/P.7-2（PUSH/バッジ）診断確定**: GeTuiログ上、push payload(notification+iOS aps+badge)は正しくGeTuiへ`code:0 success`で送信され`successed_offline`(APNs委譲)。**サーバーコードは正常**で、通知が出ないのはiOS APNs証明書設定(GeTui/DCloudコンソール)またはアプリのpush provisioning依存。コードでは修正不可。加えて管理者61名中cid登録14名のみ(多くが端末側push未登録)
 
 **日付：** 2026-07-16
 

@@ -940,6 +940,9 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 **追加対応（2026-07-17）**
 - **P.3(3)** メッセージ一覧に1対1相手を表示: サーバーに`StaffRoomController@dmThreads`(自分が関わるDMテーブルを列挙し相手/最新/未読を返却)+ルート追加、jpshop message一覧にDMスレッド表示・dm遷移
 - **P.7-1/P.7-2（PUSH/バッジ）診断確定**: GeTuiログ上、push payload(notification+iOS aps+badge)は正しくGeTuiへ`code:0 success`で送信され`successed_offline`(APNs委譲)。**サーバーコードは正常**で、通知が出ないのはiOS APNs証明書設定(GeTui/DCloudコンソール)またはアプリのpush provisioning依存。コードでは修正不可。加えて管理者61名中cid登録14名のみ(多くが端末側push未登録)
+- **P.7-1 バッジ(クライアント側)**: jpshop index.vueのアプリバッジがメッセージ+予約通知の未読のみだったので、getStaffRoomUnread(group+dm)をvalue3に集計しsetBadgeNumberに加算(前面/起動時に反映)
+- **今日の予約件数の確認**: ダッシュボードの「今日」はday_order_count(ComeLog来店記録の別指標)。「今日の予約」はtoday_count(修正済)を両アプリが使用。P.3/P.4は正しく修正済みと確認
+- **⑱ 管理App UI(2026/7/11依頼・埋もれていた分)**: ①TOP クチコミアイコンを★★★ボックス風に差替、②各種設定 Googleビジネス連携アイコンをモノクロGに差替(著作権対応)、③ご利用プランにGoogleビジネス連携/Googleクチコミ管理を追加(ConfigService vip_function+各プランfunctions、説明文はPDF文言、アイコンgbp.svg/gbp_review.svgをサーバー配置)。アイコンはFigma意図に沿った作成版で厳密Figma素材は後日差替可
 
 **日付：** 2026-07-16
 

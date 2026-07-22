@@ -115,7 +115,7 @@
         <view class="settingItem" @click="toNext(9)">
             <view class="itemLeft">
                 <view class="itemIcon">
-                    <image src="../../static/svg/setting_gbp.svg" mode="widthFix"></image>
+                    <image src="../../static/svg/setting_g_mono.svg" mode="widthFix"></image>
                 </view>
                 <view class="itemName">
                     Googleビジネス連携

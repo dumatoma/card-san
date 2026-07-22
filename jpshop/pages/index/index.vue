@@ -82,7 +82,7 @@
             <view class="indexItem" hover-class="click-hover" @click="toReview">
                 <view class="itemMask" v-if="shopInfo.vip.type == 1" @click.stop="maskClick"></view>
                 <view class="itemTop">
-                    <image src="../../static/index/Review_icon.svg" mode="aspectFill"></image>
+                    <image src="../../static/index/Review_icon_new.svg" mode="aspectFill"></image>
                 </view>
                 <view class="itemBot">
                     クチコミ

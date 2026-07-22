@@ -22,7 +22,7 @@
             <view class="switchLabel">1対1チャットを許可</view>
             <u-switch v-model="staffRoomDm" activeColor="#33C75A" @change="saveMemberFlags"></u-switch>
         </view>
-        <u-button class="btn" type="primary" :plain="true" @click="save">保存</u-button>
+        <u-button class="btn" type="primary" @click="save">保存</u-button>
     </view>
 </template>
 <script>
@@ -174,13 +174,18 @@
         .btn {
             width: 480upx;
             height: 96upx;
-            margin-top: 60upx;
+            margin-top: 100upx;
+            background: #1A73E8;
+            color: #fff;
+            border-radius: 20upx;
         }
     }
+    /* スタッフルーム項目の上下余白を広げる（Figma指定） */
     .sectionTitle {
         font-size: 28rpx;
         color: #86868B;
         font-weight: bold;
+        margin-top: 50rpx;
         padding: 40rpx 0 20rpx;
         border-bottom: 2rpx solid #d2d2d7;
     }
@@ -188,7 +193,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 30rpx 0;
+        padding: 44rpx 0;
         border-bottom: 2rpx solid #d2d2d7;
     }
     .switchLabel {

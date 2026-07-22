@@ -16,8 +16,8 @@
             <view class="srLeft">
                 <image :src="staffRoomAvatar || '../../static/images/avatar.png'" class="srAvatar" mode="aspectFill"></image>
                 <view class="srInfo">
-                    <view class="srName">{{ staffRoomName }}</view>
-                    <view class="srSub">スタッフルーム</view>
+                    <view class="srName">{{ staffRoomName }}({{ staffRoomCount }})</view>
+                    <view class="srSub">{{ staffRoomLastMessage || 'スタッフルーム' }}</view>
                 </view>
             </view>
             <view class="srBadge" v-if="groupUnread > 0">{{ groupUnread }}</view>
@@ -85,6 +85,8 @@
                 staffRoomJoin: false,
                 staffRoomName: '',
                 staffRoomAvatar: '',
+                staffRoomCount: 0,
+                staffRoomLastMessage: '',
                 groupUnread: 0,
                 options1: [{
                     text: '削除',
@@ -207,6 +209,8 @@
                         this.staffRoomJoin  = res.data.my_join == 1
                         this.staffRoomName  = res.data.room.name
                         this.staffRoomAvatar = res.data.room.avatar
+                        this.staffRoomCount = res.data.members ? res.data.members.length : 0
+                        this.staffRoomLastMessage = res.data.room.last_message || ''
                     }
                 }).catch(() => {})
                 getStaffRoomUnread().then(res => {

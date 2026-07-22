@@ -49,7 +49,8 @@
     import {
         getStaffRoomMessages,
         sendStaffRoomMessage,
-        readStaffRoomMessages
+        readStaffRoomMessages,
+        getStaffRoom
     } from '@/api/index.js'
     export default {
         data() {
@@ -74,6 +75,7 @@
             let admin = uni.getStorageSync('admin')
             this.myId = admin.id
             this.loadHistory()
+            this.setRoomTitle()
         },
         onShow() {
             readStaffRoomMessages().catch(() => {})
@@ -91,6 +93,16 @@
             uni.$off('getPositonsOrder', this._socketHandler)
         },
         methods: {
+            // ヘッダーにルーム名と参加人数を表示（例: CARD SALONスタッフ(3)）
+            setRoomTitle() {
+                getStaffRoom().then(res => {
+                    if (res.code == 200) {
+                        let name = res.data.room.name || 'スタッフルーム'
+                        let count = res.data.members ? res.data.members.length : 0
+                        uni.setNavigationBarTitle({ title: name + '(' + count + ')' })
+                    }
+                }).catch(() => {})
+            },
             // 入力欄の高さを8行まで追従させ、それ以上は固定して内部スクロールに任せる
             onLine(e) {
                 if (e.detail && e.detail.lineCount <= 8) {

@@ -589,8 +589,8 @@
                                             object.image = val.image
                                             object.price = val.price
                                             object.time = val.order_time
-                                            object.time = val.order_time
-                                            object.checked = false
+                                            // 現在選択中のメニューを初期チェック状態にする（開いた時にチェックが外れる不具合の修正）
+                                            object.checked = !!(that.menu && val.id == that.menu.id)
                                             object.id = val.id
                                             object.cid = val.cid
                                             obj.items.push(object)

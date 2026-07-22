@@ -2173,27 +2173,25 @@
                         }
                     })
                 } else {
-                    getFuDetail(id).then((rest) => {
-                        getCates().then((res) => {
-                            if (res.code == 200) {
-                                getMenuList().then((result) => {
-                                    if (result.code == 200) {
-                                        res.data.cates.forEach((item, index) => {
-                                            item.menus = []
-                                            result.data.menus.forEach((ite, idx) => {
-                                                if (ite.cid == item.id && ite
-                                                    .is_order == 1) {
-                                                    item.menus.push(ite)
-                                                }
-                                            })
+                    // getFuDetail の戻り値は未使用で、失敗するとメニュー選択画面が開かない不具合の原因だったため除去。
+                    // お休み分岐と同じ信頼できるフローでメニューを読み込み、モーダルを開く。
+                    getCates().then((res) => {
+                        if (res.code == 200) {
+                            getMenuList().then((result) => {
+                                if (result.code == 200) {
+                                    res.data.cates.forEach((item, index) => {
+                                        item.menus = []
+                                        result.data.menus.forEach((ite, idx) => {
+                                            if (ite.cid == item.id && ite.is_order == 1) {
+                                                item.menus.push(ite)
+                                            }
                                         })
-                                        that.menuList = res.data.cates
-                                        console.log(that.menuList)
-                                        this.huiYuanShow = true;
-                                    }
-                                })
-                            }
-                        })
+                                    })
+                                    that.menuList = res.data.cates
+                                    this.huiYuanShow = true;
+                                }
+                            })
+                        }
                     })
                 }
                 that.getNoticeList()

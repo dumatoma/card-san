@@ -281,7 +281,8 @@
         getConfig,
         buyextras,
         buyextra,
-        getAdminDetail
+        getAdminDetail,
+        getStaffRoomUnread
     } from "../../api/index.js";
     import mod from "@/components/mod.vue"
     import permission from "@/components/permission/permission.vue"
@@ -310,6 +311,7 @@
                 showd: false,
                 value: 0,
                 value2: 0,
+                value3: 0,
                 showPackage: false,
                 sf: false,
                 ss: false,
@@ -401,6 +403,7 @@
             that.admin = uni.getStorageSync("admin")
             that.getUnread()
             that.getLists()
+            that.getStaffRoomBadge()
             let cid = uni.getStorageSync("cid")
             getConfig().then((res) => {
                 let data = {}
@@ -454,14 +457,14 @@
             }).catch(() => { uni.hideLoading() })
             setTimeout(() => {
                 let that = this
-                plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1);
+                plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1);
             }, 220)
         },
 
         onHide() {
             setTimeout(() => {
                 let that = this
-                plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1);
+                plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1);
             }, 520)
         },
         methods: {
@@ -868,7 +871,7 @@
                 getAppointNoticeList(1).then((res) => {
                     if (res.code == 200) {
                         that.value2 = res.data.unread_count
-                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1);
+                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1);
                     }
                 }).catch(() => {})
             },
@@ -886,7 +889,20 @@
                             number += val.unread_num
                         })
                         that.value = number
-                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1);
+                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1);
+                    }
+                }).catch(() => {})
+            },
+            // スタッフルーム(グループ+DM)の未読をバッジに加算
+            getStaffRoomBadge() {
+                let that = this
+                getStaffRoomUnread().then(res => {
+                    if (res.code == 200) {
+                        let dm = 0
+                        let dmUnread = res.data.dm_unread || {}
+                        for (let k in dmUnread) { dm += dmUnread[k] * 1 }
+                        that.value3 = (res.data.group_unread * 1) + dm
+                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1);
                     }
                 }).catch(() => {})
             },

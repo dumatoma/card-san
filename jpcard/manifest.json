@@ -2,8 +2,8 @@
     "name" : "Card-San",
     "appid" : "__UNI__1ED8C1A",
     "description" : "Card-San",
-    "versionName" : "1.1.3",
-    "versionCode" : 1068,
+    "versionName" : "1.1.4",
+    "versionCode" : 1069,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {

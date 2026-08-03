@@ -1254,3 +1254,23 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 **反映：** ネイティブApp（jpcard）のため次回ビルド・ストア配信で反映。
 
 **日付：** 2026-08-03
+
+---
+
+### 64. 新機能：ユーザーAPP 店舗情報にGoogleクチコミ表示を追加
+
+**概要：** ユーザーAPP（jpcard）＞店舗情報のプロフィール欄の下に、Google Business Profile 連携店舗のクチコミ（評価・件数）を表示。タップで詳細画面（評価分布・クチコミ本文・絞り込み・並べ替え）へ遷移。GBP未連携の店舗では項目自体を非表示（クライアント指摘 2026.8.3-1）。方針：既存のショップ側GBP連携（`GoogleBusiness` lib／OAuthトークン）を再利用し、ユーザー向け公開APIを新設。
+
+| 対象 | 修正内容 |
+|------|----------|
+| `app/Http/Controllers/Api/Member/GoogleReviewController.php`（サーバー・新規） | 公開クチコミ集計 `buildReviewData()`（連携判定・評価平均・件数・星分布・本文をRedis 1時間キャッシュ）と `GET /api/member/shop/{id}/reviews` |
+| `app/Http/Controllers/Api/Member/ShopController.php`（サーバー） | `show()` の返却に `review`（connected/avg_rating/total）を追加（プロフィール下バッジ用・軽量） |
+| `routes/api.php`（サーバー） | `GET /shop/{id}/reviews` を member グループに追加 |
+| `jpcard/api/index.js` | `getShopReviews(id)` を追加 |
+| `jpcard/pagesA/storeInformation/storeInformation.vue` | プロフィール下にクチコミ項目（`v-if="reviewInfo.connected"`：評価・件数・星、タップで詳細へ）を追加 |
+| `jpcard/pagesA/googleReviews/googleReviews.vue`（新規） | クチコミ詳細：評価サマリー／星分布バー／絞り込み（星別）／並べ替え（新着・古い順・評価高/低）／一覧（返信表示） |
+| `jpcard/pages.json` | `googleReviews/googleReviews` を登録 |
+
+**反映：** サーバーAPIは即時反映済み（現状はGBP連携店舗が無いため全店 `connected:false`＝非表示。連携後に自動表示）。App UIはネイティブApp（jpcard）のため次回ビルド・ストア配信で反映。
+
+**日付：** 2026-08-03

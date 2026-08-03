@@ -14,6 +14,18 @@
         <view class="items-boxs">
             <view class="jj" v-if="shopInfo.des" v-text="shopInfo.des">
             </view>
+            <!-- クチコミ（Googleビジネス連携店舗のみ表示） -->
+            <view class="review-entry" v-if="reviewInfo.connected" @click="toReviews" hover-class="hover1">
+                <view class="review-score">{{ reviewInfo.avg_rating ? reviewInfo.avg_rating.toFixed(1) : '0.0' }}</view>
+                <view class="review-cen">
+                    <view class="review-stars">
+                        <text v-for="i in 5" :key="i"
+                            :class="i <= Math.round(reviewInfo.avg_rating) ? 'star-on' : 'star-off'">★</text>
+                    </view>
+                    <view class="review-count">{{ reviewInfo.total }}件のクチコミ</view>
+                </view>
+                <view class="review-arrow">›</view>
+            </view>
             <view class="items">
                 <view class="items-fle">
                     <view class="left">
@@ -251,6 +263,11 @@
                 imgList: [],
                 shopInfo: {},
                 memberAppDownloadUrl: "",
+                reviewInfo: {
+                    connected: false,
+                    avg_rating: 0,
+                    total: 0
+                },
                 staff: [],
                 today: {},
                 todayTime: {},
@@ -397,6 +414,11 @@
                 "%23")); //转义后的#等于%23，利用正则表达式，替换所有%23后6位为新的十六进制六位数。
                 return res;
             },
+            toReviews() {
+                uni.navigateTo({
+                    url: '../googleReviews/googleReviews?sid=' + this.sid
+                })
+            },
             copy() {
                 let that = this
                 // アプリダウンロードリンク（正式なQRリンク先で固定。指摘 2026.8.3-1）
@@ -474,6 +496,7 @@
                     if (res.code == 200) {
                         that.shopInfo = res.data.shop
                         that.memberAppDownloadUrl = res.data.member_app_download_url || ""
+                        that.reviewInfo = res.data.review || { connected: false, avg_rating: 0, total: 0 }
                         that.staff = res.data.admin3
                         uni.request({
                             url: "https://maps.googleapis.com/maps/api/geocode/json?address=〒" + that
@@ -553,6 +576,43 @@
 </script>
 
 <style lang="scss" scoped>
+    .review-entry{
+        display: flex;
+        align-items: center;
+        padding: 30upx 40upx;
+        border-bottom: 2rpx solid #d2d2d7;
+    }
+    .review-entry .review-score{
+        font-size: 52upx;
+        font-weight: bold;
+        color: #1D1D1F;
+        line-height: 1;
+        margin-right: 24upx;
+    }
+    .review-entry .review-cen{
+        flex: 1;
+    }
+    .review-entry .review-stars{
+        font-size: 32upx;
+        line-height: 1.2;
+    }
+    .review-entry .review-stars .star-on{
+        color: #FBBC04;
+    }
+    .review-entry .review-stars .star-off{
+        color: #D2D2D7;
+    }
+    .review-entry .review-count{
+        font-size: 26upx;
+        color: #707070;
+        margin-top: 6upx;
+    }
+    .review-entry .review-arrow{
+        font-size: 44upx;
+        color: #C7C7CC;
+        margin-left: 12upx;
+    }
+
     .jj{
         font-size: 32rpx;
         // font-family: Noto Sans Kannada, Noto Sans Kannada;

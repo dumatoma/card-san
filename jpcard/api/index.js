@@ -118,6 +118,14 @@ export const getShopInfo = (id) => {
 	})
 }
 
+// 获取店铺Googleクチコミ（评价一览・分布・本文）
+export const getShopReviews = (id) => {
+	return request({
+		url: '/api/member/shop/' + id + '/reviews',
+		method: 'get'
+	})
+}
+
 // 获取卡片详情 
 export const getCardInfo = (id) => {
 	return request({

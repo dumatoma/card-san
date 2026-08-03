@@ -157,6 +157,13 @@
                 }
 
             }, {
+                "path": "googleReviews/googleReviews",
+                "style": {
+                    "navigationStyle": "custom",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
                 "path": "couponList/couponList",
                 "style": {
                     "navigationStyle": "custom",

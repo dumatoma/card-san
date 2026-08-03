@@ -399,13 +399,8 @@
             },
             copy() {
                 let that = this
-                let downloadUrl = that.memberAppDownloadUrl
-                if (!downloadUrl) {
-                    const platform = uni.getSystemInfoSync().platform
-                    downloadUrl = platform === 'android'
-                        ? 'https://play.google.com/store/apps/details?id=com.cardsan.customer'
-                        : 'https://apps.apple.com/jp/app/cardsan/id6445853601'
-                }
+                // アプリダウンロードリンク（正式なQRリンク先で固定。指摘 2026.8.3-1）
+                const downloadUrl = 'https://me-qr.com/tOELaM49'
                 uni.setClipboardData({
                     data: downloadUrl,
                     success: () => {

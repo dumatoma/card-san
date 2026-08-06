@@ -1,7 +1,7 @@
 <template>
     <view class="container">
-        <view class="roomIcon">
-            <image src="/static/icons/staffroom_setting.svg" mode="aspectFit"></image>
+        <view class="roomIcon" @click="uploadImage">
+            <image :src="avatar || '/static/icons/staffroom_setting.svg'" mode="aspectFit"></image>
         </view>
         <view class="section roomNameSection">
             <view class="label">ルーム名</view>

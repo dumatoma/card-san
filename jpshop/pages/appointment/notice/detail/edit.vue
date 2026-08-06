@@ -542,6 +542,9 @@
                         that.day_admin = res.data.order.day_admin
                         that.appoint_admin = res.data.order.appoint_admin  || d
                         that.menu = res.data.order.menu
+                        // お休み・勤務時間外(menu.id が 0/なし)の編集時は「お休み・勤務時間外」を
+                        // 選択状態(wai=true)にして、メニュー選択でチェックが入るようにする 2026.7.29
+                        that.wai = !(that.menu && that.menu.id)
                         that.mid = res.data.order.mid
                         that.totalTime = res.data.order.menu.order_time
                     }

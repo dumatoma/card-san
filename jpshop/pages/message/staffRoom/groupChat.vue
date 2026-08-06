@@ -281,11 +281,11 @@
     .chatName { font-size: 24upx; color: #aaa; }
     .blank { width: 100vw; height: 122upx; }
     .sendBox {
-        width: 100vw; height: 122upx;
+        width: 100vw; min-height: 122upx; flex-shrink: 0;
         background: #F9F9F9;
         box-shadow: 0px -1upx 0px 2upx rgba(0,0,0,0.3);
         display: flex; align-items: center;
-        box-sizing: border-box; padding: 0 32upx 32upx;
+        box-sizing: border-box; padding: 20upx 32upx 32upx;
         position: fixed; bottom: 0; left: 0;
         justify-content: space-between;
         .boxLeft {

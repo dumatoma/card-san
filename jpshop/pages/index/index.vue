@@ -68,7 +68,7 @@
                 <view class="itemBot">
                     メッセージ
                 </view>
-                <view class="bdg" v-if="value * 1 > 0 && shopInfo.vip.type != 1" v-text="value"></view>
+                <view class="bdg" v-if="messageUnread > 0 && shopInfo.vip.type != 1" v-text="messageUnread"></view>
             </view>
             <view class="indexItem" hover-class="click-hover" @click="toNotice">
                 <view class="itemMask" v-if="shopInfo.vip.type == 1" @click.stop="maskClick"></view>
@@ -362,6 +362,11 @@
         computed: {
             newMessage() {
                 return this.$store.state.newMessage;
+            },
+            // メッセージアイコンの未読バッジ：ユーザーチャット(value)＋スタッフルーム/1対1(value3)の合算
+            // (予約通知 value2 は含めない) 2026.7.29
+            messageUnread() {
+                return this.value * 1 + this.value3 * 1;
             },
         },
         watch: {

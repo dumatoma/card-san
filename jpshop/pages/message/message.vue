@@ -386,7 +386,9 @@
             min-width: 44upx;
             height: 44upx;
             background: #D93025;
-            border-radius: 50%;
+            border-radius: 22upx;
+            flex-shrink: 0;
+            box-sizing: border-box;
             text-align: center;
             line-height: 44upx;
             font-size: 24upx;

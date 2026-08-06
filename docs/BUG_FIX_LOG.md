@@ -1316,3 +1316,22 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 **反映：** 管理WEB（jppc）のビルド・デプロイで反映。
 
 **日付：** 2026-08-06
+
+---
+
+### 68. 管理App メッセージ/スタッフルーム/1対1チャット 6件一括修正（2026.7.29-1）＋予約編集
+
+**概要：** クライアント報告（2026.7.29-1／予約編集）に基づく jpshop（管理App）の不具合修正。
+
+| # | 対象 | 内容 |
+|---|------|------|
+| A | `jpshop/pages/message/staffRoom/staffRoom.vue` | スタッフルーム設定のアイコンに `@click="uploadImage"` を付与し、読み込んだ `avatar` を表示。タップでカメラ/アルバム選択→画像変更が可能に（既存 `uploadImage()` を結線） |
+| B | `jpshop/pages/message/message.vue` | スタッフルーム/1対1の未読バッジ `.srBadge` が潰れた楕円になる不具合。`border-radius:50%`→`22upx`（＝高さ/2）、`flex-shrink:0`・`box-sizing:border-box` 追加で正円化 |
+| C | `jpshop/pages/index/index.vue` | TOPメッセージアイコンのバッジがユーザーチャット分のみだった問題。`messageUnread = value + value3`（ユーザー＋スタッフルーム＋1対1）を computed で合算表示（予約通知 value2 は含めない） |
+| D | `jpshop/pages/message/staffRoom/dm.vue` | 1対1チャットで相手アイコンが出ない不具合。`loadHistory` が avatar 無しのDMメッセージで `targetAvatar` を潰していたため、`targetMsg.avatar` がある時のみ上書きに修正 |
+| E | `jpshop/pages/message/staffRoom/groupChat.vue`・`dm.vue` | 改行を重ねると入力欄UIが崩れる不具合。`.sendBox` の固定 `height:122upx`→`min-height:122upx`＋`flex-shrink:0`（ユーザーチャットと同仕様）で入力欄の伸長に追従。8行超のスクロールは既存の `max-height:400upx;overflow-y:auto` で対応 |
+| F | `jpshop/pages/appointment/notice/detail/edit.vue` | 予約編集で[お休み・勤務時間外]選択時にメニュー選択のチェックが入らない不具合。`getDetail` で `wai = !(menu && menu.id)` を初期化し、menu.id が 0/なし の場合に[お休み・勤務時間外]を選択状態に |
+
+**反映：** ネイティブApp（jpshop）のため次回ビルド・ストア配信で反映。
+
+**日付：** 2026-08-06

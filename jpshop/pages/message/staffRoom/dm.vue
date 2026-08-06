@@ -117,7 +117,9 @@
                         this.history = res.data.messages
                         // grab target avatar from first message
                         let targetMsg = this.history.find(m => m.from_id == this.toId)
-                        if (targetMsg) this.targetAvatar = targetMsg.avatar
+                        // DMメッセージは avatar を持たないため、値がある時だけ上書き
+                        // (一覧から渡された相手アイコンを undefined で潰さない) 2026.7.29
+                        if (targetMsg && targetMsg.avatar) this.targetAvatar = targetMsg.avatar
                         this.rebuildArr()
                         this.scrollBottom()
                     }
@@ -260,10 +262,10 @@
     .chatName { font-size: 24upx; color: #aaa; }
     .blank { width: 100vw; height: 122upx; }
     .sendBox {
-        width: 100vw; height: 122upx; background: #F9F9F9;
+        width: 100vw; min-height: 122upx; flex-shrink: 0; background: #F9F9F9;
         box-shadow: 0px -1upx 0px 2upx rgba(0,0,0,0.3);
         display: flex; align-items: center;
-        box-sizing: border-box; padding: 0 32upx 32upx;
+        box-sizing: border-box; padding: 20upx 32upx 32upx;
         position: fixed; bottom: 0; left: 0;
         justify-content: space-between;
         .boxLeft {

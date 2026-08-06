@@ -768,6 +768,30 @@ export const readMessage = (id) => {
     })
 }
 
+// ===== スタッフルームチャット =====
+// ルーム情報・メンバー・自分の参加/1対1許可フラグを取得
+export const getStaffRoom = () => request({ url: "/api/shop/staff_room", method: "get" })
+// 1対1トークのスレッド一覧
+export const getStaffDmThreads = () => request({ url: "/api/shop/staff_room/dm_threads", method: "get" })
+// ルーム設定保存（主管理者）
+export const updateStaffRoomSettings = (data) => request({ url: "/api/shop/staff_room/room", method: "post", data })
+// 自分の「参加する」「1対1を許可」フラグ保存
+export const updateStaffRoomMember = (data) => request({ url: "/api/shop/staff_room/member", method: "put", data })
+// グループメッセージ取得（before_id でページング）
+export const getStaffRoomMessages = (beforeId) => request({ url: "/api/shop/staff_room/messages" + (beforeId ? "?before_id=" + beforeId : ""), method: "get" })
+// グループメッセージ送信（type 1=text,2=image）
+export const sendStaffRoomMessage = (data) => request({ url: "/api/shop/staff_room/messages", method: "post", data })
+// グループ既読
+export const readStaffRoomMessages = () => request({ url: "/api/shop/staff_room/messages/read", method: "post", data: {} })
+// 1対1メッセージ取得
+export const getStaffDmMessages = (adminId, beforeId) => request({ url: "/api/shop/staff_room/dm/" + adminId + (beforeId ? "?before_id=" + beforeId : ""), method: "get" })
+// 1対1メッセージ送信
+export const sendStaffDm = (data) => request({ url: "/api/shop/staff_room/dm", method: "post", data })
+// 1対1既読
+export const readStaffDm = (data) => request({ url: "/api/shop/staff_room/dm/read", method: "post", data })
+// 未読数（group_unread）
+export const getStaffRoomUnread = () => request({ url: "/api/shop/staff_room/unread", method: "get" })
+
 // 购买契约套餐
 export const buyPlan = (data) => {
     return request({

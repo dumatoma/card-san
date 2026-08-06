@@ -138,7 +138,9 @@ export default {
         this.$route.name == "message" ||
         this.$route.name == "delivery" ||
         this.$route.name == "setting" ||
-        this.$route.name == "accountInfo"
+        this.$route.name == "accountInfo" ||
+        this.$route.name == "staffRoomSet" ||
+        this.$route.name == "roomChat"
       ) {
         this.i = 3;
         this.svgData14 = this.changeColor(this.svgData4,"#1d1d1f");
@@ -211,8 +213,10 @@ export default {
       getUnreadnumber(){
          let that = this
          setInterval(() => {
-             let num = localStorage.getItem("unreadnum")
-             that.list[3].current = num  
+             // 上部「メッセージ」バッジ = メッセージチャット未読 + ルームチャット未読(合算)
+             let num = Number(localStorage.getItem("unreadnum")) || 0
+             let room = Number(localStorage.getItem("roomunread")) || 0
+             that.list[3].current = num + room
          },1000)
       },
     cut(index) {

@@ -29,6 +29,19 @@
             placeholder="担当者を入力してください"
             v-model="admin.name"
           />
+          <div class="staff-room-set no-size">
+            <div class="srs-tit">スタッフチャットルーム設定</div>
+            <label class="srs-row shou">
+              <span class="srs-radio" :class="staffRoomJoin ? 'on' : ''"></span>
+              <input type="checkbox" v-model="staffRoomJoin" style="display:none" />
+              スタッフルームに参加する
+            </label>
+            <label class="srs-row shou">
+              <span class="srs-radio" :class="staffRoomDm ? 'on' : ''"></span>
+              <input type="checkbox" v-model="staffRoomDm" style="display:none" />
+              1対1のトークを許可する
+            </label>
+          </div>
           <div class="keep shou" @click="keep">保　存</div>
         </div>
       </div>
@@ -44,7 +57,7 @@
 </template>
 
 <script>
-import {getStore,setMessageOn} from "@/http/api.js"
+import {getStore,setMessageOn,getStaffRoom,updateStaffRoomMember} from "@/http/api.js"
 export default {
   name: "",
   components: {},
@@ -53,11 +66,14 @@ export default {
       keepShow: false,
       imgUrl: require("../static/yulan-tou.png"),
       name:"",
-      admin:{}
+      admin:{},
+      staffRoomJoin:false,
+      staffRoomDm:false
     };
   },
   created() {
       this.getInfo()
+      this.loadFlags()
   },
   methods: {
     getInfo(){
@@ -65,6 +81,15 @@ export default {
         let info = localStorage.getItem("admin")
         let infos = JSON.parse(info)
         that.admin = infos
+    },
+    loadFlags(){
+        let that = this
+        getStaffRoom().then((res) => {
+            if(res && res.code == 200){
+                that.staffRoomJoin = res.data.my_join == 1
+                that.staffRoomDm = res.data.my_dm == 1
+            }
+        }).catch(() => {})
     },
     handleAvatarSuccess(res, file) {
         let that = this
@@ -91,7 +116,11 @@ export default {
               }, 1500);
           }
       })
-      
+      // スタッフチャットルーム設定（参加・1対1許可）を保存
+      updateStaffRoomMember({
+          staff_room_join: that.staffRoomJoin ? 1 : 0,
+          staff_room_dm: that.staffRoomDm ? 1 : 0
+      }).catch(() => {})
     },
   },
 };
@@ -171,6 +200,48 @@ export default {
         color: #ffffff;
         font-size: 16px;
         margin: 40px auto;
+      }
+      .staff-room-set {
+        width: 329px;
+        margin-top: 25px;
+        border-top: 1px solid #d2d2d7;
+        padding-top: 18px;
+        .srs-tit {
+          font-size: 15px;
+          font-weight: bold;
+          color: #1d1d1f;
+          margin-bottom: 14px;
+        }
+        .srs-row {
+          display: flex;
+          align-items: center;
+          font-size: 14px;
+          color: #1d1d1f;
+          margin-bottom: 14px;
+          .srs-radio {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #aaaaaa;
+            margin-right: 10px;
+            box-sizing: border-box;
+            position: relative;
+          }
+          .srs-radio.on {
+            border-color: #1a73e8;
+          }
+          .srs-radio.on::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #1a73e8;
+          }
+        }
       }
     }
   }

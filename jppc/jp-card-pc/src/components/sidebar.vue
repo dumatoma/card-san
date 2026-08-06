@@ -65,6 +65,21 @@
       >
         メッセージテンプレート
       </div>
+      <div
+        :class="index == 7 ? 'item active no-size' : 'item  shou no-size'"
+        @click="cuts(7)"
+        v-if="type == 1"
+      >
+        スタッフルーム設定
+      </div>
+      <div
+        :class="index == 8 ? 'item active no-size' : 'item  shou no-size'"
+        @click="cuts(8)"
+      >
+        ルームチャット<span class="hui" v-if="roomNum > 0">{{
+          roomNum > 99 ? "99+" : roomNum
+        }}</span>
+      </div>
     </div>
     <!-- TOP -->
     <div class="its" v-if="current1 == 0">
@@ -169,6 +184,7 @@
 </template>
 
 <script>
+import { getStaffRoomUnread, getStaffDmThreads } from "@/http/api.js";
 export default {
   props: {
     current: {
@@ -189,6 +205,7 @@ export default {
       current1: 0,
       type:1,
       num:0,
+      roomNum:0,
       topList: [
         {
           title: "ダッシュボード",
@@ -288,6 +305,12 @@ export default {
         } else if (val.path == "/accountInfo") {
           this.current1 = 3;
           this.index = 4;
+        } else if (val.path == "/staffRoomSet") {
+          this.current1 = 3;
+          this.index = 7;
+        } else if (val.path == "/roomChat") {
+          this.current1 = 3;
+          this.index = 8;
         } else if (val.path == "/appointment") {
           this.current1 = 4;
           this.index = 1;
@@ -376,8 +399,12 @@ export default {
           let num = localStorage.getItem("unreadnum")
           this.num = num
       },1000)
-      
-      
+
+      // ルームチャット未読（グループ＋1対1）バッジ
+      this.getRoomNum()
+      setInterval(() => { this.getRoomNum() }, 8000)
+
+
     setTimeout(() => {
       if (this.$route.name == "message") {
         this.current1 = 3;
@@ -391,6 +418,12 @@ export default {
       } else if (this.$route.name == "accountInfo") {
         this.current1 = 3;
         this.index = 4;
+      } else if (this.$route.name == "staffRoomSet") {
+        this.current1 = 3;
+        this.index = 7;
+      } else if (this.$route.name == "roomChat") {
+        this.current1 = 3;
+        this.index = 8;
       } else if (this.$route.name == "appointment") {
         this.current1 = 4;
         this.index = 1;
@@ -494,6 +527,23 @@ export default {
     }, 200);
   },
   methods: {
+    getRoomNum() {
+      let that = this;
+      let apply = () => {
+        that.roomNum = (that.roomGroup || 0) + (that.roomDm || 0);
+        // 上部ナビ「メッセージ」バッジ合算用に共有
+        localStorage.setItem("roomunread", that.roomNum);
+      };
+      getStaffRoomUnread().then((res) => {
+        if (res && res.code == 200) that.roomGroup = res.data.group_unread * 1 || 0;
+        apply();
+      }).catch(() => {});
+      getStaffDmThreads().then((res) => {
+        if (res && res.code == 200)
+          that.roomDm = (res.data.threads || []).reduce((s, t) => s + (t.unread * 1 || 0), 0);
+        apply();
+      }).catch(() => {});
+    },
     yueCuts(i) {
       this.index = i;
       if (i == 1) {
@@ -538,6 +588,14 @@ export default {
       }else if (i == 6) {
         this.$router.push({
           path: "/moduleSetting",
+        });
+      }else if (i == 7) {
+        this.$router.push({
+          path: "/staffRoomSet",
+        });
+      }else if (i == 8) {
+        this.$router.push({
+          path: "/roomChat",
         });
       }
     },

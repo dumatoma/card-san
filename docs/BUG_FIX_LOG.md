@@ -1335,3 +1335,23 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 **反映：** ネイティブApp（jpshop）のため次回ビルド・ストア配信で反映。
 
 **日付：** 2026-08-06
+
+---
+
+### 69. 新機能：管理WEB スタッフルームチャット（ルームチャット）追加（2026.8.4-1）
+
+**概要：** 管理App（jpshop）に実装済みのスタッフルームチャットを、管理WEB（jppc / card-san.jp）へ移植。既存の `/api/shop/staff_room/*`（App と同じ）を再利用し、バックエンド改修なし。クライアント指示（2026.8.4-1）の①〜⑤に対応。
+
+| 対象 | 内容 |
+|------|------|
+| `jppc/jp-card-pc/src/http/api.js` | staff_room 系11エンドポイントを追加（getStaffRoom / dm_threads / room / member / messages(+read) / dm(+read) / unread） |
+| `jppc/jp-card-pc/src/router/index.js` | `/staffRoomSet`・`/roomChat` ルート追加 |
+| `jppc/jp-card-pc/src/components/sidebar.vue` | メッセージ左メニューに「スタッフルーム設定」（主管理者 `type==1` のみ）と「ルームチャット」（未読バッジ付き）を追加。ルーム未読(group+1対1)を8秒間隔で集計 |
+| `jppc/jp-card-pc/src/components/headerView.vue` | 新ルートをメッセージセクション判定に追加。上部「メッセージ」バッジをメッセージ未読＋ルーム未読の合算に |
+| `jppc/jp-card-pc/src/views/messsageInformation.vue`（①） | アカウント情報に「スタッフチャットルーム設定」（参加する／1対1を許可）を追加、保存で `updateStaffRoomMember` |
+| `jppc/jp-card-pc/src/views/staffRoomSetting.vue`（②・新規） | 主管理者用ルーム設定：アイコン添付・ルーム名・ON/OFF・注意書き・保存 |
+| `jppc/jp-card-pc/src/views/roomChat.vue`（③④⑤・新規） | 左：ルーム(名+人数)/1対1一覧＋未読、右：チャット詳細（Enter送信/Shift+Enter改行/画像、自分=緑バブル右寄せ）。ヘッダークリックでメンバー一覧（④）、各メンバー「1対1トーク」（相手/自分が1対1許可OFFなら非活性）→確認ダイアログ（⑤）→一覧に1対1追加。socket(`staff_room_message`/`staff_dm`)でリアルタイム反映 |
+
+**反映：** 管理WEB（jppc）ビルド・**card-san.jp へデプロイ済み**（HTTP 200）。`/api/shop/staff_room/*` 11ルート存在確認済み。
+
+**日付：** 2026-08-06

@@ -99,6 +99,14 @@ const routes = [
     path: '/accountInfo',
     name: 'accountInfo',
     component: () => import('../views/messsageInformation.vue')
+  }, {
+    path: '/staffRoomSet',
+    name: 'staffRoomSet',
+    component: () => import('../views/staffRoomSetting.vue')
+  }, {
+    path: '/roomChat',
+    name: 'roomChat',
+    component: () => import('../views/roomChat.vue')
   },
   {
     path: '/cardInfo',

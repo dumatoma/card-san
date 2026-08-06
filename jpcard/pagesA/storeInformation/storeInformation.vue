@@ -16,14 +16,13 @@
             </view>
             <!-- クチコミ（Googleビジネス連携店舗のみ表示） -->
             <view class="review-entry" v-if="reviewInfo.connected" @click="toReviews" hover-class="hover1">
+                <view class="review-badge">★</view>
                 <view class="review-score">{{ reviewInfo.avg_rating ? reviewInfo.avg_rating.toFixed(1) : '0.0' }}</view>
-                <view class="review-cen">
-                    <view class="review-stars">
-                        <text v-for="i in 5" :key="i"
-                            :class="i <= Math.round(reviewInfo.avg_rating) ? 'star-on' : 'star-off'">★</text>
-                    </view>
-                    <view class="review-count">{{ reviewInfo.total }}件のクチコミ</view>
+                <view class="review-stars">
+                    <text v-for="i in 5" :key="i"
+                        :class="i <= Math.round(reviewInfo.avg_rating) ? 'star-on' : 'star-off'">★</text>
                 </view>
+                <view class="review-count">・{{ reviewInfo.total }}クチコミ</view>
                 <view class="review-arrow">›</view>
             </view>
             <view class="items">
@@ -416,7 +415,8 @@
             },
             toReviews() {
                 uni.navigateTo({
-                    url: '../googleReviews/googleReviews?sid=' + this.sid
+                    url: '../googleReviews/googleReviews?sid=' + this.sid +
+                        '&name=' + encodeURIComponent(this.shopInfo.shop_name || '')
                 })
             },
             copy() {
@@ -579,22 +579,29 @@
     .review-entry{
         display: flex;
         align-items: center;
-        padding: 30upx 40upx;
+        padding: 28upx 40upx;
         border-bottom: 2rpx solid #d2d2d7;
     }
+    .review-entry .review-badge{
+        width: 44upx;
+        height: 44upx;
+        border-radius: 10upx;
+        background: #E8F0FE;
+        color: #1A73E8;
+        font-size: 26upx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 18upx;
+    }
     .review-entry .review-score{
-        font-size: 52upx;
+        font-size: 32upx;
         font-weight: bold;
         color: #1D1D1F;
-        line-height: 1;
-        margin-right: 24upx;
-    }
-    .review-entry .review-cen{
-        flex: 1;
+        margin-right: 12upx;
     }
     .review-entry .review-stars{
-        font-size: 32upx;
-        line-height: 1.2;
+        font-size: 30upx;
     }
     .review-entry .review-stars .star-on{
         color: #FBBC04;
@@ -603,9 +610,10 @@
         color: #D2D2D7;
     }
     .review-entry .review-count{
+        flex: 1;
         font-size: 26upx;
         color: #707070;
-        margin-top: 6upx;
+        margin-left: 8upx;
     }
     .review-entry .review-arrow{
         font-size: 44upx;

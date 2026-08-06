@@ -1,6 +1,6 @@
 <template>
     <view class="page">
-        <u-navbar title="クチコミ" :placeholder="true" :safeAreaInsetTop="true" :autoBack="true"
+        <u-navbar :title="shopName || 'クチコミ'" :placeholder="true" :safeAreaInsetTop="true" :autoBack="true"
             :border="true" bgColor="#FFFFFF"></u-navbar>
 
         <view v-if="loading" class="loading">
@@ -14,41 +14,52 @@
             </view>
 
             <block v-else>
-                <!-- 集計サマリー -->
+                <!-- Google でのクチコミの概要 -->
                 <view class="summary">
-                    <view class="sum-left">
-                        <view class="sum-score">{{ avgRating.toFixed(1) }}</view>
-                        <view class="sum-stars">
-                            <text v-for="i in 5" :key="i"
-                                :class="i <= Math.round(avgRating) ? 'star-on' : 'star-off'">★</text>
-                        </view>
-                        <view class="sum-total">{{ total }}件のクチコミ</view>
+                    <view class="sum-tit">
+                        <text>Google でのクチコミの概要</text>
+                        <u-icon name="info-circle" color="#909399" size="16"></u-icon>
                     </view>
-                    <view class="sum-right">
-                        <view class="bar-row" v-for="star in [5,4,3,2,1]" :key="star">
-                            <text class="bar-label">{{ star }}</text>
-                            <view class="bar-track">
-                                <view class="bar-fill" :style="{ width: barWidth(star) }"></view>
+                    <view class="sum-body">
+                        <view class="sum-bars">
+                            <view class="bar-row" v-for="star in [5,4,3,2,1]" :key="star">
+                                <text class="bar-label">{{ star }}</text>
+                                <view class="bar-track">
+                                    <view class="bar-fill" :style="{ width: barWidth(star) }"></view>
+                                </view>
                             </view>
-                            <text class="bar-count">{{ distribution[star] || 0 }}</text>
+                        </view>
+                        <view class="sum-score">
+                            <view class="score-num">{{ avgRating.toFixed(1) }}</view>
+                            <view class="score-stars">
+                                <text v-for="i in 5" :key="i"
+                                    :class="i <= Math.round(avgRating) ? 'star-on' : 'star-off'">★</text>
+                            </view>
+                            <view class="score-total">({{ total }})</view>
                         </view>
                     </view>
                 </view>
 
-                <!-- 絞り込み -->
+                <!-- クチコミ -->
+                <view class="sec-tit">クチコミ</view>
+
+                <!-- 絞り込み（星別） -->
                 <scroll-view scroll-x class="filter-bar" :show-scrollbar="false">
                     <view class="chip" :class="filterStar === 0 ? 'chip-on' : ''" @click="filterStar = 0">すべて</view>
-                    <view class="chip" v-for="star in [5,4,3,2,1]" :key="star"
+                    <view class="chip" v-for="star in [5,4,3,2,1]" :key="star" v-if="distribution[star] > 0"
                         :class="filterStar === star ? 'chip-on' : ''" @click="filterStar = star">
-                        ★{{ star }}
+                        ★{{ star }} <text class="chip-num">{{ distribution[star] }}</text>
                     </view>
                 </scroll-view>
 
                 <!-- 並べ替え -->
-                <view class="sort-bar">
-                    <view class="sort-item" v-for="s in sortOptions" :key="s.value"
-                        :class="sortBy === s.value ? 'sort-on' : ''" @click="sortBy = s.value">
-                        {{ s.label }}
+                <view class="sort-wrap">
+                    <view class="sort-label">並べ替え</view>
+                    <view class="sort-bar">
+                        <view class="sort-chip" v-for="s in sortOptions" :key="s.value"
+                            :class="sortBy === s.value ? 'sort-on' : ''" @click="sortBy = s.value">
+                            {{ s.label }}
+                        </view>
                     </view>
                 </view>
 
@@ -59,7 +70,12 @@
                 <view v-else class="list">
                     <view class="review" v-for="(item, index) in displayReviews" :key="index">
                         <view class="rv-head">
-                            <image class="rv-avatar" :src="item.reviewer_photo || defaultAvatar" mode="aspectFill"></image>
+                            <image v-if="item.reviewer_photo" class="rv-avatar" :src="item.reviewer_photo"
+                                mode="aspectFill"></image>
+                            <view v-else class="rv-avatar rv-avatar-txt"
+                                :style="{ background: avatarColor(item.reviewer_name) }">
+                                {{ initial(item.reviewer_name) }}
+                            </view>
                             <view class="rv-head-r">
                                 <view class="rv-name">{{ item.reviewer_name || 'ゲスト' }}</view>
                                 <view class="rv-meta">
@@ -67,7 +83,7 @@
                                         <text v-for="i in 5" :key="i"
                                             :class="i <= item.rating ? 'star-on' : 'star-off'">★</text>
                                     </text>
-                                    <text class="rv-date">{{ item.create_time }}</text>
+                                    <text class="rv-date">{{ relativeTime(item.create_ts) }}</text>
                                 </view>
                             </view>
                         </view>
@@ -90,6 +106,7 @@
         data() {
             return {
                 sid: '',
+                shopName: '',
                 loading: true,
                 connected: false,
                 avgRating: 0,
@@ -97,26 +114,25 @@
                 distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
                 reviews: [],
                 filterStar: 0,
-                sortBy: 'new',
+                sortBy: 'default',
                 sortOptions: [
-                    { label: '新しい順', value: 'new' },
-                    { label: '古い順', value: 'old' },
-                    { label: '評価が高い順', value: 'high' },
-                    { label: '評価が低い順', value: 'low' }
+                    { label: '関連度順', value: 'default' },
+                    { label: '新規順', value: 'new' },
+                    { label: '最高', value: 'high' },
+                    { label: '最低', value: 'low' }
                 ],
-                defaultAvatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png'
+                avatarColors: ['#EA4335', '#4285F4', '#FBBC04', '#34A853', '#A142F4', '#00ACC1', '#FB8C00']
             }
         },
         computed: {
             displayReviews() {
-                let list = this.reviews
+                let list = this.reviews.slice()
                 if (this.filterStar > 0) {
                     list = list.filter(r => r.rating === this.filterStar)
                 }
-                list = list.slice()
                 switch (this.sortBy) {
-                    case 'old':
-                        list.sort((a, b) => (a.create_ts || 0) - (b.create_ts || 0))
+                    case 'new':
+                        list.sort((a, b) => (b.create_ts || 0) - (a.create_ts || 0))
                         break
                     case 'high':
                         list.sort((a, b) => (b.rating - a.rating) || ((b.create_ts || 0) - (a.create_ts || 0)))
@@ -125,13 +141,15 @@
                         list.sort((a, b) => (a.rating - b.rating) || ((b.create_ts || 0) - (a.create_ts || 0)))
                         break
                     default:
-                        list.sort((a, b) => (b.create_ts || 0) - (a.create_ts || 0))
+                        // 関連度順：APIの返却順（Googleの既定順）をそのまま使用
+                        break
                 }
                 return list
             }
         },
         onLoad(options) {
             this.sid = options.sid || ''
+            this.shopName = options.name ? decodeURIComponent(options.name) : ''
             this.getData()
         },
         methods: {
@@ -154,6 +172,26 @@
             barWidth(star) {
                 if (!this.total) return '0%'
                 return Math.round(((this.distribution[star] || 0) / this.total) * 100) + '%'
+            },
+            initial(name) {
+                if (!name) return 'G'
+                return name.trim().charAt(0).toUpperCase()
+            },
+            avatarColor(name) {
+                let key = (name || 'G').charCodeAt(0) || 0
+                return this.avatarColors[key % this.avatarColors.length]
+            },
+            relativeTime(ts) {
+                if (!ts) return ''
+                let now = Math.floor(Date.now() / 1000)
+                let diff = now - ts
+                if (diff < 0) diff = 0
+                let day = 86400
+                if (diff < day) return '今日'
+                if (diff < day * 7) return Math.floor(diff / day) + '日前'
+                if (diff < day * 30) return Math.floor(diff / (day * 7)) + '週間前'
+                if (diff < day * 365) return Math.floor(diff / (day * 30)) + 'か月前'
+                return Math.floor(diff / (day * 365)) + '年前'
             }
         }
     }
@@ -172,7 +210,7 @@
     }
 
     .empty {
-        padding: 160upx 0;
+        padding: 120upx 0;
         text-align: center;
     }
     .empty-txt {
@@ -180,54 +218,47 @@
         color: #909399;
     }
 
+    .star-on { color: #FBBC04; }
+    .star-off { color: #D2D2D7; }
+
+    /* 概要 */
     .summary {
-        display: flex;
         background: #FFFFFF;
-        padding: 40upx;
+        padding: 32upx 40upx;
     }
-    .sum-left {
-        width: 220upx;
-        text-align: center;
-        border-right: 2rpx solid #EDEDED;
-    }
-    .sum-score {
-        font-size: 72upx;
+    .sum-tit {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 30upx;
         font-weight: bold;
         color: #1D1D1F;
-        line-height: 1;
+        margin-bottom: 24upx;
     }
-    .sum-stars {
-        font-size: 30upx;
-        margin: 12upx 0 8upx;
-    }
-    .sum-total {
-        font-size: 24upx;
-        color: #707070;
-    }
-    .sum-right {
-        flex: 1;
-        padding-left: 32upx;
+    .sum-body {
         display: flex;
-        flex-direction: column;
-        justify-content: center;
+        align-items: center;
+    }
+    .sum-bars {
+        flex: 1;
+        padding-right: 32upx;
     }
     .bar-row {
         display: flex;
         align-items: center;
-        margin: 4upx 0;
+        margin: 5upx 0;
     }
     .bar-label {
-        width: 28upx;
-        font-size: 24upx;
+        width: 24upx;
+        font-size: 22upx;
         color: #707070;
-        text-align: right;
     }
     .bar-track {
         flex: 1;
         height: 12upx;
         background: #EDEDED;
         border-radius: 6upx;
-        margin: 0 16upx;
+        margin-left: 12upx;
         overflow: hidden;
     }
     .bar-fill {
@@ -235,53 +266,92 @@
         background: #FBBC04;
         border-radius: 6upx;
     }
-    .bar-count {
-        width: 48upx;
-        font-size: 22upx;
+    .sum-score {
+        width: 200upx;
+        text-align: center;
+    }
+    .score-num {
+        font-size: 76upx;
+        font-weight: bold;
+        color: #1D1D1F;
+        line-height: 1;
+    }
+    .score-stars {
+        font-size: 28upx;
+        margin: 8upx 0 4upx;
+    }
+    .score-total {
+        font-size: 24upx;
         color: #909399;
-        text-align: right;
     }
 
-    .star-on { color: #FBBC04; }
-    .star-off { color: #D2D2D7; }
+    .sec-tit {
+        font-size: 30upx;
+        font-weight: bold;
+        color: #1D1D1F;
+        padding: 28upx 40upx 8upx;
+    }
 
+    /* 絞り込み */
     .filter-bar {
         white-space: nowrap;
-        background: #FFFFFF;
-        padding: 20upx 24upx;
-        margin-top: 16upx;
+        background: #F5F5F7;
+        padding: 16upx 32upx;
     }
     .chip {
         display: inline-block;
-        padding: 10upx 28upx;
+        padding: 10upx 26upx;
         margin-right: 16upx;
         font-size: 26upx;
-        color: #707070;
-        background: #F0F0F0;
+        color: #3C4043;
+        background: #FFFFFF;
+        border: 2upx solid #DADCE0;
         border-radius: 30upx;
+    }
+    .chip-num {
+        color: #909399;
     }
     .chip-on {
         color: #FFFFFF;
         background: #1A73E8;
+        border-color: #1A73E8;
+    }
+    .chip-on .chip-num {
+        color: #FFFFFF;
     }
 
-    .sort-bar {
-        display: flex;
-        background: #FFFFFF;
-        padding: 0 24upx 20upx;
+    /* 並べ替え */
+    .sort-wrap {
+        background: #F5F5F7;
+        padding: 4upx 32upx 16upx;
     }
-    .sort-item {
+    .sort-label {
         font-size: 24upx;
         color: #707070;
-        margin-right: 32upx;
+        margin: 8upx 0;
+    }
+    .sort-bar {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .sort-chip {
+        padding: 10upx 26upx;
+        margin-right: 16upx;
+        font-size: 26upx;
+        color: #3C4043;
+        background: #FFFFFF;
+        border: 2upx solid #DADCE0;
+        border-radius: 30upx;
     }
     .sort-on {
-        color: #1A73E8;
-        font-weight: bold;
+        color: #FFFFFF;
+        background: #1A73E8;
+        border-color: #1A73E8;
     }
 
+    /* リスト */
     .list {
-        padding: 0 24upx;
+        padding: 0 24upx 24upx;
     }
     .review {
         background: #FFFFFF;
@@ -299,6 +369,14 @@
         border-radius: 50%;
         background: #EDEDED;
         margin-right: 20upx;
+    }
+    .rv-avatar-txt {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #FFFFFF;
+        font-size: 34upx;
+        font-weight: bold;
     }
     .rv-name {
         font-size: 28upx;

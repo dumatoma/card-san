@@ -844,10 +844,9 @@
                         </div>
                         <div class="flex spbet no-size">
                             <div class="left">終了</div>
-                            <div class="right shou" v-if="orderDetail.smid != 0">
-                                {{endTime}}
-                            </div>
-                            <div class="right shou" v-else>
+                            <!-- 通常メニュー(smid>0)の予約編集でも終了時間のドラムロールを表示し編集可能にする
+                                 (従来は smid==0 の お休み・勤務時間外 のみ表示。不具合修正 2026.7.29) -->
+                            <div class="right shou">
                                 <el-time-select v-model="endTime" :picker-options="{
                       start: '09:00',
                       step: '00:30',

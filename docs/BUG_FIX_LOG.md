@@ -1355,3 +1355,19 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 **反映：** 管理WEB（jppc）ビルド・**card-san.jp へデプロイ済み**（HTTP 200）。`/api/shop/staff_room/*` 11ルート存在確認済み。
 
 **日付：** 2026-08-06
+
+---
+
+### 70. 予約WEB（order.card-san.jp）を HBuilderX 正規H5ビルドで再デプロイ（#66 の解決）
+
+**概要：** #66 でロールバックしていた予約WEBの2件（「指名なし」表示の設定連動／「予約を確定する」二重送信防止）を、HBuilderX の「発行→網站-PC Web或手机H5」で正規ビルドし直して order.card-san.jp へ再デプロイ。headless CLI ビルドで欠落していた uni-app H5 起動スクリプト（coverSupport／rpx→px 変換）が正しく生成され、UI崩れは解消。
+
+| 対象 | 対応 |
+|------|------|
+| `/www/wwwroot/order.card-san.jp`（サーバー） | HBuilderX 出力 `outsiteAppointment/unpackage/dist/build/web` をデプロイ（バックアップ取得・托管ファイル保持） |
+
+**検証：** HTTP 200／`index.html` に coverSupport 起動スクリプトあり／配信CSSに生`rpx`=0／`no_appoint`（指名なし）配信JSに反映／`isSubmitting`（二重送信防止）ビルド済み。
+
+**反映：** **order.card-san.jp へデプロイ済み・上線完了。** 予約WEBの指名なし表示・二重送信防止の2件が正式反映。
+
+**日付：** 2026-08-06

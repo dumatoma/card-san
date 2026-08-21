@@ -1371,3 +1371,23 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 **反映：** **order.card-san.jp へデプロイ済み・上線完了。** 予約WEBの指名なし表示・二重送信防止の2件が正式反映。
 
 **日付：** 2026-08-06
+
+---
+
+### 71. 新機能：Instagram → GBP 自動/一括転載（バックエンド・実装のみ／GBP連携待ち）
+
+**概要：** Instagram の投稿を Google ビジネスプロフィール(GBP)へ localPosts として転載する機能を実装。手動一括エンドポイント＋定時コマンド。写真のみ対応（動画/Reelスキップ、カルーセルは先頭の写真）、`web_gbp_ins_sync_log` で重複転載防止、1回あたり件数上限あり。
+
+| 対象 | 内容 |
+|------|------|
+| `app/Http/Controllers/Api/Shop/GoogleBusinessController.php`（サーバー） | `syncInstagramBatch()`（手動一括・`POST /api/shop/google_business/posts/sync_instagram_batch`）と共用コア `runInstagramSync($shop,$limit)`（IG media 取得→写真判定→重複除外→`createPost`→ログ記録） |
+| `app/Console/Commands/GbpSyncInstagram.php`（サーバー・新規） | `gbp:sync-instagram` コマンド：`gbp_ins_sync_on=1`＋GBP/IG連携済み店舗を回して自動転載 |
+| `app/Console/Kernel.php`（サーバー） | 上記コマンドを `hourly()` で登録（※実行には `schedule:run` の cron が必要） |
+| `routes/api.php`（サーバー） | `sync_instagram_batch` ルート追加 |
+| DB `web_gbp_ins_sync_log`（新規テーブル） | `sid, ins_media_id, gbp_post_name, create_time`（UNIQUE(sid,ins_media_id)で重複防止） |
+
+**⚠️ 稼働前提（現時点では動作しない）：** ① GBPの `client_id/client_secret` 未設定（空）→どの店舗もGBP未連携（0件）。② Google の Business Profile API `localPosts` 書込承認の実地確認（1件テスト投稿）。③ 自動(hourly)実行には `* * * * * php artisan schedule:run` の cron 登録。④ 任意でフロント（jpshop/jppc の「GBP投稿管理」）に「一括転載」ボタンを追加。
+
+**反映：** バックエンドは api.card-san.jp にデプロイ済み（route/command/table 確認・lint OK）。GBP連携が有効化されれば即利用可。
+
+**日付：** 2026-08-21

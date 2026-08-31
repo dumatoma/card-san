@@ -14,7 +14,7 @@
           >
             <div class="box">
               <div class="ite-left">
-                <img :src="item.avatar || defaultImg" style="object-fit: cover" alt="" />
+                <img :src="item.avatar || (item.kind == 'group' ? groupImg : defaultImg)" style="object-fit: cover" alt="" />
               </div>
               <div class="ite-midd">
                 <div class="uname">
@@ -40,7 +40,7 @@
             :class="currentKind == 'group' ? 'shou clickable' : ''"
             @click="currentKind == 'group' ? openMembers() : null"
           >
-            <img :src="currentThread.avatar || defaultImg" alt="" v-if="current > -1" />
+            <img :src="currentThread.avatar || (currentKind == 'group' ? groupImg : defaultImg)" alt="" v-if="current > -1" />
             <div class="uname" v-if="current > -1">
               {{ currentThread.name }}<span v-if="currentKind == 'group'"> ({{ currentThread.count }})</span>
             </div>
@@ -64,6 +64,10 @@
                   <div class="mtime">{{ m.time }}</div>
                   <div class="ri no-size" v-if="m.type == 1">{{ m.message }}</div>
                   <div class="riImage no-size" v-if="m.type == 2"><img :src="m.message" alt="" /></div>
+                  <div class="le">
+                    <div class="left-img"><img :src="myAvatar || defaultImg" style="object-fit: cover" alt="" /></div>
+                    <div class="left-name">{{ myName }}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -161,6 +165,7 @@ export default {
   data() {
     return {
       defaultImg: require("../static/yulan-tou.png"),
+      groupImg: require("../static/group170.svg"),
       threads: [],
       members: [],
       myId: "",
@@ -336,7 +341,10 @@ export default {
       return this.currentThread.name;
     },
     handleKeyCode(e) {
-      if (e.shiftKey) return; // Shift+Enter は改行
+      // 日本語入力(IME)の変換確定のEnterでは送信しない。
+      // 変換中は keyCode=229 / isComposing=true になるため除外する。
+      if (e.isComposing || e.keyCode === 229) return;
+      if (e.shiftKey || e.keyCode !== 13) return; // Shift+Enterは改行 / Enter以外は無視
       e.preventDefault();
       this.handleSendText();
     },

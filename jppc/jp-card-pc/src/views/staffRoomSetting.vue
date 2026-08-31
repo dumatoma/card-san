@@ -4,7 +4,7 @@
     <div class="card no-size">
       <div class="top no-size">
         <img :src="avatar" v-if="avatar" class="avt" />
-        <img src="../static/yulan-tou.png" v-else class="avt" />
+        <img src="../static/group170.svg" v-else class="avt" />
       </div>
       <div class="bottom no-size">
         <el-upload

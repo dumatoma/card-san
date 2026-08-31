@@ -135,7 +135,9 @@ export default {
 }
 .avatar-box {
   width: 410px;
-  height: 523px;
+  min-height: 523px;
+  padding-bottom: 30px;
+  margin-bottom: 40px;
   background: #ffffff;
   box-shadow: 0px 3px 10px 1px rgba(0, 0, 0, 0.16);
   .top {

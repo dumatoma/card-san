@@ -1419,3 +1419,23 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 **配信超過（#8）が一度も表示されない理由：** 残数（月3,000通＋追加購入分）＜配信人数 の時のみ表示される仕様で、小規模店舗では発生しない。ダイアログ自体は動作。
 
 **日付：** 2026-10-01
+
+---
+
+### 73. 決済 彻查（第2弾）：定期処理停止・App内課金(Apple/Google)・追加購入の二重加算・本番DEBUG（2026-10-01）
+
+| # | 問題 | 対応 |
+|---|------|------|
+| 1 | **月間配信数（メッセージ/クーポン/SMS）の月次リセットが 2025-11 頃から停止**（Laravel scheduler の cron が無く `AutoRecoverVipCount` 未実行。全店舗 `last_recover_date` が 2025-09〜11 で停止）→ 月3,000通を使い切ると永久に配信不可になる状態 | `Kernel` に `AutoRecoverVipCount` を毎日 00:05 で登録、root crontab に `schedule:run`（www ユーザー実行・root所有ログ障害の再発防止）を追加 |
+| 2 | **Android 課金が全て失敗**：Google Play API 認証が `deleted_client`（Google Cloud の OAuth クライアント削除）。購入確認・承認ができず、プラン未反映＋Google が3日後に自動返金（店舗26が 2026-09-08 に8回失敗） | サービスアカウント鍵（`storage/app/google-play-service-account.json`）対応を追加（署名・トークン交換を検証済み）。**鍵の発行が必要** |
+| 3 | **iOS 購入確認のクラッシュ**（2025-12-17 `Undefined index: signedTransactionInfo`）：本番APIのみ参照し、TestFlight/審査のサンドボックス取引で Apple 課金済みなのにプラン未反映 | `getTransactionInfo` を本番→サンドボックスのフォールバック＋`errorCode` 処理、`verifyReceipt` を 21007 で再検証、購入確認は正本の取引情報で判定・同一取引の二重登録防止 |
+| 4 | Apple/Google 通知が「更新」のみ処理、自動更新OFF（解約）・再開・返金・アップグレード未対応。通知ペイロードを信用（偽装で期間延長可能）、冪等性なし、未知トークンで 400→再送ループ | `IapNotifyService` 新設：通知からIDだけ取り出し Apple/Google API から正本を再取得して反映、DID_RENEW/SUBSCRIBED/UPGRADE/自動更新ON・OFF/REFUND/REVOKE、Google RENEWED/RECOVERED/RESTARTED/CANCELED/REVOKED に対応、冪等 |
+| 5 | 配信数の追加購入（Stripe）：Webhook と WebView 完了の両経路が非原子的に加算 → **同時到着で二重加算**、処理済みで失敗を返し Stripe が3日間再送 | 状態更新を原子的に確保して1回だけ加算、処理済みは成功扱い、WebView 経路も共通処理に統一 |
+| 6 | **本番で `APP_DEBUG=true`**（エラー画面で環境変数・秘密情報が露出し得る） | `APP_DEBUG=false` |
+| 7 | WEB ご契約内容 | 次回更新日からのプラン変更予定を表示 |
+
+**検証：** 実際の過去の Apple/Google 通知・iOS 取引を新処理で再生（DBロールバック）、偽装通知が拒否されること、Stripe ハーネス 28/28 をデプロイ後コードで再実行。バックアップ：`/www/backup_billing_20260930_234320`。
+
+**未対応（要判断/要設定）：** Google サービスアカウント鍵の発行、無料試用自動延長 `RenewTryVip`（同じく停止中）を再開するか、会員数超過の自動課金 `ShopVipMember`（旧カード保存方式に依存するため停止のまま）、iOS アプリの購入前「未完了取引の一括 finish」処理（検証前に終了させるため購入消失の恐れ。実機テストが必要）。
+
+**日付：** 2026-10-01

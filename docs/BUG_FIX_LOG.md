@@ -1391,3 +1391,31 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 **反映：** バックエンドは api.card-san.jp にデプロイ済み（route/command/table 確認・lint OK）。GBP連携が有効化されれば即利用可。
 
 **日付：** 2026-08-21
+
+---
+
+### 72. 決済（Stripe/アプリ内課金）一括修正：二重請求・カード再入力・継続で新規課金・更新未処理・配信超過（2026-10-01）
+
+**根本原因（WEB/Stripe）：** 購入のたびに Stripe **Payment Link** を発行し、そのID（`plink_…`）を `subscription_id` に保存していた。このため①毎回 Stripe Customer が新規作成されカード再入力、②プラン変更時に旧サブスクが `plink_` 扱いで**停止されず二重請求**（実際に 2025-11-07・2026-01-08 に同日2本のサブスクが発生し手動停止されていた）、③「解約」は即時キャンセル、「継続する」は新規購入扱いで**新規課金**、④Webhook に `invoice.paid` が無く、更新処理が `subscription.updated`→`payment_intent.succeeded`→`CreateSubscriptionsEndJob`（サブスク取消・返金を行うジョブ）経由の不安定な経路、⑤Webhook の署名/真正性検証なし。
+
+**対応（バックエンド・サーバー）：**
+| 対象 | 内容 |
+|------|------|
+| `app/Services/StripeBillingService.php`（新規） | 1店舗=1 Customer=1 Subscription。新規＝登録カードで即時サブスク作成（無ければ Checkout で1回だけ入力）、アップグレード＝同一サブスク価格を即時変更（差額日割り即時請求）、ダウングレード/周期変更＝Subscription Schedule で次回更新日から適用、解約＝`cancel_at_period_end`、継続＝解約取消（請求なし）、`invoice.paid` で有効化/更新を冪等記録、カード概要（ブランド・下4桁・期限）、カード変更（Checkout setup） |
+| `VipController.php` | `pay()` の Stripe 分岐を新サービスへ。`destroy()` は期間末解約。新規 `resume()`・`card()`・`cardSetup()` |
+| `routes/api.php` | `POST /api/shop/vip/{id}/resume`、`GET /api/shop/vip_card`、`POST /api/shop/vip_card/setup` |
+| `StripePay.php` | `notify()` をイベントIDで Stripe から再取得して検証する方式に変更。`invoice.paid`/`checkout.session.completed`/`customer.subscription.deleted`/`invoice.payment_failed` を処理。旧 subscription 系経路（誤キャンセル・二重記録の原因）を廃止。`vip_count` 単発決済は従来通り |
+| `PayCardController.php` | カード番号・CVV の受け取り/保存を廃止（PCI DSS）。一覧は Stripe のカード概要を返し、登録/変更は Stripe 安全画面URLを返す（既存データは0件のため削除不要） |
+| `ShopVipValidator.php` | クレジットカード契約中（解約予約中含む）のアプリ内課金への切替を拒否（二重課金・即時解約防止） |
+| Stripe Webhook（本番 `we_1Php…`） | `invoice.paid`,`invoice.payment_failed`,`checkout.session.completed`,`customer.subscription.deleted` を追加 |
+| データ | 店舗11の `stripe_customer_id` を実際にカード(AMEX ****1002)と有効サブスクを持つ Customer に修正 |
+
+**検証：** Stripe **テストモード**＋テストクロックで28項目を自動テスト（DBはロールバック）→ 28/28 合格（登録カード即時決済・カード概要・アップグレード同一サブスク日割り¥3,100・ダウングレード予約→1か月後に適用・期間末解約・継続で請求0件・invoice.paid 冪等・常にサブスク1本）。本番でカード概要取得を確認。バックアップ：`/www/backup_billing_20260930_234320`。
+
+**対応（管理WEB jppc、card-san.jp デプロイ済み）：** ご契約内容にカード（ブランド・下4桁・期限）＋「カードを変更」、解約予約中は「継続する」→確認→「継続の手続きが完了しました」、お申し込みの二重送信防止・タイムアウト30秒・結果表示、解約の確認チェック必須、TOP「継続はこちら」を解約取消へ、お支払い方法の生カード入力フォーム廃止、配信超過ダイアログ（配信履歴のクーポン文言/誤パラメータ、一斉配信「300人」固定）修正。
+
+**対応（管理App jpshop、1.0.36/1087・要ビルド）：** ご契約内容にカード表示＋「継続する」、TOP「継続はこちら」修正（プレミアム固定廃止）、クレカ契約中はアプリ内課金に進ませない、お支払い方法の「下4桁」にCVVを表示していた不具合を修正、カード変更は Stripe 安全画面へ。
+
+**配信超過（#8）が一度も表示されない理由：** 残数（月3,000通＋追加購入分）＜配信人数 の時のみ表示される仕様で、小規模店舗では発生しない。ダイアログ自体は動作。
+
+**日付：** 2026-10-01

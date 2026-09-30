@@ -2,7 +2,7 @@
     <view>
         <view class="content border_top">
             <view class="cardContent border_bottom ">
-                <view class="cardItem" @longpress="deleteItem(item,index)" v-for="(item,index) in array">
+                <view class="cardItem" v-for="(item,index) in array">
                     <view class="cardTitle">
                         <view class="logo">
                             <image src="../../../static/icons/cardLogo.png" mode=""></image>
@@ -13,7 +13,7 @@
                         </view>
                     </view>
                     <view class="cardsContent">
-                        <view class="nameItem" v-text="`下４桁 ${item.cvv}`"></view>
+                        <view class="nameItem" v-text="`下４桁 ${item.last4 || ''}`"></view>
                         <view class="nameItem" v-text="`${item.card_no}`"></view>
                         <view class="nameItem" v-text="`有効期限　${item.expire_date}`"></view>
                     </view>
@@ -28,7 +28,7 @@
 </template>
 
 <script>
-    import {getPayList,deletePayMethod} from '@/api/index.js'
+    import {getPayList,deletePayMethod,setupVipCard} from '@/api/index.js'
     import mod from "@/components/mod.vue"
     export default {
         components:{mod},
@@ -52,11 +52,13 @@
           let that = this  
           that.getList()
         },
+        onShow() {
+          this.getList()
+        },
         methods:{
+            // カード番号は当社サーバーで扱わず、Stripe の安全な入力画面（ブラウザ）で登録・変更する（PCI DSS 対応）
             addNew(){
-                uni.redirectTo({
-                    url:'../payment/paylist'
-                })
+                this.openCardSetup()
             },
             getList(){
                 getPayList().then((res) => {
@@ -66,9 +68,33 @@
                 })
             },
             toEdit(e){
-                uni.redirectTo({
-                    url:"../payment/payDetail?id="+e.id+"&source=edit&type=1"
-                })
+                this.openCardSetup()
+            },
+            openCardSetup(){
+                let that = this
+                uni.showLoading({ title: '読み込み中', mask: true })
+                setupVipCard().then((res) => {
+                    uni.hideLoading()
+                    if(res.code == 200 && res.data.url){
+                        uni.showModal({
+                            title: 'カード情報の登録・変更',
+                            content: 'ブラウザでStripeの安全な入力画面を開きます。入力完了後、アプリに戻って再表示してください。',
+                            cancelText: 'キャンセル',
+                            confirmText: '開く',
+                            success(r){
+                                if(!r.confirm) return
+                                // #ifdef APP-PLUS
+                                plus.runtime.openURL(res.data.url)
+                                // #endif
+                                // #ifndef APP-PLUS
+                                window.location.href = res.data.url
+                                // #endif
+                            }
+                        })
+                    }else{
+                        uni.showToast({ title: res.message || 'エラーが発生しました', icon: 'none' })
+                    }
+                }).catch(() => { uni.hideLoading() })
             },
             deleteItem(item,index){
                 this.show = true

@@ -85,6 +85,9 @@
                     </view>
                     <view class="cBottom" style="text-align: left !important;"
                         v-text="vips[0].is_try == 1 ? '-' : vips[0].card_type == 1 ? 'クレジットカード' : vips[0].card_type == 2 ? 'Apple App Store' : 'Google Play'"></view>
+                    <view class="cardLine" v-if="vips[0].card_type == 1 && card">
+                        {{card.brand_name}}　**** {{card.last4}}　（有効期限 {{('0' + card.exp_month).slice(-2)}}/{{String(card.exp_year).slice(-2)}}）
+                    </view>
                 </view>
                 <view class="citem" v-else>
                     <view class="cTop">
@@ -102,10 +105,11 @@
             <view class="btn" hover-class="cl" v-if="isexpire == false" @click="tone">
                 再開する
             </view>
-            <!-- <view class="btn" hover-class="cl" v-if="vips.length == 1 && vips[0].cancel_time > 0 && plt == 'ios'"
-                @click="toc">
+            <!-- 解約予約中（クレジットカード）：「継続する」で解約取消・新規課金なし -->
+            <view class="btn" hover-class="cl" v-if="isexpire == true && vips[0].cancel_time > 0 && vips[0].card_type == 1"
+                @click="toResume">
                 継続する
-            </view> -->
+            </view>
             <view class="jie" hover-class="cj" v-if="isexpire == true && vips[0].cancel_time == 0 && vips[0].is_try == 0" @click="toff">
                 解約手続き
             </view>
@@ -132,7 +136,9 @@
     import {
         getShopInfo,
         getPackageList,
-        delPlan
+        delPlan,
+        getVipCard,
+        resumePlan
     } from "@/api/index.js"
     export default {
         components: {
@@ -155,7 +161,9 @@
                 vips: [{}],
                 content: '',
                 plt: "",
-                isexpire: true
+                isexpire: true,
+                card: null,
+                resuming: false
             };
         },
         onLoad() {
@@ -168,8 +176,39 @@
             })
             this.getvip()
             this.plt = uni.getStorageSync("platform")
+            getVipCard().then((res) => {
+                if (res.code == 200) this.card = res.data.card
+            }).catch(() => {})
         },
         methods: {
+            toResume() {
+                let that = this
+                uni.showModal({
+                    title: 'ご契約を継続しますか？',
+                    content: '解約手続きを取り消し、現在のプランを継続します。新たな料金は発生しません。',
+                    cancelText: 'キャンセル',
+                    confirmText: '継続する',
+                    success(r) {
+                        if (!r.confirm || that.resuming) return
+                        that.resuming = true
+                        uni.showLoading({ title: '処理中', mask: true })
+                        resumePlan(that.vips[0].id).then((res) => {
+                            that.resuming = false
+                            uni.hideLoading()
+                            uni.showModal({
+                                title: res.code == 200 ? 'お知らせ' : 'エラー',
+                                content: res.message || (res.code == 200 ? '継続の手続きが完了しました' : '継続の手続きに失敗しました'),
+                                showCancel: false,
+                                confirmText: '閉じる'
+                            })
+                            that.getvip()
+                        }).catch(() => {
+                            that.resuming = false
+                            uni.hideLoading()
+                        })
+                    }
+                })
+            },
             tone(){
                 let platform = uni.getStorageSync("platform")
                 if(this.isexpire == true){
@@ -311,6 +350,11 @@
 </script>
 
 <style lang="scss">
+    .cardLine {
+        font-size: 26upx;
+        color: #1D1D1F;
+        margin-top: 10upx;
+    }
     .ic{
         width: 60upx;
         height: 60upx;

@@ -1055,3 +1055,11 @@ export const syncInsToGBP = (data) => request({ url: '/api/shop/google_business/
 export const getIntegrationSettings = () => request({ url: '/api/shop/google_business/integration/settings', method: 'get' })
 export const updateIntegrationSettings = (data) => request({ url: '/api/shop/google_business/integration/settings', method: 'put', data })
 
+
+// ===== Stripe 課金（2026-10 改修）=====
+// 解約の取り消し（継続する）— 新規課金なし
+export const resumePlan = (id) => request({ url: "/api/shop/vip/" + id + "/resume", method: "post", data: {} })
+// 登録カード（ブランド・下4桁・有効期限）
+export const getVipCard = () => request({ url: "/api/shop/vip_card", method: "get" })
+// カード登録・変更（Stripeの安全な入力画面URL）
+export const setupVipCard = () => request({ url: "/api/shop/vip_card/setup", method: "post", data: {} })

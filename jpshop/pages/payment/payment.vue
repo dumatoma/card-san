@@ -478,16 +478,13 @@
             },
             toSuccess1() {
                 let that = this
-                const hasActiveStripe = that.using.card_type == 1
-                    && that.vips.length > 0
-                    && that.vips[0].cancel_time == 0
-                const isUpgrade = Number(that.type) > Number(that.vips[0] ? that.vips[0].type : 0)
-                // Stripeユーザーでも升级（アップグレード）はアプリ内課金で可能
-                // 降级/同等プランの場合のみPCブラウザへ誘導する
-                if(hasActiveStripe && !isUpgrade){
+                // クレジットカード（WEB/Stripe）でご契約中の場合、アプリ内課金へ切り替えると二重課金になるため WEB で手続き
+                const v = that.vips.length > 0 ? that.vips[0] : null
+                const onStripe = v && v.card_type == 1 && v.is_try != 1
+                if(onStripe){
                     that.show = true
                     that.title = 'プラン・支払い周期の変更について'
-                    that.content = 'お手数ではございますが、PCブラウザよりCard-Sanウェブサイトにログインしてプラン変更をお願いします。'
+                    that.content = 'クレジットカード決済でご契約中です。プラン変更・継続は、PCブラウザよりCard-Sanウェブサイトの「ご契約内容」から行ってください。（アップグレードの差額は日割りで自動精算されます）'
                     return
                 }
                 that.changeS("e")

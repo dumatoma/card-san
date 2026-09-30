@@ -142,7 +142,7 @@
                     解約終了日：<text style="color: #FC0303;">{{shopInfo.vips[0].end_time || 0}}</text>
                 </view>
                 <view class="tips_right">
-                    <u-button @click="toPay" :ripple='true' type="primary " shape="circle" class="apply_btn"
+                    <u-button @click="toContinue" :ripple='true' type="primary " shape="circle" class="apply_btn"
                         text="継続はこちら"></u-button>
                 </view>
             </view>
@@ -811,6 +811,15 @@
                 uni.navigateTo({
                     url: "/pages/payment/payment?type=3"
                 })
+            },
+            // 解約予約中の継続：クレジットカード契約は解約取消（新規課金しない）、App/Google は現在のプランで
+            toContinue() {
+                let v = this.shopInfo.vips[0] || {}
+                if (v.card_type == 1) {
+                    uni.navigateTo({ url: "/pages/accounts/contract/contract" })
+                } else {
+                    uni.navigateTo({ url: "/pages/payment/payment?type=" + (v.type || 3) })
+                }
             },
             openUel() {
                 let that = this

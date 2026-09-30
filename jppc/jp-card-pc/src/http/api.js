@@ -797,6 +797,7 @@ export const buyPlan = (data) => {
     return request({
         url: "/api/shop/vip",
         method: "post",
+        timeout: 30000,
         data:data
     })
 }
@@ -907,6 +908,7 @@ export const setpayOrder = (data) => {
     return request({
         url: "api/shop/vip/pay",
         method: "post",
+        timeout: 30000,
         data:data
     })
 }
@@ -915,7 +917,8 @@ export const offtrad = (data) => {
     return request({
         url: "api/shop/vip/"+data,
         method: "post",
-        data:{'_method':'delete'}
+        data:{'_method':'delete'},
+        timeout: 30000
     })
 }
 
@@ -941,3 +944,10 @@ export const reviewSetting = (data) => {
         data:data
     })
 }
+// ===== Stripe 課金（2026-10 改修）=====
+// 解約の取り消し（継続する）— 新規課金なし
+export const resumePlan = (id) => request({ url: "/api/shop/vip/" + id + "/resume", method: "post", data: {}, timeout: 30000 })
+// 登録カード（ブランド・下4桁・有効期限）
+export const getVipCard = () => request({ url: "/api/shop/vip_card", method: "get", timeout: 20000 })
+// カード登録・変更（Stripeの安全な入力画面URL）
+export const setupVipCard = () => request({ url: "/api/shop/vip_card/setup", method: "post", data: {}, timeout: 30000 })

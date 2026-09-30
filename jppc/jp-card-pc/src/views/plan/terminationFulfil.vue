@@ -58,6 +58,7 @@
                 id: '',
                 date: "",
                 checked: false,
+                submitting: false,
                 jp:{}
             };
         },
@@ -75,7 +76,15 @@
                 history.go(-1)
             },
             offf() {
+                // 確認チェックが無い場合は解約しない／二重送信防止
+                if (!this.checked) {
+                    this.$message({ message: '「上記内容を確認した上で、解約を了承しました。」にチェックしてください。', type: 'warning', offset: 400 })
+                    return
+                }
+                if (this.submitting) return
+                this.submitting = true
                 offtrad(this.id).then((res) => {
+                    this.submitting = false
                     if (res.code == 200) {
                         this.step = 2
                     } else {
@@ -85,6 +94,9 @@
                             offset: 400
                         });
                     }
+                }).catch(() => {
+                    this.submitting = false
+                    this.$message({ message: '通信エラーが発生しました。ご契約内容で状況をご確認ください。', type: 'error', offset: 400 })
                 })
             }
         },

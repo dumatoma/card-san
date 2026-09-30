@@ -25,7 +25,7 @@
                 <img src="../static/icon/tips.png" alt="" />
                 <span>現在のご契約は{{cancelTime}}にキャンセルされます。</span>
             </div>
-            <div class="jieright" @click="toBuy">
+            <div class="jieright" @click="toContinue">
                 継続はこちら
             </div>
         </div>
@@ -226,6 +226,14 @@
                     }
                    
                 })
+            },
+            // 解約予約中の「継続」：Stripe契約は新規購入ではなく解約取消（ご契約内容の「継続する」）へ
+            toContinue() {
+                if (this.vips.length && this.vips[0].card_type == 1) {
+                    this.$router.push({ path: "/content" })
+                } else {
+                    this.toBuy()
+                }
             },
             toBuy() {
                 let that = this

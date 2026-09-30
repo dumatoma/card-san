@@ -117,8 +117,11 @@
                     <div>です。</div>
                     　 上記は次月からのご請求となります。
                 </div> -->
-                <div class="sur_btn u-flex-center shou" @click="sub">
-                    この内容でお申し込み
+                <div class="saved_card" v-if="card">
+                    お支払い：{{card.brand_name}} **** {{card.last4}}（ご登録のカードで決済されます）
+                </div>
+                <div class="sur_btn u-flex-center shou" :style="submitting ? 'opacity:0.5;pointer-events:none' : ''" @click="sub">
+                    {{ submitting ? '処理中…' : 'この内容でお申し込み' }}
                 </div>
             </div>
         </div>
@@ -132,11 +135,14 @@
         buyPlan,
         getStore,
         setpayOrder,
-        getConfig
+        getConfig,
+        getVipCard
     } from "@/http/api.js"
     export default {
         data() {
             return {
+                submitting: false,
+                card: null,
                 show: "one",
                 inp1: "",
                 inp2: "",
@@ -266,6 +272,7 @@
             };
         },
         created() {
+            this.loadCard()
             let that = this
             that.idx = that.$route.query.index
             that.getList()
@@ -351,36 +358,52 @@
                 that.getCardList()
             },
             sub() {
+                // 二重送信防止（旧実装はタイムアウト時に再クリックで注文が重複していた）
                 let that = this
+                if (that.submitting) return
+                that.submitting = true
                 let data = {}
                 data['card_type'] = 1
                 data['type'] = that.idx * 1 + 1
                 data['month'] = that.cycleIndex == 0 ? 12 : that.cycleIndex == 1 ? 6 : 1
+                let fail = (msg) => {
+                    that.submitting = false
+                    that.$message({ message: msg, type: 'error', offset: 400 })
+                }
                 buyPlan(data).then((res) => {
-                    console.log(res)
-                    if (res.code == 200) {
-                        let da  = {}
-                        da['svid'] = res.data.svid
-                        setpayOrder(da).then((rest) => {
-                            if(rest.code == 200){
-                                // that.$message({
-                                // 	message: rest.message,
-                                // 	type: 'success',
-                                //      offset: 400
-                                // });
-                                window.open(rest.data.url)
-                            }else{
-                                that.$message({
-                                	message: rest.message,
-                                	type: 'error',
-                                     offset: 400
-                                });
-                            }
-                        })
-                    } else {
-                        that.$message.error(res.message)
+                    if (res.code == 201) {
+                        that.submitting = false
+                        that.finish(res.message || '継続の手続きが完了しました')
+                        return
                     }
+                    if (res.code != 200) {
+                        return fail(res.message)
+                    }
+                    setpayOrder({ svid: res.data.svid }).then((rest) => {
+                        if (rest.code != 200) {
+                            return fail(rest.message)
+                        }
+                        let d = rest.data || {}
+                        if (d.mode == 'checkout' && d.url) {
+                            // カード未登録時のみ Stripe の決済画面へ（完了後この管理画面に戻る）
+                            window.location.href = d.url
+                            return
+                        }
+                        that.submitting = false
+                        that.finish(d.message || rest.message || 'お手続きが完了しました')
+                    }).catch(() => fail('通信エラーが発生しました。二重申込みを防ぐため、「ご契約内容」で状況をご確認ください。'))
+                }).catch(() => fail('通信エラーが発生しました。時間をおいて再度お試しください。'))
+            },
+            finish(msg) {
+                this.$alert(msg, 'お知らせ', {
+                    confirmButtonText: '閉じる',
+                    callback: () => { this.$router.push('/content') }
                 })
+            },
+            loadCard() {
+                getVipCard().then((res) => {
+                    if (res.code == 200) this.card = res.data.card
+                }).catch(() => {})
             },
             getCardList() {
                 let that = this
@@ -483,6 +506,16 @@
 
 
 <style lang="scss" scoped>
+    .saved_card{
+        width: 420px;
+        margin: 10px auto 0;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: #1d1d1f;
+        background: rgba(26,115,232,0.08);
+        border-radius: 8px;
+        text-align: center;
+    }
     .rule{
         font-size: 14px;
         color: #1A73E8;

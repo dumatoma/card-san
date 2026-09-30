@@ -448,7 +448,7 @@
                     メッセージ配信
                 </div>
                 <div class="tipinfo">
-                    このメッセージは今すぐ300人に配信されます。<br/> 配信しますか？ 
+                    このメッセージは今すぐ{{cMember}}人に配信されます。<br/> 配信しますか？ 
                 </div>
                 <div class="tipwarning" style="margin: 20px 0;">
                     配信上限数を超過しています。

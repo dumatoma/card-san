@@ -35,6 +35,14 @@
                 <div class="payitem">
                     クレジットカード決済
                 </div>
+                <div class="payitem card_line" v-if="card">
+                    <span class="card_brand">{{card.brand_name}}</span>
+                    <span>**** **** **** {{card.last4}}</span>
+                    <span class="card_exp">有効期限 {{('0' + card.exp_month).slice(-2)}}/{{String(card.exp_year).slice(-2)}}</span>
+                </div>
+                <div class="payitem fe">
+                    <div class="btn" @click="changeCard">カードを変更</div>
+                </div>
             </div>
             
             
@@ -49,6 +57,32 @@
         </div>
         <div class="btn" style="width: 200px;margin: 50px 0 0 120px;" @click="tooff" v-if="showCancel && planInfo.card_type == 1">
             解約手続き
+        </div>
+        <!-- 解約予約中：期間末まで利用可。「継続する」で取り消し（新規課金なし） -->
+        <div class="cancel_box" v-if="isCancelled && planInfo.card_type == 1">
+            <div class="cancel_txt">ご契約は {{format(planInfo.end_time*1000)}} に終了します（解約手続き済み）。</div>
+            <div class="btn continue_btn" @click="confirmResume = true">継続する</div>
+        </div>
+
+        <!-- 継続の確認 -->
+        <div class="mask" v-if="confirmResume">
+            <div class="result_box">
+                <div class="result_tit">ご契約を継続しますか？</div>
+                <div class="result_txt">解約手続きを取り消し、現在のプランを継続します。<br/>新たな料金は発生しません。次回更新日以降も自動更新されます。</div>
+                <div class="u-flex" style="justify-content:center">
+                    <div class="result_btn gray shou" @click="confirmResume = false">キャンセル</div>
+                    <div class="result_btn shou" @click="doResume">継続する</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 完了・お知らせ（Attention） -->
+        <div class="mask" v-if="resultMsg">
+            <div class="result_box">
+                <div class="result_tit">{{resultTitle}}</div>
+                <div class="result_txt">{{resultMsg}}</div>
+                <div class="result_btn shou" @click="closeResult">閉じる</div>
+            </div>
         </div>
         <div class="fixed" v-show="keepShow">
             <div class="zhe"></div>
@@ -136,7 +170,10 @@
         getPackageList,
         getBindCard,
         buyPlan,
-        editPaymethod
+        editPaymethod,
+        getVipCard,
+        setupVipCard,
+        resumePlan
     } from "@/http/api.js"
     export default {
         data() {
@@ -153,45 +190,109 @@
                 infos:{},
                 showchagne:false,
                 showCancel:false,
-                id:""
+                isCancelled:false,
+                id:"",
+                card:null,
+                confirmResume:false,
+                resultTitle:"",
+                resultMsg:"",
+                busy:false
             };
         },
         created() {
-            let that = this
-            this.Loading = this.$loading({
-                spinner: "", //自定义加载图标类名
-                text: "読み込み中…", //显示在加载图标下方的加载文案
-                background: "rgba(0, 0, 0, 0.6)", //遮罩背景色
-            })
-            getStore().then((res) => {
-                console.log(":111",res.data.shop_info.vip)
-                if (res.code == 200) {
-                    that.planInfo = res.data.shop_info.vip
-                    that.id = res.data.shop_info.vips[0].id
-                    let infos = res.data.shop_info.vips
-                    if(infos[0].cancel_time == 0){
-                        that.showCancel = true
-                    }
-                    that.getPlanDetail()
-                    if (that.planInfo.month == 1) {
-                        that.cycleIndex = 0
-                    } else if (that.planInfo.month == 6) {
-                        that.cycleIndex = 1
-                    } else {
-                        that.cycleIndex = 2
-                    }
-                }
-            })
-            getBindCard().then((res) => {
-                console.log("change",res)
-                if(res.code == 200){
-                    that.cardInfo = res.data.cards[0]
-                    that.cardid = res.data.cards[0].id
-                }
-            })
-            this.Loading.close()
+            this.loadAll()
+            this.handleStripeReturn()
         },
         methods: {
+            loadAll() {
+                let that = this
+                let loading = this.$loading({
+                    spinner: "",
+                    text: "読み込み中…",
+                    background: "rgba(0, 0, 0, 0.6)",
+                })
+                getStore().then((res) => {
+                    loading.close()
+                    if (res.code == 200) {
+                        that.planInfo = res.data.shop_info.vip || {}
+                        let infos = res.data.shop_info.vips || []
+                        that.id = infos.length ? infos[0].id : ""
+                        that.showCancel = infos.length > 0 && infos[0].cancel_time == 0
+                        that.isCancelled = infos.length > 0 && infos[0].cancel_time != 0
+                        that.getPlanDetail()
+                        if (that.planInfo.month == 1) {
+                            that.cycleIndex = 0
+                        } else if (that.planInfo.month == 6) {
+                            that.cycleIndex = 1
+                        } else {
+                            that.cycleIndex = 2
+                        }
+                    }
+                }).catch(() => { loading.close() })
+                getVipCard().then((res) => {
+                    if (res.code == 200) {
+                        that.card = res.data.card
+                    }
+                }).catch(() => {})
+            },
+            // Stripe の決済画面／カード登録画面から戻ってきた場合
+            handleStripeReturn() {
+                let q = window.location.search || ""
+                if (q.indexOf("stripe=") < 0) return
+                let kind = (q.match(/stripe=(\w+)/) || [])[1]
+                try { window.history.replaceState(null, "", window.location.pathname + window.location.hash) } catch (e) {}
+                if (kind == "success") {
+                    this.showResult("お知らせ", "お支払いを受け付けました。反映まで数十秒かかる場合があります。")
+                    let n = 0
+                    let timer = setInterval(() => {
+                        n++
+                        this.loadAll()
+                        if (n >= 4) clearInterval(timer)
+                    }, 4000)
+                } else if (kind == "card") {
+                    this.showResult("お知らせ", "お支払い方法（クレジットカード）を更新しました。")
+                    setTimeout(() => this.loadAll(), 3000)
+                }
+            },
+            showResult(title, msg) {
+                this.resultTitle = title
+                this.resultMsg = msg
+            },
+            closeResult() {
+                this.resultMsg = ""
+            },
+            changeCard() {
+                if (this.busy) return
+                this.busy = true
+                setupVipCard().then((res) => {
+                    this.busy = false
+                    if (res.code == 200 && res.data.url) {
+                        window.location.href = res.data.url
+                    } else {
+                        this.$message({ message: res.message, type: "error", offset: 400 })
+                    }
+                }).catch(() => {
+                    this.busy = false
+                    this.$message({ message: "通信エラーが発生しました。", type: "error", offset: 400 })
+                })
+            },
+            doResume() {
+                if (this.busy) return
+                this.busy = true
+                resumePlan(this.id).then((res) => {
+                    this.busy = false
+                    this.confirmResume = false
+                    if (res.code == 200) {
+                        this.showResult("お知らせ", res.message || "継続の手続きが完了しました")
+                        this.loadAll()
+                    } else {
+                        this.$message({ message: res.message, type: "error", offset: 400 })
+                    }
+                }).catch(() => {
+                    this.busy = false
+                    this.$message({ message: "通信エラーが発生しました。ご契約内容を再読み込みしてご確認ください。", type: "error", offset: 400 })
+                })
+            },
             tooff(){
               this.$router.push('/terminationFulfil?id='+this.id+"&refresh="+this.format(this.planInfo.end_time*1000))  
             },
@@ -339,7 +440,7 @@
                     }
                 }
                 that.cycleList = array
-                that.Loading.close()
+                that.Loading && that.Loading.close()
             },
             cycleClick(index) {
                 this.cycleIndex = index;
@@ -353,6 +454,39 @@
 </script>
 
 <style lang="scss" scoped>
+    .card_line{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: bold;
+        .card_brand{ color: #1a73e8; }
+        .card_exp{ font-weight: normal; color: #707070; font-size: 12px; }
+    }
+    .cancel_box{
+        width: 450px;
+        margin: 40px 0 0 0;
+        padding: 20px;
+        background: rgba(230,191,24,0.15);
+        border: 1px solid rgba(230,191,24,0.6);
+        border-radius: 10px;
+        .cancel_txt{ font-size: 14px; color: #1d1d1f; margin-bottom: 14px; }
+        .continue_btn{ width: 200px; background: #1a73e8; color: #fff; border: none; }
+    }
+    .result_box{
+        width: 380px;
+        background: #fff;
+        border-radius: 12px;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%,-50%);
+        padding: 36px 28px 28px;
+        text-align: center;
+        .result_tit{ font-size: 18px; font-weight: bold; color: #1d1d1f; margin-bottom: 16px; }
+        .result_txt{ font-size: 14px; color: #1d1d1f; line-height: 1.8; margin-bottom: 26px; white-space: pre-wrap; }
+        .result_btn{ display: inline-block; min-width: 120px; height: 40px; line-height: 40px; border-radius: 20px; background: #1a73e8; color: #fff; font-size: 14px; margin: 0 8px; padding: 0 16px; }
+        .result_btn.gray{ background: #eaeaea; color: #1d1d1f; border: 1px solid #707070; }
+    }
     .attention{
         width: 600px;
         position: absolute;

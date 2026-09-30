@@ -360,26 +360,23 @@
     <div class="mask" v-if="shows2 == true">
         <div class="containp" v-if="shows2 == true">
             <div class="tipContent">
-                <div class="tipTitle">
-                    クーポンを配信
+                <div class="tipTitle" style="font-weight: bold;">
+                    メッセージ配信
                 </div>
                 <div class="tipinfo">
-                    このクーポンは
-                </div>
-                <div class="tipinfo">
-                    今すぐ{{number}}人に配信されます。
+                    このメッセージは今すぐ{{cMember}}人に配信されます。
                 </div>
                 <div class="tipwarning">
                     配信上限数を超過しています。
                 </div>
                 <div class="tipinfo">
-                    このクーポンを配信するには、
+                    このメッセージを配信するには、
                 </div>
                 <div class="tipinfo">
-                     追加料(¥1,100)のお支払いで、
+                    利用料（￥1,200）で、
                 </div>
                 <div class="tipinfo">
-                    更に3,000通のクーポンを配信できます。
+                    更に3,000通のメッセージを配信できます。
                 </div>
                 <div class="tipinfo">
                     配信しますか？
@@ -396,7 +393,7 @@
 
 <script>
 import Month from "@/components/rili";
-import {getTimingList,addTimingMessage,getTimingDetail,deleteTimingItem,editTimingMessage,getExtra,sceneMember,sceen,getStore} from "@/http/api.js"
+import {getTimingList,addTimingMessage,getTimingDetail,deleteTimingItem,editTimingMessage,getExtra,topay,sceneMember,sceen,getStore} from "@/http/api.js"
 export default {
   name: "",
   components: {
@@ -417,6 +414,7 @@ export default {
       shengChangeShow: false,
       keepShow: false,
       cMember:0,
+      paying:false,
       sexOptions: [
         {
           checked: false,
@@ -748,18 +746,27 @@ export default {
       
       
       pays(){
+        // 配信数超過の追加購入（メッセージ: type=1）。旧コードはクーポン(type=2)・card_type 無し・to_pay 無しで決済できなかった
         let that = this
-        let data = {}
-        data['type'] = 2
-        getExtra(data).then((res) => {
+        if (that.paying) return
+        that.paying = true
+        getExtra({ type: 1, card_type: 1 }).then((res) => {
             if(res.code == 200){
-                window.open(res.data.url)
-                that.shows2 = false
-                that.shows1 = false
+                topay({ order_no: res.data.order_no }).then((rest) => {
+                    that.paying = false
+                    that.shows2 = false
+                    that.shows1 = false
+                    if(rest.code == 200){
+                        window.open(rest.data.url)
+                    }else{
+                        that.$message({ message: rest.message, type: 'error', offset: 400 });
+                    }
+                }).catch(() => { that.paying = false })
             }else{
-                that.$message.error(res.message)
+                that.paying = false
+                that.$message({ message: res.message, type: 'error', offset: 400 });
             }
-        })
+        }).catch(() => { that.paying = false })
       },
       confirm1(){
          let that = this

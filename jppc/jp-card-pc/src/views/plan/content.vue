@@ -25,6 +25,9 @@
                     <div class="right">{{format(planInfo.end_time*1000)}}</div>
                 </div>
             </div>
+            <div class="pending_line" v-if="pending">
+                次回更新日から「{{planName(pending.type)}}（{{pending.month}}ヶ月）」に変更予定です。
+            </div>
         </div>
         
         <div class="wrap" style="padding: 0;width: 450px;">
@@ -193,6 +196,7 @@
                 isCancelled:false,
                 id:"",
                 card:null,
+                pending:null,
                 confirmResume:false,
                 resultTitle:"",
                 resultMsg:"",
@@ -219,6 +223,7 @@
                         that.id = infos.length ? infos[0].id : ""
                         that.showCancel = infos.length > 0 && infos[0].cancel_time == 0
                         that.isCancelled = infos.length > 0 && infos[0].cancel_time != 0
+                        that.pending = infos.find(v => v.status == 0 && v.card_type == 1) || null
                         that.getPlanDetail()
                         if (that.planInfo.month == 1) {
                             that.cycleIndex = 0
@@ -253,6 +258,9 @@
                     this.showResult("お知らせ", "お支払い方法（クレジットカード）を更新しました。")
                     setTimeout(() => this.loadAll(), 3000)
                 }
+            },
+            planName(t) {
+                return t == 1 ? 'ライト' : t == 2 ? 'スタンダード' : 'プレミアム'
             },
             showResult(title, msg) {
                 this.resultTitle = title
@@ -454,6 +462,14 @@
 </script>
 
 <style lang="scss" scoped>
+    .pending_line{
+        margin: 0 20px 10px;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: #1a73e8;
+        background: rgba(26,115,232,0.08);
+        border-radius: 8px;
+    }
     .card_line{
         display: flex;
         align-items: center;

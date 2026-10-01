@@ -1439,3 +1439,40 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 **未対応（要判断/要設定）：** Google サービスアカウント鍵の発行、無料試用自動延長 `RenewTryVip`（同じく停止中）を再開するか、会員数超過の自動課金 `ShopVipMember`（旧カード保存方式に依存するため停止のまま）、iOS アプリの購入前「未完了取引の一括 finish」処理（検証前に終了させるため購入消失の恐れ。実機テストが必要）。
 
 **日付：** 2026-10-01
+
+---
+
+### 74. プッシュ通知：文字化け・タップ遷移不可・アプリを開かないとバッジ更新されない（2026.9.8 報告書）
+
+| 問題 | 原因 | 対応 |
+|------|------|------|
+| アプリ前面で通知が JSON 文字列のまま表示（文字化け）、タップしても画面遷移しない | `payload` が文字列のみで、アプリ側は文字列をそのまま表示 | サーバ：payload に `title/content/badge` を含めた JSON に統一。jpcard/jpshop `App.vue` に `parsePayload()` を追加（文字列/オブジェクト両対応） |
+| iOS のバッジが実際の未読数とずれる・開くまで更新されない | GeTui の `auto_badge "+1"`（独自カウンタ） | `PushBadgeService` 新設：受信者ごとの実未読数（会員=チャット未読+未読クーポン、管理=顧客チャット+予約通知+スタッフルーム/1対1）を算出し APNs `aps.badge` に絶対値で設定 |
+| Android でアプリ終了中に届かない・バッジ無し | オフライン用ベンダーチャネル（ups）未設定 | `push_channel.android.ups` に通知＋Huawei/OPPO/Xiaomi のバッジ指定 |
+
+`GeTuiApi::pushSingleBatchCid` で全送信を `PushBadgeService::normalize` に通す（呼び出し元の修正不要）。GeTui がスキーマを受理することを確認済み。アプリ：jpcard 1.1.6/1072、jpshop 1.0.36/1087（commit 620e2b8）。**実機（アプリ完全終了状態）での確認が必要。**
+
+**日付：** 2026-10-01
+
+---
+
+### 75. 配信数超過（SMS/メッセージ/クーポン）の Stripe 商品カタログ化＋決済Attention（Stripe超過課金_2026.9.23 / 決済Attention.pdf）
+
+**仕様：** 管理WEB で Stripe 契約 → Stripe 決済ページへ。App/Google 契約 → 「管理Appから課金」Attention。管理App で App/Google 契約 → アプリ内課金、Stripe 契約 → 「Webサイトから課金」Attention。副管理者 → 「実行する権限がありません」。
+
+| 対象 | 内容 |
+|------|------|
+| `config/stripe_overage.php`（新規）＋`.env` | 価格IDは `.env`（`STRIPE_{TEST,LIVE}_PRICE_{SMS,MESSAGE,COUPON}`）。`STRIPE_OVERAGE_MODE=test` の間はテストキー（`STRIPE_TEST_SECRET`）＋テスト価格IDで決済。**本番切替は `STRIPE_OVERAGE_MODE=live` の1行のみ** |
+| `app/Services/StripeOverageService.php`（新規） | 価格IDで Checkout(payment) を作成（カード/Link のみ＝即時決済）。完了は戻りURLでのセッション検証と Webhook の両方で冪等に加算（支払済み・注文番号・価格IDの一致を検証）。決済Attention 判定（副管理者／契約の決済方法） |
+| `VipCountController.php` | `store`/`toPay` で Attention 判定（サーバ側でも拒否、`data.attention` = permission/web/app）。Stripe は Checkout URL を返す。決済画面作成済みの未払い注文は再利用しない |
+| `PayController::stripeVipCountReturn` + `pay/overage_result.blade.php` | `GET /api/pay/stripe/vip_count_return`：完了/キャンセル/確認中/エラー画面 |
+| `StripePay::notify` | `checkout.session.completed`（metadata `vip_count_checkout`）を超過購入として処理。テストモードのイベントは `STRIPE_OVERAGE_MODE=test` の間だけテストキーで検証して処理 |
+| Stripe テスト Webhook `we_1Pi9h…` | URL を https に修正、`checkout.session.completed` のみに |
+| 管理WEB jppc | `src/utils/overagePay.js`（共通）：TOP(SMS)・一斉配信/配信履歴(メッセージ)・クーポン作成で使用。同じタブで決済ページへ（非同期後の window.open はブロックされるため）。App契約の Attention を仕様の文言・デザインで表示。card-san.jp デプロイ済み |
+| 管理App jpshop（1.0.36/1088・要ビルド） | Stripe 契約者向け Attention を仕様の文言（黄色枠＋説明枠）に。発注がサーバで拒否された時にローディングが閉じず無反応だった不具合を修正 |
+
+**検証（テストモード）：** 実 API（`/api/shop/vip_count` → `to_pay`）→ Stripe Checkout をブラウザ自動操作で 4242 カード決済、SMS 100通／メッセージ 3,000通／クーポン 3,000通の3商品とも「お支払いが完了しました」→ 各1回だけ加算・支払ログ1件（戻りURLと Webhook が同時到着しても二重加算なし）。追加 17 項目（Attention 判定8パターン、価格IDの対応、未払いで加算しない、偽セッション拒否、再読み込み/再送で二重加算なし）全合格。テスト店舗(4)のデータは元に戻し済み。バックアップ：`/www/backup_overage_20261001_143604`、`/www/backup_jppc_20261001_144313.tgz`。
+
+**本番切替手順：** `.env` の `STRIPE_OVERAGE_MODE=live` → `kill -USR2 $(pgrep -f "[p]hp-fpm: master")`。切替後、クライアントへ連絡（各商品1回ずつ実決済テスト）。
+
+**日付：** 2026-10-01

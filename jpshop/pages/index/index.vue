@@ -259,7 +259,10 @@
                 <view class="infoPanelTitle">お支払いについて</view>
                 <scroll-view scroll-y="true" class="infoPanelScroll">
                     <view class="infoPanelWarn">
-                        SMS配信上限を超過しています。PCブラウザよりCard-Sanにログインしてお支払いをお願いします。[アカウント]→[ご契約]ページからお手続きが可能です。
+                        お支払いについては、お手数ではございますが、PCブラウザよりCard-San管理ウェブサイトからお支払いをお願いします。
+                    </view>
+                    <view class="infoPanelNote">
+                        ウェブサイトでご契約し、クレジットカード決済をご利用の方は、このアプリからのお支払いの手続きができません。<br /><br />PCブラウザよりCard-San管理ウェブサイトにログインしてお支払いの手続きをお願いします。
                     </view>
                     <view class="infoPanelBtn" @click="showSmsStripeInfo = false">上記内容を確認しました</view>
                 </scroll-view>
@@ -473,6 +476,17 @@
             }, 520)
         },
         methods: {
+            // 追加購入の発注が拒否された場合（決済Attention：副管理者／Stripe契約者のアプリ内課金）
+            extraFail(res) {
+                uni.hideLoading()
+                let at = res && res.data && res.data.attention
+                if (at == 'web') {
+                    this.sms = false
+                    this.showSmsStripeInfo = true
+                } else {
+                    uni.showToast({ title: (res && res.message) || 'エラーが発生しました', icon: "none", duration: 2500 })
+                }
+            },
             // 获取支付通道
             getChannels() {
                 // #ifdef APP-PLUS
@@ -676,6 +690,8 @@
                                         }
                                     }
                                 );
+                            } else {
+                                that.extraFail(res)
                             }
                         }).catch(() => { uni.hideLoading() })
                     }else{
@@ -686,6 +702,8 @@
                             if (res.code == 200) {
                                 that.getChannels()
                                 that.orid = res.data.order_no
+                            } else {
+                                that.extraFail(res)
                             }
                         }).catch(() => { uni.hideLoading() })
                     }
@@ -1666,5 +1684,15 @@
             font-weight: bold;
             margin-top: 100upx;
         }
+    }
+
+    .infoPanelNote {
+        border: 1px solid #d2d2d7;
+        padding: 30upx;
+        font-size: 26upx;
+        line-height: 1.7;
+        color: #1d1d1f;
+        background: #fff;
+        margin: 30upx 0 60upx;
     }
 </style>

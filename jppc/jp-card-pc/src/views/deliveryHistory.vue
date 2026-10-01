@@ -392,6 +392,7 @@
 </template>
 
 <script>
+import { buyOverage } from '@/utils/overagePay.js'
 import Month from "@/components/rili";
 import {getTimingList,addTimingMessage,getTimingDetail,deleteTimingItem,editTimingMessage,getExtra,topay,sceneMember,sceen,getStore} from "@/http/api.js"
 export default {
@@ -746,27 +747,11 @@ export default {
       
       
       pays(){
-        // 配信数超過の追加購入（メッセージ: type=1）。旧コードはクーポン(type=2)・card_type 無し・to_pay 無しで決済できなかった
+        // 配信数超過の追加購入（メッセージ）。決済Attention は overagePay.js で判定
         let that = this
-        if (that.paying) return
-        that.paying = true
-        getExtra({ type: 1, card_type: 1 }).then((res) => {
-            if(res.code == 200){
-                topay({ order_no: res.data.order_no }).then((rest) => {
-                    that.paying = false
-                    that.shows2 = false
-                    that.shows1 = false
-                    if(rest.code == 200){
-                        window.open(rest.data.url)
-                    }else{
-                        that.$message({ message: rest.message, type: 'error', offset: 400 });
-                    }
-                }).catch(() => { that.paying = false })
-            }else{
-                that.paying = false
-                that.$message({ message: res.message, type: 'error', offset: 400 });
-            }
-        }).catch(() => { that.paying = false })
+        buyOverage(1).then((moved) => {
+            if (moved) { that.shows2 = false; that.shows1 = false }
+        })
       },
       confirm1(){
          let that = this

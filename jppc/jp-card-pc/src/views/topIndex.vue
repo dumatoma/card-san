@@ -115,6 +115,7 @@
 </template>
 
 <script>
+import { buyOverage } from '@/utils/overagePay.js'
     import ScrollbarContainer from "@/components/scrollContainer.vue";
     import {
         getStore,
@@ -195,38 +196,12 @@
             },
             
             buysms(){
-                let that = this
-                let data = {}
-                data.type = 3
-                data.card_type = 1
-                getExtra(data).then((res) => {
-                    console.log(res)
-                    if(res.code == 200){
-                       let  temp = {}
-                       temp.order_no = res.data.order_no
-                       topay(temp).then((rest) => {
-                           if(rest.code == 200){
-                               window.open(rest.data.url)
-                           }else{
-                               that.$message({
-                                   message: '' + rest.message,
-                                   type: 'error',
-                                   offset: 400,
-                                   center: true
-                               });
-                           }
-                       }) 
-                    }else{
-                        that.$message({
-                            message: '' + res.message,
-                            type: 'error',
-                            offset: 400,
-                            center: true
-                        });
-                    }
-                   
-                })
-            },
+        // 配信数超過の追加購入（SMS）。決済Attention は overagePay.js で判定
+        let that = this
+        buyOverage(3).then((moved) => {
+            
+        })
+      },
             // 解約予約中の「継続」：Stripe契約は新規購入ではなく解約取消（ご契約内容の「継続する」）へ
             toContinue() {
                 if (this.vips.length && this.vips[0].card_type == 1) {

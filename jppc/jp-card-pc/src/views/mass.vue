@@ -493,6 +493,7 @@
 </template>
 
 <script>
+import { buyOverage } from '@/utils/overagePay.js'
 import Month from "@/components/rili";
 import {getTimingList,addTimingMessage,getTimingDetail,deleteTimingItem,editTimingMessage,getExtra,sceneMember,sceen,getStore,getConfig,topay} from "@/http/api.js"
 export default {
@@ -963,35 +964,10 @@ export default {
       
       
       pays(){
+        // 配信数超過の追加購入（メッセージ）。決済Attention は overagePay.js で判定
         let that = this
-        let data = {}
-        data['type'] = 1
-        data['card_type'] = 1
-        getExtra(data).then((res) => {
-            if(res.code == 200){
-                let df = {}
-                df.order_no = res.data.order_no
-                topay(df).then((rest) => {
-                    that.shows2 = false
-                    that.shows1 = false
-                    if(rest.code == 200){
-                        window.open(rest.data.url)
-                    }else{
-                        that.$message({
-                        	message: rest.message,
-                        	type: 'error',
-                             offset: 400
-                        });
-                    }
-                })
-               
-            }else{
-                that.$message({
-                	message: res.message,
-                	type: 'error',
-                     offset: 400
-                });
-            }
+        buyOverage(1).then((moved) => {
+            if (moved) { that.shows2 = false; that.shows1 = false }
         })
       },
       confirm1(){

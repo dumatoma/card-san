@@ -617,6 +617,7 @@
 </template>
 
 <script>
+import { buyOverage } from '@/utils/overagePay.js'
 import {addNewCoupon,getCouponDetail,editCoupon,getExtra,sceen,getConfig,topay} from "@/http/api.js"
 export default {
   name: "",
@@ -939,26 +940,11 @@ export default {
           })
       },
       pays(){
+        // 配信数超過の追加購入（クーポン）。決済Attention は overagePay.js で判定
         let that = this
-        let data = {}
-        data['type'] = 2
-        data['card_type'] = 1
-        getExtra(data).then((res) => {
-            if(res.code == 200){
-                let  temp = {}
-                temp.order_no = res.data.order_no
-                topay(temp).then((rest) => {
-                    if(rest.code == 200){
-                        window.open(rest.data.url)
-                    }
-                })
-                that.shows2 = false
-                that.shows1 = false
-            }else{
-                that.shows2 = false
-                that.shows1 = false
-                that.$message.error(res.message)
-            }
+        buyOverage(2).then((moved) => {
+            that.shows2 = false
+            that.shows1 = false
         })
       },
       changeDate(e){

@@ -1475,6 +1475,8 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 
 **本番切替手順：** `.env` の `STRIPE_OVERAGE_MODE=live` → `kill -USR2 $(pgrep -f "[p]hp-fpm: master")`。切替後、クライアントへ連絡（各商品1回ずつ実決済テスト）。
 
+**本番切替済み（2026-10-01）：** `STRIPE_OVERAGE_MODE=live`。本番の価格ID3件（SMS `price_1UIoRP…`／メッセージ `price_1UIoSQ…`／クーポン `price_1UIoTQ…`）で本番 Checkout が作成できること（livemode=true・¥1,200）を確認し、確認用セッションは即時失効（課金なし）。本番 Webhook は `checkout.session.completed` 受信済み。切替前の .env：`/www/backup_overage_20261001_143604/.env.before_live`。
+
 **日付：** 2026-10-01
 
 ---

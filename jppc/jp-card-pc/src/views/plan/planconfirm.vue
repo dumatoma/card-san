@@ -87,6 +87,33 @@
                         </div>
                     </div>
                 </div> -->
+                <!-- お支払い方法（契約終了後の再契約で別のカードに変更できるように）2026-10 -->
+                <div class="sur_box sur_one m-t-30 paysel">
+                    <div class="sur_blue">お支払い方法</div>
+                    <template v-if="activeStripe">
+                        <div class="paysel_row" v-if="card">
+                            <span class="paysel_brand">{{card.brand_name}}</span>**** {{card.last4}}
+                            <span class="paysel_exp">有効期限 {{('0' + card.exp_month).slice(-2)}}/{{String(card.exp_year).slice(-2)}}</span>
+                        </div>
+                        <div class="paysel_note">ご契約中のクレジットカードで変更されます。カードの変更は「ご契約内容」から行えます。</div>
+                    </template>
+                    <template v-else>
+                        <label class="paysel_row shou" v-if="card">
+                            <input type="radio" value="saved" v-model="payCard" />
+                            <span>登録済みのカード</span>
+                            <span class="paysel_brand">{{card.brand_name}}</span>**** {{card.last4}}
+                            <span class="paysel_exp">有効期限 {{('0' + card.exp_month).slice(-2)}}/{{String(card.exp_year).slice(-2)}}</span>
+                        </label>
+                        <label class="paysel_row shou">
+                            <input type="radio" value="new" v-model="payCard" />
+                            <span>{{card ? '別のクレジットカードで支払う' : 'クレジットカード'}}</span>
+                        </label>
+                        <div class="paysel_note" v-if="payCard == 'new'">「この内容でお申し込み」の後、Stripe の安全な決済画面でカード情報を入力します。</div>
+                        <div class="paysel_note" v-if="lastCardType == 2 || lastCardType == 3">
+                            前回は {{lastCardType == 2 ? 'App Store' : 'Google Play'}} でのご契約でした。クレジットカードでお申し込みの場合、{{lastCardType == 2 ? 'App Store' : 'Google Play'}} の定期購入が残っていないことをご確認ください。
+                        </div>
+                    </template>
+                </div>
                 <div class="sur_box sur_one sur_card m-t-30 no-size">
                     <div class="card_item" style="font-weight: bold">ご契約内容</div>
                     <div class="card_item u-flex u-row-between">
@@ -240,6 +267,9 @@
                     title: "クレジットカード",
                 }],
                 payIndex: 0,
+                payCard: 'new',
+                activeStripe: false,
+                lastCardType: 0,
                 exhibitionShow: false,
                 bgList: [{
                         title: "ライト",
@@ -343,6 +373,10 @@
                     if (res.code == 200) {
                         that.info = res.data.shop_info.vip
                         that.endDate = res.data.shop_info.vips.length>0?res.data.shop_info.vips[0].end_timestamp:""
+                        let vs = res.data.shop_info.vips || []
+                        that.activeStripe = vs.some(v => v.card_type == 1 && v.status == 1 && v.is_try != 1)
+                        let lv = res.data.shop_info.last_vip
+                        that.lastCardType = lv && lv.is_try != 1 ? lv.card_type * 1 : 0
                         that.getConfig()
                     }
 
@@ -379,7 +413,9 @@
                     if (res.code != 200) {
                         return fail(res.message)
                     }
-                    setpayOrder({ svid: res.data.svid }).then((rest) => {
+                    let payData = { svid: res.data.svid }
+                    if (!that.activeStripe && (that.payCard == 'new' || !that.card)) payData.new_card = 1
+                    setpayOrder(payData).then((rest) => {
                         if (rest.code != 200) {
                             return fail(rest.message)
                         }
@@ -402,7 +438,10 @@
             },
             loadCard() {
                 getVipCard().then((res) => {
-                    if (res.code == 200) this.card = res.data.card
+                    if (res.code == 200) {
+                        this.card = res.data.card
+                        if (this.card) this.payCard = 'saved'
+                    }
                 }).catch(() => {})
             },
             getCardList() {
@@ -1046,4 +1085,10 @@
             margin-bottom: 20px;
         }
     }
+
+.paysel { padding-bottom: 14px; }
+.paysel_row { display: flex; align-items: center; gap: 8px; padding: 10px 16px 0; font-size: 14px; }
+.paysel_brand { font-weight: bold; margin-left: 8px; }
+.paysel_exp { color: #86868b; font-size: 12px; margin-left: 8px; }
+.paysel_note { padding: 8px 16px 0; font-size: 12px; color: #86868b; line-height: 1.6; }
 </style>

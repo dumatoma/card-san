@@ -88,9 +88,8 @@
                             console.log(res)
                             that.isSending = false
                             if (res.data.code == 200) {
-                                that.code = res.data.data.code
                                 uni.showToast({
-                                    title: that.code,
+                                    title: res.data.message,
                                     icon: "none",
                                     duration: 2000
                                 })
@@ -110,21 +109,27 @@
                 let that = this
                 that.value2 = that.value2.slice(0,-1)
             },
+            // 認証コードはサーバでのみ照合する（旧：APIが返したコードと画面で比較＝メールを見ずに登録できた）。2026-10
             toNext(){
                 let that = this
-                console.log(that.value2)
-                console.log(that.code)
-                if(that.value2 == that.code){
-                   uni.navigateTo({
-                       url:"/pages/thirdStep/thirdStep?email="+this.email+"&code="+this.value2
-                   }) 
-                }else{
-                    uni.showToast({
-                        title:"認証コードが間違っています",
-                        icon:"none"
-                    })
-                }
-               
+                if (that.checking) return
+                that.checking = true
+                uni.request({
+                    url: that.$baseUrl + "/api/shop/register",
+                    method: "POST",
+                    data: { request_type: 3, email: that.email, code: that.value2 },
+                    success(res) {
+                        that.checking = false
+                        if (res.data.code == 200) {
+                            uni.navigateTo({
+                                url: "/pages/thirdStep/thirdStep?email=" + that.email + "&code=" + that.value2
+                            })
+                        } else {
+                            uni.showToast({ title: res.data.message || "認証コードが間違っています", icon: "none" })
+                        }
+                    },
+                    fail() { that.checking = false }
+                })
             }
             
 		}

@@ -54,7 +54,7 @@
                     let data = {}
                     data.phone = that.query.phone
                     data.request_type = 2
-                    data.code = that.value2 == '111111'?that.query.code: that.value2
+                    data.code = that.value2
                     sendPhoneCode(data).then((res) => {
                         if (res.code == 200) {
                             uni.showToast({
@@ -83,7 +83,7 @@
                     let data = {}
                     data.phone = that.query.phone
                     data.request_type = 2
-                    data.code = that.value2 == "111111"?that.query.code : that.value2
+                    data.code = that.value2
                     sendLoginCode(data).then((res) => {
                         that.btnloading = false
                         if (res.code == 200) {

@@ -66,7 +66,7 @@
                 data.login_type = 2
                 data.phone = that.phone
                 data.request_type = 2
-                data.code = that.value == "111111"? that.codes : that.value
+                data.code = that.value
                 Login(data).then((res) => {
                     that.showsl = false
                     if(res.code == 200){

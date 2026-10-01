@@ -69,7 +69,7 @@
                 data.login_type = 1
                 data.email = that.email
                 data.request_type = 2
-                data.code = that.value == "111111"? that.codes : that.value
+                data.code = that.value
                 that.loadStatus = true
                 Login(data).then((res) => {
                      that.loadStatus = false

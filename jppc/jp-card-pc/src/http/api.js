@@ -954,3 +954,18 @@ export const setupVipCard = () => request({ url: "/api/shop/vip_card/setup", met
 // スタッフルーム：自分の送信メッセージを削除
 export const deleteStaffRoomMessage = (id) => request({ url: "/api/shop/staff_room/messages/" + id + "/delete", method: "post", data: {} })
 export const deleteStaffDm = (toId, id) => request({ url: "/api/shop/staff_room/dm/" + toId + "/" + id + "/delete", method: "post", data: {} })
+
+// ===== Googleビジネス連携 / クチコミ管理（2026-10）=====
+export const gbpOverview = () => request({ url: "/api/shop/google_business/overview", method: "get" })
+export const gbpAuthUrl = () => request({ url: "/api/shop/google_business/get_auth_url", method: "get" })
+export const gbpConnect = (data) => request({ url: "/api/shop/google_business/create_access_token", method: "post", data, timeout: 30000 })
+export const gbpDisconnect = () => request({ url: "/api/shop/google_business/disconnect", method: "delete", data: { full: 1 } })
+export const gbpFeatures = (data) => request({ url: "/api/shop/google_business/features", method: "put", data })
+export const gbpSyncNow = () => request({ url: "/api/shop/google_business/sync_now", method: "post", data: {}, timeout: 60000 })
+export const gbpReviewList = (params) => request({ url: "/api/shop/google_business/review_list", method: "get", params, timeout: 30000 })
+export const gbpReviewRead = (ids) => request({ url: "/api/shop/google_business/review_read", method: "post", data: { ids } })
+export const gbpReviewUnread = () => request({ url: "/api/shop/google_business/review_unread", method: "get" })
+export const gbpReviewReply = (id, comment) => request({ url: "/api/shop/google_business/review_reply/" + encodeURIComponent(id), method: "post", data: { comment }, timeout: 30000 })
+export const gbpInsPosts = (after) => request({ url: "/api/shop/google_business/ins_posts", method: "get", params: { after: after || "" }, timeout: 30000 })
+export const gbpInsRepost = (id) => request({ url: "/api/shop/google_business/ins_posts/" + encodeURIComponent(id) + "/repost", method: "post", data: {}, timeout: 60000 })
+export const gbpPosts = (pageToken) => request({ url: "/api/shop/google_business/posts", method: "get", params: { page_token: pageToken || "" }, timeout: 30000 })

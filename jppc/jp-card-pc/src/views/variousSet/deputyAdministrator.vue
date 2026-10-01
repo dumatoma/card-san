@@ -125,7 +125,7 @@ export default {
       setShow: true,
       checkedOperate: [],
       query:{},
-      privileges:[1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+      privileges:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
       operateList: [
           {
               name:"QRリーダー",
@@ -158,6 +158,11 @@ export default {
           {
               name:"予約管理",
               value:8
+          },
+          {
+              // 管理App と同じ番号（2026-10）
+              name:"クチコミ管理",
+              value:15
           },
       ],
       checkedAccount: [],
@@ -209,6 +214,10 @@ export default {
               name:"スタッフ登録",
               value:14
           },
+          {
+              name:"Googleビジネス連携",
+              value:16
+          },
       ],
       conserveShow: false,
       shop_name:""
@@ -246,7 +255,7 @@ export default {
   },
   methods: {
     operateClick() {
-      let temp = [1,2,3,4,5,6,7,8]
+      let temp = [1,2,3,4,5,6,7,8,15]
       if(this.operateShow == false){
           let array = this.privileges
           let a1 = [...array,...temp]
@@ -259,7 +268,7 @@ export default {
       // this.operateShow = !this.operateShow;
     },
     setClick() {
-      let temp = [9,11,10,12,13,14]
+      let temp = [9,11,10,12,13,14,16]
       if(this.setShow == false){
           let array = this.privileges
           let a1 = [...array,...temp]
@@ -271,14 +280,14 @@ export default {
       }
     },
     operateChange(e) {
-      if(e.includes(8) && e.includes(1) && e.includes(2) && e.includes(3) && e.includes(4) && e.includes(5) && e.includes(6) && e.includes(7)){
+      if(e.includes(8) && e.includes(1) && e.includes(2) && e.includes(3) && e.includes(4) && e.includes(5) && e.includes(6) && e.includes(7) && e.includes(15)){
           this.operateShow = true
       }else{
            this.operateShow = false
       }
     },
     setChange(e) {
-      if(e.includes(14) && e.includes(9) && e.includes(10) && e.includes(11) && e.includes(12) && e.includes(13)){
+      if(e.includes(14) && e.includes(9) && e.includes(10) && e.includes(11) && e.includes(12) && e.includes(13) && e.includes(16)){
           this.setShow = true
       }else{
            this.setShow = false

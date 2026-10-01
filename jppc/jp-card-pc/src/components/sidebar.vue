@@ -2,6 +2,10 @@
   <div class="side">
     <div></div>
     <div></div>
+    <!-- クチコミ（2026-10） -->
+    <div class="its" v-if="current1 == 5">
+      <div class="item active no-size" @click="$route.path != '/reviews' && $router.push('/reviews')">クチコミ管理</div>
+    </div>
     <!-- 预约 -->
     <div class="its" v-if="current1 == 4">
       <div
@@ -270,6 +274,11 @@ export default {
           img: require("../static/index/assistant.png"),
           imgCss: require("../static/index/assSelect.png"),
         },
+        {
+          title: "Googleビジネス連携",
+          img: require("../static/index/google.svg"),
+          imgCss: require("../static/index/googleSelect.svg"),
+        },
       ],
       setIndex: 0,
       menuList: ["カテゴリー登録", "メニュー登録", "外部リンク"],
@@ -386,6 +395,11 @@ export default {
         ) {
           this.current1 = 1;
           this.setIndex = 7;
+        } else if (val.path == "/googleBusiness" || val.path == "/gbpPosts") {
+          this.current1 = 1;
+          this.setIndex = 8;
+        } else if (val.path == "/reviews") {
+          this.current1 = 5;
         }
       },
     },
@@ -452,6 +466,11 @@ export default {
       ) {
         this.current1 = 0;
         this.topIndex = 3;
+      } else if (this.$route.name == "googleBusiness" || this.$route.name == "gbpPosts") {
+        this.current1 = 1;
+        this.setIndex = 8;
+      } else if (this.$route.name == "reviews") {
+        this.current1 = 5;
       } else if (this.$route.name == "storeInfo") {
         this.current1 = 1;
         this.setIndex = 0;
@@ -656,6 +675,10 @@ export default {
       } else if (e == 7) {
         this.$router.push({
           path: "/deputyLook",
+        });
+      } else if (e == 8) {
+        this.$router.push({
+          path: "/googleBusiness",
         });
       }
     },

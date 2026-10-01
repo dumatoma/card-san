@@ -1,0 +1,5 @@
+// Googleビジネス連携まわりのアイコン（モノクロ。Figma に合わせて黒線）
+export const G_ICON = '<svg viewBox="0 0 48 48" width="40" height="40"><path fill="#1d1d1f" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>'
+export const INFO_ICON = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#1d1d1f" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="17"/><circle cx="12" cy="7.5" r="0.6" fill="#1d1d1f"/></svg>'
+export const REVIEW_ICON = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#1d1d1f" stroke-width="1.8"><path d="M3 4h18v13H9l-5 4v-4H3z" stroke-linejoin="round"/><text x="12" y="13.5" font-size="7" text-anchor="middle" fill="#1d1d1f" stroke="none">★★★</text></svg>'
+export const IG_ICON = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#1d1d1f" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="0.8" fill="#1d1d1f"/></svg>'

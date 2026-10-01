@@ -291,6 +291,21 @@ const routes = [
     component: () => import('../views/reviewSetting.vue')
   },
   ,{
+    path: '/googleBusiness',
+    name: 'googleBusiness',
+    component: () => import('../views/gbp/googleBusiness.vue')
+  },
+  {
+    path: '/gbpPosts',
+    name: 'gbpPosts',
+    component: () => import('../views/gbp/gbpPosts.vue')
+  },
+  {
+    path: '/reviews',
+    name: 'reviews',
+    component: () => import('../views/gbp/reviews.vue')
+  },
+  ,{
     path: '/moduleSetting',
     name: 'moduleSetting',
     component: () => import('../views/moduleSetting.vue')

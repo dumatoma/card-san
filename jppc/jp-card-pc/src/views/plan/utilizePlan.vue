@@ -458,6 +458,24 @@ export default {
                 ],
                 des:"メニュー毎の時間、担当者の設定、予約リマインダー通知ができます。　他社サービス(お店のホームページ等)に予約機能を表示、連携することが出来ます。"
               },
+              {
+                title: "Googleビジネス連携",
+                imgs: [
+                  { img: require("@/static/index/circle.png") },
+                  { img: require("@/static/index/circle.png") },
+                  { img: require("@/static/index/circle.png") },
+                ],
+                des:"アプリで更新した営業時間や写真、インスタ投稿をGoogleビジネスプロフィールに自動表示。最新の情報をGoogleに提供することで、強力なMEO(Googleマップ上位表示)対策になります。"
+              },
+              {
+                title: "Googleクチコミ管理",
+                imgs: [
+                  { img: require("@/static/wrong.png")},
+                  { img: require("@/static/index/circle.png") },
+                  { img: require("@/static/index/circle.png") },
+                ],
+                des:"アプリ内でGoogleマップのクチコミを確認・返信でき、新着クチコミをリアルタイムで通知として受け取ります。"
+              },
             ],
       p:999,
       c:999,

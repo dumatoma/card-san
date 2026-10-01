@@ -212,6 +212,10 @@
                     this.index1 = 3
                 }else if(this.$route.name == 'appointment'){
                     this.index1 = 4
+                }else if(this.$route.name == 'reviews'){
+                    this.index1 = 5
+                }else if(this.$route.name == 'googleBusiness' || this.$route.name == 'gbpPosts'){
+                    this.index1 = 1
                 }
                 
                 

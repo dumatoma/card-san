@@ -18,7 +18,8 @@
                 <div :style="`backgroundImage: url(${svgData13})`" class="icon1" v-if="index == 2"></div>
                 <div :style="`backgroundImage: url(${svgData14})`" class="icon1" v-if="index == 3"></div>
                 <div :style="`backgroundImage: url(${svgData15})`" class="icon1" v-if="index == 4"></div>
-                <a href="https://cardsan.zendesk.com/" target="_blank"> <div :style="`backgroundImage: url(${svgData16})`" class="icon1" v-if="index == 5"></div></a>   
+                <div :style="`backgroundImage: url(${svgData17})`" class="icon1" v-if="index == 5"></div>
+                <a href="https://cardsan.zendesk.com/" target="_blank"> <div :style="`backgroundImage: url(${svgData16})`" class="icon1" v-if="index == 6"></div></a>   
             </div>
             <div :class="ind == index ? 'top-active' : 'top'">
               {{ item.title }}
@@ -27,6 +28,9 @@
               {{ item.current > 99 ? "99+" : item.current }}
             </div>
             <div class="cuts" v-if="item.current > 0 && index == 4">
+              {{ item.current > 99 ? "99+" : item.current }}
+            </div>
+            <div class="cuts" v-if="item.current > 0 && index == 5">
               {{ item.current > 99 ? "99+" : item.current }}
             </div>
           </div>
@@ -44,7 +48,7 @@
 </template>
 
 <script>
-import {getMessageList,sendMessage,readMessage,getStore,getAppointNoticeList} from "@/http/api.js"
+import {getMessageList,sendMessage,readMessage,getStore,getAppointNoticeList,gbpReviewUnread} from "@/http/api.js"
 import { mapActions, mapGetters } from 'vuex';
 import svg1 from '../static/svgData/svgjs/menu1.js'
 import svg2 from '../static/svgData/svgjs/menu2.js'
@@ -52,6 +56,7 @@ import svg3 from '../static/svgData/svgjs/menu3.js'
 import svg4 from '../static/svgData/svgjs/menu4.js'
 import svg5 from '../static/svgData/svgjs/menu5.js'
 import svg6 from '../static/svgData/svgjs/menu6.js'
+import svg7 from '../static/svgData/svgjs/menu7.js'
 export default {
   name: "",
   components: {},
@@ -78,6 +83,8 @@ export default {
       svgData14:'"' + svg4 + '"',
       svgData15:'"' + svg5 + '"',
       svgData16:'"' + svg6 + '"',
+      svgData7:'"' + svg7 + '"',
+      svgData17:'"' + svg7 + '"',
       restday:0,
       restMember:0,
       list: [
@@ -90,6 +97,7 @@ export default {
           current: 0,
         },
         { img: require("../static/menu5.svg"), title: "予約", current: "0" },
+        { title: "クチコミ", current: 0 },
         { img: require("../static/menu6.svg"), title: "ヘルプ" },
       ],
     };
@@ -150,6 +158,9 @@ export default {
       ) {
         this.i = 4;
         this.svgData15 = this.changeColor(this.svgData5,"#1d1d1f");
+      } else if (this.$route.name == "reviews") {
+        this.i = 5;
+        this.svgData17 = this.changeColor(this.svgData7,"#1d1d1f");
       } else if (
         this.$route.name == "topIndex" ||
         this.$route.name == "manage" ||
@@ -166,6 +177,8 @@ export default {
         this.$route.name == "typeRegister" ||
         this.$route.name == "menuList" ||
         this.$route.name == "menuRegister" ||
+        this.$route.name == "googleBusiness" ||
+        this.$route.name == "gbpPosts" ||
         this.$route.name == "deputyAdministrator"
       ) {
         this.i = 1;
@@ -181,6 +194,8 @@ export default {
          this.svgData13 = this.changeColor(this.svgData3,"#1d1d1f");
       }
     }, 200);
+    this.getReviewUnread()
+    setInterval(() => { this.getReviewUnread() }, 30000)
     setInterval(() => {
          this.getUnreadnumber() 
          // getAppointNoticeList().then((res) => {
@@ -205,6 +220,11 @@ export default {
                 that.restMember = 30 - res.data.member_count * 1
             }
         })
+      },
+      getReviewUnread(){
+        gbpReviewUnread().then((res) => {
+          if (res && res.code == 200) this.list[5].current = res.data.unread * 1
+        }).catch(() => {})
       },
       changeColor(url,color){
        	let res = url.replace(/%23[a-zA-Z0-9]{6}/g, color.replace("#", "%23"));//转义后的#等于%23，利用正则表达式，替换所有%23后6位为新的十六进制六位数。
@@ -237,6 +257,7 @@ export default {
           this.svgData14 = this.changeColor(this.svgData4,"#707070");
           this.svgData15 = this.changeColor(this.svgData5,"#707070");
           this.svgData16 = this.changeColor(this.svgData6,"#707070");
+          this.svgData17 = this.changeColor(this.svgData7,"#707070");
           break;
 
         case 1:
@@ -250,6 +271,7 @@ export default {
           this.svgData14 = this.changeColor(this.svgData4,"#707070");
           this.svgData15 = this.changeColor(this.svgData5,"#707070");
           this.svgData16 = this.changeColor(this.svgData6,"#707070");
+          this.svgData17 = this.changeColor(this.svgData7,"#707070");
           break;
 
         case 2:
@@ -269,6 +291,7 @@ export default {
           this.svgData14 = this.changeColor(this.svgData4,"#707070");
           this.svgData15 = this.changeColor(this.svgData5,"#707070");
           this.svgData16 = this.changeColor(this.svgData6,"#707070");
+          this.svgData17 = this.changeColor(this.svgData7,"#707070");
           break;
 
         case 3:
@@ -284,6 +307,7 @@ export default {
           this.svgData14 = this.changeColor(this.svgData4,"#1d1d1f");
           this.svgData15 = this.changeColor(this.svgData5,"#707070");
           this.svgData16 = this.changeColor(this.svgData6,"#707070");
+          this.svgData17 = this.changeColor(this.svgData7,"#707070");
           break;
         case 4:
           this.$router.push({
@@ -298,8 +322,18 @@ export default {
           this.svgData14 = this.changeColor(this.svgData4,"#707070");
           this.svgData15 = this.changeColor(this.svgData5,"#1d1d1f");
           this.svgData16 = this.changeColor(this.svgData6,"#707070");
+          this.svgData17 = this.changeColor(this.svgData7,"#707070");
           break;
         case 5:
+          this.$router.push({ path: "/reviews" });
+          this.svgData11 = this.changeColor(this.svgData1,"#707070");
+          this.svgData12 = this.changeColor(this.svgData2,"#707070");
+          this.svgData13 = this.changeColor(this.svgData3,"#707070");
+          this.svgData14 = this.changeColor(this.svgData4,"#707070");
+          this.svgData15 = this.changeColor(this.svgData5,"#707070");
+          this.svgData17 = this.changeColor(this.svgData7,"#1d1d1f");
+          break;
+        case 6:
           // this.svgData11 = this.changeColor(this.svgData1,"#707070");
           // this.svgData12 = this.changeColor(this.svgData2,"#707070");
           // this.svgData13 = this.changeColor(this.svgData3,"#707070");

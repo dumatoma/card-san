@@ -1526,3 +1526,41 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 **検証：** 本番 HTTP（送信→日時あり→削除 200→再削除 403→一覧から消える）、既存の1対1データで日時付与・受信者による削除が 403 で残ることを確認、ブラウザ（テスト店舗）で表示・削除を確認しテストデータは削除・設定を元に戻した。バックアップ：`/www/backup_staffroom_20261001_145304`、`/www/backup_jppc_20261001_145511.tgz`。
 
 **日付：** 2026-10-01
+
+---
+
+### 79. 新機能：管理WEB Googleビジネス連携・クチコミ管理（各種設定／TOPバー「クチコミ」／副管理者権限／プラン比較表）
+
+**画面（管理WEB jppc、card-san.jp デプロイ済み）**
+
+| 画面 | 内容 |
+|------|------|
+| 各種設定 > Googleビジネス連携（`views/gbp/googleBusiness.vue`、サイドバー最下部） | 未連携（連携する）／連携済み（連携したGoogleアカウントのメール・店舗名・連携を解除）、機能トグル（基本情報／クチコミ管理／Instagram×GBP投稿連動）、基本情報ON時：自動同期設定・同期項目（営業時間/住所/業種/写真）・最終同期・今すぐ同期、「Google側への投稿を設定・管理 投稿管理→」、解除確認ダイアログ |
+| Instagram×GBP投稿管理（`views/gbp/gbpPosts.vue`） | Instagramアカウント状態（未連携・要再連携は「お知らせ設定画面へ→」）、自動同期設定、動画対象外の注意書き、タブ（Instagram投稿／GBP投稿）、転載済み／未転載／転載不可(動画)、もっと見る、「n/総数件を表示中」、GBPへの転載プレビュー→「GBPに転載する」 |
+| TOPバー「クチコミ」＋未読バッジ、クチコミ管理（`views/gbp/reviews.vue`） | 平均評価／総件数／未返信（タブで絞り込み）、未読N件・未読の青丸、返信する→入力欄(0/4096)・キャンセル/送信、返信済みは日付＋編集、もっと見る、GBP未連携画面（Googleビジネス連携画面へ）、クチコミ0件の表示 |
+| 副管理者の設定 | [運営] 最下部「クチコミ管理」(15)、[各種設定] 最下部「Googleビジネス連携」(16)（管理App と同じ番号） |
+| ご利用プラン | 各プランの説明は設定（`vip_function` の gbp / gbp_review）から表示済み。比較表に「Googleビジネス連携」(全プラン)・「Googleクチコミ管理」(スタンダード・プレミアム) を追加 |
+
+**バックエンド（api.card-san.jp）**
+
+| 対象 | 内容 |
+|------|------|
+| `config/gbp.php` + `.env` | `GBP_CLIENT_ID` / `GBP_CLIENT_SECRET`（**未設定＝準備中表示**）。リダイレクトURI：`https://api.card-san.jp/api/shop/google_business/callback/pc` と `/mobile` |
+| `app/Libs/GoogleBusiness.php` | 認証情報をconfigから、スコープに `openid email`（連携アカウントのメール表示）、SSL検証ありの通信、location 取得/更新(PATCH)・写真追加・連携解除時の revoke |
+| OAuth 修正 | コールバック画面が壊れており（`@if()` / `{{ }}`）HTTP 500 → 作り直し（PC は管理WEBへ戻る）。ルート名の誤り（`api.google_business.callback` は存在せず認証URL生成で例外）、PC のトークン交換で redirect_uri 不一致、state（CSRF）検証、location を v4 形式 `accounts/x/locations/y` で保存（旧 v1 形式ではクチコミ・投稿 API が失敗） |
+| `app/Services/GbpService.php`（新規） | 基本情報同期（曜日別営業時間→regularHours、住所→storefrontAddress、業種→カテゴリ、店舗写真→GBP写真・重複防止）、クチコミのキャッシュ `web_gbp_review`（初回取込は既読、以降の新着は未読＋プッシュ通知［主管理者・権限15の副管理者］）、返信/編集、Instagram 投稿一覧に転載状態、1件転載（重複防止） |
+| 新規 API | `overview` / `features` / `sync_now` / `review_list` / `review_read` / `review_unread` / `review_reply/{id}` / `ins_posts` / `ins_posts/{id}/repost`（副管理者権限15/16・プラン（gbp_review）を確認） |
+| 定期処理 | `gbp:sync-reviews`（15分毎）、`gbp:auto-sync`（毎時・変更がある場合のみ）、`gbp:sync-instagram` は「投稿連動ON」も条件に |
+| DB | `web_shop` に gbp_email / gbp_location_title / gbp_review_on / gbp_ins_on / gbp_auto_sync / gbp_sync_fields / gbp_last_sync_at / gbp_sync_hash / gbp_reviews_at、新規 `web_gbp_review`・`web_gbp_photo_log` |
+
+**検証：** 未連携状態の全画面・API、テスト店舗(4)にダミー連携＋ダミークチコミ12件を入れて連携済み画面（未読・青丸・返信入力・未返信絞り込み・解除ダイアログ）を確認後、連携解除APIで元に戻した。副管理者（権限なし→403／15・16あり→200）、ライトプランのクチコミ→403、営業時間・住所変換、Instagram 投稿一覧（店舗11：17件・動画判定）。**Google 側の実接続は OAuth クライアント発行後に要確認。** バックアップ：`/www/backup_gbp_20261001_150855`、`/www/backup_gbp_web_shop_*.sql`。
+
+**日付：** 2026-10-01
+
+---
+
+### 80. Instagram 連携が切れたまま（長期トークンの自動更新が止まっていた）
+
+`RefreshInstagramAccessToken`（60日で失効する長期トークンの更新）が scheduler に登録されておらず、店舗2/4/6/8/24 のトークンが 2025-12 に失効（お知らせのInstagram表示・GBP転載が不可）。また失敗判定が `error_type` のみで `{"error":{...}}` 形式の失敗を成功扱いしていた。→ 判定修正、毎日 03:30 に登録、店舗11は更新済み。**失効済みの店舗は「お知らせ設定」から再連携が必要。** あわせて `Instagram::children()` の fields 誤記（`idmedia_url`）でカルーセルの写真が取れなかった不具合を修正。
+
+**日付：** 2026-10-01

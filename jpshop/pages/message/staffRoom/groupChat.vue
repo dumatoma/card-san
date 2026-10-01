@@ -17,7 +17,12 @@
                         <view v-if="item.type == 2" class="msgDetailImage">
                             <image @click="previewImage(item.message)" :src="item.message" mode="widthFix"></image>
                         </view>
-                        <view class="sendTime">{{ item.time }}</view>
+                        <view style="display: flex;align-items: center;">
+                            <view class="sendTime">{{ item.time }}</view>
+                            <view class="delas" v-if="item.admin_id == myId && isNum(item.id)" @click.stop="delthis(item)">
+                                <image src="../../../static/svg/delta.svg" mode=""></image>
+                            </view>
+                        </view>
                     </view>
                 </view>
             </view>
@@ -50,7 +55,8 @@
         getStaffRoomMessages,
         sendStaffRoomMessage,
         readStaffRoomMessages,
-        getStaffRoom
+        getStaffRoom,
+        deleteStaffRoomMessage
     } from '@/api/index.js'
     export default {
         data() {
@@ -93,6 +99,42 @@
             uni.$off('getPositonsOrder', this._socketHandler)
         },
         methods: {
+            isNum(id) {
+                return id != null && !isNaN(Number(id))
+            },
+            // 自分の送信メッセージを削除（相手の画面からも消える）。2026-10
+            delthis(item) {
+                uni.showModal({
+                    title: '',
+                    content: '選択したメッセージを削除しますか？',
+                    confirmText: '削除',
+                    confirmColor: '#D93025',
+                    cancelText: 'キャンセル',
+                    success: (r) => {
+                        if (!r.confirm) return
+                        deleteStaffRoomMessage(item.id).then(res => {
+                            if (res.code == 200) {
+                                this.removeMsg(item.id)
+                            } else {
+                                uni.showToast({ title: res.message || '削除できませんでした', icon: 'none' })
+                            }
+                        }).catch(() => {})
+                    }
+                })
+            },
+            removeMsg(id) {
+                this.history = this.history.filter(m => m.id != id)
+                this.currentMessages = this.currentMessages.filter(m => m.id != id)
+                this.rebuildArr()
+            },
+            // 送信APIが返す正式なメッセージ（id・日時）で画面に追加
+            pushSent(res, fallback) {
+                let m = (res.data && res.data.message) ? Object.assign({}, fallback, res.data.message) : fallback
+                if (res.data && res.data.id) m.id = res.data.id
+                this.currentMessages.push(m)
+                this.rebuildArr()
+                this.scrollBottom()
+            },
             // ヘッダーにルーム名と参加人数を表示（例: CARD SALONスタッフ(3)）
             setRoomTitle() {
                 getStaffRoom().then(res => {
@@ -111,6 +153,10 @@
             },
             listenSocket() {
                 this._socketHandler = (result) => {
+                    if (result.type == 'staff_room_delete' && result.data) {
+                        this.removeMsg(result.data.id)
+                        return
+                    }
                     if (result.type == 'staff_room_message') {
                         result.data.forEach(msg => {
                             this.currentMessages.push(msg)
@@ -207,7 +253,11 @@
                         if (result.errMsg == 'uploadFile:ok') {
                             let re = JSON.parse(result.data)
                             if (re.code == 200) {
-                                sendStaffRoomMessage({ type: 2, message: re.data.path }).catch(() => {})
+                                sendStaffRoomMessage({ type: 2, message: re.data.path }).then(r => {
+                                    // 自分が送った画像も即時表示（旧：再読み込みまで表示されなかった）
+                                    let admin = uni.getStorageSync('admin')
+                                    if (r.code == 200) this.pushSent(r, { admin_id: this.myId, name: admin.message_name || admin.name, avatar: admin.avatar, type: 2, message: re.data.path })
+                                }).catch(() => {})
                             }
                         }
                     }
@@ -303,4 +353,14 @@
         z-index: 100;
     }
 }
+    .delas {
+        width: 36rpx;
+        height: 36rpx;
+        margin: 0 12rpx;
+        flex-shrink: 0;
+        image {
+            width: 100%;
+            height: 100%;
+        }
+    }
 </style>

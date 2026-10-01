@@ -1063,3 +1063,11 @@ export const resumePlan = (id) => request({ url: "/api/shop/vip/" + id + "/resum
 export const getVipCard = () => request({ url: "/api/shop/vip_card", method: "get" })
 // カード登録・変更（Stripeの安全な入力画面URL）
 export const setupVipCard = () => request({ url: "/api/shop/vip_card/setup", method: "post", data: {} })
+
+// スタッフルーム：自分の送信メッセージを削除
+export const deleteStaffRoomMessage = (id) => {
+    return request({ url: "/api/shop/staff_room/messages/" + id + "/delete", method: "post", data: {} })
+}
+export const deleteStaffDm = (toId, id) => {
+    return request({ url: "/api/shop/staff_room/dm/" + toId + "/" + id + "/delete", method: "post", data: {} })
+}

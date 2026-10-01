@@ -62,6 +62,7 @@
                 <!-- 自分 -->
                 <div class="info-right" v-else>
                   <div class="mtime">{{ m.time }}</div>
+                  <div class="mdel shou" v-if="m.id" @click="askDelete(m)" title="削除"><img src="../static/svg/delta.svg" alt="" /></div>
                   <div class="ri no-size" v-if="m.type == 1">{{ m.message }}</div>
                   <div class="riImage no-size" v-if="m.type == 2"><img :src="m.message" alt="" /></div>
                   <div class="le">
@@ -133,6 +134,19 @@
       </div>
     </div>
 
+    <!-- 送信メッセージ削除の確認 -->
+    <div class="fixed" v-show="delTarget">
+      <div class="zhe" @click="delTarget = null"></div>
+      <div class="dialog">
+        <div class="d-title">選択したメッセージを削除しますか？</div>
+        <div class="d-sub">削除したメッセージは相手の画面からも消えます。</div>
+        <div class="d-btns">
+          <div class="d-cancel shou" @click="delTarget = null">キャンセル</div>
+          <div class="d-ok d-del shou" @click="doDelete">削除</div>
+        </div>
+      </div>
+    </div>
+
     <!-- 1対1トーク確認ダイアログ -->
     <div class="fixed" v-show="showConfirm">
       <div class="zhe" @click="showConfirm = false"></div>
@@ -158,6 +172,8 @@ import {
   getStaffDmMessages,
   sendStaffDm,
   readStaffDm,
+  deleteStaffRoomMessage,
+  deleteStaffDm,
 } from "@/http/api.js";
 
 export default {
@@ -183,6 +199,7 @@ export default {
       messageTxt: "",
       view: "chat",
       showConfirm: false,
+      delTarget: null,
       confirmTarget: {},
     };
   },
@@ -378,7 +395,7 @@ export default {
         optimistic.avatar = that.myAvatar;
         sendStaffRoomMessage({ type: type, message: message })
           .then((res) => {
-            if (res && res.code == 200 && res.data && res.data.id) optimistic.id = res.data.id;
+            if (res && res.code == 200 && res.data) that.applySent(optimistic, res.data);
           })
           .catch(() => {});
       } else {
@@ -386,7 +403,7 @@ export default {
         optimistic.to_id = that.currentDmId;
         sendStaffDm({ to_id: that.currentDmId, type: type, message: message })
           .then((res) => {
-            if (res && res.code == 200 && res.data && res.data.id) optimistic.id = res.data.id;
+            if (res && res.code == 200 && res.data) that.applySent(optimistic, res.data);
           })
           .catch(() => {});
       }
@@ -397,6 +414,37 @@ export default {
       if (that.threads[that.current]) {
         that.$set(that.threads[that.current], "last_message", type == 2 ? "[画像]" : message);
       }
+    },
+    applySent(optimistic, data) {
+      let m = data.message || {};
+      this.$set(optimistic, "id", data.id || data.message_id);
+      ["time", "date", "week", "create_time"].forEach((k) => {
+        if (m[k] != null) this.$set(optimistic, k, m[k]);
+      });
+      this.rebuild();
+    },
+    askDelete(m) {
+      if (!m.id) return;
+      this.delTarget = m;
+    },
+    doDelete() {
+      let that = this;
+      let m = that.delTarget;
+      that.delTarget = null;
+      if (!m) return;
+      let p = that.currentKind == "group" ? deleteStaffRoomMessage(m.id) : deleteStaffDm(that.currentDmId, m.id);
+      p.then((res) => {
+        if (res && res.code == 200) {
+          that.removeMsg(m.id);
+        } else {
+          that.$message({ message: (res && res.message) || "削除できませんでした", type: "error", offset: 400 });
+        }
+      }).catch(() => {});
+    },
+    removeMsg(id) {
+      this.history = this.history.filter((x) => x.id != id);
+      this.localMsgs = this.localMsgs.filter((x) => x.id != id);
+      this.rebuild();
     },
     openMembers() {
       this.view = "members";
@@ -443,6 +491,14 @@ export default {
       }
       if (!datas || !datas.type) return;
       let that = this;
+      if (datas.type == "staff_room_delete") {
+        if (that.currentKind == "group" && datas.data) that.removeMsg(datas.data.id);
+        return;
+      }
+      if (datas.type == "staff_dm_delete") {
+        if (that.currentKind == "dm" && datas.data && datas.data.from_id == that.currentDmId) that.removeMsg(datas.data.id);
+        return;
+      }
       if (datas.type == "staff_room_message") {
         let items = datas.data || [];
         if (that.currentKind == "group") {
@@ -665,6 +721,20 @@ export default {
       color: #c0c4cc;
       margin-right: 8px;
     }
+    .mdel {
+      width: 18px;
+      height: 18px;
+      margin-right: 8px;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+    .mdel:hover {
+      opacity: 1;
+    }
+    .mdel img {
+      width: 100%;
+      height: 100%;
+    }
   }
   .send-box {
     border-top: 1px solid #ededed;
@@ -815,5 +885,9 @@ export default {
       color: #fff;
     }
   }
+}
+.d-ok.d-del {
+  background: #d93025 !important;
+  color: #fff;
 }
 </style>

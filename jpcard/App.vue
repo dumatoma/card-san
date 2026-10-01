@@ -16,8 +16,18 @@
             // click: 通知バーをタップした時（バックグラウンド→フォアグラウンド遷移）
             // receive: アプリがフォアグラウンドで通知を受信した時
             // 通知タップ時：該当画面へ遷移
+            // payload は JSON 文字列で届く（ローカル通知経由では二重に文字列化される）ためオブジェクトに戻す。2026-10
+            // 文字列のまま扱うと前面受信時に生の文字列が表示され（文字化け）、タップ遷移もしなかった
+            function parsePayload(message) {
+                var p = message && message.payload
+                for (var i = 0; i < 3 && typeof p === 'string'; i++) {
+                    try { p = JSON.parse(p) } catch (e) { break }
+                }
+                return (p && typeof p === 'object') ? p : {}
+            }
             function handlePushClick(message) {
-                if (!message.payload) return
+                message = { payload: parsePayload(message) }
+                if (!message.payload.type) return
                 if (message.payload.type == 'message') {
                     uni.navigateTo({
                         url: "/pagesA/message/chat?sid=" + message.payload.id + "&name=" + message.payload.name
@@ -30,7 +40,7 @@
             }
             // フォアグラウンド受信時：システムは自動で通知バーに出さないため手動でローカル通知を作成し、バッジも更新
             function handlePushReceive(message) {
-                var payload = message.payload || {}
+                var payload = parsePayload(message)
                 try {
                     var title = payload.title || 'Card-San'
                     var content = payload.content || message.content || 'メッセージが届きました'

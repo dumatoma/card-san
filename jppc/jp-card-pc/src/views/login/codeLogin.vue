@@ -192,8 +192,10 @@
     }
 
     .wrap {
-        width: 100vw;
-        height: 100vh;
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
         box-sizing: border-box;
         background: #f9f9f9;
 
@@ -212,11 +214,9 @@
         .content_login {
             width: 640px;
             height: 520px;
-            position: relative;
+            flex-shrink: 0;
+            margin: 40px auto; // TOPバーから40px下に固定(画面の高さで動かない)
             text-align: center;
-            left: 50%;
-            top: 10%;
-            transform: translateX(-50%); //移动的距离以自身的宽度为准
             background: #fff;
             padding: 1px 95px 0;
             box-shadow: 0px 20px 40px 1px rgba(0, 0, 0, 0.07);
@@ -291,7 +291,7 @@
         .popup {
             top: 0;
             bottom: 0;
-            position: absolute;
+            position: fixed;
             z-index: 999;
             width: 100%;
             background: rgba(0, 0, 0, 0.16);
@@ -340,8 +340,8 @@
             height: 50px;
             font-size: 12px;
             color: #fff;
-            position: fixed;
-            bottom: 0px;
+            flex-shrink: 0;
+            margin-top: auto; // 画面が高いときは下端に、低いときはブロックの下に配置
             background: #1d1d1f;
         }
     }

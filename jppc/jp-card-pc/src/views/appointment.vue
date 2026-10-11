@@ -1859,9 +1859,15 @@
                                 v.color = "#d2d2d7"
                             }
                         })
-                        that.dangiId = res.data.admins[0].id
-                        that.staffColor1 = res.data.admins[0].color
-                        that.dangName = res.data.admins[0].name
+                        // メニュー変更後も選択中の当日担当を維持する(2026-06-05 サーバー直接修正 #28 をソースへ反映)
+                        // 選択中のスタッフがリストにいなければ先頭のスタッフにする
+                        let currentId = that.dangId || that.dangiId
+                        let current = res.data.admins.find((v) => v.id == currentId) || res.data.admins[0]
+                        if (current) {
+                            that.dangiId = current.id
+                            that.staffColor1 = current.color
+                            that.dangName = current.name
+                        }
                     }
                 })
             },
@@ -1931,11 +1937,13 @@
                             that.staffColor = v.color
                             that.zhiName = v.name
                             that.dangiId = v.id
+                            that.dangId = v.id // 手動で選んだ当日担当を、メニュー変更後も維持するため
                             that.staffColor1 = v.color
                             that.dangName = v.name
                             console.log("equal",v)
                         } else {
                             that.dangiId = v.id
+                            that.dangId = v.id // 手動で選んだ当日担当を、メニュー変更後も維持するため
                             that.staffColor1 = v.color
                             that.dangName = v.name
                         }

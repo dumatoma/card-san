@@ -143,11 +143,12 @@
     }
     
 	.wrap {
-		width: 100vw;
-		height: 100vh;
+		width: 100%;
+		min-height: 100vh;
 		box-sizing: border-box;
 		background: #f9f9f9;
-        height: 100vh;
+		display: flex;
+		flex-direction: column;
 
 		.mark-title {
 			width: 100%;
@@ -164,11 +165,9 @@
 		.content_login {
 			width: 640px;
 			height: 579px;
-			position: relative;
+			flex-shrink: 0;
+			margin: 40px auto; // TOPバーから40px下に固定(画面の高さで動かない)
 			text-align: center;
-			left: 50%;
-			top: 40%;
-			transform: translate(-50%, -50%); //移动的距离以自身的宽度为准
 			background: #fff;
 			padding: 0 119px;
 			box-shadow: 0px 20px 40px 1px rgba(0, 0, 0, 0.07);
@@ -251,8 +250,8 @@
 			height: 50px;
 			font-size: 12px;
 			color: #fff;
-			position: absolute;
-			bottom: 0px;
+			flex-shrink: 0;
+			margin-top: auto; // 画面が高いときは下端に、低いときはブロックの下に配置
 			background: #1d1d1f;
 		}
 

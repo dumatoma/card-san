@@ -35,15 +35,16 @@
       <!-- 右：チャット詳細 or メンバー一覧 -->
       <div class="right no-size">
         <template v-if="view == 'chat'">
-          <div
-            class="top no-size"
-            :class="currentKind == 'group' ? 'shou clickable' : ''"
-            @click="currentKind == 'group' ? openMembers() : null"
-          >
-            <img :src="currentThread.avatar || (currentKind == 'group' ? groupImg : defaultImg)" alt="" v-if="current > -1" />
-            <div class="uname" v-if="current > -1">
-              {{ currentThread.name }}<span v-if="currentKind == 'group'"> ({{ currentThread.count }})</span>
+          <div class="top no-size">
+            <div class="top-left">
+              <img :src="currentThread.avatar || (currentKind == 'group' ? groupImg : defaultImg)" alt="" v-if="current > -1" />
+              <div class="uname" v-if="current > -1">{{ currentThread.name }}</div>
             </div>
+            <!-- メンバー一覧を開くボタン(グループのみ) [カスタムエイド] -->
+            <button type="button" class="mem-btn" v-if="current > -1 && currentKind == 'group'" @click="openMembers()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"></path><circle cx="17" cy="9" r="2.8"></circle><path d="M16 14.2c3 .2 5.5 2.3 5.5 5.8"></path></svg>
+              メンバー {{ currentThread.count }}
+            </button>
           </div>
           <div class="info-box" ref="warp">
             <div class="info-item no-size" v-for="(m, i) in messages" :key="i">
@@ -76,8 +77,9 @@
           </div>
           <div class="send-box no-size" v-if="current > -1">
             <textarea
+              ref="ta"
               v-model="messageTxt"
-              placeholder="Enterで送信／Shift+Enterで改行"
+              placeholder="メッセージを入力（Enterで送信／Shift+Enterで改行）"
               @keydown.enter="handleKeyCode($event)"
             ></textarea>
           </div>
@@ -92,15 +94,10 @@
             >
               <div class="hx"><img src="../static/fasong.png" class="huixing" alt="" /></div>
             </el-upload>
-            <div>
-              <img
-                src="../static/send.png"
-                class="huixing"
-                :style="messageTxt == '' ? 'opacity:0.6 !important' : ''"
-                alt=""
-                @click.stop="handleSendText"
-              />
-            </div>
+            <button type="button" class="send-btn" :class="messageTxt == '' ? 'off' : ''" @click.stop="handleSendText">
+              送信
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5l18-8.5L3 3.5v6.6l12.5 1.9L3 13.9z"></path></svg>
+            </button>
           </div>
         </template>
 
@@ -217,6 +214,10 @@ export default {
         this.toDoSocket(this.socketMsgs && this.socketMsgs.data);
       },
     },
+    // 入力欄の高さを文字量に合わせる [カスタムエイド]
+    messageTxt() {
+      this.autoGrow();
+    },
   },
   created() {
     let admin = JSON.parse(localStorage.getItem("admin") || "{}");
@@ -226,6 +227,15 @@ export default {
     this.loadList(true);
   },
   methods: {
+    // 入力欄の高さを文字量に合わせて84px〜160pxで伸び縮みさせる [カスタムエイド]
+    autoGrow() {
+      this.$nextTick(() => {
+        const el = this.$refs.ta;
+        if (!el) return;
+        el.style.height = "84px";
+        el.style.height = Math.min(Math.max(el.scrollHeight + 2, 84), 160) + "px";
+      });
+    },
     loadList(autoOpen) {
       let that = this;
       getStaffRoom()
@@ -535,76 +545,94 @@ export default {
   color: #1d1d1f;
   font-size: 21px;
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
+// ===== [カスタムエイド 2026-10-12] チャット画面の統一デザイン =====
+// メッセージチャット(message.vue)と同じ寸法・同じ見た目にそろえている
 .content {
   display: flex;
-  height: calc(100vh - 114px - 50px - 90px);
+  width: 100%;
+  max-width: 1120px;
+  height: calc(100vh - 260px);
+  min-height: 560px;
   background: #ffffff;
-  box-shadow: 0px 3px 10px 1px rgba(0, 0, 0, 0.16);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
+// 左: ルーム/相手一覧(幅320px固定)
 .left {
-  width: 340px;
-  border-right: 1px solid #ededed;
+  width: 320px;
+  flex-shrink: 0;
+  border-right: 1px solid #ececf0;
   overflow-y: auto;
   .user-list {
     .item {
-      padding: 14px 16px;
-      border-bottom: 1px solid #f0f0f0;
+      padding: 10px 16px;
+      border-bottom: 1px solid #f2f2f5;
     }
     .item.move {
-      background: #f2f7ff;
+      background: #eef4fe;
     }
     .box {
       display: flex;
       align-items: center;
+      gap: 12px;
+    }
+    .ite-left {
+      flex-shrink: 0;
+      display: flex;
     }
     .ite-left img {
-      width: 46px;
-      height: 46px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: #ededed;
-      border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(メッセージ横のアイコンとそろえる)
+      border: 0.5px solid #aaaaaa;
       box-sizing: border-box;
     }
     .ite-midd {
       flex: 1;
-      margin-left: 12px;
-      overflow: hidden;
+      min-width: 0;
     }
     .uname {
       font-size: 15px;
-      font-weight: bold;
+      font-weight: 500;
       color: #1d1d1f;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .info {
-      font-size: 12px;
-      color: #909399;
-      margin-top: 4px;
+      font-size: 13px;
+      color: #6e6e73;
+      margin-top: 2px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 200px;
+      -webkit-line-clamp: 1;
     }
     .ite-rig {
-      text-align: right;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
       .time {
         font-size: 11px;
-        color: #c0c4cc;
+        color: #8e8e93;
       }
       .hui {
-        display: inline-block;
         min-width: 20px;
         height: 20px;
         line-height: 20px;
-        padding: 0 5px;
+        padding: 0 6px;
         box-sizing: border-box;
         background: #d93025;
         color: #fff;
-        font-size: 12px;
+        font-size: 11px;
         text-align: center;
         border-radius: 10px;
-        margin-top: 6px;
       }
     }
     .empty {
@@ -615,72 +643,132 @@ export default {
     }
   }
 }
+// 右: メッセージ欄
 .right {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   .top {
-    height: 62px;
+    height: 60px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
-    padding: 0 20px;
-    border-bottom: 1px solid #ededed;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 24px;
+    border-bottom: 1px solid #ececf0;
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
     img {
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
       border-radius: 50%;
       object-fit: cover;
-      margin-right: 12px;
       background: #ededed;
-      border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(メッセージ横のアイコンとそろえる)
+      border: 0.5px solid #aaaaaa;
       box-sizing: border-box;
     }
     .uname {
       font-size: 16px;
       font-weight: bold;
       color: #1d1d1f;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
-  .top.clickable:hover {
-    background: #f6f9ff;
+  // メンバー一覧を開くボタン
+  .mem-btn {
+    flex-shrink: 0;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid #d2d2d7;
+    border-radius: 16px;
+    background: #ffffff;
+    color: #1d1d1f;
+    font-size: 13px;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    &:hover {
+      background: #f5f5f7;
+    }
   }
   .info-box {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    padding: 16px 20px;
-    background: #fafafa;
+    padding: 6px 24px 14px;
+    background: #f7f7f9;
   }
+  // 日付
   .rig-time {
-    text-align: center;
+    display: table;
+    margin: 14px auto 0;
+    padding: 3px 12px;
+    border-radius: 10px;
+    background: #ececf0;
+    color: #6e6e73;
     font-size: 12px;
-    color: #909399;
-    margin: 14px 0;
   }
   .info-message {
-    margin-bottom: 14px;
+    margin-top: 14px;
     // メッセージ横のアイコンと名前。相手側・自分側の両方に効かせる
     // (以前は相手側だけに書かれていて、自分側のアイコンが元の画像サイズで表示されていた)
     .le {
-      text-align: center;
+      width: 44px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       .left-img img {
-        width: 36px;
-        height: 36px;
+        display: block;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         object-fit: cover;
         background: #ededed;
         border: 0.5px solid #aaaaaa; // アイコンの周りの枠線
         box-sizing: border-box;
-        display: block;
-        margin: 0 auto;
       }
       .left-name {
-        font-size: 11px;
-        color: #909399;
-        max-width: 60px;
+        max-width: 44px;
+        margin-top: 2px;
+        font-size: 10px;
+        color: #8e8e93;
+        text-align: center;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+    }
+    // 吹き出し(相手側・自分側共通)
+    .ri {
+      max-width: #{"min(70%, 560px)"};
+      box-sizing: border-box;
+      padding: 10px 14px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #1d1d1f;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .riImage img {
+      display: block;
+      max-width: 200px;
+      border-radius: 10px;
+    }
+    .mtime {
+      font-size: 11px;
+      color: #8e8e93;
     }
   }
   .info-left {
@@ -690,24 +778,12 @@ export default {
       margin-right: 10px; // 相手側: アイコンの右に吹き出し
     }
     .ri {
-      max-width: 60%;
       background: #ffffff;
-      border: 1px solid #ededed;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 14px;
-      color: #1d1d1f;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .riImage img {
-      max-width: 200px;
-      border-radius: 10px;
+      border: 1px solid #e5e5ea;
+      border-radius: 16px 16px 16px 4px;
     }
     .mtime {
-      font-size: 11px;
-      color: #c0c4cc;
-      margin-left: 8px;
+      margin-left: 10px;
     }
   }
   .info-right {
@@ -718,23 +794,11 @@ export default {
       margin-left: 10px; // 自分側: 吹き出しの右にアイコン
     }
     .ri {
-      max-width: 60%;
       background: #87fa7d;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 14px;
-      color: #1d1d1f;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .riImage img {
-      max-width: 200px;
-      border-radius: 10px;
+      border-radius: 16px 16px 4px 16px;
     }
     .mtime {
-      font-size: 11px;
-      color: #c0c4cc;
-      margin-right: 8px;
+      margin-right: 10px;
     }
     .mdel {
       width: 18px;
@@ -751,36 +815,85 @@ export default {
       height: 100%;
     }
   }
+  // 入力欄(3行分の高さ。入力に合わせて最大160pxまで伸びる)
   .send-box {
-    border-top: 1px solid #ededed;
-    padding: 10px 20px 0;
+    flex-shrink: 0;
+    border-top: 1px solid #ececf0;
+    padding: 12px 24px 0;
     textarea {
+      display: block;
       width: 100%;
-      height: 56px;
-      border: none;
+      height: 84px;
+      max-height: 160px;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 10px;
       outline: none;
       resize: none;
+      overflow-y: auto;
       font-size: 14px;
+      line-height: 1.7;
+      color: #1d1d1f;
+      font-family: inherit;
+      &:focus {
+        border-color: #1a73e8;
+      }
     }
   }
   .bot {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 20px 14px;
-    .huixing {
-      width: 26px;
-      height: 26px;
+    padding: 8px 24px 12px;
+    .hx {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
+      &:hover {
+        background: rgba(29, 29, 31, 0.1);
+      }
+      img {
+        width: 18px;
+        height: 20px;
+      }
+    }
+  }
+  // 送信ボタン
+  .send-btn {
+    height: 40px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 20px;
+    background: #1a73e8;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    &:hover {
+      background: #1557b0;
+    }
+    &.off {
+      opacity: 0.5;
     }
   }
 }
 .member-head {
-  height: 52px;
+  height: 60px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #ededed;
-  padding: 0 16px;
+  border-bottom: 1px solid #ececf0;
+  padding: 0 24px;
   .back {
     color: #1a73e8;
     font-size: 14px;
@@ -793,7 +906,9 @@ export default {
   }
 }
 .member-list {
-  padding: 16px 20px;
+  flex: 1;
+  min-height: 0;
+  padding: 16px 24px;
   overflow-y: auto;
   .member-item {
     display: flex;
@@ -813,6 +928,8 @@ export default {
         object-fit: cover;
         margin-right: 12px;
         background: #ededed;
+        border: 0.5px solid #aaaaaa; // アイコンの周りの枠線
+        box-sizing: border-box;
       }
       .mb-name {
         font-size: 15px;

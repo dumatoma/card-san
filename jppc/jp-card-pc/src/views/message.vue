@@ -11,7 +11,7 @@
                     <div class="total">メンバー数:{{showlist.length}}</div>
                 </div>
                 <div class="user-list no-size">
-                    <div :class="current == index ? 'item move no-size' : 'item no-size'"
+                    <div :class="['item', 'no-size', current == index ? 'move' : '', item.uid == currentUid ? 'sel' : '']"
                         v-for="(item, index) in showlist" :key="index" style="cursor: pointer;" @mousemove="move(index)"
                         @mouseleave="out(index)" @click="showDetail(item.uid,item.name,item.avatar,index)">
                         <div class="box">
@@ -88,7 +88,6 @@
                                         <img src="../static/svg/delta.svg" alt="" />
                                     </div>
                                 </div>
-                                <div class="m"> </div>
                                 <div class="ri" v-html="item1.message" v-if="item1.type == 1"></div>
                                 <div class="riImage" v-if="item1.type == 2">
                                     <img :src="item1.message" alt="">
@@ -112,7 +111,7 @@
                 </div>
 
                 <div class="send-box no-size">
-                    <textarea v-model="messageTxt" placeholder="Enterで送信／Shift+Enterで改行"
+                    <textarea ref="ta" v-model="messageTxt" placeholder="メッセージを入力（Enterで送信／Shift+Enterで改行）"
                         @keydown.enter="handleKeyCode($event)" @focus="getf = true" @blur="getf = false"></textarea>
                 </div>
                 <div class="bot no-size">
@@ -125,11 +124,10 @@
 
                     </el-upload>
 
-                    <div>
-                        <img src="../static/send.png" class="huixing"
-                            :style="messageTxt == ''?'opacity:0.6 !important' : ''" alt=""
-                            @click.stop="handleSendText" />
-                    </div>
+                    <button type="button" class="send-btn" :class="messageTxt == '' ? 'off' : ''" @click.stop="handleSendText">
+                        送信
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5l18-8.5L3 3.5v6.6l12.5 1.9L3 13.9z"></path></svg>
+                    </button>
 
                 </div>
             </div>
@@ -241,6 +239,10 @@
                     let that = this
                     that.toDoSocket(that.socketMsgs.data)
                 }
+            },
+            // 入力欄の高さを文字量に合わせる [カスタムエイド]
+            messageTxt() {
+                this.autoGrow()
             }
 
         },
@@ -466,6 +468,15 @@
                     dom.scrollTop = dom.scrollHeight;
                 }, 20);
             },
+            // 入力欄の高さを文字量に合わせて84px〜160pxで伸び縮みさせる [カスタムエイド]
+            autoGrow() {
+                this.$nextTick(() => {
+                    const el = this.$refs.ta;
+                    if (!el) return;
+                    el.style.height = "84px";
+                    el.style.height = Math.min(Math.max(el.scrollHeight + 2, 84), 160) + "px";
+                });
+            },
             messageMove(i) {
                 this.messageCurrent = i;
             },
@@ -563,9 +574,9 @@
 
 <style lang="scss" scoped>
     .hx {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -581,6 +592,7 @@
 
     .riImage {
         width: 266px;
+        max-width: 60%;
         margin: 0 10px;
     }
 
@@ -597,6 +609,7 @@
         color: #1d1d1f;
         font-size: 21px;
         font-weight: bold;
+        margin-bottom: 10px;
     }
 
     .dels {
@@ -610,260 +623,323 @@
         height: 100%;
     }
 
+    // ===== [カスタムエイド 2026-10-12] チャット画面の統一デザイン =====
+    // ルームチャット(roomChat.vue)と同じ寸法・同じ見た目にそろえている
     .content {
-        margin-top: 18px;
-        width: 872px;
-        height: 608px;
-
-        box-shadow: 0px 3px 10px 1px rgba(0, 0, 0, 0.16);
+        width: 100%;
+        max-width: 1120px;
+        height: calc(100vh - 260px);
+        min-height: 560px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
         display: flex;
 
+        // 左: メンバー一覧(幅320px固定)
         .left {
-            width: 375px;
-            border-right: 1px solid #d2d2d7;
+            width: 320px;
+            flex-shrink: 0;
+            border-right: 1px solid #ececf0;
+            display: flex;
+            flex-direction: column;
 
             .lef-top {
-                width: 100%;
-                height: 100px;
-                background: #f5f5f7;
-                border-bottom: 1px solid #d2d2d7;
+                flex-shrink: 0;
+                padding: 14px 16px 10px;
+                border-bottom: 1px solid #ececf0;
 
                 .search {
-                    width: 100%;
-                    padding: 16px;
                     position: relative;
 
                     img {
                         position: absolute;
-                        top: 26px;
-                        left: 26px;
+                        top: 11px;
+                        left: 12px;
                         width: 16px;
                         height: 16px;
                     }
 
                     input {
-                        padding-left: 30px;
                         width: 100%;
-                        height: 35px;
-                        border-radius: 10px;
-                        background: rgb(233, 233, 234);
+                        height: 38px;
+                        box-sizing: border-box;
+                        padding: 0 12px 0 36px;
                         border: 0;
+                        border-radius: 10px;
+                        background: #f2f2f5;
                         outline: none;
+                        font-size: 13px;
                     }
                 }
 
                 .total {
-                    margin-left: 20px;
-                    color: #1d1d1f;
-                    font-size: 16px;
+                    margin-top: 8px;
+                    color: #6e6e73;
+                    font-size: 12px;
                 }
             }
 
             .user-list {
-                width: 100%;
-                height: calc(608px - 100px);
+                flex: 1;
+                min-height: 0;
                 overflow-y: auto;
                 overflow-x: hidden;
 
-                .move {
-                    // padding: 10px 0;
-                    background: rgba(29, 29, 31, 0.05) !important;
+                .item {
+                    background: #ffffff;
+                    border-bottom: 1px solid #f2f2f5;
                 }
 
-                // border-right: 1px solid #d2d2d7;
-                .item {
-                    // padding: 10px 0;
-                    // margin-right: 16px;
+                .move {
+                    background: #f5f5f7;
+                }
 
-                    background: #ffffff;
+                // 表示中の相手
+                .sel {
+                    background: #eef4fe;
+                }
 
-                    .box {
-                        padding: 20px 0;
-                        margin-left: 16px;
-                        width: calc(100% - 16px);
-                        // height: 76px;
-                        display: flex;
-                        border-bottom: 1px solid rgba(60, 60, 67, 0.36);
+                .box {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 10px 16px; // 上下20px → 10px
+                }
+
+                .ite-left {
+                    flex-shrink: 0;
+                    display: flex;
+
+                    img {
+                        width: 44px;
+                        height: 44px;
+                        border-radius: 50%;
+                        border: 0.5px solid #aaaaaa;
+                        box-sizing: border-box;
+                        object-fit: cover;
+                    }
+                }
+
+                .ite-midd {
+                    flex: 1;
+                    min-width: 0;
+
+                    .uname {
+                        color: #1d1d1f;
+                        font-size: 15px;
+                        font-weight: 500;
+                        margin-bottom: 2px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                     }
 
-                    // align-items: center;
-                    .ite-left {
-                        // vertical-align: middle;
-                        display: flex;
-                        // align-items: center;
-                        line-height: 76px;
-                        margin-right: 10px;
-                        height: 100%;
+                    // 最新メッセージは1行で省略(…)
+                    .info {
+                        color: #6e6e73;
+                        font-size: 13px;
+                        -webkit-line-clamp: 1;
+                        word-break: break-all;
+                    }
+                }
+
+                // マウスを乗せたとき、削除メニュー(…)の分だけ文字を短くする
+                .move .ite-midd {
+                    padding-right: 26px;
+                }
+
+                .ite-rig {
+                    flex-shrink: 0;
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    gap: 4px;
+
+                    .time {
+                        color: #8e8e93;
+                        font-size: 11px;
+                    }
+
+                    .hui {
+                        min-width: 20px;
+                        height: 20px;
+                        padding: 0 6px;
+                        box-sizing: border-box;
+                        border-radius: 10px;
+                        background: #d93025;
+                        color: #ffffff;
+                        font-size: 11px;
+                        line-height: 20px;
+                        text-align: center;
+                    }
+
+                    .huis {
+                        position: absolute;
+                        right: calc(100% + 2px);
+                        top: 50%;
+                        transform: translateY(-50%);
+                        z-index: 1;
 
                         img {
-                            width: 40px;
-                            height: 40px;
-                            border-radius: 50%;
-                            border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(ルームチャットとそろえる)
-                            box-sizing: border-box;
-                            object-fit: cover;
-                        }
-                    }
-
-                    .ite-midd {
-                        width: 251px;
-                        margin-right: 16px;
-
-                        .uname {
-                            color: #1d1d1f;
-                            font-size: 16px;
-                            margin-bottom: 4px;
+                            display: block;
+                            width: 24px;
+                            height: 24px;
                         }
 
-                        .info {
-                            width: 100%;
+                        .del {
+                            position: absolute;
+                            right: 0;
+                            top: 28px;
+                            width: 56px;
+                            height: 30px;
+                            background: #ffffff;
+                            border: 1px solid #aaaaaa;
                             color: #707070;
-                            font-size: 14px;
-                        }
-                    }
-
-                    .ite-rig {
-                        .time {
-                            color: #86868b;
-                            font-size: 10px;
-                        }
-
-                        .huis {
-                            margin-top: 5px;
-                            position: relative;
-
-                            img {
-                                width: 26px;
-                                height: 26px;
-                            }
-
-                            .del {
-                                position: absolute;
-                                right: 14px;
-                                bottom: -28px;
-                                width: 56px;
-                                height: 30px;
-                                background: #ffffff;
-                                border: 1px solid #aaaaaa;
-                                color: #707070;
-                                font-size: 12px;
-                                text-align: center;
-                                line-height: 30px;
-                            }
-                        }
-
-                        .hui {
-                            width: 26px;
-                            height: 26px;
-                            background: #d93025;
-                            border-radius: 50%;
+                            font-size: 12px;
                             text-align: center;
-                            line-height: 26px;
-                            color: #ffffff;
-                            margin-top: 5px;
+                            line-height: 30px;
                         }
                     }
                 }
             }
         }
 
+        // 右: メッセージ欄
         .right {
-            width: 498px;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
 
             .top {
+                height: 60px;
+                flex-shrink: 0;
                 display: flex;
                 align-items: center;
-                height: 100px;
-                padding-left: 30px;
-                background: #f5f5f7;
-                border-bottom: 1px solid #d2d2d7;
+                gap: 12px;
+                padding: 0 24px;
+                background: #ffffff;
+                border-bottom: 1px solid #ececf0;
 
                 img {
-                    width: 40px;
-                    height: 40px;
+                    width: 36px;
+                    height: 36px;
                     border-radius: 50%;
-                    border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(ルームチャットとそろえる)
+                    border: 0.5px solid #aaaaaa;
                     box-sizing: border-box;
-                    object-fit: cover; // 画像の縦横比を保って丸く切り抜く
+                    object-fit: cover;
                 }
 
                 .uname {
-                    margin-left: 20px;
+                    color: #1d1d1f;
+                    font-size: 16px;
+                    font-weight: bold;
                 }
             }
 
             .info-box {
-                width: 100%;
-                height: 370px;
-                overflow: scroll;
+                flex: 1;
+                min-height: 0;
+                overflow-y: auto;
                 overflow-x: hidden;
-                // &::-webkit-scrollbar {
-                //   width: 0px;
-                //   height: 0px;
-                //   background-color: rgba(240, 240, 240, 1);
-                // }
+                box-sizing: border-box;
+                padding: 6px 24px 14px;
+                background: #f7f7f9;
+            }
+
+            .more {
+                text-align: center;
+                color: #8e8e93;
+                font-size: 12px;
             }
 
             .info-item {
                 width: 100%;
-                padding: 0 16px 0 14px;
 
+                // 日付
                 .rig-time {
-                    margin-top: 30px;
-                    color: #86868b;
-                    font-size: 14px;
-                    text-align: center;
+                    display: table;
+                    margin: 14px auto 0;
+                    padding: 3px 12px;
+                    border-radius: 10px;
+                    background: #ececf0;
+                    color: #6e6e73;
+                    font-size: 12px;
+
+                    &:empty {
+                        display: none;
+                    }
                 }
 
                 .info-message {
                     display: flex;
                     flex-wrap: wrap;
-                    margin-top: 16px;
+                    margin-top: 14px;
+
+                    // メッセージ横のアイコンと名前(相手側・自分側共通)
+                    .le {
+                        width: 44px;
+                        flex-shrink: 0;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+
+                        .left-img img {
+                            display: block;
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 50%;
+                            border: 0.5px solid #aaaaaa;
+                            box-sizing: border-box;
+                            object-fit: cover;
+                        }
+
+                        .left-name {
+                            max-width: 44px;
+                            margin-top: 2px;
+                            color: #8e8e93;
+                            font-size: 10px;
+                            text-align: center;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
+                    }
+
+                    // 吹き出し(相手側・自分側共通)
+                    .ri {
+                        max-width: #{"min(70%, 560px)"};
+                        box-sizing: border-box;
+                        padding: 10px 14px;
+                        color: #1d1d1f;
+                        font-size: 14px;
+                        line-height: 1.7;
+                        white-space: pre-wrap;
+                        word-break: break-all;
+                        word-wrap: break-word;
+                    }
 
                     .info-left {
                         width: 100%;
                         display: flex;
+                        align-items: flex-end;
 
                         .le {
-                            margin-right: 9px;
-
-                            .left-img {
-                                img {
-                                    width: 36px;
-                                    height: 36px;
-                                    border-radius: 50%;
-                                    border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(ルームチャットとそろえる)
-                                    box-sizing: border-box;
-                                    object-fit: cover;
-                                }
-                            }
-
-                            .left-name {
-                                color: #86868b;
-                                margin-top: 3px;
-                                font-size: 8px;
-                            }
+                            margin-right: 10px;
                         }
 
                         .ri {
-                            max-width: 246px;
-                            display: flex;
-                            align-items: center;
-                            background: rgba(143, 168, 248, 0.2);
-                            color: #1d1d1f;
-                            font-size: 14px;
-                            padding: 10px;
-                            word-break: break-all;
-                            word-wrap: break-word;
-                            white-space: pre-wrap;
-                            border-radius: 10px;
+                            background: #ffffff;
+                            border: 1px solid #e5e5ea;
+                            border-radius: 16px 16px 16px 4px;
                         }
 
                         .m {
                             margin-left: 10px;
-                            color: #86868b;
-                            font-size: 10px;
-                            align-self: flex-end;
+                            color: #8e8e93;
+                            font-size: 11px;
                         }
                     }
 
@@ -871,77 +947,29 @@
                         width: 100%;
                         display: flex;
                         justify-content: flex-end;
+                        align-items: flex-end;
 
                         .m {
                             margin-right: 10px;
-                            color: #86868b;
-                            font-size: 10px;
-                            align-self: flex-end;
+                            color: #8e8e93;
+                            font-size: 11px;
+                            line-height: 1.4;
+                            text-align: right;
 
                             .di {
                                 text-align: right;
-                                color: #86868b;
-                                margin-bottom: 4px;
+                                color: #8e8e93;
                             }
+                        }
 
-                            .dian {
-                                text-align: right;
-
-                                img {
-                                    width: 26px;
-                                    height: 26px;
-                                }
-                            }
-
-                            .del-box {
-                                width: 56px;
-                                height: 30px;
-                                background: #ffffff;
-                                opacity: 1;
-                                border: 1px solid #aaaaaa;
-
-                                div {
-                                    text-align: center;
-                                    margin: 4px 0;
-                                    width: 56px;
-                                    height: 22px;
-                                    line-height: 22px;
-                                    background: rgba(29, 29, 31, 0.1);
-                                }
-                            }
+                        .dels {
+                            margin-right: 8px;
                         }
 
                         .ri {
-                            max-width: 246px;
-                            background: #87fa7d;
-                            color: #1d1d1f;
-                            font-size: 14px;
-                            padding: 10px;
-                            word-break: break-all;
-                            word-wrap: break-word;
-                            white-space: pre-wrap;
                             margin-right: 10px;
-                            border-radius: 10px;
-                            line-height: 32px;
-                        }
-
-                        .le {
-                            .left-img {
-                                img {
-                                    width: 36px;
-                                    height: 36px;
-                                    border-radius: 50%;
-                                    border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(ルームチャットとそろえる)
-                                    box-sizing: border-box;
-                                    object-fit: cover;
-                                }
-                            }
-
-                            .left-name {
-                                color: #86868b;
-                                margin-top: 3px;
-                                font-size: 8px;
-                            }
+                            background: #87fa7d;
+                            border-radius: 16px 16px 4px 16px;
                         }
                     }
                 }
@@ -949,48 +977,76 @@
         }
     }
 
+    // 入力欄(3行分の高さ。入力に合わせて最大160pxまで伸びる)
+    .send-box {
+        width: 100%;
+        flex-shrink: 0;
+        box-sizing: border-box;
+        padding: 12px 24px 0;
+        background: #ffffff;
+        border-top: 1px solid #ececf0;
+
+        textarea {
+            display: block;
+            width: 100%;
+            height: 84px;
+            max-height: 160px;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 10px;
+            outline: none;
+            resize: none;
+            overflow-y: auto;
+            color: #1d1d1f;
+            line-height: 1.7;
+            font-family: inherit;
+
+            &:focus {
+                border-color: #1a73e8;
+            }
+        }
+    }
+
     .bot {
         width: 100%;
-        height: 40px;
-        background: #f5f5f7;
-        border-top: 1px solid #d2d2d7;
-        border-bottom: 1px solid #d2d2d7;
+        flex-shrink: 0;
+        box-sizing: border-box;
         display: flex;
         justify-content: space-between;
-        box-sizing: border-box;
-        padding: 0 10px;
         align-items: center;
+        padding: 8px 24px 12px;
+        background: #ffffff;
 
         img {
             width: 18px;
             height: 20px;
-            // margin-left: 19px;
             cursor: pointer;
         }
     }
 
-    .send-box {
-        width: 100%;
-        height: 98px;
-        padding: 10px 13px;
-        border-top: 1px solid #d2d2d7;
+    // 送信ボタン
+    .send-btn {
+        height: 40px;
+        padding: 0 20px;
+        border: 0;
+        border-radius: 20px;
+        background: #1a73e8;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
 
-        textarea {
-            border: 0;
-            outline: none;
-            width: 100%;
-            height: 100%;
-            resize: none;
-            overflow: scroll;
-            overflow-x: hidden;
-            /*去掉滚动条*/
-            // &::-webkit-scrollbar {
-            //   width: 0px;
+        &:hover {
+            background: #1557b0;
+        }
 
-            //   height: 0px;
-
-            //   background-color: rgba(240, 240, 240, 1);
-            // }
+        &.off {
+            opacity: 0.5;
         }
     }
 

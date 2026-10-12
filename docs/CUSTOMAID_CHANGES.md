@@ -81,6 +81,49 @@
 
 ---
 
+## 2026-10-12(3回目) 運営からのお知らせ
+
+### 8. 管理WEBサイト TOP「運営からのお知らせ」の枠が二重になっている
+
+| 項目 | 内容 |
+|------|------|
+| 修正 | 外側の白い枠と二重に見えていた、内側の枠線(1px #e8e8e8)を削除 |
+| ファイル | `jppc/jp-card-pc/src/views/topIndex.vue` |
+| 本番反映 | `/www/wwwroot/card-san.jp` に手動配置 |
+
+### 9. 運営からのお知らせが、送信後に作ったアカウントに表示されない(サーバー側)
+
+**注意: サーバー(api.card-san.jp)のPHPはGitHubで管理されていないため、変更内容をここに記録する。**
+
+| 項目 | 内容 |
+|------|------|
+| 症状 | customaid.card-san.jp/#/Notice から送ったお知らせが、送信後に作られた店舗(管理WEB・管理App)やお客様(Card-San App)に表示されない |
+| 原因 | サーバーが「お知らせの作成日時 ≧ アカウントの作成日時」のお知らせだけを返していた |
+| 修正 | 「アカウント作成日時の120日前以降」のお知らせを返すように変更(運営判断で120日。不要なお知らせは customaid.card-san.jp で削除して調整する) |
+| 変更日時 | 2026-10-12 13:29(日本時間) |
+| バックアップ | `/www/backup_adminnotice_20261012_1228xx/`(Shop_/Member_AdminNoticeController.php) |
+| 確認 | `php -l` で文法エラーなし。作成日時はすべて整数(秒)。「2026-10-15作成」と仮定した場合、修正前0件 → 修正後2件 |
+
+変更したファイルと行(どちらも13行目、行末に `// [カスタムエイド 2026-10-12]` のメモあり):
+
+```php
+// /www/wwwroot/api.card-san.jp/app/Http/Controllers/Api/Shop/AdminNoticeController.php(店舗向け type 1)
+// 修正前
+$model = AdminNoticeModel::where('type', 1)->where('create_time', '>=', auth('shop')->user()->shop->create_time);
+// 修正後
+$model = AdminNoticeModel::where('type', 1)->where('create_time', '>=', auth('shop')->user()->shop->create_time - 120 * 86400);
+
+// /www/wwwroot/api.card-san.jp/app/Http/Controllers/Api/Member/AdminNoticeController.php(お客様向け type 2)
+// 修正前
+$model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->user()->create_time);
+// 修正後
+$model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->user()->create_time - 120 * 86400);
+```
+
+既知の制限: 未読数(バッジ)は、店舗・お客様ごとの既読記録をもとに数えている。送信後に作られたアカウントには既読記録がないため、過去のお知らせは一覧には表示されるが、未読数には数えられない。
+
+---
+
 ## 今後の運用ルール
 
 - 修正は「ソースを修正 → ビルドして本番に配置 → 同じ日に GitHub に反映」を1セットで行う

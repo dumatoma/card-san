@@ -33,7 +33,8 @@
         <div class="content no-size">
             <div class="user-list no-size">
                 <scrollbar-container ref="scrollbarRef" height="331px" class="scroll-container">
-                    <div style="border: 1px solid #e8e8e8; width: 98%">
+                    <!-- 外側の白い枠と二重に見えるため、内側の枠線(1px #e8e8e8)を削除 -->
+                    <div style="width: 98%">
                         <div class="item" v-for="(item, index) in list" :key="index">
                             <div class="box">
                                 <div class="name" v-text="item.title"></div>

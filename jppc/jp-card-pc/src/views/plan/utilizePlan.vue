@@ -271,7 +271,9 @@
         >
           <div class="u-flex">
             {{ item.title }}
-            <el-tooltip class="item" effect="dark" :content="item.des" placement="top-start">
+            <!-- 説明文が横1列に長く伸びないよう、幅を決めて折り返す(popper-class=plan-tip、スタイルは下の非scopedブロック) -->
+            <el-tooltip class="item" effect="dark" placement="top-start" popper-class="plan-tip">
+                 <div slot="content" lang="ja" class="plan-tip-text">{{ item.des }}</div>
                  <img class="tit_img" style="cursor:pointer" src="@/static/index/tan.png" />
             </el-tooltip>
           </div>
@@ -1115,5 +1117,17 @@ export default {
       margin-bottom: 20px;
     }
   }
+}
+</style>
+
+<style lang="scss">
+// 機能比較の「!」の説明(ツールチップ)。ツールチップは body 直下に表示されるため scoped ではなくここで指定する
+.el-tooltip__popper.plan-tip {
+  max-width: 360px; // 横幅の上限。これを超えると折り返す(以前は上限なしで横1列に伸びていた)
+  line-height: 1.7; // 行間を少し広げて読みやすくする
+  padding: 10px 14px; // 折り返した文章の周りの余白
+}
+.plan-tip-text {
+  word-break: auto-phrase; // 日本語の文節の切れ目で折り返す(対応ブラウザ: Chrome/Edge。非対応のブラウザでは通常の折り返し)
 }
 </style>

@@ -39,7 +39,7 @@
             </div>
             <div class="secondPart">
                 <div class="secondTitle">
-                    お店のGoogleビジネスプロフィールのレ<br/>ビュー用リンクURLを貼り付けてください
+                    お店のGoogleビジネスプロフィールの<br/>レビュー用リンクURLを貼り付けてください
                 </div>
                 <div class="txtarea">
                     <textarea v-model="content"></textarea>
@@ -88,7 +88,7 @@
         },
         methods: {
             toOpen(){
-                window.open("https://cardsan.zendesk.com/hc/ja/articles/39169673962393-Google%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E3%83%97%E3%83%AD%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%81%AE%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%AF%E3%81%AE%E4%BD%9C%E6%88%90")
+                window.open("https://cardsan.zendesk.com/hc/ja/articles/57035978592409-%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%AF%E3%81%AE%E4%BD%9C%E6%88%90-Google%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E3%83%97%E3%83%AD%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB") // 2026-10-12 カスタムエイド: リンク切れのため新しいヘルプ記事に変更
             },
             delImage(){
                 let that = this
@@ -260,8 +260,9 @@
         padding: 40px;
         
         .secondTitle{
-            font-size: 16px;
+            font-size: 14px; /* 以前は16px */
             color: rgba(29,29,31,0.9);
+            padding-bottom: 10px; /* 下の入力欄との間の余白 */
         }
     }
     
@@ -287,7 +288,7 @@
         color: #1d1d1f;
         font-size: 21px;
         font-weight: bold;
-        margin-bottom: 29px;
+        margin-bottom: 10px; /* タイトル下の余白(以前は29px) */
     }
     .reviewImage{
         height: 60px;

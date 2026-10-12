@@ -3,7 +3,9 @@
     <div class="tit">スタッフルーム設定</div>
     <div class="card no-size">
       <div class="top no-size">
-        <img :src="avatar" v-if="avatar" class="avt" />
+        <!-- 読み込みが終わるまでは空の円を表示(以前は読み込み中に初期アイコンが一瞬見えていた) -->
+        <div v-if="!loaded" class="avt avt-loading"></div>
+        <img :src="avatar" v-else-if="avatar" class="avt up-avatar" />
         <img src="../static/group170.svg" v-else class="avt" />
       </div>
       <div class="bottom no-size">
@@ -24,7 +26,7 @@
         </div>
 
         <div class="room-radio">
-          <label class="srs-row shou">
+          <label class="srs-row shou" :class="isOn ? '' : 'off'">
             <span class="srs-radio" :class="isOn ? 'on' : ''"></span>
             <input type="checkbox" v-model="isOn" style="display:none" />
             スタッフルーム
@@ -60,6 +62,7 @@ export default {
       avatar: "",
       isOn: false,
       keepShow: false,
+      loaded: false, // ルーム情報の読み込みが終わったか
     };
   },
   created() {
@@ -75,8 +78,11 @@ export default {
             that.avatar = res.data.room.avatar || "";
             that.isOn = res.data.room.is_on == 1;
           }
+          that.loaded = true;
         })
-        .catch(() => {});
+        .catch(() => {
+          that.loaded = true;
+        });
     },
     handleAvatarSuccess(res) {
       if (res.code == 200) {
@@ -111,7 +117,7 @@ export default {
   color: #1d1d1f;
   font-size: 21px;
   font-weight: bold;
-  margin-bottom: 29px;
+  margin-bottom: 10px; // タイトル下の余白(以前は29px)
 }
 .card {
   width: 410px;
@@ -129,10 +135,18 @@ export default {
       border-radius: 50%;
       object-fit: cover;
       background: #ededed;
+      vertical-align: top;
+    }
+    .avt-loading {
+      display: inline-block; // 画像と同じ大きさの空の円(読み込み中の表示)
+    }
+    .up-avatar {
+      border: 1px solid #aaaaaa; // アップした画像の周りに1pxの線(白い背景との境目を見せる)
+      box-sizing: border-box;
     }
   }
   .bottom {
-    padding-left: 40px;
+    padding: 0 40px; // 左右を同じ余白にして、保存ボタンがカードの中心に来るようにする(以前は左だけ40px)
     .add {
       width: 108px;
       height: 34px;
@@ -174,6 +188,9 @@ export default {
         align-items: center;
         font-size: 14px;
         color: #1d1d1f;
+        &.off {
+          color: #707070; // チェックを外しているときの文字色
+        }
         .srs-radio {
           width: 18px;
           height: 18px;

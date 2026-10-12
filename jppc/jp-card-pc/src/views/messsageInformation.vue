@@ -3,7 +3,7 @@
     <div class="tit">メッセージアカウント情報</div>
     <div class="avatar-box">
       <div class="top no-size">
-        <img :src="admin.avatar" alt="" style="border-radius: 50%;object-fit: cover;" v-if="admin.avatar"/>
+        <img :src="admin.avatar" alt="" class="up-avatar" style="border-radius: 50%;object-fit: cover;" v-if="admin.avatar"/>
         <img src="../static/yulan-tou.png" alt="" style="border-radius: 50%;object-fit: cover;" v-else/>
         <!-- <div class="txt">[各種設定/店舗情報/店舗名]が反映される</div> -->
       </div>
@@ -31,12 +31,12 @@
           />
           <div class="staff-room-set no-size">
             <div class="srs-tit">スタッフチャットルーム設定</div>
-            <label class="srs-row shou">
+            <label class="srs-row shou" :class="staffRoomJoin ? '' : 'off'">
               <span class="srs-radio" :class="staffRoomJoin ? 'on' : ''"></span>
               <input type="checkbox" v-model="staffRoomJoin" style="display:none" />
               スタッフルームに参加する
             </label>
-            <label class="srs-row shou">
+            <label class="srs-row shou" :class="staffRoomDm ? '' : 'off'">
               <span class="srs-radio" :class="staffRoomDm ? 'on' : ''"></span>
               <input type="checkbox" v-model="staffRoomDm" style="display:none" />
               1対1のトークを許可する
@@ -131,7 +131,7 @@ export default {
   color: #1d1d1f;
   font-size: 21px;
   font-weight: bold;
-  margin-bottom: 29px;
+  margin-bottom: 10px; // タイトル下の余白(以前は29px)
 }
 .avatar-box {
   width: 410px;
@@ -151,6 +151,10 @@ export default {
       height: 119px;
       margin-bottom: 30px;
     }
+    .up-avatar {
+      border: 1px solid #aaaaaa; // アップした画像の周りに1pxの線(白い背景との境目を見せる)
+      box-sizing: border-box;
+    }
     .txt {
       font-size: 16px;
       color: #1d1d1f;
@@ -158,7 +162,7 @@ export default {
     }
   }
   .bottom {
-    padding-left: 40px;
+    padding: 0 40px; // 左右を同じ余白にして、保存ボタンがカードの中心に来るようにする(以前は左だけ40px)
     .add {
       width: 108px;
       height: 34px;
@@ -220,6 +224,9 @@ export default {
           font-size: 14px;
           color: #1d1d1f;
           margin-bottom: 14px;
+          &.off {
+            color: #707070; // チェックを外しているときの文字色
+          }
           .srs-radio {
             width: 18px;
             height: 18px;

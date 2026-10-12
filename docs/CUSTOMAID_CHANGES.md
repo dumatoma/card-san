@@ -307,6 +307,15 @@ $model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->
 | 修正 | ページ全体に `overscroll-behavior-y: none` を指定(iOS 16以降のSafari・Chromeで有効。それより古い端末は従来どおり) |
 | 本番反映 | 本番の `/www/wwwroot/order.card-san.jp/index.html` の `</head>` の直前に `<style>` を1行追加(バックアップ `/www/backup_order_indexhtml_20261012_*/`)。ソースは App.vue の共通スタイルに追加(このプロジェクトは独自の index.html テンプレートを使っていないため) |
 
+### 24. 予約WEBページの最初の画面に「<」(戻る)が表示される(`outsiteAppointment/pages/index/index.vue`)
+
+| 項目 | 内容 |
+|------|------|
+| 症状 | 最初の画面(メニュー一覧)なのに、ヘッダー左上に「<」が表示される |
+| 原因 | ヘッダー(u-navbar)の左アイコンの指定がなく、既定の「<」が出ていた(予約完了画面は `leftIcon=""` で非表示にしている) |
+| 修正 | `leftIcon=""` を指定して非表示にした |
+| 本番反映 | 本番の `static/js/pages-index-index.922ac468.js` の該当の指定に `leftIcon:""` を追加(バックアップ `/www/backup_order_index2_20261012_*/`)。ソースも修正済み |
+
 **予約WEBページ共通の注意:** 静的ファイルはスマホに12時間保存される設定(`cache-control: max-age=43200`)。ファイル名を変えずに中身を書き換えたため、すでに開いたことのあるスマホでは、最大12時間は古い表示のことがある
 
 ---

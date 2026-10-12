@@ -1,6 +1,7 @@
 <template>
     <view>
-        <u-navbar :placeholder="true" :safeAreaInsetTop="true" :height="60" :border="true">
+        <!-- [カスタムエイド 2026-10-12] 最初の画面なので、左上の「<」(戻る)を表示しない -->
+        <u-navbar :placeholder="true" :safeAreaInsetTop="true" :height="60" :border="true" leftIcon="">
             <view class="u-nav-slot" slot="center">
                 <view v-text="shopName" style="text-align: center;"></view>
                 <view v-text="info.shop_name" style="text-align: center;"></view>

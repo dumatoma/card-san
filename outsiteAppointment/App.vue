@@ -36,5 +36,11 @@
     body{
         font-family: Hiragino Sans-W3, Hiragino Sans, Hiragino Sans-W5;  
     }
+
+    // [カスタムエイド 2026-10-12] ページ端での引っ張り(バウンス)と、引っ張って再読み込みを止める。予約の途中で入力が消えないようにするため
+    html,
+    body{
+        overscroll-behavior-y: none;
+    }
     
 </style>

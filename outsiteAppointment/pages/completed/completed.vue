@@ -59,8 +59,9 @@
         <view class="img">
           <image src="../../static/image/message.png" mode=""></image>
         </view>
+        <!-- [カスタムエイド 2026-10-12] SMS送信の案内に変更(予約確認で入力した電話番号を表示) -->
         <view class="con-text">
-          メッセージに予約内容を送信しましたのでご確認ください。
+          <text v-if="query.phone">“{{query.phone}}”宛に</text>SMSで予約内容を送信しましたのでご確認ください。
         </view>
         <view class="con-btns" @click="back()">
           TOPに戻る
@@ -89,9 +90,10 @@
       leftClick() {
         uni.navigateBack()
       },
+      // [カスタムエイド 2026-10-12] 店舗IDを付けて、その店舗の予約ページに戻る(以前は店舗IDなしで戻り、店舗が分からなくなっていた)
       back() {
         uni.reLaunch({
-          url: '../../pages/index/index'
+          url: '/pages/index/index?id=' + (this.query.id || '')
         })
       },
       formatDate(ms) {
@@ -201,6 +203,7 @@
     }
 
     .con-text {
+      padding: 0 20px; // [カスタムエイド 2026-10-12] 左右に20pxの余白
       font-size: 32rpx;
       text-align: center;
       color: #1D1D1F;

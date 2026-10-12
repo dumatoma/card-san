@@ -6,7 +6,8 @@
                 <view v-text="info.shop_name" style="text-align: center;"></view>
             </view>
         </u-navbar>
-        <u-sticky customNavHeight="44">
+        <!-- [カスタムエイド 2026-10-12] ヘッダー(u-navbar 高さ60)に合わせる。44だとスクロール時に店舗名の下半分が隠れていた -->
+        <u-sticky customNavHeight="60">
             <view class="scroll">
                 <view style="overflow-x: scroll;">
                     <view class="flex" style="margin: 0;">

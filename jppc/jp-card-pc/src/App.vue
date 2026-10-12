@@ -1,7 +1,8 @@
 <template>
     <div id="app">
         <el-container>
-            <div style="height: 114px;background: red;" v-if="main_swiper == true"></div>
+            <!-- 固定ヘッダーの高さ分のスペーサー。万一見えてもヘッダーと同じ色(#f5f5f7)にする(以前は赤) -->
+            <div style="height: 114px;background: #f5f5f7;" v-if="main_swiper == true"></div>
             <el-header height="114px" style="position: fixed;left: 0;top: 0;width: 100vw;z-index: 99 !important;"
                 v-if="main_swiper == true">
                 <top></top>
@@ -370,6 +371,7 @@
     .el-main {
         padding-left: 50px;
         padding-top: 26px;
+        padding-bottom: 50px; /* コンテンツ下の余白(以前は20px) */
         background-color: #fbfbfd;
     }
 
@@ -421,6 +423,17 @@
         -o-box-sizing: border-box;
         -ms-box-sizing: border-box;
         box-sizing: border-box;
+    }
+
+    // ページ全体のバウンド(引っ張りすぎ)スクロールを止める。ヘッダー下の背景が見えないようにする
+    html,
+    body {
+        overscroll-behavior: none;
+    }
+
+    // メイン画面のスクロールが端まで来ても、ページ全体のスクロールに伝わらないようにする
+    .el-main {
+        overscroll-behavior: contain;
     }
 
     #app {

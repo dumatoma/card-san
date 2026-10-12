@@ -1,7 +1,7 @@
 <template>
   <div class="headr">
     <div class="bottom">
-      <div class="bgs" style="width: 95%;">
+      <div class="bgs">
         <div class="left">
           <!-- <img src="../static/menu1.svg" alt="" /> -->
           <div
@@ -9,7 +9,6 @@
             v-for="(item, index) in list"
             :key="index"
             @click="cut(index)"
-            :style="index == 3?'width:145px' : ''"
           >
             <div class="border" v-if="ind == index"></div>
             <div style="width: 20px;height: 20px;position: relative;top: -12px;">
@@ -397,7 +396,8 @@ export default {
       height: 100%;
       display: flex;
       align-items: center;
-      width: 70%;
+      flex: 0 0 auto; // メニューは文字の幅だけ使い、縮めない(以前は幅70%固定で、狭い画面で右側に被っていた)
+      min-width: 0;
       
       
       .item {
@@ -405,9 +405,9 @@ export default {
         display: flex;
         align-items: center;
         line-height: 54px;
-        margin-right: 40px;
+        margin-right: 8px; // メニュー同士の間隔(以前は40px + 各メニュー幅120px固定で間隔が広すぎた)
+        padding: 0 14px; // メニューの左右の余白。ホバー時の背景と下線の幅にもなる
         position: relative;
-        width: 120px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -417,8 +417,8 @@ export default {
         .border {
           position: absolute;
           bottom: 0;
-          left: -20px;
-          width: calc(100% + 40px);
+          left: 0;
+          width: 100%; // 選択中の下線はメニューの幅に合わせる
           height: 4px;
           background: #1a73e8;
           border-radius: 10px 10px 10px 10px;
@@ -465,6 +465,8 @@ export default {
     .right {
       display: flex;
       align-items: center;
+      flex-shrink: 0; // ご契約プランとプラン名は縮めない
+      margin-left: 24px; // メニューとの最低限の間隔(画面を狭めてもメニューに被らない)
       .ls {
         font-size: 16px;
         color: #2699fb;
@@ -481,6 +483,20 @@ export default {
         font-size: 16px;
         border-radius: 20px;
       }
+    }
+  }
+}
+
+// 画面の横幅が狭いときは、メニューの余白を詰めて、ご契約プランがメニューに被らない・はみ出さないようにする
+@media (max-width: 1360px) {
+  .bottom .bgs {
+    margin: 0 16px 0 24px; // 左右の余白を小さくする
+    .left .item {
+      padding: 0 8px; // メニューの左右の余白を小さくする
+      margin-right: 4px; // メニュー同士の間隔を小さくする
+    }
+    .right {
+      margin-left: 16px; // メニューとの間隔を小さくする
     }
   }
 }

@@ -564,6 +564,8 @@ export default {
       height: 46px;
       border-radius: 50%;
       background: #ededed;
+      border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(メッセージ横のアイコンとそろえる)
+      box-sizing: border-box;
     }
     .ite-midd {
       flex: 1;
@@ -630,6 +632,8 @@ export default {
       object-fit: cover;
       margin-right: 12px;
       background: #ededed;
+      border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(メッセージ横のアイコンとそろえる)
+      box-sizing: border-box;
     }
     .uname {
       font-size: 16px;
@@ -654,19 +658,20 @@ export default {
   }
   .info-message {
     margin-bottom: 14px;
-  }
-  .info-left {
-    display: flex;
-    align-items: flex-end;
+    // メッセージ横のアイコンと名前。相手側・自分側の両方に効かせる
+    // (以前は相手側だけに書かれていて、自分側のアイコンが元の画像サイズで表示されていた)
     .le {
       text-align: center;
-      margin-right: 10px;
       .left-img img {
         width: 36px;
         height: 36px;
         border-radius: 50%;
         object-fit: cover;
         background: #ededed;
+        border: 0.5px solid #aaaaaa; // アイコンの周りの枠線
+        box-sizing: border-box;
+        display: block;
+        margin: 0 auto;
       }
       .left-name {
         font-size: 11px;
@@ -676,6 +681,13 @@ export default {
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+    }
+  }
+  .info-left {
+    display: flex;
+    align-items: flex-end;
+    .le {
+      margin-right: 10px; // 相手側: アイコンの右に吹き出し
     }
     .ri {
       max-width: 60%;
@@ -702,6 +714,9 @@ export default {
     display: flex;
     align-items: flex-end;
     justify-content: flex-end;
+    .le {
+      margin-left: 10px; // 自分側: 吹き出しの右にアイコン
+    }
     .ri {
       max-width: 60%;
       background: #87fa7d;

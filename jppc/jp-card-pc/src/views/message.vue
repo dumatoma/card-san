@@ -699,6 +699,8 @@
                             width: 40px;
                             height: 40px;
                             border-radius: 50%;
+                            border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(ルームチャットとそろえる)
+                            box-sizing: border-box;
                             object-fit: cover;
                         }
                     }
@@ -780,6 +782,9 @@
                     width: 40px;
                     height: 40px;
                     border-radius: 50%;
+                    border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(ルームチャットとそろえる)
+                    box-sizing: border-box;
+                    object-fit: cover; // 画像の縦横比を保って丸く切り抜く
                 }
 
                 .uname {
@@ -827,6 +832,8 @@
                                     width: 36px;
                                     height: 36px;
                                     border-radius: 50%;
+                                    border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(ルームチャットとそろえる)
+                                    box-sizing: border-box;
                                     object-fit: cover;
                                 }
                             }
@@ -924,6 +931,8 @@
                                     width: 36px;
                                     height: 36px;
                                     border-radius: 50%;
+                                    border: 0.5px solid #aaaaaa; // アイコンの周りの枠線(ルームチャットとそろえる)
+                                    box-sizing: border-box;
                                     object-fit: cover;
                                 }
                             }

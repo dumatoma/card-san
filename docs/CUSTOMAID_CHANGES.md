@@ -316,6 +316,51 @@ $model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->
 | 修正 | `leftIcon=""` を指定して非表示にした |
 | 本番反映 | 本番の `static/js/pages-index-index.922ac468.js` の該当の指定に `leftIcon:""` を追加(バックアップ `/www/backup_order_index2_20261012_*/`)。ソースも修正済み |
 
+---
+
+## 2026-10-13 予約WEBページの新しいURL(/reserve/)・タブレット/PC対応・押したときの見た目
+
+### 25. 予約ページのURLを `https://order.card-san.jp/reserve/?id=店舗ID` に変更
+
+| 項目 | 内容 |
+|------|------|
+| 目的 | Googleビジネスプロフィールの「予約リンク」に店舗ごとのURLを登録できるようにする(従来の `/#/?id=11` は「#」以降がGoogleに無視される) |
+| 予約ページ | ルーターを history 方式・base `/reserve/` に変更(`manifest.json` の `h5.router`・`publicPath`)。本番では、本番のビルド済みファイル一式を `/www/wwwroot/order.card-san.jp/reserve/` にコピーし、`static/js/index.9708116b.js` の `router` / `publicPath` / `.p` と、`index.html` のファイル参照を `/reserve/` に書き換えた |
+| nginx | 宝塔の書き換え用ファイル `/www/server/panel/vhost/rewrite/order.card-san.jp.conf`(空だった)に追加: `location = /reserve { return 301 /reserve/$is_args$args; }` と `location /reserve/ { try_files $uri $uri/ /reserve/index.html; }`。再読み込みしても200で返る |
+| 旧URL | 旧ページ(`/www/wwwroot/order.card-san.jp/index.html`)の先頭に、`/#/?id=〇〇` で開かれたら `/reserve/?id=〇〇` に移る処理を追加。旧ページのファイルはそのまま残している |
+| 管理WEB | 「予約機能外部LINK設定」の表示を `https://order.card-san.jp/reserve/?id=` に変更(`jppc/jp-card-pc/src/views/outappoint.vue`) |
+| 管理App | 同じ変更をソースのみ(`jpshop/pages/outAppoint/outAppoint.vue`)。アプリの次回更新で反映 |
+| バックアップ | nginx: `/www/backup_order_nginx_20261012_233730/`、旧ページ: `/www/backup_order_root_20261013_*/` |
+
+### 26. タブレット・PCでの表示(中央に幅480px)
+
+| 項目 | 内容 |
+|------|------|
+| 修正 | 481px以上の画面では、予約ページを中央の幅480pxにまとめ、左右を背景色にする。部品の大きさの基準(uni-app の `rpxCalcMaxDeviceWidth` / `rpxCalcBaseDeviceWidth`)も480pxにして、崩れないようにした。スマホの表示は従来どおり |
+| 詳細 | 画面の上下に固定の部分(ヘッダー・予約ボタン・ポップアップ)も同じ幅に。画面幅(100vw)で作られた部分(カレンダー・時間表・予約確認画面)を中央の幅に収める |
+| 管理WEB・App | 「PCサイトには対応していません」の注意書きを削除(管理WEBは反映、管理Appはソースのみ) |
+| 経緯 | 幅600pxで一度反映したが、部品が大きすぎたため480pxに変更(運営判断) |
+
+### 27. 押したときの見た目(日付・時間の枠・ボタン)
+
+- 日付と「予約する」などのボタンは、押すと色が変わって少し縮む。PCではマウスを乗せると色が変わる
+- 時間の枠は、◯印だけでなく枠全体を押せるようにし、押したとき・マウスを乗せたときに枠全体の色が変わる(`components/week/week.vue` の◯印に `cs-slot` を付けた)
+- メニューとスタッフの選択は、選ぶと色が変わるため対象外(運営判断)
+- 振動は、iPhoneのブラウザが対応していないため実装しない
+
+### 28. 予約ページのアイコン(ファビコン)
+
+- 予約ページにアイコンのファイルがなく、ブラウザのURL欄に既定のアイコン(緑の「V」)が出ていた
+- Card-San App のアイコン(`jpcard/unpackage/res/icons/180x180.png`)から `favicon.ico`(16/32/48px)と `apple-touch-icon.png`(180px)を作り、`/www/wwwroot/order.card-san.jp/` に配置。`index.html`(旧ページ)と `reserve/index.html` に `<link rel=icon>` `<link rel=apple-touch-icon>` を追加
+- バックアップ: `/www/backup_order_favicon_20261013_*/`
+- 注意: 予約ページのソースは HBuilderX 標準の `index.html` テンプレートを使っているため、次に開発会社がビルドして配置し直すときは、アイコンの指定を付け直す必要がある
+
+**25〜27 共通**
+
+- ソース: `outsiteAppointment/manifest.json`・`pages.json`・`App.vue`・`components/week/week.vue`
+- 本番: `/reserve/` のビルド済みファイルを直接書き換え。JSのファイル名が変わらないため、`index.html` で `index.9708116b.js?v=480` と目印を付け、スマホに保存された古いファイルが使われないようにした
+- 確認: 本番のファイルで、スマホ・タブレット・PCの3サイズで「メニュー→日時→確認→完了→TOPに戻る」と再読み込みを確認。運営が実機で確認
+
 **予約WEBページ共通の注意:** 静的ファイルはスマホに12時間保存される設定(`cache-control: max-age=43200`)。ファイル名を変えずに中身を書き換えたため、すでに開いたことのあるスマホでは、最大12時間は古い表示のことがある
 
 ---

@@ -15,7 +15,8 @@
                 <view class="mItem" v-if="item.business == 1">
                     <view v-if="d <= item.stamp" class="dateItem" v-for="(ite,idx) in item.times"
                         :style="ite.status == 'selected'? 'background:#fff !important' : '' ">
-                        <image src="../../static/icons/ring.png" mode="" v-if="ite.status == 'selected'"
+                        <!-- [カスタムエイド 2026-10-13] cs-slot: 押したときの見た目(App.vue) -->
+                        <image class="cs-slot" src="../../static/icons/ring.png" mode="" v-if="ite.status == 'selected'"
                             @click="addNew(ite)"></image>
                         <image style="width: 60upx;height: 60upx;" src="../../static/svg/noTime.svg" mode=""
                             v-if="ite.status == 'unselected'"></image>

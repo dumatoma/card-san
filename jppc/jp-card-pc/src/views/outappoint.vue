@@ -8,9 +8,7 @@
                 Webサイトのボタンやページに以下のLINK URLをコピーして貼り付けてくださ<br />
                 い。　アプリと連携した予約ページが作成できます。
             </div>
-            <div class="words">
-                <span style="color: #D93025;">※</span> ただし、スマートフォン、タブレットサイトでの表示のみ対応可。<br /> PCサイトには対応していません。
-            </div>
+            <!-- [カスタムエイド 2026-10-13] 予約ページがPC・タブレットに対応したため、「PCサイトには対応していません」の注意書きを削除 -->
             <div class="wtitle">
                 予約ページLINK URL
             </div>
@@ -35,7 +33,7 @@
             let that = this
             let info = localStorage.getItem("admin")
             let infos = JSON.parse(info)
-            that.link = "https://order.card-san.jp/#/?id=" + infos.sid
+            that.link = "https://order.card-san.jp/reserve/?id=" + infos.sid // [カスタムエイド 2026-10-13] 新しい予約URL(Googleビジネスプロフィールに登録できる形)
         },
         methods: {
             async copyurl() {

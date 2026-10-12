@@ -3,9 +3,8 @@
         <view class="words">
             Webサイトのボタンやページに以下のLINK URLをコピーして貼り付けてください。　アプリと連携した予約ページが作成できます。
         </view>
-        <view class="words" style="margin-top: 40upx;margin-bottom: 100upx;">
-            <text style="color: #d93025;">※</text>ただしスマートフォン、タブレットサイトでの表示のみ対応可。PCサイトには対応していません。
-        </view>
+        <!-- [カスタムエイド 2026-10-13] 予約ページがタブレット・PCに対応したため、「PCサイトには対応していません」の注意書きを削除(アプリの次回更新で反映) -->
+        <view style="margin-bottom: 100upx;"></view>
         <view class="titel">
             予約ページLINK URL
         </view>
@@ -35,7 +34,7 @@
         onShow() {
             let that = this
             let info = uni.getStorageSync("admin")
-            that.link = "https://order.card-san.jp/#/?id=" + info.sid
+            that.link = "https://order.card-san.jp/reserve/?id=" + info.sid // [カスタムエイド 2026-10-13] 新しい予約URL(アプリの次回更新で反映)
         },
         methods: {
             copy() {

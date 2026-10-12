@@ -40,6 +40,8 @@
         }
     ],
 	"globalStyle": {
+		"rpxCalcMaxDeviceWidth": 480,
+		"rpxCalcBaseDeviceWidth": 480,
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "ご予約",
 		"navigationBarBackgroundColor": "#F8F8F8",

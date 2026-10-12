@@ -71,8 +71,10 @@
     "vueVersion" : "2",
     "h5" : {
         "router" : {
-            "base" : "./"
+            "mode" : "history",
+            "base" : "/reserve/"
         },
+        "publicPath" : "/reserve/",
         "unipush" : {
             "enable" : false
         }

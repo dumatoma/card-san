@@ -1,6 +1,8 @@
 <template>
     <div class="con">
         <div class="time">
+            <!-- [カスタムエイド 2026-10-14] 担当者名の行の左側(時間の列の上)を隠す白いふた。縦スクロールしても時間の文字が担当者名の横に出ないようにする -->
+            <div class="tcorner"></div>
             <div class="timeItem" v-for="(item,index) in times">
                 <div class="timeName" v-text="item.time"></div>
                 <div class="point"></div>
@@ -394,17 +396,33 @@
         background-color: rgba(0, 0, 0, .15);
     }
 
+    /* [カスタムエイド 2026-10-14] 担当者名を上に止める修正。
+       横スクロールを .manager から外側の .pres(縦横どちらもスクロール)に移した。
+       .manager に横スクロールがあると、担当者名(.mTop)の「上で止まる」設定がその中で効いてしまい、縦スクロールで止まらなかったため */
     .con {
-        width: 100%;
+        width: max-content; /* 担当者が多いときは横に広がり、.pres が横スクロールする */
+        min-width: 100%;
         display: flex;
 
         .time {
             box-sizing: border-box;
-            padding: 50px 0 0 15px;
-            position: relative;
-            top: -22px;
+            padding: 0 0 0 15px; /* 上の50pxは .tcorner(40px)+余白(10px)に置き換え */
+            position: sticky; /* 横スクロールしても時間の列は左に止める */
+            left: 0;
+            z-index: 3;
+            background: #fff;
+
+            .tcorner {
+                position: sticky; /* 縦スクロールしても上に止まる */
+                top: var(--cs-stick, 0px); /* 日付の帯に隠れた分だけ下げる(appointment.vue で設定) */
+                height: 40px;
+                margin: 0 0 10px -15px;
+                background: #fff;
+                z-index: 5;
+            }
 
             .timeItem {
+                transform: translateY(-22px); /* 以前の top:-22px と同じ位置(時刻の文字を罫線の高さに合わせる) */
                 height: 44px;
                 font-size: 12px;
                 font-family: Hiragino Sans-W3, Hiragino Sans;
@@ -442,8 +460,8 @@
     //     background: rgba(0, 0, 0, 0.1);
     // }
     .manager {
-        width: 100%;
-        overflow-x: scroll;
+        flex: 1; /* [カスタムエイド 2026-10-14] 以前は width:100%; overflow-x:scroll(担当者名が止まらない原因) */
+        overflow: visible;
         display: flex;
         border-top: none;
         // border-left: 2px solid #EAEAEA;
@@ -502,8 +520,10 @@
                 justify-content: center;
                 align-items: center;
                 position: sticky;
-                top: 0;
+                top: var(--cs-stick, 0px); /* [カスタムエイド 2026-10-14] 日付の帯に隠れた分だけ下げる(appointment.vue で設定) */
                 left: 0;
+                z-index: 2; /* [カスタムエイド 2026-10-14] 予約の枠の上に重ねる */
+                background: #fff;
 
                 .pe {
                     width: 100%;

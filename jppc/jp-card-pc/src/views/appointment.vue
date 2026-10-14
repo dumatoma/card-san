@@ -1,7 +1,7 @@
 <template>
     <div style="position: relative;">
         <div class="tit">予約一覧</div>
-        <div class="app-box no-size" style="position: sticky;top:0;z-index: 67;height: 80vh;overflow-y: scroll;">
+        <div class="app-box no-size" ref="csApBox" @scroll="csSyncStick" style="position: sticky;top:0;z-index: 67;height: 80vh;overflow-y: scroll;">
             <div class="tab">
                 <div class="item no-size" style="border-bottom: 1px solid #d2d2d7" @click="yueTongShow = true">
                     <div class="lef">予約通知</div>
@@ -12,7 +12,7 @@
                     <div class="rig">{{todaynum}}</div>
                 </div>
             </div>
-            <div style="position: sticky;top: 0;z-index: 66;background: #fff;border-bottom:1px solid #aaa;padding-bottom:10px">
+            <div ref="csDateHead" style="position: sticky;top: 0;z-index: 66;background: #fff;border-bottom:1px solid #aaa;padding-bottom:10px">
                 <div class="time">
                     <div class="lef-time">{{timers}}</div>
                     <!-- <div class="lef-time">{{timers2}}</div> -->
@@ -33,7 +33,8 @@
             </div>
 
             <!-- 日 -->
-            <div v-if="tab" class="pres" style="height: 65vh;overflow-y: scroll;">
+            <!-- [カスタムエイド 2026-10-14] 縦横どちらもこの枠でスクロール(担当者名を上に止めるため) -->
+            <div v-if="tab" class="pres" ref="csPres" @scroll="csSyncStick" style="height: 65vh;overflow: auto;">
                 <progres :manager="managers" @addNew="addNewAppointment" :tdate="dDate" :times="times"
                     @checkdetail="godetail" @checkorder="goOrder"></progres>
             </div>
@@ -1206,8 +1207,29 @@
             this.year = myDate.getFullYear();
             this.day = myDate.getDate() - 1;
             this.days = myDate.getDate();
+            // [カスタムエイド 2026-10-14] 担当者名を上に止める位置の調整(画面サイズが変わったとき)
+            this._csResize = () => this.csSyncStick()
+            window.addEventListener("resize", this._csResize)
+            this.$nextTick(() => this.csSyncStick())
+        },
+        beforeDestroy() {
+            if (this._csResize) window.removeEventListener("resize", this._csResize)
+        },
+        updated() {
+            this.csSyncStick() // 日/週の切り替えなどで予約表が作り直されたとき
         },
         methods: {
+            // [カスタムエイド 2026-10-14] 外側の枠をスクロールすると、予約表(.pres)の上の部分が日付の帯の下に隠れる。
+            // 隠れた分だけ、担当者名(.mTop)と左上のふた(.tcorner)を止める位置を下げる(CSS変数 --cs-stick、progress.vue で使用)
+            csSyncStick() {
+                const pres = this.$refs.csPres, head = this.$refs.csDateHead
+                if (!pres || !head) return
+                const o = Math.max(0, Math.round(head.getBoundingClientRect().bottom - pres.getBoundingClientRect().top))
+                if (pres._csStick !== o) {
+                    pres._csStick = o
+                    pres.style.setProperty("--cs-stick", o + "px")
+                }
+            },
             toBuy() {
                 this.$router.push({
                     path: "/utilizePlan",
@@ -2823,7 +2845,7 @@
         color: #1d1d1f;
         font-size: 21px;
         font-weight: bold;
-        margin-bottom: 20px;
+        margin-bottom: 16px; // [カスタムエイド 2026-10-14] 担当者名を止めたため、縦の余白を詰める(20px→16px)
     }
 
     .app-box {
@@ -2831,7 +2853,7 @@
         // height: 1373px;
         background: #ffffff;
         box-shadow: 0px 3px 10px 1px rgba(0, 0, 0, 0.16);
-        padding: 40px 40px 0 40px;
+        padding: 30px 40px 0 40px; // [カスタムエイド 2026-10-14] 担当者名を止めたため、縦の余白を詰める(上 40px→30px)
 
         .tab {
             width: 384px;
@@ -2877,7 +2899,7 @@
         .time {
             display: flex;
             align-items: center;
-            margin-bottom: 42px;
+            margin-bottom: 16px; // [カスタムエイド 2026-10-14] 担当者名を止めたため、縦の余白を詰める(42px→16px)
 
             .lef-time {
                 margin-right: 20px;

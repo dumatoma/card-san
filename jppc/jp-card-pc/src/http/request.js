@@ -42,14 +42,20 @@ service.interceptors.response.use(response => {
   if (response.status == 200) {
     let data = response.data;
     if (data.code == 401) {
-     console.log(this)
-     window.location.href = "https://card-san.jp/#/login"
-     // window.location.href = "http://localhost:8081/#/login"
-     // this.$router.replace({
-     //     name:"login",
-     //     params:{test:"test"}
-     // })
-     console.log(window.location.href)
+      // [カスタムエイド 2026-10] ログイン切れ（401）のときの移動先を修正
+      // 旧：URLの「#/」以降だけを書き換えてログイン画面へ移動していたため、ページが読み込み直されず、
+      //     画面上部の定期通信（未読数など）が裏で動き続けた。その定期通信が認証コード入力中にも 401 を受け、
+      //     認証コード画面からログイン画面へ戻されていた。
+      // 新：ログイン関連の画面（ログイン・認証コード・副管理者・電話番号・新規登録）にいるときは移動しない。
+      //     それ以外の画面では、保存済みのログイン情報を消し、ページを読み込み直してログイン画面へ移動する
+      //     （読み込み直すことで、裏の定期通信も止まる）。
+      var onAuthPage = /^#\/(login|code|deputyAdmin|phone|register)(\?|$)/.test(window.location.hash)
+      if (!onAuthPage) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('admin')
+        window.location.replace("https://card-san.jp/#/login")
+        window.location.reload()
+      }
       return false
     } else if (data.code == 403) {
         

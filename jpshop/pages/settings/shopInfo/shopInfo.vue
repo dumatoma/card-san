@@ -17,7 +17,8 @@
                 </view>
             </view>
             <view class="xz">
-                TOP画像(6枚まで掲載可)
+                <!-- [カスタムエイド 2026-10-14] 枚数の上限(6枚)をなくした(アプリの次回更新で反映) -->
+                TOP画像
             </view>
             <view class="addImage" hover-class="btnhover" @click="uploadImage">
                 <text>+</text>
@@ -399,9 +400,11 @@
             // 选择图片并上传
             uploadImage() {
                 let that = this
-                if (that.info.carousel.length < 6) {
+                // [カスタムエイド 2026-10-14] 6枚の上限をなくした。一度に選べるのは9枚まで(端末の選択画面の上限)
+                if (!Array.isArray(that.info.carousel)) that.$set(that.info, 'carousel', [])
+                if (true) {
                     uni.chooseImage({
-                        count: 6 - that.info.carousel.length,
+                        count: 9,
                         success: (res) => {
                             const tempPaths = res.tempFilePaths
                             for (let i = 0; i < tempPaths.length; i++) {

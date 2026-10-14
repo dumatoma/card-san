@@ -12,80 +12,60 @@
     <div class="not_cont no-size">
       <div style="padding: 30px 40px 0 40px">
         <div class="add-pictur m-t-20 no-size">
-          <div class="pic-tit">TOP画像(最大6枚)</div>
-
-          <div class="img-bos">
-            <div class="img-boxs u-flex u-flex-wrap">
-              <div
-                class="img-item"
-                v-for="(item, index) in shopInfo.carousel"
-                :key="index"
-                :style="{ background: item ? '' : 'rgba(0,0,0,0.07)' }"
-              >
-                <img
-                  src="@/static/gClose.png"
-                  alt=""
-                  class="colse shou"
-                  @click="delPicture(index)"
-                />
-                <img
-                  :src="item"
-                  class="tu"
-                  v-if="item"
-                  @click="handlePictureCardPreview(item)"
-                />
-                <img v-else src="@/static/index/image.png" class="moren" />
+          <!-- [カスタムエイド 2026-10-14] TOP画像：枚数の上限(6枚)をなくし、小さいサムネイル・枠内スクロール・ドラッグ並び替え・まとめてドロップに変更 -->
+          <div class="cs-top-head">
+            <div>
+              <div class="cs-top-title">TOP画像<span class="cs-top-count">{{ (shopInfo.carousel || []).length }}枚</span></div>
+              <div class="cs-top-desc">1枚目がアプリのTOPに最初に表示されます。画像をドラッグして順番を入れ替えられます。</div>
+            </div>
+            <button type="button" class="cs-top-addbtn" @click="openTopUpload">＋ 画像を追加</button>
+          </div>
+          <div class="cs-top-box" :class="{ 'is-over': topDragOver }" @dragover.prevent="onTopDragOver" @dragleave.prevent="topDragOver = false" @drop.prevent="onTopDrop">
+            <div class="cs-top-scroll">
+              <div class="cs-top-grid" ref="topGrid">
+                <div class="cs-top-tile" v-for="(item, index) in shopInfo.carousel" :key="index" :class="{ 'is-main': index == 0 }">
+                  <img :src="item" class="cs-top-img" alt="" draggable="false" @click="previewTop(item)" />
+                  <span class="cs-top-drag" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"></circle><circle cx="15" cy="6" r="1.7"></circle><circle cx="9" cy="12" r="1.7"></circle><circle cx="15" cy="12" r="1.7"></circle><circle cx="9" cy="18" r="1.7"></circle><circle cx="15" cy="18" r="1.7"></circle></svg>
+                  </span>
+                  <button type="button" class="cs-top-del" :aria-label="(index + 1) + '枚目を削除'" @click="delPicture(index)">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+                  </button>
+                  <span class="cs-top-main" v-if="index == 0">メイン</span>
+                  <span class="cs-top-no">{{ index + 1 }}</span>
+                </div>
+                <button type="button" class="cs-top-add" @click="openTopUpload">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                  <span>追加</span>
+                </button>
               </div>
             </div>
-            <el-upload
-              class="upload-demo"
-              accept="image/*"
-              action="https://api.card-san.jp/tool/upload/file"
-              :on-success="handleAvatarSuccess"
-              drag
-              :limit="6"
-              :show-file-list="false"
-              :file-list="fileList"
-              name="file"
-            >
-              <div class="tuo no-size">
-                <img src="@/static/edit-image.png" alt="" />
-                <br />
-                <span class="txt">クリックorファイルをドロップ</span>
-              </div>
-            </el-upload>
-            <!-- <div class="add">
-              <el-upload
-                class="upload-demo"
-                accept="image/*"
-                action="https://hyk.ljcyh.com/tool/upload/file"
-                :on-success="handleAvatarSuccess"
-                drag
-                :limit="6"
-                :show-file-list="false"
-                :file-list="fileList"
-                name="file"
-              >
-                <div class="zhui">
-                  <span class="el-icon-plus" style="font-weight: 700"></span>
-                  ファイル追加
-                </div>
-              </el-upload>
-            </div> -->
+            <div class="cs-top-hint" v-if="(shopInfo.carousel || []).length > 14">枠の中をスクロールすると、すべての画像を確認できます</div>
+            <div class="cs-top-hint">この枠に画像をドラッグ&amp;ドロップしても追加できます(複数枚まとめて可)</div>
           </div>
+          <el-upload
+            ref="topUpload"
+            class="cs-top-uploader"
+            accept="image/*"
+            action="https://api.card-san.jp/tool/upload/file"
+            :on-success="handleAvatarSuccess"
+            :show-file-list="false"
+            multiple
+            name="file"
+          ><span></span></el-upload>
         </div>
       </div>
       <!-- 基本情報 -->
       <div class="grey_back u-flex no-size">基本情報</div>
       
       <div class="basic">
-          <div class="industry m-t-30">プロフィール</div>
-          <textarea class="no-size" rows="8" style="width: 740px;resize: none;outline: none;margin-bottom: 30px;margin-top: 10px;box-sizing: border-box;padding: 5px;border: 1px solid #d2d2d7;border-radius: 10px;height: 100px;" type="text" placeholder="あなたのビジネスのプロフィールを入力してください。" v-model="shopInfo.des" />
+          <div class="industry">プロフィール</div> <!-- [カスタムエイド 2026-10-14] 上の余白 30px→0 -->
+          <textarea class="no-size" rows="8" style="width: 740px;resize: none;outline: none;margin-bottom: 30px;margin-top: 5px;box-sizing: border-box;padding: 5px;border: 1px solid #d2d2d7;border-radius: 10px;height: 100px;" type="text" placeholder="あなたのビジネスのプロフィールを入力してください。" v-model="shopInfo.des" />
         <div class="u-flex industry">
           <div style="color: #d93025">※</div>
           <div>業種(店舗情報には反映されません)</div>
         </div>
-        <div class="m-t-10">
+        <div style="margin-top: 5px"><!-- [カスタムエイド 2026-10-14] 10px→5px -->
           <el-select
             v-model="shopInfo.shop_cate"
             @change="selectChanged"
@@ -140,7 +120,7 @@
       </div>
       <div class="four">
         <div class="industry m-t-30">郵便番号</div>
-        <div class="u-flex m-t-10">
+        <div class="u-flex" style="margin-top: 5px"><!-- [カスタムエイド 2026-10-14] 10px→5px -->
           <input class="int_two no-size" type="number" placeholder="郵便番号" v-model="shopInfo.zip_code" />
           <div class="add_btn u-flex-center shou" @click="searchAddress">住所検索</div>
         </div>
@@ -575,6 +555,7 @@
 <script>
 
 import {getStore,getConfig,gatZipAddress,editShop,getAllStaff} from "@/http/api.js"
+import Sortable from "sortablejs" // [カスタムエイド 2026-10-14] TOP画像の並び替え
 export default {
   data() {
     return {
@@ -635,6 +616,7 @@ export default {
       fileList: [],
       dialogImageUrl: "",
       dialogVisible: false,
+      topDragOver: false, // [カスタムエイド 2026-10-14]
       botList: [
         {
           img: require("../../static/index/cardImg.png"),
@@ -676,7 +658,57 @@ export default {
          }
      })
   },
+  // [カスタムエイド 2026-10-14] TOP画像のドラッグ並び替え
+  mounted() {
+    this.$nextTick(() => {
+      if (!this.$refs.topGrid) return
+      this._topSortable = Sortable.create(this.$refs.topGrid, {
+        draggable: ".cs-top-tile",
+        filter: ".cs-top-del", // 削除ボタンはドラッグの対象外
+        preventOnFilter: false,
+        forceFallback: true, // ブラウザ標準のドラッグを使わない(画像の標準ドラッグや外側のドロップ枠と干渉しないように)
+        fallbackTolerance: 4, // 4px以上動かしたらドラッグ(それ未満はクリック=拡大表示)
+        animation: 150,
+        onStart: () => { this._topDragging = true },
+        onMove: (e) => !(e.related && e.related.classList.contains("cs-top-add")),
+        onEnd: (e) => {
+          setTimeout(() => { this._topDragging = false }, 50)
+          const from = e.oldDraggableIndex, to = e.newDraggableIndex
+          if (from == null || to == null || from === to) return
+          // Sortableが動かした要素を元の位置に戻し、並び替えはデータ側で行う(Vueの再描画に任せる)
+          e.from.removeChild(e.item)
+          e.from.insertBefore(e.item, e.from.children[e.oldIndex] || null)
+          const list = this.shopInfo.carousel
+          const moved = list.splice(from, 1)[0]
+          list.splice(to, 0, moved)
+        }
+      })
+    })
+  },
+  beforeDestroy() {
+    if (this._topSortable) this._topSortable.destroy()
+  },
   methods: {
+      // [カスタムエイド 2026-10-14] TOP画像の追加(ボタン・ドラッグ&ドロップ)
+      previewTop(item) {
+        if (this._topDragging) return // ドラッグした直後のクリックでは拡大表示しない
+        this.handlePictureCardPreview(item)
+      },
+      openTopUpload() {
+        const inner = this.$refs.topUpload && this.$refs.topUpload.$refs["upload-inner"]
+        if (inner) inner.handleClick()
+      },
+      onTopDragOver(e) {
+        const types = (e.dataTransfer && e.dataTransfer.types) || []
+        this.topDragOver = Array.prototype.indexOf.call(types, "Files") !== -1
+      },
+      onTopDrop(e) {
+        this.topDragOver = false
+        const files = Array.prototype.filter.call((e.dataTransfer && e.dataTransfer.files) || [], (f) => /^image\//.test(f.type))
+        if (!files.length) return
+        const inner = this.$refs.topUpload && this.$refs.topUpload.$refs["upload-inner"]
+        if (inner) inner.uploadFiles(files)
+      },
       getInfo(){
         let that = this
         getStore().then((res) => {
@@ -752,6 +784,8 @@ export default {
         console.log(res)
         console.log(file)
       // this.shopInfo.carousel(res.data.path);
+      if (!res || !res.data || !res.data.path) return // [カスタムエイド 2026-10-14]
+      if (!Array.isArray(this.shopInfo.carousel)) this.$set(this.shopInfo, "carousel", [])
       this.shopInfo.carousel.push(res.data.path);
     },
     delPicture(i) {
@@ -1013,7 +1047,7 @@ export default {
   height: 40px;
   outline: 0;
   background: #fff;
-  margin-top: 10px;
+  margin-top: 5px; /* [カスタムエイド 2026-10-14] 項目名の下の余白 10px→5px */
   border-radius: 10px;
   padding-left: 14px;
   font-size: 14px;
@@ -1029,7 +1063,7 @@ input::-webkit-inner-spin-button {
   outline: 0;
   font-size: 18px;
   line-height: 22px;
-  margin-top: 10px;
+  margin-top: 5px; /* [カスタムエイド 2026-10-14] 項目名の下の余白 10px→5px */
   border-radius: 10px;
   padding: 10px;
   border: 1px solid #d2d2d7;
@@ -1085,7 +1119,7 @@ input::-webkit-inner-spin-button {
 
 .sale_grey {
   font-size: 12px;
-  margin-top: 10px;
+  margin-top: 5px; /* [カスタムエイド 2026-10-14] 項目名の下の余白 10px→5px */
   color: #aaaaaa;
   font-weight: lighter;
 }
@@ -1124,7 +1158,7 @@ input::-webkit-inner-spin-button {
   background: #fff;
   border-radius: 10px;
   padding-left: 14px;
-  margin-top: 10px;
+  margin-top: 5px; /* [カスタムエイド 2026-10-14] 項目名の下の余白 10px→5px */
   border: 1px solid #d2d2d7;
 }
 .area_one {
@@ -1499,6 +1533,31 @@ input::-webkit-inner-spin-button {
 }
 </style>
 
-
-
-
+<!-- [カスタムエイド 2026-10-14] TOP画像の一覧 -->
+<style lang="scss" scoped>
+.cs-top-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.cs-top-title { font-size: 16px; color: #707070; }
+.cs-top-count { margin-left: 10px; font-size: 14px; color: #1d1d1f; }
+.cs-top-desc { margin-top: 4px; font-size: 12px; line-height: 1.7; color: #707070; }
+.cs-top-addbtn { flex-shrink: 0; height: 36px; padding: 0 16px; border: 0; border-radius: 18px; background: #1a73e8; color: #fff; font-size: 14px; cursor: pointer; }
+.cs-top-addbtn:hover { background: #1765cc; }
+.cs-top-box { border: 1px dashed #9fc3f7; border-radius: 10px; background: #f7faff; padding: 12px; }
+.cs-top-box.is-over { border-color: #1a73e8; background: #e8f0fe; }
+.cs-top-scroll { max-height: 360px; overflow-y: auto; padding: 2px; }
+.cs-top-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.cs-top-tile { position: relative; aspect-ratio: 3 / 2; border-radius: 8px; overflow: hidden; background: #e5e5ea; }
+.cs-top-tile.is-main { box-shadow: 0 0 0 2px #1a73e8; }
+.cs-top-img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: grab; }
+.cs-top-drag, .cs-top-del { position: absolute; top: 6px; width: 26px; height: 26px; padding: 0; border: 0; display: flex; align-items: center; justify-content: center; }
+.cs-top-drag { left: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.92); color: #515154; pointer-events: none; }
+.cs-top-tile { cursor: grab; }
+.cs-top-img { -webkit-user-drag: none; user-select: none; }
+.cs-top-del { right: 6px; border-radius: 13px; background: rgba(29, 29, 31, 0.72); color: #fff; cursor: pointer; }
+.cs-top-main { position: absolute; left: 6px; bottom: 6px; padding: 1px 8px; border-radius: 10px; background: #1a73e8; color: #fff; font-size: 11px; font-weight: bold; }
+.cs-top-no { position: absolute; right: 6px; bottom: 6px; min-width: 20px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: rgba(255, 255, 255, 0.92); color: #1d1d1f; font-size: 11px; line-height: 18px; text-align: center; font-weight: bold; }
+.cs-top-add { aspect-ratio: 3 / 2; border: 1.5px dashed #8ab0ee; border-radius: 8px; background: #fff; color: #1a73e8; font-size: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; }
+.cs-top-add:hover { background: #f0f6ff; }
+.cs-top-hint { margin-top: 10px; text-align: center; font-size: 12px; color: #707070; }
+.cs-top-uploader { display: none; }
+.sortable-ghost { opacity: 0.4; }
+</style>

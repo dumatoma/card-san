@@ -137,5 +137,27 @@
             filter: brightness(.95) !important;
         }
     }
-    
+
+    // [カスタムエイド 2026-10-14] 日時選択(yuYue): 担当者の選択(指名なし…)をヘッダー(高さ60px)の4px下に止め、
+    // そのすぐ下にカレンダーを止める。スクロールしても担当者を切り替えられるようにするため
+    uni-page-body .askForName {
+        position: sticky;
+        top: 60px;
+        z-index: 971; // カレンダー(u-sticky 970)より上
+        box-sizing: border-box;
+        height: 43px; // 上4px + ボタン34px + 下5px
+        padding: 4px 0 5px 20px !important;
+        align-items: center;
+    }
+    uni-page-body .askForName .name_item {
+        height: 34px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    // 担当者の選択がある店舗だけ、カレンダーを止める位置を 60px → 103px(60+43)に下げる
+    uni-page-body .content:has(> .askForName) > .u-sticky {
+        top: 103px !important;
+    }
 </style>

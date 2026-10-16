@@ -342,6 +342,23 @@ export const getComeList = (data) => {
     })
 }
 
+// [カスタムエイド 2026-10-16] 来店履歴の編集:選べるメニュー(自店舗の全メニュー)とスタッフ(予約に対応するスタッフ)
+export const getComeOptions = () => {
+    return request({
+        url: "api/shop/order/come_options",
+        method: "get"
+    })
+}
+
+// [カスタムエイド 2026-10-16] 来店履歴の編集:保存(menu_ids・admin_ids・keep_menu_names・keep_admin_names)
+export const updateCome = (id, data) => {
+    return request({
+        url: "api/shop/order/come/" + id,
+        method: "post",
+        data: data
+    })
+}
+
 // 删除来店记录  
 export const deleteAppointOrders = (id) => {
     return request({

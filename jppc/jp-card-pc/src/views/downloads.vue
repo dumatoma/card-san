@@ -291,8 +291,13 @@
                 <scrollbar-container style="box-sizing: border-box;padding: 0 20px;" ref="scrollbarRef" height="630px"
                     class="scroll-container">
                     <div class="resume_wrap">
-                        <div class="comeitem" v-for="item,index in comeList">
-                            <div class="del" @click="deleteItem(item.id)">削除</div>
+                        <!-- [カスタムエイド 2026-10-16] 来店履歴の編集(メニュー・担当者)。編集中の行は青枠、ほかの行は薄くして押せなくする -->
+                        <div class="comeitem" v-for="item,index in comeList" :key="item.id"
+                            :class="{'cs-come-editing': editingId == item.id, 'cs-come-dim': editingId && editingId != item.id, 'cs-come-saved': savedId == item.id}">
+                            <div class="cs-come-act" v-if="editingId != item.id">
+                                <span class="cs-come-edit" @click="startEditCome(item)">編集</span>
+                                <span class="cs-come-del" @click="deleteItem(item.id)">削除</span>
+                            </div>
                             <div class="c1">
                                 <div class="cleft">
                                     <img src="../static/svg/correct.svg" alt="" />
@@ -306,20 +311,40 @@
                                 <div class="cleft">
                                     <img src="../static/svg/menu.svg" alt="" />
                                 </div>
-                                <div class="cright">
+                                <div class="cright" v-if="editingId != item.id">
                                     <div v-if="item.menu_names.length > 0" v-for="it,idx in item.menu_names"
                                         v-text="it"></div>
                                     <div v-if="item.menu_names.length == 0">--</div>
+                                </div>
+                                <!-- [カスタムエイド 2026-10-16] 編集中:メニューは札(×で外す)+「メニューを選択」。今は登録のない名前は灰色・×なし(押すと入れ替え) -->
+                                <div class="cright cs-come-field" v-else>
+                                    <span class="cs-come-label">メニュー</span>
+                                    <span class="cs-come-none" v-if="editMenus.length == 0">未設定</span>
+                                    <span class="cs-chip" :class="{'cs-chip-legacy': m.legacy}" v-for="m,mi in editMenus"
+                                        :key="'m' + mi" @click="m.legacy ? openMenuPicker(mi) : null">
+                                        {{ m.legacy ? m.title + '(現在は登録なし)' : m.title }}
+                                        <span class="cs-chip-x" v-if="!m.legacy" @click.stop="removeEditMenu(mi)">×</span>
+                                    </span>
+                                    <span class="cs-chip-add" @click="openMenuPicker(null)">メニューを選択</span>
                                 </div>
                             </div>
                             <div class="c1">
                                 <div class="cleft">
                                     <img src="../static/svg/user.svg" alt="" />
                                 </div>
-                                <div class="cright">
+                                <div class="cright" v-if="editingId != item.id">
                                     <div v-for="it,idx in item.day_sadmin_names" v-if="item.day_sadmin_names.length > 0"
                                         v-text="it"></div>
                                     <div v-if="item.day_sadmin_names.length == 0">--</div>
+                                </div>
+                                <!-- [カスタムエイド 2026-10-16] 編集中:担当者は選択欄(予約に対応するスタッフだけ)。今は登録のない名前は「未設定」に戻せず、入れ替えだけできる -->
+                                <div class="cright cs-come-field" v-else>
+                                    <span class="cs-come-label">担当者</span>
+                                    <select class="cs-come-select" v-for="s,si in editStaffs" :key="'s' + si" v-model="editStaffs[si]">
+                                        <option v-if="!isKeepStaff(s)" :value="0">未設定(--)</option>
+                                        <option v-if="isKeepStaff(s)" :value="s">{{ s.slice(5) }}(現在は登録なし)</option>
+                                        <option v-for="a in comeOptions.admins" :key="a.id" :value="a.id">{{ a.name }}</option>
+                                    </select>
                                 </div>
                             </div>
                            <div class="c1" v-if="item.point.length > 0">
@@ -346,9 +371,32 @@
                                     <div v-if="item.coupon_names.length == 0">--</div>
                                 </div>
                             </div>
+                            <!-- [カスタムエイド 2026-10-16] 編集中の保存・キャンセル -->
+                            <div class="cs-come-btns" v-if="editingId == item.id">
+                                <button type="button" class="cs-btn-cancel" @click="cancelEditCome">キャンセル</button>
+                                <button type="button" class="cs-btn-save" :disabled="comeSaving" @click="saveEditCome(item)">保存</button>
+                            </div>
                         </div>
                     </div>
                 </scrollbar-container>
+            </div>
+            <!-- [カスタムエイド 2026-10-16] 来店履歴の編集:メニューを選択(複数可。追加・外す・入れ替えをまとめて行う) -->
+            <div class="cs-pick-mask" v-if="menuPickerShow" @click.self="menuPickerShow = false">
+                <div class="cs-pick" role="dialog" aria-label="メニューを選択">
+                    <div class="cs-pick-tit">メニューを選択</div>
+                    <div class="cs-pick-hint">複数選べます。外すときはチェックを外してください</div>
+                    <div class="cs-pick-list">
+                        <label class="cs-pick-opt" v-for="m in comeOptions.menus" :key="m.id">
+                            <input type="checkbox" :value="m.id" v-model="menuPickerChecked">
+                            <span>{{ m.title }}</span>
+                        </label>
+                        <div class="cs-pick-empty" v-if="comeOptions.menus.length == 0">登録されているメニューがありません</div>
+                    </div>
+                    <div class="cs-pick-btns">
+                        <button type="button" class="cs-btn-cancel" @click="menuPickerShow = false">キャンセル</button>
+                        <button type="button" class="cs-btn-save" @click="applyMenuPicker">決定</button>
+                    </div>
+                </div>
             </div>
         </div>
         <!-- 卡片一览表 -->
@@ -426,7 +474,9 @@
         getComeList,
         getConfig,
         deleteAppointment,
-        deleteAppointOrders
+        deleteAppointOrders,
+        getComeOptions, // [カスタムエイド 2026-10-16] 来店履歴の編集
+        updateCome // [カスタムエイド 2026-10-16] 来店履歴の編集
     } from '@/http/api.js'
     export default {
         components: {
@@ -462,6 +512,17 @@
                 state: "change", //使用卡变更注意change,卡更新new
                 dotShow: true,
                 resumeShow: true, //来店履历
+                // [カスタムエイド 2026-10-16] 来店履歴の編集
+                editingId: null, // 編集中の来店履歴のid
+                editMenus: [], // 編集中のメニュー [{id, title, legacy}]。legacy=今は登録のない名前
+                editStaffs: [0], // 編集中の担当者(スタッフid、0=未設定、'keep:名前'=今は登録のない名前)
+                comeOptions: { menus: [], admins: [] }, // 選べるメニュー・スタッフ
+                comeOptionsLoaded: false,
+                menuPickerShow: false,
+                menuPickerChecked: [],
+                menuReplaceIndex: null, // 今は登録のない名前の札を押して開いたとき、その札の位置
+                comeSaving: false,
+                savedId: null, // 保存直後に薄い緑にする行
                 cardShow: true, //卡片一览表
                 cardIndex: 998534523453,
                 limitShow: false,
@@ -552,6 +613,7 @@
                             type: 'success',
                             offset: 400
                         });
+                        that.editingId = null // [カスタムエイド 2026-10-16] 削除したら編集も終える
                         that.getComeList()
                     } else {
                         that.$message({
@@ -562,6 +624,110 @@
                     }
                 })
             },
+            // [カスタムエイド 2026-10-16] 来店履歴の編集 ここから
+            isKeepStaff(v) {
+                return typeof v === 'string' && v.indexOf('keep:') === 0
+            },
+            startEditCome(item) {
+                let that = this
+                let begin = () => {
+                    that.editMenus = (item.menu_names || []).filter((n) => n !== '' && n !== null).map((n) => {
+                        let m = that.comeOptions.menus.find((x) => x.title === n)
+                        return m ? { id: m.id, title: m.title, legacy: false } : { id: null, title: n, legacy: true }
+                    })
+                    let staffs = (item.day_sadmin_names || []).filter((n) => n !== '' && n !== null).map((n) => {
+                        let a = that.comeOptions.admins.find((x) => x.name === n)
+                        return a ? a.id : 'keep:' + n
+                    })
+                    that.editStaffs = staffs.length > 0 ? staffs : [0]
+                    that.editingId = item.id
+                    that.$nextTick(() => {
+                        if (that.$refs.scrollbarRef) that.$refs.scrollbarRef.updateScroll()
+                    })
+                }
+                if (that.comeOptionsLoaded) {
+                    begin()
+                    return
+                }
+                getComeOptions().then((res) => {
+                    if (res && res.code == 200) {
+                        that.comeOptions = { menus: res.data.menus || [], admins: res.data.admins || [] }
+                        that.comeOptionsLoaded = true
+                        begin()
+                    } else {
+                        that.$message({ message: (res && res.message) || '読み込みに失敗しました', type: 'error', offset: 400 })
+                    }
+                }).catch(() => {
+                    that.$message({ message: '読み込みに失敗しました', type: 'error', offset: 400 })
+                })
+            },
+            cancelEditCome() {
+                this.editingId = null
+                this.menuPickerShow = false
+                this.$nextTick(() => {
+                    if (this.$refs.scrollbarRef) this.$refs.scrollbarRef.updateScroll()
+                })
+            },
+            removeEditMenu(mi) {
+                this.editMenus.splice(mi, 1)
+            },
+            openMenuPicker(replaceIndex) {
+                this.menuReplaceIndex = replaceIndex
+                this.menuPickerChecked = this.editMenus.filter((m) => !m.legacy).map((m) => m.id)
+                this.menuPickerShow = true
+            },
+            applyMenuPicker() {
+                let that = this
+                let checked = that.menuPickerChecked
+                let before = that.editMenus.filter((m) => !m.legacy).map((m) => m.id)
+                let legacy = that.editMenus.filter((m) => m.legacy)
+                let added = checked.filter((id) => before.indexOf(id) < 0)
+                // 今は登録のない名前の札から開いて、新しいメニューを選んだら、その札と入れ替える
+                if (that.menuReplaceIndex !== null && added.length > 0) {
+                    let target = that.editMenus[that.menuReplaceIndex]
+                    legacy = legacy.filter((m) => m !== target)
+                }
+                // 並び順:残っている今までのもの → 新しく選んだもの(選んだ順)
+                let ids = before.filter((id) => checked.indexOf(id) >= 0).concat(added)
+                that.editMenus = legacy.concat(ids.map((id) => {
+                    let m = that.comeOptions.menus.find((x) => x.id === id)
+                    return { id: id, title: m ? m.title : '', legacy: false }
+                }))
+                that.menuPickerShow = false
+            },
+            saveEditCome(item) {
+                let that = this
+                if (that.comeSaving) return
+                let data = {
+                    menu_ids: that.editMenus.filter((m) => !m.legacy).map((m) => m.id),
+                    keep_menu_names: that.editMenus.filter((m) => m.legacy).map((m) => m.title),
+                    admin_ids: that.editStaffs.filter((v) => typeof v === 'number' && v > 0),
+                    keep_admin_names: that.editStaffs.filter((v) => that.isKeepStaff(v)).map((v) => v.slice(5))
+                }
+                that.comeSaving = true
+                updateCome(item.id, data).then((res) => {
+                    that.comeSaving = false
+                    if (res && res.code == 200) {
+                        item.menu_names = res.data.menu_names
+                        item.day_sadmin_names = res.data.day_sadmin_names
+                        that.editingId = null
+                        that.savedId = item.id
+                        setTimeout(() => {
+                            if (that.savedId === item.id) that.savedId = null
+                        }, 2000)
+                        that.$message({ message: '保存しました', type: 'success', offset: 400 })
+                        that.$nextTick(() => {
+                            if (that.$refs.scrollbarRef) that.$refs.scrollbarRef.updateScroll()
+                        })
+                    } else {
+                        that.$message({ message: (res && res.message) || '保存できませんでした', type: 'error', offset: 400 })
+                    }
+                }).catch(() => {
+                    that.comeSaving = false
+                    that.$message({ message: '保存できませんでした', type: 'error', offset: 400 })
+                })
+            },
+            // [カスタムエイド 2026-10-16] 来店履歴の編集 ここまで
             cardClick(index, id) {
                 let that = this
                 that.id = id
@@ -992,6 +1158,197 @@
             }
         }
     }
+
+    // [カスタムエイド 2026-10-16] 来店履歴の編集 ここから
+    .cs-come-act {
+        position: absolute; // 今の「削除」と同じ位置(行の右下)
+        bottom: 20px;
+        right: 12px;
+        display: flex;
+        gap: 18px; // 「編集」と「削除」の間隔
+        font-size: 14px;
+    }
+    .cs-come-edit {
+        color: #1F6FE5; // 編集は青文字
+        cursor: pointer;
+    }
+    .cs-come-del {
+        color: #D93025; // 削除は今までどおり赤文字
+        cursor: pointer;
+    }
+    .comeitem.cs-come-editing {
+        background: #EEF4FD; // 編集中の行は薄い青
+        border: 2px solid #1F6FE5; // 青い枠で編集中だと分かるようにする
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin: 8px 0;
+    }
+    .comeitem.cs-come-dim {
+        opacity: 0.45; // 編集中は、ほかの行を薄くする
+        pointer-events: none; // ほかの行の編集・削除を押せないようにする
+    }
+    .comeitem.cs-come-saved {
+        background: #EEF8F0; // 保存した行を少しの間だけ薄い緑にする
+        transition: background 0.6s;
+    }
+    .cs-come-field {
+        gap: 6px; // 札どうしの間隔
+    }
+    .cs-come-label {
+        width: 100%; // 項目名を1行使って札の上に置く
+        font-size: 12px;
+        color: #3A5A8C;
+        font-weight: bold;
+    }
+    .cs-come-none {
+        color: #8E8E93; // 「未設定」は灰色
+        margin-right: 4px;
+    }
+    .cs-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 30px;
+        padding: 0 4px 0 12px; // ×の右側は詰める
+        border-radius: 15px;
+        background: #FFFFFF;
+        border: 1px solid #9BB8E8;
+        font-size: 13px;
+    }
+    .cs-chip-legacy {
+        padding: 0 12px; // ×がないので左右同じ余白
+        background: #F2F2F7; // 今は登録のない名前は灰色
+        border-color: #D1D1D6;
+        color: #6E6E73;
+        cursor: pointer; // 押すと一覧が開き、入れ替えられる
+    }
+    .cs-chip-x {
+        width: 22px;
+        height: 22px;
+        border-radius: 11px;
+        background: #E3E8F0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .cs-chip-add {
+        display: inline-flex;
+        align-items: center;
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 15px;
+        border: 1.5px dashed #1F6FE5; // 点線で「押すと選べる」ことを示す
+        color: #1F6FE5;
+        background: #FFFFFF;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .cs-come-select {
+        height: 34px;
+        min-width: 200px;
+        padding: 0 8px;
+        border: 1px solid #9BB8E8;
+        border-radius: 6px;
+        background: #FFFFFF;
+        font-size: 14px;
+        color: #1D1D1F;
+        margin: 0 6px 6px 0; // 担当者が2人いる日は選択欄を並べる
+    }
+    .cs-come-btns {
+        display: flex;
+        justify-content: flex-end; // 右寄せ
+        gap: 10px;
+        margin-top: 8px;
+    }
+    .cs-btn-cancel,
+    .cs-btn-save {
+        height: 34px;
+        padding: 0 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    .cs-btn-cancel {
+        background: #E5E5EA; // キャンセルは灰色
+        color: #1D1D1F;
+    }
+    .cs-btn-save {
+        background: #1F6FE5; // 保存・決定は青
+        color: #FFFFFF;
+        font-weight: bold;
+        &:disabled {
+            opacity: 0.6; // 保存中は二重に押せない
+            cursor: default;
+        }
+    }
+    .cs-pick-mask {
+        position: fixed; // 画面全体を薄暗くして、その上に一覧を出す
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 3000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .cs-pick {
+        width: 360px;
+        background: #FFFFFF;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+    .cs-pick-tit {
+        height: 48px;
+        line-height: 48px;
+        text-align: center;
+        font-size: 15px;
+        font-weight: bold;
+        border-bottom: 1px solid #D2D2D7;
+    }
+    .cs-pick-hint {
+        padding: 8px 16px 4px 16px;
+        font-size: 12px;
+        color: #6E6E73;
+    }
+    .cs-pick-list {
+        max-height: 360px; // メニューが多いときは一覧の中でスクロール
+        overflow-y: auto;
+    }
+    .cs-pick-opt {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 44px;
+        padding: 0 16px;
+        border-bottom: 1px solid #EFEFF4;
+        font-size: 14px;
+        color: #1D1D1F;
+        cursor: pointer;
+        input {
+            width: 18px;
+            height: 18px;
+            accent-color: #1F6FE5; // チェックの色を青にそろえる
+            margin: 0;
+        }
+    }
+    .cs-pick-empty {
+        padding: 20px 16px;
+        font-size: 13px;
+        color: #8E8E93;
+    }
+    .cs-pick-btns {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 12px 16px;
+    }
+    // [カスタムエイド 2026-10-16] 来店履歴の編集 ここまで
 
     .font_color {
         font-size: 16px;

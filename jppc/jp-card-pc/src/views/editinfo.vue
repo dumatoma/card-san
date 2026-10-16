@@ -164,7 +164,7 @@ export default {
       dialogImageUrl: "",
       dialogVisible: false,
 	  info:{},
-      total:0
+      total:'' // [カスタムエイド 2026-10-16] 読み込み中に「0」が一瞬表示されないよう、初期値を空欄にする
     };
   },
   created() {

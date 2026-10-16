@@ -337,7 +337,7 @@ export const deleteCard = (data) => {
 // 获取来店履历
 export const getComeList = (data) => {
     return request({
-        url: "api/shop/order?type=come&date="+data.date+"&mid="+data.id,
+        url: "api/shop/order?type=come&mid="+data.id, // [カスタムエイド 2026-10-16] 固定の日付(2022-12-19)を送らないようにする。来店回数・来店履歴が0件になっていたため
         method: "get"
     })
 }

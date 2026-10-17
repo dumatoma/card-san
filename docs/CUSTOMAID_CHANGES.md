@@ -405,6 +405,24 @@ $model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->
 | 確認 | スマホ幅(390px)とPC幅(1280px)で、スクロール後に担当者の選択がヘッダーの下、カレンダーがその下に止まること、担当者を切り替えられることを確認。動きのモックは運営確認済み |
 | アプリ | Card-San App・管理Appの同様の修正は「CardSan アプリ修正一覧」(プロジェクト doc)に記録 |
 
+## 2026-10-17 管理WEBのスマホ・タブレット版(オーナー情報・ご契約内容)
+
+### 32. スマホ・タブレットで管理WEBを開いたときに、専用の画面を表示する
+
+| 項目 | 内容 |
+|---|---|
+| 目的 | クレジットカード(Stripe)で契約し、ふだんは管理アプリを使っている店舗が、支払いのためにPCを開かなくても、スマホ・タブレットのブラウザから契約の手続き・支払いができるようにする(アプリ内課金への流れを減らす) |
+| 切り替え | iPhone・iPad・Android で card-san.jp を開くと、自動で `#/sp/…` の画面に切り替わる(PCは今までどおり)。新規登録・副管理者ログインはPC版の画面のまま。画面下の「PC版の画面を表示する」を押すと、その端末ではPC版のまま(`localStorage` の `sp_force`)。`#/sp/…` を直接開くと解除 |
+| 画面 | ログイン/認証コード/オーナー情報(ID変更を含む)/ご契約内容/ご利用プラン/お申し込み/解約手続き。デザインはキャンバス「管理WEB スマホ版モック」(運営確認済み)。タブレットは同じ画面を幅600pxで中央に表示 |
+| ご契約内容の状態 | 解約予約中:帯と【継続する】(カード決済)/【継続はこちら】(アプリ内課金)。無料お試し終了・契約期間終了:ヘッダーの下を覆う注意表示(PC版のTOPと同じ文言)。アプリ内課金の人:プラン・周期・お支払い方法・解約のボタンで Figma の Attention を表示。SMS配信数超過(`vip_sms_alert`):ログイン後に自動でお知らせ。メッセージ・クーポンの超過はサーバーに記録がないため、「配信数の追加購入」から支払う(PC版と同じ `buyOverage`) |
+| 処理 | APIはPC版と同じ(ログイン `Login`、オーナー情報 `getUserINfo`/`editUser`/`changeEmail`、契約 `getStore`/`getVipCard`/`setupVipCard`/`resumePlan`/`offtrad`、申し込み `getPackageList`/`buyPlan`/`setpayOrder`、追加購入 `getExtra`/`topay`)。サーバーの変更なし |
+| 契約更新日 | お申し込み画面は「次に請求される日」を表示(資料「契約更新日の表示ずれ_決済別」のStripeの動き):契約なし・無料お試し中・アプリ内課金からの切り替え・周期も変わるアップグレードは「今日+期間」、それ以外は今の契約の終了日 |
+| ソース | 追加:`src/views/sp/`(SpShell.vue・sp.css・spLogin・spCode・spOwner・spContract・spPlan・spConfirm・spCancel)、`src/utils/spDevice.js`、`src/static/sp/`(タグラインなしの白ロゴ、色・大きさをそろえた機能アイコン)。変更:`router/index.js`(/sp のルートと自動切り替え)、`App.vue`(/sp ではPC版のヘッダー・メニューを出さない)、`http/request.js`(ログイン切れのとき sp/login・sp/code では移動しない) |
+| 確認 | ビルド済みファイルを、APIの応答を模したテストで iPhone(390px)・iPad(820px)・PC(1440px)の幅で表示。各状態(契約中・解約予約中・アプリ内課金・無料お試し中・期間終了・SMS超過・変更予定あり)と、継続の確認・Attention・機能一覧の表・機能詳細の開閉を確認。PC版の画面が変わらないことを確認 |
+| 本番反映 | 2026-10-17、`/www/wwwroot/card-san.jp` に配置(`js/app.be850d8f.js`)。配置前のバックアップ `/www/backup_jppc_20261017_144837.tgz` |
+| 修正(運営の確認後) | ①ご利用プランの「機能詳細」を、最初はすべて閉じた状態にした(`spPlan.vue`)。②スマホのブラウザ(Googleアプリなど)で「中国語⇔日本語」の翻訳の表示が出ていたため、`public/index.html` を `<html lang="ja" translate="no">` にし、`<meta name="google" content="notranslate">` を追加(ページの言語が未指定で、漢字の多い文章を中国語と誤判定していた。PC版にも効く) |
+| 本番反映(修正版) | 2026-10-17、`js/app.a56a5d77.js` を配置。配置前のバックアップ `/www/backup_jppc_20261017_150109.tgz` |
+
 ---
 
 ## 今後の運用ルール

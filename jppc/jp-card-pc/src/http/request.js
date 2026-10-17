@@ -49,7 +49,8 @@ service.interceptors.response.use(response => {
       // 新：ログイン関連の画面（ログイン・認証コード・副管理者・電話番号・新規登録）にいるときは移動しない。
       //     それ以外の画面では、保存済みのログイン情報を消し、ページを読み込み直してログイン画面へ移動する
       //     （読み込み直すことで、裏の定期通信も止まる）。
-      var onAuthPage = /^#\/(login|code|deputyAdmin|phone|register)(\?|$)/.test(window.location.hash)
+      var onAuthPage = /^#\/(login|code|deputyAdmin|phone|register|sp\/login|sp\/code)(\?|$)/.test(window.location.hash)
+      // [カスタムエイド 2026-10-17] スマホ版のログイン・認証コード画面(sp/login・sp/code)も同じ扱いにする
       if (!onAuthPage) {
         localStorage.removeItem('token')
         localStorage.removeItem('admin')

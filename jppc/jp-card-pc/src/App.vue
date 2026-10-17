@@ -117,6 +117,8 @@
         getConfig,
         getMessageList
     } from "@/http/api.js"
+    // [カスタムエイド 2026-10-17] スマホ・タブレット版(/sp)ではPC版のヘッダー・メニューを出さない
+    import { isChromeless } from "@/utils/spDevice.js"
     export default {
         components: {
             top,
@@ -144,17 +146,7 @@
                     localStorage.setItem('timestamp', res.data.config.timestamp)
                 }
             })
-            if (
-                this.$route.name === "deputyAdmin" ||
-                this.$route.name === "register" ||
-                this.$route.name === "login" ||
-                this.$route.name === "code" ||
-                this.$route.name === "phone"
-            ) {
-                this.main_swiper = false;
-            } else {
-                this.main_swiper = true;
-            }
+            this.main_swiper = !isChromeless(this.$route);
             
             setInterval(() => {
                 // this.getUnreadnumber()
@@ -220,17 +212,7 @@
                 }
                 
                 
-                if (
-                    this.$route.name === "deputyAdmin" ||
-                    this.$route.name === "register" ||
-                    this.$route.name === "login" ||
-                    this.$route.name === "code" ||
-                    this.$route.name === "phone"
-                ) {
-                    this.main_swiper = false;
-                } else {
-                    this.main_swiper = true;
-                }
+                this.main_swiper = !isChromeless(this.$route);
                 
               
                 

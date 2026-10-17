@@ -1,0 +1,106 @@
+/* [カスタムエイド 2026-10-17] スマホ・タブレット版(/sp)共通のスタイル。クラス名はすべて sp- で始める(PC版に影響させない) */
+.sp-page {
+    width: 100%;
+    min-height: 100vh;
+    flex: 1;
+    box-sizing: border-box;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', Meiryo, sans-serif;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    -webkit-text-size-adjust: 100%;
+    position: relative;
+}
+.sp-page *, .sp-page *::before, .sp-page *::after { box-sizing: border-box; }
+.sp-page a { color: #1a73e8; text-decoration: none; }
+.sp-page button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.sp-page input, .sp-page select { font-family: inherit; }
+.sp-page input:focus, .sp-page select:focus { outline: 2px solid #1a73e8; outline-offset: 1px; }
+
+/* ヘッダー */
+.sp-hd-auth { height: 54px; flex-shrink: 0; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+.sp-hd-back { position: absolute; left: 6px; top: 5px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #fff; background: transparent; border: 0; }
+.sp-logo { height: 22px; width: auto; display: block; }
+.sp-hd-main { height: 70px; flex-shrink: 0; background: #000; display: flex; align-items: center; justify-content: space-between; padding: 0 10px 0 20px; }
+.sp-hd-main .sp-shop { font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 8px; max-width: 60vw; }
+.sp-logout { min-height: 44px; padding: 0 10px; display: flex; align-items: center; gap: 6px; font-size: 16px; color: #fff; background: transparent; border: 0; }
+.sp-tabs-wrap { flex-shrink: 0; background: #fff; border-bottom: 1px solid #e5e5ea; padding: 12px 16px; }
+.sp-tabs { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #eeeef0; border-radius: 10px; padding: 3px; }
+.sp-tab { height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #515154; border: 0; background: transparent; }
+.sp-tab.on { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.12); font-weight: 700; color: #1d1d1f; }
+.sp-hd-sub { height: 56px; flex-shrink: 0; background: #fff; border-bottom: 1px solid #e5e5ea; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
+.sp-hd-sub h1 { margin: 0; font-size: 17px; font-weight: 700; }
+.sp-hd-sub .sp-hd-back { position: static; color: #1d1d1f; }
+
+/* 本文(タブレットでは幅600pxで中央) */
+.sp-body { flex: 1; width: 100%; max-width: 600px; margin: 0 auto; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px; }
+.sp-card { background: #fff; border-radius: 14px; }
+.sp-card-pad { padding: 16px; }
+.sp-h1 { margin: 0; font-size: 22px; font-weight: 700; }
+.sp-cap { font-size: 12px; color: #6e6e73; }
+.sp-sec-title { margin: 0; padding: 14px 16px 6px; font-size: 13px; font-weight: 500; color: #6e6e73; }
+.sp-row { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #f0f0f2; }
+.sp-row:last-child { border-bottom: 0; }
+.sp-val { font-size: 17px; font-weight: 700; }
+.sp-note { margin: 0; font-size: 12px; line-height: 1.7; color: #515154; }
+.sp-small { margin: 0; font-size: 11px; line-height: 1.7; color: #6e6e73; }
+.sp-gray-box { padding: 12px; border-radius: 10px; background: #f5f5f7; font-size: 12px; line-height: 1.8; color: #515154; }
+.sp-yellow-box { padding: 10px 12px; border-radius: 10px; background: #fff8e1; font-size: 12px; line-height: 1.7; color: #5f4b00; }
+.sp-blue-box { padding: 10px 12px; border-radius: 10px; background: #e8f0fe; font-size: 12px; line-height: 1.7; color: #174ea6; }
+
+/* ボタン */
+.sp-btn { height: 50px; border-radius: 25px; border: 0; background: #1a73e8; color: #fff; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; width: 100%; }
+.sp-btn:disabled, .sp-btn.dis { opacity: 0.45; cursor: not-allowed; }
+.sp-btn-line { height: 46px; border-radius: 23px; border: 1px solid #1a73e8; background: #fff; color: #1a73e8; font-size: 15px; font-weight: 500; width: 100%; display: flex; align-items: center; justify-content: center; }
+.sp-pill { flex-shrink: 0; min-height: 40px; padding: 0 14px; border: 1px solid #1a73e8; border-radius: 20px; background: #fff; color: #1a73e8; font-size: 13px; font-weight: 500; display: flex; align-items: center; }
+.sp-link { min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #1a73e8; background: transparent; border: 0; width: 100%; }
+.sp-link.red { color: #c5221f; }
+.sp-red-btn { background: #c5221f; }
+
+/* 入力 */
+.sp-field { display: flex; flex-direction: column; gap: 6px; }
+.sp-label { font-size: 13px; font-weight: 500; }
+.sp-req { color: #d93025; }
+.sp-input { height: 48px; border: 1px solid #d2d2d7; border-radius: 10px; padding: 0 14px; font-size: 16px; color: #1d1d1f; background: #fff; width: 100%; -webkit-appearance: none; }
+select.sp-input { padding: 0 12px; }
+
+/* 認証コード(6桁) */
+.sp-code { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.sp-code-box { height: 56px; border: 1px solid #d2d2d7; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; background: #fff; }
+.sp-code-box.cur { border: 2px solid #1a73e8; }
+.sp-code-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; border: 0; color: transparent; background: transparent; caret-color: transparent; }
+
+/* ポップアップ */
+.sp-mask { position: fixed; inset: 0; background: rgba(29,29,31,0.5); z-index: 2000; display: flex; justify-content: center; align-items: flex-start; padding: 12vh 16px 24px; overflow-y: auto; }
+.sp-mask.under-header { top: 70px; z-index: 1500; }
+.sp-dialog { width: 100%; max-width: 480px; background: #fff; border-radius: 16px; padding: 26px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+.sp-dialog.center { text-align: center; }
+.sp-dialog-title { font-size: 16px; font-weight: 700; line-height: 1.6; }
+.sp-dialog-text { font-size: 13px; line-height: 1.8; color: #515154; white-space: pre-line; }
+.sp-dbtn { height: 48px; border: 0; border-radius: 10px; background: #1a73e8; color: #fff; font-size: 15px; font-weight: 700; width: 100%; }
+.sp-dbtn.gray { background: #e5e5ea; color: #6e6e73; }
+.sp-dbtn:disabled { opacity: 0.5; }
+.sp-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* アプリ内課金の人向け Attention(Figma の形) */
+.sp-att { width: 100%; max-width: 480px; background: #fff; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+.sp-att-title { padding: 14px 16px; background: #eeeef0; font-size: 15px; font-weight: 700; text-align: center; }
+.sp-att-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.sp-att-warn { padding: 12px 14px; border-radius: 8px; background: rgba(230,191,24,0.45); font-size: 14px; font-weight: 700; line-height: 1.7; }
+.sp-att-note { padding: 12px 14px; border: 1px solid #d2d2d7; border-radius: 8px; font-size: 13px; line-height: 1.8; white-space: pre-line; }
+.sp-att-ok { height: 48px; border: 0; border-radius: 24px; background: #19c45a; color: #fff; font-size: 15px; font-weight: 700; }
+
+/* お知らせ(画面下に少し出る) */
+.sp-toast { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); max-width: calc(100vw - 32px); padding: 12px 18px; border-radius: 12px; background: rgba(29,29,31,0.92); color: #fff; font-size: 14px; line-height: 1.6; z-index: 3000; text-align: center; }
+.sp-toast.err { background: rgba(197,34,31,0.95); }
+
+.sp-loading { padding: 40px 0; text-align: center; color: #6e6e73; font-size: 14px; }
+.sp-foot { flex-shrink: 0; padding: 12px 16px 20px; text-align: center; font-size: 11px; color: #6e6e73; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.sp-foot button { background: transparent; border: 0; color: #6e6e73; font-size: 12px; text-decoration: underline; min-height: 36px; }
+
+/* ラジオ(プラン・周期の選択) */
+.sp-radio { width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #c7c7cc; }
+.sp-radio span { width: 10px; height: 10px; border-radius: 50%; background: transparent; }
+.sp-radio.on { border-color: #1a73e8; }
+.sp-radio.on span { background: #1a73e8; }

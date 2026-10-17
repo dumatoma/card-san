@@ -7,6 +7,8 @@ import code from '../views/login/codeLogin.vue'
 import phone from '../views/login/phoneLogin.vue'
 import deputyAdmin from '../views/login/deputyAdmin.vue'
 import FirstStep from '../views/variousSet/firstStep.vue'
+// [カスタムエイド 2026-10-17] スマホ・タブレット版(/sp)の自動切り替え
+import { spRedirect } from '../utils/spDevice.js'
 
 Vue.use(VueRouter)
 const originalPush = VueRouter.prototype.push;
@@ -24,6 +26,14 @@ VueRouter.prototype.replace = function push(location, onResolve, onReject) {
   return originalReplace.call(this, location).catch(err => err);
 };
 const routes = [
+  // [カスタムエイド 2026-10-17] スマホ・タブレット版(オーナー情報・ご契約内容だけ)
+  { path: '/sp/login', name: 'spLogin', component: () => import('../views/sp/spLogin.vue') },
+  { path: '/sp/code', name: 'spCode', component: () => import('../views/sp/spCode.vue') },
+  { path: '/sp/owner', name: 'spOwner', component: () => import('../views/sp/spOwner.vue') },
+  { path: '/sp/contract', name: 'spContract', component: () => import('../views/sp/spContract.vue') },
+  { path: '/sp/plan', name: 'spPlan', component: () => import('../views/sp/spPlan.vue') },
+  { path: '/sp/confirm', name: 'spConfirm', component: () => import('../views/sp/spConfirm.vue') },
+  { path: '/sp/cancel', name: 'spCancel', component: () => import('../views/sp/spCancel.vue') },
   {
     path: '/register',
     name: 'register',
@@ -316,6 +326,14 @@ const router = new VueRouter({
   mode: 'hash',
   base: process.env.BASE_URL,
   routes
+})
+
+// [カスタムエイド 2026-10-17] スマホ・タブレットで開いたときは /sp の画面へ。/sp の画面はログインが必要
+router.beforeEach((to, from, next) => {
+  var r = null
+  try { r = spRedirect(to, from) } catch (e) { r = null }
+  if (r && r.path !== to.path) next(r)
+  else next()
 })
 
 export default router

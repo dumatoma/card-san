@@ -48,6 +48,7 @@
         html,
         body {
             background: #ececf0 !important;
+            overflow-x: hidden; // [カスタムエイド 2026-10-18] 中央の幅からはみ出す部品で、画面が横にずれないようにする
         }
         uni-app,
         uni-page,

@@ -39,14 +39,56 @@
                 </view>
             </view>
             <!-- 日历组件 -->
+            <!-- [カスタムエイド 2026-10-18] 週の切り替え:日にちと予約枠を一緒に指について横に動かす(左の時間の列は固定)。
+                 青い丸は今日だけ。日曜・祝日は赤。見出しは表示中の週(◯月◯日〜◯日) -->
             <u-sticky offsetTop="16">
             <view class="calendar">
-                <lxCalendar @change="change"></lxCalendar>
+                <view class="cs-wk">
+                    <view class="cs-wk-head">
+                        <view class="cs-wk-title">{{ weekTitle }}</view>
+                        <view class="cs-wk-arrows">
+                            <view class="cs-wk-arrow" :class="{ dis: weekOffset <= 0 }" @click="goWeek(-1)" aria-label="前の週">
+                                <view class="cs-chev prev"></view>
+                            </view>
+                            <view class="cs-wk-arrow" @click="goWeek(1)" aria-label="次の週">
+                                <view class="cs-chev next"></view>
+                            </view>
+                        </view>
+                    </view>
+                    <view class="cs-wk-labels">
+                        <view class="cs-wk-label" v-for="(w, i) in weekLabels" :key="i" :class="i == 0 ? 'sun' : i == 6 ? 'sat' : ''">{{ w }}</view>
+                    </view>
+                    <view class="cs-pager cs-day-pager" id="csDayPager">
+                        <view class="cs-track">
+                            <view class="cs-pane" v-for="p in panes" :key="p.key">
+                                <view class="cs-wk-days" v-if="!p.empty">
+                                    <view class="cs-wk-day" v-for="d in p.days" :key="d.key" :class="d.cls">
+                                        <text class="cs-wk-num">{{ d.day }}</text>
+                                    </view>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
             </view>
             </u-sticky>
             <!-- 周 -->
-            <view v-if="status == 'week'">
-                <week :info="info" :times="times" @addNew="addNewAppointment" :weekData="weekData"></week>
+            <view v-if="status == 'week'" class="cs-wbody">
+                <view class="cs-timecol" :style="`height:${80 * (times.length + 1)}upx`">
+                    <view class="time">
+                        <view class="timeItem" v-for="(item, index) in times" :key="index">
+                            <view class="timeName" v-text="item.time"></view>
+                            <view class="point"></view>
+                        </view>
+                    </view>
+                </view>
+                <view class="cs-pager cs-grid-pager" id="csGridPager">
+                    <view class="cs-track">
+                        <view class="cs-pane" v-for="p in panes" :key="p.key">
+                            <week v-if="!p.empty" :info="info" :times="times" :hideTime="true" @addNew="addNewAppointment" :weekData="p.data"></week>
+                        </view>
+                    </view>
+                </view>
             </view>
             <view class="btn1" hover-class="btnhover" @click="showMenu = true">
                 お問い合わせ
@@ -73,8 +115,8 @@
 </template>
 
 <script>
-    import lxCalendar from "@/components/lx-calendar/lx-calendar.vue"
     import week from "@/components/week/week.vue"
+    import { holidayName } from "@/utils/jpHoliday.js"
     import {
         getAppointmentList,
         getStaffList,
@@ -84,7 +126,6 @@
     } from "@/api/index.js"
     export default {
         components: {
-            lxCalendar,
             week
         },
         data() {
@@ -189,8 +230,45 @@
                 orderInfo: uni.getStorageSync("orderItem"),
                 info:{},
                 appointprice:0,
-                query:{}
+                query:{},
+                // [カスタムエイド 2026-10-18] 週のスライド
+                weekLabels: ['日', '月', '火', '水', '木', '金', '土'],
+                weekOffset: 0,      // 今週から何週先か(0 = 今週。今週より前には戻れない)
+                weekCache: {},      // 週の初日(YYYY-MM-DD)ごとの予約データ
+                weekGen: 0,         // 担当者を切り替えたら増やす(古い読み込み結果を捨てる)
+                weekBusy: false
             }
+        },
+        computed: {
+            baseSunday() {
+                let d = new Date()
+                d.setHours(0, 0, 0, 0)
+                d.setDate(d.getDate() - d.getDay())
+                return d
+            },
+            panes() {
+                let list = []
+                for (let i = -1; i <= 1; i++) {
+                    let o = this.weekOffset + i
+                    if (o < 0) {
+                        list.push({ key: 'empty', empty: true })
+                        continue
+                    }
+                    let start = this.weekStartOf(o)
+                    let key = this.formatDate(start.getTime())
+                    list.push({ key: key, empty: false, data: this.weekCache[key] || [], days: this.weekDays(start) })
+                }
+                return list
+            },
+            weekTitle() {
+                let s = this.weekStartOf(this.weekOffset)
+                let e = new Date(s)
+                e.setDate(e.getDate() + 6)
+                return s.getFullYear() + '年 ' + (s.getMonth() + 1) + '月' + s.getDate() + '日〜' + (e.getMonth() != s.getMonth() ? (e.getMonth() + 1) + '月' : '') + e.getDate() + '日'
+            }
+        },
+        mounted() {
+            this.$nextTick(() => this.bindSwipe())
         },
         created() {
             
@@ -204,10 +282,8 @@
             that.getStaffData()
             that.getInfo(options.id)
             that.getList()
-            setTimeout(() => {
-                that.getWeekList(that.formatDate(that.getWeekDate(that.getToday())))
-                that.selectDate = that.formatDate(that.getWeekDate(that.getToday()))
-            },1000)
+            // [カスタムエイド 2026-10-18] 今週・来週の予約データを読み込む(店舗情報の読み込み後)
+            that.selectDate = that.formatDate(that.getWeekDate(that.getToday()))
            
         },
         onShow() {
@@ -261,6 +337,7 @@
                     if(res.code == 200){
                         this.info = res.data.shop
                         // console.log(111111,res.data.shop.day_business["202303"])
+                        this.loadAroundWeeks(true)
                     }
                 })
             },
@@ -413,12 +490,174 @@
                 that.current = index
                 that.staffId = e
                 that.appointprice = price
-                that.getWeekList(that.selectDate)
+                // [カスタムエイド 2026-10-18] 担当者を切り替えたら、表示中の週と前後の週を読み込み直す
+                that.weekGen++
+                that.weekCache = {}
+                that.loadAroundWeeks(true)
             },
 
             // 返回首页
             toIndex() {
                 uni.navigateBack()
+            },
+            // ===== [カスタムエイド 2026-10-18] 週のスライド =====
+            weekStartOf(o) {
+                let d = new Date(this.baseSunday)
+                d.setDate(d.getDate() + o * 7)
+                return d
+            },
+            weekDays(start) {
+                let today = new Date()
+                today.setHours(0, 0, 0, 0)
+                let days = []
+                for (let i = 0; i < 7; i++) {
+                    let d = new Date(start)
+                    d.setDate(d.getDate() + i)
+                    let cls = []
+                    if (d.getTime() == today.getTime()) cls.push('today')
+                    if (i == 0 || holidayName(d)) cls.push('sun')
+                    else if (i == 6) cls.push('sat')
+                    days.push({ key: i, day: d.getDate(), cls: cls.join(' ') })
+                }
+                return days
+            },
+            // 1週分の予約データを読み込む(読み込み済みなら何もしない)
+            loadWeek(o, showLoading) {
+                let that = this
+                if (o < 0) return
+                let key = that.formatDate(that.weekStartOf(o).getTime())
+                if (that.weekCache[key]) return
+                that.$set(that.weekCache, key, [])
+                let gen = that.weekGen
+                if (showLoading) uni.showLoading({ title: "読み込み中", mask: true })
+                getAppointmentList({ date: key, sid: that.query.id, id: that.staffId, smid: that.query.mid }).then((res) => {
+                    if (showLoading) uni.hideLoading()
+                    if (gen != that.weekGen) return
+                    if (res.code == 200) {
+                        let array = res.data.orders
+                        array.forEach((val) => { val.times = that.times })
+                        that.$set(that.weekCache, key, array)
+                    } else {
+                        that.$delete(that.weekCache, key)
+                    }
+                }).catch(() => {
+                    if (showLoading) uni.hideLoading()
+                    if (gen == that.weekGen) that.$delete(that.weekCache, key)
+                })
+            },
+            loadAroundWeeks(showLoading) {
+                this.loadWeek(this.weekOffset, showLoading)
+                this.loadWeek(this.weekOffset + 1, false)
+                this.loadWeek(this.weekOffset - 1, false)
+            },
+            tracks() {
+                return document.querySelectorAll('.cs-track')
+            },
+            setTrackX(px, anim) {
+                this.tracks().forEach((t) => {
+                    t.style.transition = anim ? 'transform .28s cubic-bezier(.2,.7,.2,1)' : 'none'
+                    t.style.transform = 'translate3d(calc(-33.3333% + ' + px + 'px),0,0)'
+                })
+            },
+            goWeek(dir) {
+                let that = this
+                if (that.weekBusy) return
+                if (dir < 0 && that.weekOffset <= 0) {
+                    that.setTrackX(0, true)
+                    return
+                }
+                that.weekBusy = true
+                let el = document.getElementById('csGridPager') || document.getElementById('csDayPager')
+                let w = el ? el.clientWidth : 300
+                that.setTrackX(-dir * w, true)
+                setTimeout(() => {
+                    that.weekOffset += dir
+                    that.selectDate = that.formatDate(that.weekStartOf(that.weekOffset).getTime())
+                    that.$nextTick(() => {
+                        that.setTrackX(0, false)
+                        that.weekBusy = false
+                        that.loadAroundWeeks(true)
+                    })
+                }, 290)
+            },
+            // 日にちの行・予約枠のどちらをなぞっても、両方を一緒に動かす(スマホは指、PCはマウスのドラッグとトラックパッド)
+            bindSwipe() {
+                let that = this
+                let ids = ['csDayPager', 'csGridPager']
+                ids.forEach((id) => {
+                    let el = document.getElementById(id)
+                    if (!el || el.__csBound) return
+                    el.__csBound = true
+                    let sx = 0, sy = 0, st = 0, axis = '', dx = 0
+                    let limit = (v) => (that.weekOffset <= 0 && v > 0 ? v / 3 : v)
+                    let finish = (v, fast) => {
+                        let w = el.clientWidth
+                        if (v < -w * 0.3 || (fast && v < 0)) that.goWeek(1)
+                        else if (v > w * 0.3 || (fast && v > 0)) that.goWeek(-1)
+                        else that.setTrackX(0, true)
+                    }
+                    el.addEventListener('touchstart', (e) => {
+                        if (that.weekBusy) return
+                        let p = e.touches[0]
+                        sx = p.clientX; sy = p.clientY; st = Date.now(); axis = ''; dx = 0
+                    }, { passive: true })
+                    el.addEventListener('touchmove', (e) => {
+                        if (that.weekBusy) return
+                        let p = e.touches[0], mx = p.clientX - sx, my = p.clientY - sy
+                        if (!axis) {
+                            if (Math.abs(mx) < 6 && Math.abs(my) < 6) return
+                            axis = Math.abs(mx) > Math.abs(my) ? 'x' : 'y'
+                        }
+                        if (axis != 'x') return
+                        e.preventDefault()
+                        dx = limit(mx)
+                        that.setTrackX(dx, false)
+                    }, { passive: false })
+                    el.addEventListener('touchend', () => {
+                        if (axis != 'x' || that.weekBusy) return
+                        finish(dx, Math.abs(dx) > 30 && Date.now() - st < 250)
+                    })
+                    // マウスでつかんでドラッグ
+                    let down = false, mdx = 0, msx = 0, moved = false
+                    el.addEventListener('pointerdown', (e) => {
+                        if (e.pointerType != 'mouse' || e.button != 0 || that.weekBusy) return
+                        down = true; moved = false; msx = e.clientX; mdx = 0
+                    })
+                    window.addEventListener('pointermove', (e) => {
+                        if (!down) return
+                        mdx = e.clientX - msx
+                        if (!moved && Math.abs(mdx) < 6) return
+                        moved = true
+                        that.setTrackX(limit(mdx), false)
+                    })
+                    window.addEventListener('pointerup', () => {
+                        if (!down) return
+                        down = false
+                        if (moved) finish(limit(mdx), false)
+                    })
+                    // ドラッグしたあとのクリックで予約枠が押されないようにする
+                    el.addEventListener('click', (e) => {
+                        if (moved) { e.stopPropagation(); e.preventDefault(); moved = false }
+                    }, true)
+                    // トラックパッドの2本指スワイプ
+                    let wx = 0, wt = null
+                    el.addEventListener('wheel', (e) => {
+                        if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || that.weekBusy) return
+                        e.preventDefault()
+                        wx -= e.deltaX
+                        if (that.weekOffset <= 0 && wx > 0) wx = Math.min(wx, 60)
+                        that.setTrackX(wx, false)
+                        clearTimeout(wt)
+                        wt = setTimeout(() => {
+                            let v = wx
+                            wx = 0
+                            let w = el.clientWidth
+                            if (v < -w * 0.25) that.goWeek(1)
+                            else if (v > w * 0.25) that.goWeek(-1)
+                            else that.setTrackX(0, true)
+                        }, 140)
+                    }, { passive: false })
+                })
             },
         }
     }
@@ -637,4 +876,35 @@
             }
         }
     }
+
+    /* [カスタムエイド 2026-10-18] 週のスライド(日にち・予約枠) */
+    .cs-wk { width: 100%; background: #fff; }
+    .cs-wk-head { display: flex; align-items: center; justify-content: space-between; height: 100upx; box-sizing: border-box; padding: 0 30upx 0 60upx; border-bottom: 1px solid #f5f5f5; }
+    .cs-wk-title { font-size: 34upx; color: #1D1D1F; font-family: Hiragino Sans-W6, Hiragino Sans; }
+    .cs-wk-arrows { display: flex; align-items: center; }
+    .cs-wk-arrow { width: 80upx; height: 80upx; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .cs-wk-arrow.dis { opacity: .3; }
+    .cs-wk-labels { display: flex; margin-left: 158upx; width: 560upx; padding-top: 10upx; }
+    .cs-wk-label { width: 80upx; text-align: center; font-size: 30upx; height: 60upx; line-height: 60upx; color: #1D1D1F; }
+    .cs-pager { overflow: hidden; touch-action: pan-y; width: 560upx; }
+    .cs-day-pager { margin-left: 158upx; padding-bottom: 12upx; }
+    .cs-track { display: flex; width: 300%; transform: translate3d(-33.3333%, 0, 0); will-change: transform; }
+    .cs-pane { width: 33.3333%; flex-shrink: 0; min-height: 1px; }
+    .cs-wk-days { display: flex; }
+    .cs-wk-day { width: 80upx; height: 80upx; display: flex; align-items: center; justify-content: center; }
+    .cs-wk-num { width: 72upx; height: 72upx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32upx; color: #1D1D1F; }
+    .cs-wk-label.sun, .cs-wk-day.sun .cs-wk-num { color: #D93025; }
+    .cs-wk-label.sat, .cs-wk-day.sat .cs-wk-num { color: #1A73E8; }
+    .cs-wk-day.today .cs-wk-num { background: #1A73E8; color: #fff !important; }
+    .cs-wbody { display: flex; width: 100%; }
+    .cs-chev { width: 22upx; height: 22upx; border-top: 4upx solid #1A73E8; border-left: 4upx solid #1A73E8; }
+    .cs-chev.prev { transform: rotate(-45deg); margin-left: 8upx; }
+    .cs-chev.next { transform: rotate(135deg); margin-right: 8upx; }
+    /* 時間の列(予約枠の部品 week.vue と同じ見た目) */
+    .cs-timecol { width: 158upx; flex-shrink: 0; padding-top: 8upx; box-sizing: border-box; }
+    .cs-timecol .time { position: relative; top: -40upx; }
+    .cs-timecol .timeItem { height: 80upx; line-height: 80upx; width: 158upx; font-size: 24upx; font-family: Hiragino Sans-W3, Hiragino Sans; color: #1D1D1F; display: flex; align-items: center; justify-content: space-between; text-align: center; }
+    .cs-timecol .timeName { flex: 1; text-align: center; }
+    .cs-timecol .point { width: 20upx; height: 2upx; background-color: #EAEAEA; }
+    .cs-grid-pager { flex-shrink: 0; }
 </style>

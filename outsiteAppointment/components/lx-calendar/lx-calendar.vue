@@ -20,7 +20,7 @@
                         v-for="(item,index) in   week_list_prev_co" :key="index">
                         <view class="dd" @click="item_click(vo,index,key)" v-for="(vo,key) in item" :key="key">
                             <view class="num"
-                                :class="[vo.today ? 'today' : '',vo.type == 'month' ? 'month' : (retract ? '' : 'disabled')]" :style="key == 0? 'color:#D93025' : key == 6? 'color:#1A73E8' : '' ">
+                                :class="[isRealToday(vo.date) ? 'today' : '',vo.type == 'month' ? 'month' : (retract ? '' : 'disabled')]" :style="key == 0? 'color:#D93025' : key == 6? 'color:#1A73E8' : '' ">
                                 {{vo.day}}
                             </view>
                             <view v-show="vo.dot && (vo.type == 'month' || retract)" class="dot"></view>
@@ -34,7 +34,7 @@
                         :key="index">
                         <view class="dd" @click="item_click(vo,index,key)" v-for="(vo,key) in item" :key="key">
                             <view class="num"
-                                :class="[vo.today ? 'today' : '',vo.type == 'month' ? 'month' : (retract ? '' : 'disabled')]" :style="key == 0? 'color:#D93025' : key == 6? 'color:#1A73E8' : '' ">
+                                :class="[isRealToday(vo.date) ? 'today' : '',vo.type == 'month' ? 'month' : (retract ? '' : 'disabled')]" :style="key == 0? 'color:#D93025' : key == 6? 'color:#1A73E8' : '' ">
                                 {{vo.day}}
                             </view>
                             <view v-show="vo.dot && (vo.type == 'month' || retract)" class="dot"></view>
@@ -48,7 +48,7 @@
                         v-for="(item,index) in  week_list_next_co" :key="index">
                         <view class="dd" @click="item_click(vo,index,key)" v-for="(vo,key) in item" :key="key">
                             <view class="num"
-                                :class="[vo.today ? 'today' : '',vo.type == 'month' ? 'month' : (retract ? '' : 'disabled')]" :style="key == 0? 'color:#D93025' : key == 6? 'color:#1A73E8' : '' ">
+                                :class="[isRealToday(vo.date) ? 'today' : '',vo.type == 'month' ? 'month' : (retract ? '' : 'disabled')]" :style="key == 0? 'color:#D93025' : key == 6? 'color:#1A73E8' : '' ">
                                 {{vo.day}}
                             </view>
                             <view v-show="vo.dot && (vo.type == 'month' || retract)" class="dot"></view>
@@ -343,12 +343,24 @@
                 })
                 this[week_list] = list;
             },
+            // [カスタムエイド 2026-10-18] 青い丸は本当の「今日」だけに付ける
+            // (vo.today は「選んでいる日」で、週を切り替えると7日ずつ動くため、表示には使わない)
+            isRealToday(date) {
+                const d = new Date()
+                return date == `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+            },
+            real_today() {
+                let d = new Date();
+                return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+            },
             set_to_day(type) {
                 let list = [];
 
                 this[type].map((item, index) => {
                     list.push(item.map((vo, key) => {
-                        if (vo.date == `${this.date}`) {
+                        // [カスタムエイド 2026-10-18] 青い丸は「本当の今日」だけに付ける
+                        // (以前は選んでいる日に付いていたため、週を切り替えると同じ曜日に丸が移っていた)
+                        if (String(vo.date).replace(/-0/g, '-') == this.real_today()) {
                             vo.today = true;
                         } else {
                             vo.today = false;

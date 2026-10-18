@@ -84,7 +84,7 @@
                         お支払い方法
                     </view>
                     <view class="cBottom" style="text-align: left !important;"
-                        v-text="vips[0].is_try == 1 ? '-' : vips[0].card_type == 1 ? 'クレジットカード' : vips[0].card_type == 2 ? 'Apple App Store' : 'Google Play'"></view>
+                        v-text="vips[0].is_try == 1 ? '-' : vips[0].card_type == 1 ? 'クレジットカード' : vips[0].card_type == 2 ? 'App Store 課金' : 'Google Play 課金'"></view>
                     <view class="cardLine" v-if="vips[0].card_type == 1 && card">
                         {{card.brand_name}}　**** {{card.last4}}　（有効期限 {{('0' + card.exp_month).slice(-2)}}/{{String(card.exp_year).slice(-2)}}）
                     </view>
@@ -130,6 +130,7 @@
 </template>
 
 <script>
+    import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-10-18] 端末の種類はその場で判定(No.10)
     import subscribe from "@/components/subscribe/subscribe.vue"
     import subscribee from "@/components/su1b/su1b.vue"
     import sios from "@/components/sios.vue"
@@ -175,7 +176,7 @@
                 mask:true
             })
             this.getvip()
-            this.plt = uni.getStorageSync("platform")
+            this.plt = getPlatform()
             getVipCard().then((res) => {
                 if (res.code == 200) this.card = res.data.card
             }).catch(() => {})
@@ -210,7 +211,7 @@
                 })
             },
             tone(){
-                let platform = uni.getStorageSync("platform")
+                let platform = getPlatform()
                 if(this.isexpire == true){
                     uni.navigateTo({
                         url: "/pages/payment/payment?type="+this.vips[0].type
@@ -259,17 +260,28 @@
                     })
                 }
             },
+            // [カスタムエイド 2026-10-18] 解約の案内は、端末ではなく「契約の支払い方法」で出し分ける(修正一覧 No.11)
+            // 以前は iPhone なら支払い方法に関係なく Apple 用の案内が出ていた(カード決済の人にも)
             toff() {
-                let platform = uni.getStorageSync("platform")
-                if(platform != 'ios'){
-                    if (this.info.card_type == 1) {
-                        this.title = "解約手続きについて"
-                        this.content = "解約手続きは、お手数ではございますが、PCブラウザよりCard-Sanウェブサイトにログインしてください。"
-                        this.show2 = true               
-                    } else {
-                        this.changeS(0)
-                    }
-                }else{
+                let platform = getPlatform()
+                let ct = Number(this.info.card_type)
+                if (ct == 1) {
+                    // クレジットカード(Stripe)決済:ウェブサイトで解約
+                    this.title = "解約手続きについて"
+                    this.content = "解約手続きは、お手数ではございますが、PCブラウザよりCard-Sanウェブサイトにログインしてください。"
+                    this.show2 = true
+                } else if (ct == 2) {
+                    // App Store 課金:iPhone の設定から解約(Apple 用の案内)
+                    this.show3 = true
+                } else if (ct == 3 && platform == 'ios') {
+                    // Google Play 課金なのに iPhone で開いている:Android の Playストアで解約
+                    this.title = "解約手続きについて"
+                    this.content = "Google Play でご契約のサブスクリプションは、このiPhoneからは解約できません。ご契約時のAndroid端末の「Playストア」アプリ→[定期購入]→「CardSan管理」→[定期購入を解約]から解約手続きをお願いします。"
+                    this.show2 = true
+                } else if (platform != 'ios') {
+                    // Google Play 課金(Android):今までどおりアプリ内の解約手続きへ
+                    this.changeS(0)
+                } else {
                     this.show3 = true
                 }
             },

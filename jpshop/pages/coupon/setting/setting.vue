@@ -115,6 +115,7 @@
 </template>
 
 <script>
+    import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-10-18] 端末の種類はその場で判定(No.10)
     var googlePay = uni.requireNativePlugin('sn-googlepay5');
     import mod from "../../../components/mod.vue"
     import aleOne from "../../../components/alerts/you1/you1.vue"
@@ -272,7 +273,7 @@
             that.sceenMember()
             getConfig().then((res) => {
                 if (res.code == 200) {
-                    let pt = uni.getStorageSync("platform")
+                    let pt = getPlatform()
                     if (pt == 'ios') {
                         that.pid = res.data.config.vip_count.coupon.product_id[2]
                     } else {
@@ -503,7 +504,7 @@
                 }
                 // Apple/Google IAP
                 uni.showLoading({ title: "購入処理実施中..." })
-                let plat = uni.getStorageSync("platform")
+                let plat = getPlatform()
                 if (plat != "ios") {
                     var pId = that.pid;
                     let orid = ''

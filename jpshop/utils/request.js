@@ -1,6 +1,7 @@
 /****   request.js   ****/
 // 导入axios
 import axios from '../utils/axios/index.js'
+import { getPlatform } from './platform.js' // [カスタムエイド 2026-10-18] 端末の種類はその場で判定(No.10)
 // 使用element-ui Message做消息提醒
 // import { Message} from 'element-ui';
 //1. 创建新的axios实例，
@@ -22,7 +23,7 @@ service.interceptors.request.use(config => {
     // 注意使用 token 的时候需要引入 cookie 方法或者用本地 localStorage 等方法，推荐 js-cookie
     let token = uni.getStorageSync("token") // 这里取 token 之前，你肯定需要先拿到 token, 存一下
     let info = uni.getStorageSync("admin") || {}
-    let platform = uni.getStorageSync("platform")
+    let platform = getPlatform()
     let p = platform == "ios"?2 : 3
     let uuid = info.uuid || ''
     if(token){

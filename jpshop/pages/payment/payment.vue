@@ -72,9 +72,8 @@
                 お支払い方法
             </view>
             <view class="paymethod">
-                <view class="payItem">
-                    App 課金
-                </view>
+                <!-- [カスタムエイド 2026-10-18] 「App 課金」の固定表示をやめ、契約・端末で出し分ける(修正一覧 No.8) -->
+                <view class="payItem" v-text="payMethodLabel"></view>
             </view>
         </view>
         <view class="item pd" style="box-shadow: 0rpx 0rpx 20rpx 2rpx rgba(0,0,0,0.2);">
@@ -133,11 +132,13 @@
 </template>
 
 <script>
+    import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-10-18] 端末の種類はその場で判定(No.10)
     var googlePay = uni.requireNativePlugin('sn-googlepay5');
     import {
         getShopInfo,
         getPackageList,
         getCardInfo,
+        getVipCard,
         buyPlan,
         buyPlans,
         getConfig
@@ -172,8 +173,21 @@
                 ids: ['premium_halfyear', 'premium_month', 'standard_halfyear','standard_month','light_halfyear','light_months'],
                 endDate:"",
                 timestamp:"",
-                refreshTime:"",
-                paying: false
+                refreshTime:"読み込み中…",
+                datesLoaded: false, // [カスタムエイド 2026-10-18] 契約更新日の計算に必要な読み込みが終わったか(No.9)
+                paying: false,
+                vipCard: null // [カスタムエイド 2026-10-18] カード決済で契約中のカード(No.8)
+            }
+        },
+        computed: {
+            // [カスタムエイド 2026-10-18] お支払い方法の表示(No.8)
+            payMethodLabel() {
+                const v = this.vips.length > 0 ? this.vips[0] : null
+                if (v && v.card_type == 1 && v.is_try != 1) {
+                    const c = this.vipCard
+                    return c ? ('クレジットカード ' + (c.brand_name || '') + ' **** ' + (c.last4 || '')) : 'クレジットカード'
+                }
+                return this.platform == 'ios' ? 'App Store 課金' : 'Google Play 課金'
             }
         },
         onLoad(options) {
@@ -181,27 +195,30 @@
             that.type = options.type
             that.getPlanList(options.type)
             that.getCardInfo()
+            getVipCard().then((res) => {
+                if (res && res.code == 200) that.vipCard = res.data.card
+            }).catch(() => {})
         },
         onShow() {
             let that = this
-            that.platform = uni.getStorageSync("platform")
+            that.platform = getPlatform()
             if(that.platform != "ios"){
-                googlePay.init({}, (e) => {
-                    if (e.code == 0) {
-                        // 初始化成功
-                    } else {
-                        // 初始化失败
-                    }
-                });
-                googlePay.isFeatureSupported((e) => {
-                });
-            }
-            getConfig().then((res) => {
-                if(res.code == 200){
-                    that.timestamp = res.data.config.timestamp
-                    that.getShopInfo()
+                // [カスタムエイド 2026-10-18] Google課金の部品の準備で止まっても、下の読み込み(契約更新日)は必ず行う(No.9)
+                try {
+                    googlePay.init({}, (e) => {
+                        if (e.code == 0) {
+                            // 初始化成功
+                        } else {
+                            // 初始化失败
+                        }
+                    });
+                    googlePay.isFeatureSupported((e) => {
+                    });
+                } catch (err) {
+                    console.log('googlePay init error', err)
                 }
-            }).catch(() => {})
+            }
+            that.loadDates(0)
         },
         methods: {
             formatPriceWithCommas(price) {
@@ -215,14 +232,14 @@
                     this.iap = channel ? channel : null
                     this.requestOrder()
                 }, function(e) {
-                    plus.nativeUI.alert("Failed to obtain payment channel, please try again later.", function() {}, "warning");
+                    plus.nativeUI.alert("お支払いの準備に失敗しました。しばらくしてから、もう一度お試しください。", function() {}, "エラー"); // [カスタムエイド 2026-10-18] 日本語に(No.12)
                 })
                 // #endif
             },
             // 获取内购项目列表
             requestOrder() {
                 uni.showLoading({
-                    title: 'Detecting payment environment'
+                    title: 'お支払いの準備中…' // [カスタムエイド 2026-10-18] 日本語に(No.12)
                 })
                 // #ifdef APP-PLUS
                 this.iap.requestOrder(
@@ -359,7 +376,7 @@
                     && that.vips[0].cancel_time == 0
                 const isUpgrade = Number(that.type) > Number(that.vips[0] ? that.vips[0].type : 0)
                 if (hasActiveStripe && !isUpgrade) return
-                let platform = uni.getStorageSync("platform")
+                let platform = getPlatform()
                 let data = {}
                 data['type'] = that.type
                 data['month'] = that.current
@@ -495,7 +512,7 @@
             },
             toSuccess() {
                 let that = this
-                let platform = uni.getStorageSync("platform")
+                let platform = getPlatform()
             },
             checkMore() {
                 uni.navigateTo({
@@ -526,18 +543,71 @@
                     }
                 }).catch(() => {})
             },
+            // [カスタムエイド 2026-10-18] 設定(今日の日付)と店舗情報(契約の終了日)を読み込む。失敗したら2回まで読み込み直す(No.9)
+            loadDates(retry) {
+                let that = this
+                that.datesLoaded = false
+                that.refreshTime = "読み込み中…"
+                let fail = () => {
+                    if (retry < 2) {
+                        setTimeout(() => that.loadDates(retry + 1), 1500)
+                    } else {
+                        that.refreshTime = "読み込みに失敗しました。画面を開き直してください"
+                    }
+                }
+                getConfig().then((res) => {
+                    if(res.code == 200){
+                        that.timestamp = res.data.config.timestamp
+                        that.getShopInfo(fail)
+                    } else {
+                        fail()
+                    }
+                }).catch(fail)
+            },
             chooseTime(e) {
                 let that = this
                 that.current = e
-                if(that.vips.length > 0){
-                    that.calculateTime(that.endDate * 1000)
-                }else{
-                    that.calculateTime(that.timestamp * 1000)
+                // [カスタムエイド 2026-10-18] 読み込みが終わる前は計算しない(終了日0で計算して「1970年」になっていた。No.9)
+                if (!that.datesLoaded) return
+                that.updateRenewal()
+            },
+            // [カスタムエイド 2026-10-18] 契約更新日 =「次に請求される日」(修正一覧 No.12、資料「契約更新日の表示ずれ_決済別」)
+            //  ・契約なし/無料お試し中:今日 + 期間(課金は申し込み日から始まる)
+            //  ・アップグレード:App Store 課金・カード決済からの切り替えは 今日 + 期間(Apple は請求日が申し込み日に変わる。
+            //    カード決済からアプリ内課金へのアップグレードは新しい契約が今日から始まる)
+            //    Google Play 課金は請求日が変わらないため、今の契約の終了日
+            //  ・ダウングレード・周期だけの変更・同じ内容:今の契約が終わる日に新しい内容で請求されるため、今の契約の終了日
+            updateRenewal() {
+                let that = this
+                const v = that.vips.length > 0 ? that.vips[0] : null
+                const today = that.timestamp * 1000
+                if (!v || v.is_try == 1 || !that.endDate) {
+                    that.calculateTime(today)
+                    return
                 }
+                const upgrade = Number(that.type) > Number(v.type)
+                if (upgrade && v.card_type != 3) {
+                    that.calculateTime(today)
+                    return
+                }
+                that.showDate(that.endDate * 1000)
+            },
+            // 日付をそのまま表示する(期間を足さない)
+            showDate(ms) {
+                if (!ms || Number(ms) <= 0 || isNaN(Number(ms))) {
+                    this.refreshTime = "読み込み中…"
+                    return
+                }
+                this.refreshTime = this.getHalfYearLater(Number(ms))
             },
             
             calculateTime(newDate){
                 let that = this 
+                // [カスタムエイド 2026-10-18] 日付が無い(0・空)ときは計算しない(No.9)
+                if (!newDate || Number(newDate) <= 0 || isNaN(Number(newDate))) {
+                    that.refreshTime = "読み込み中…"
+                    return
+                }
                 let dates = new Date(newDate)
                 let result
                 if(that.current == 12){
@@ -550,19 +620,24 @@
                 that.refreshTime = that.getHalfYearLater(result)
             },
             
-            getShopInfo() {
+            getShopInfo(fail) {
                 let that = this
                 getShopInfo().then((res) => {
+                    if (!res || res.code != 200 || !res.data || !res.data.shop_info) {
+                        if (fail) fail()
+                        return
+                    }
                     that.using = res.data.shop_info.vip
+                    that.datesLoaded = true
                     if (res.data.shop_info.vips.length > 0) {
                         that.vips = res.data.shop_info.vips
                         that.endDate = res.data.shop_info.vips[0].end_timestamp
-                        that.calculateTime(res.data.shop_info.vips[0].end_timestamp * 1000)
                     }else{
+                        that.vips = []
                         that.endDate = ""
-                        that.calculateTime(that.timestamp*1000)
                     }
-                }).catch(() => {})
+                    that.updateRenewal() // [カスタムエイド 2026-10-18] No.12
+                }).catch(() => { if (fail) fail() })
             },
             // 计算半年后的日期
             getHalfYearLater(timestamp) {

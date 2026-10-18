@@ -118,6 +118,7 @@
 </template>
 
 <script>
+    import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-10-18] 端末の種類はその場で判定(No.10)
     import mod from "../../../../components/mod.vue"
     import confirms from "@/components/alerts/pe1/pe1.vue"
     import pays from "@/components/alerts/pe2/pe2.vue"
@@ -239,7 +240,7 @@
             let that = this
             getConfig().then((res) => {
                 if (res.code == 200) {
-                    let pt = uni.getStorageSync("platform")
+                    let pt = getPlatform()
                     if (pt == 'ios') {
                         that.pid = res.data.config.vip_count.message.product_id[2]
                     } else {
@@ -455,7 +456,7 @@
                 }
                 // Apple/Google IAP
                 uni.showLoading({ title: "購入処理実施中..." })
-                let plat = uni.getStorageSync("platform")
+                let plat = getPlatform()
                 if (plat != 'ios') {
                     var pId = that.pid;
                     let orid = ''

@@ -445,6 +445,23 @@ $model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->
 | 確認 | ビルド済みファイルを、APIの応答を模したテストで、スマホ(390px)・タブレット(820px)で表示。指のスライド(速い・ゆっくり・途中で戻す)、‹ › での切り替え、今週より前に戻れないこと、11/3(文化の日)が赤いこと、スライド中に日にちと予約枠が同じだけ動くことを確認 |
 | 本番反映 | 2026-10-18、今の `/reserve/` を複製して新しいビルドを重ね、フォルダごと入れ替え(古いファイルも残し、スマホに保存された前の画面でも崩れないようにした)。`static/js/index.e5a3f6de.js`。元のフォルダ `/www/reserve_old_20261018_151447`(戻すときはこのフォルダを `/www/wwwroot/order.card-san.jp/reserve` に戻す) |
 
+## 2026-10-18 管理App 1.0.37(1090):課金・お申し込みの不具合の修正と、初めての自社ビルド
+
+### 35. 管理App(jpshop)の課金・お申し込み・解約の案内を直す(修正一覧 No.8・9・10・11・12・23)
+
+| 項目 | 内容 |
+|---|---|
+| No.10 iPhone が Android 扱いになる | 端末の種類をログイン時に保存した値で判定していたため、保存値が古いと iPhone でも Google の課金が動いていた。`utils/platform.js`(新規)の `getPlatform()` で、使うたびに `uni.getSystemInfoSync().platform` で判定するようにし、保存値を使っていた13か所(`utils/request.js`、`pages/payment/payment.vue`、`pages/message/notice/setting/setting.vue`、`pages/coupon/setting/setting.vue`、`pages/appDownload/appDownload.vue`、`pages/index/index.vue`、`pages/accounts/contract/contract.vue`)を置き換えた |
+| No.9 契約更新日が空欄・1970年 | 読み込みが終わる前は計算せず「読み込み中…」と出す、日付が無いときは計算しない、失敗したら2回まで読み込み直す、Google 課金の部品の準備で止まっても読み込みは必ず行う(`payment.vue`) |
+| No.12 契約更新日が1か月ずれる/英語の表示 | 契約更新日を「次に請求される日」にした(資料「契約更新日の表示ずれ_決済別」の表):契約なし・無料お試し中・App Store 課金とカード決済のアップグレードは「今日+期間」、Google Play のアップグレード・ダウングレード・周期だけの変更は「今の契約の終了日」。iPhone だけ出ていた英語の表示2つを日本語にした(`payment.vue`) |
+| No.8 お支払い方法がいつも「App 課金」 | カード決済で契約中は「クレジットカード ブランド **** 下4桁」、それ以外は iPhone「App Store 課金」・Android「Google Play 課金」(`payment.vue`) |
+| No.11 解約の案内 | 端末ではなく契約の支払い方法で出し分け:カード決済→ウェブサイトの案内、App Store 課金→Apple 用の案内、Google Play 課金→Android はアプリ内の解約、iPhone は「Playストアで解約」の案内(`contract.vue`) |
+| No.23 言い方をそろえる | ご契約内容の「お支払い方法」を「App Store 課金/Google Play 課金/クレジットカード」にし、お申し込み画面とそろえた(`contract.vue`)。1.0.37 のビルドには入っていない(次のビルドで反映) |
+| 設定(manifest.json) | バージョンを 1.0.37(1090)に上げた。使っていない連絡先のモジュール(Contacts)と Android の READ_CONTACTS・WRITE_CONTACTS を外した(クラウドビルドで「連絡先を使うなら DCloud の実名認証が必要」と止まったため。ソースでは連絡先を使っていない) |
+| ビルド | 2026-10-18、今まで開発会社が行っていたビルドを、初めてカスタムエイドで行った。坂本さんの Mac の HBuilderX 5.26(DCloud アカウント customaid1510@gmail.com、jpshop のメンバー)でクラウドビルド(Safe Mode)。iOS の配布用証明書(Apple Distribution: Customaid LLC、2027/10/18 まで)とプロファイル(CardSan管理 AppStore 2026)はカスタムエイドで新しく作成。手順はプロジェクト資料「CardSan_HBuilderX_ビルド手順メモ」 |
+| 配布 | iOS:1.0.37(1090)を Transporter で App Store Connect にアップロードし、TestFlight の内部テストで配布。Android:署名用の鍵を開発会社に依頼中のため未ビルド |
+| 確認(iPhone 実機・TestFlight) | App Store 課金のテスト店舗(店舗7):お申し込み画面の支払い方法「App Store 課金」、アップグレードの契約更新日が今日+1か月、周期変更が今の契約の終了日、解約で Apple 用の案内、Apple の支払い画面からお申し込み完了まで(テスト用の課金)。カード決済の店舗(店舗11):支払い方法「クレジットカード **** 下4桁」、解約でウェブサイトの案内(ボタンは押さず表示のみ)。契約が終わった店舗(店舗26):契約更新日が今日+1か月、支払い方法「App Store 課金」、Apple の支払い画面が出る(キャンセル)。すべて問題なし |
+
 ---
 
 ## 今後の運用ルール

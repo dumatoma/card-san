@@ -39,6 +39,7 @@
     </view>
 </template>
 <script>
+    import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-10-18] 端末の種類はその場で判定(No.10)
     import {getShopInfo} from "@/api/index.js"
     export default {
         data() {
@@ -64,7 +65,7 @@
         },
         onShow() {
             let that = this
-            that.platform = uni.getStorageSync('platform')
+            that.platform = getPlatform()
         },
         methods: {
            changeTab(e){

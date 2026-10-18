@@ -274,6 +274,7 @@
     </view>
 </template>
 <script>
+    import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-10-18] 端末の種類はその場で判定(No.10)
     var googlePay = uni.requireNativePlugin('sn-googlepay5');
     import {
         getShopInfo,
@@ -619,7 +620,7 @@
             // },
             buysms() {
                 let that = this
-                let platform = uni.getStorageSync("platform")
+                let platform = getPlatform()
 
                 // 副管理者は支払い不可
                 if (that.admin_type == 2) {

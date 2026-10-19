@@ -128,7 +128,9 @@
         </view>
         <view class="tips" v-if="shopInfo.vip.is_try != 0 && shopInfo.vips.length > 0">
             <view class="tips_left">
-                無料お試し中：<text
+                <!-- [カスタムエイド 2026-10-18] 延長中(is_renew=1)は日数ではなく「残り◯人」(30 − 会員数)。管理WEB headerView.vue と同じ -->
+                無料お試し中：<text v-if="shopInfo.vips[0].is_renew == 1"
+                    style="color: #FC0303;font-size: 24rpx;">残り{{restMember}}人</text><text v-else
                     style="color: #FC0303;font-size: 24rpx;">残り{{shopInfo.vips[0].end_day}}日</text>
             </view>
             <view class="tips_right">
@@ -259,10 +261,11 @@
                 <view class="infoPanelTitle">お支払いについて</view>
                 <scroll-view scroll-y="true" class="infoPanelScroll">
                     <view class="infoPanelWarn">
-                        お支払いについては、お手数ではございますが、PCブラウザよりCard-San管理ウェブサイトからお支払いをお願いします。
+                        お支払いについては、お手数ではございますが、Card-San管理ウェブサイトにログインしてお支払いをお願いします。
+                        <!-- [カスタムエイド 2026-10-18] 管理WEBのスマホ対応に合わせて「PCブラウザより」を外した -->
                     </view>
                     <view class="infoPanelNote">
-                        ウェブサイトでご契約し、クレジットカード決済をご利用の方は、このアプリからのお支払いの手続きができません。<br /><br />PCブラウザよりCard-San管理ウェブサイトにログインしてお支払いの手続きをお願いします。
+                        ウェブサイトでご契約し、クレジットカード決済をご利用の方は、このアプリからのお支払いの手続きができません。<br /><br />Card-San管理ウェブサイトにログインし、［ご契約内容］の［配信数の追加購入］からお支払いをお願いします。お支払い後は、このアプリからそのまま配信できます。
                     </view>
                     <view class="infoPanelBtn" @click="showSmsStripeInfo = false">上記内容を確認しました</view>
                 </scroll-view>
@@ -364,6 +367,8 @@
             }
         },
         computed: {
+            // [カスタムエイド 2026-10-18] 無料お試し延長中の残り人数(30 − 会員数、0未満にしない)
+            restMember() { return Math.max(0, 30 - Number(this.member_count || 0)) },
             newMessage() {
                 return this.$store.state.newMessage;
             },
@@ -437,6 +442,9 @@
                     that.day_order_count = res.data.day_order_count
                     that.member_count = res.data.member_count
                     that.month_order_count = res.data.month_order_count
+                    // [カスタムエイド 2026-10-18] 超過のお知らせは、サーバーの結果どおりに出す/消す(支払い後に開いたまま残らないように)
+                    that.sms = res.data.shop_info.vip_sms_alert == 1
+                    if (!that.sms) that.showSmsStripeInfo = false
                     if (res.data.shop_info.vip_sms_alert == 1) {
                         that.sms = true
                         that.smsprice = res.data.vip_sms_config.price

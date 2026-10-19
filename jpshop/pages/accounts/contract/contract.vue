@@ -268,7 +268,7 @@
                 if (ct == 1) {
                     // クレジットカード(Stripe)決済:ウェブサイトで解約
                     this.title = "解約手続きについて"
-                    this.content = "解約手続きは、お手数ではございますが、PCブラウザよりCard-Sanウェブサイトにログインしてください。"
+                    this.content = "解約手続きは、お手数ではございますが、Card-San管理ウェブサイトにログインしてください。" // [カスタムエイド 2026-10-18] Figma に合わせた
                     this.show2 = true
                 } else if (ct == 2) {
                     // App Store 課金:iPhone の設定から解約(Apple 用の案内)
@@ -288,7 +288,7 @@
             toc() {
                 if (this.info.card_type == 1) {
                     this.title = "ご利用のご継続について"
-                    this.content = "ご利用のご継続手続きは、お手数ではございますが、PCブラウザよりCard-Sanウェブサイトにログインしてください。"
+                    this.content = "ご利用のご継続手続きは、お手数ではございますが、Card-San管理ウェブサイトにログインしてください。" // [カスタムエイド 2026-10-18] 解約の案内と同じ言い方
                     this.show = true
                 } else {
                     uni.navigateTo({

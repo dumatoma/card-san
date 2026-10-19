@@ -5,17 +5,16 @@
             <scroll-view scroll-y="true" class="sdetail">
                 <view class="firstPart" v-text="content"></view>
                 <view class="secondPart">
+                    <!-- [カスタムエイド 2026-10-18] Figma の見本に合わせた(管理WEBがスマホ・タブレットに対応したため「PCブラウザより」を外した) -->
                     <view class="w1">
-                        ウェブサイトでご契約し、クレジットカード決済をご利用の方は、このアプリからの以下の手続きができません。
-                        <br/><br/><br/>
-                        ・ご利用プラン、支払い周期の変更<br/>
-                        ・クレジットカード情報の変更<br/>
-                        ・解約手続き<br/>
-                        ・解約手続き後のご継続手続き<br/>
-                        ・メンバーシップの再開<br/>
+                        <view class="w1-lead">ウェブサイトでご契約し、クレジットカード決済をご利用の方は、このアプリからの以下の手続きができません。</view>
+                        <view>・ご利用プラン、支払い周期の変更</view>
+                        <view>・解約手続き</view>
+                        <view>・解約手続き後のご継続手続き</view>
+                        <view>・メンバーシップの再開</view>
                     </view>
                     <view class="w2">
-                       PCブラウザよりCard-Sanにログインしてお手続きをしてください。［アカウント］→［ご契約］ページからお手続きが可能です。
+                        Card-San管理ウェブサイトにログインしてお手続きをしてください。［アカウント］→［ご契約］ページからお手続きが可能です。
                     </view>
                     <!-- <view class="w1">
                         それ以外のお手続きは、Card-Sanのwebサイト【アカウント】からお手続きをお願いします。
@@ -131,9 +130,15 @@
                     color: #1D1D1F;
                 }
                 
+                .w1-lead{
+                    font-weight: bold; /* Figma:最初の1文は太字 */
+                    margin-bottom: 40upx; /* 箇条書きとの間を1行あける */
+                }
                 .w2{
                     // color: #D93025 !important;
-                    margin: 40upx 0;
+                    margin: 40upx 0 0; /* 箇条書きとの間を1行あける(下は枠の余白に任せる) */
+                    font-size: 32rpx;
+                    color: #1D1D1F;
                 }
             }
             

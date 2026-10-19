@@ -2,8 +2,8 @@
     "name" : "CardSan管理",
     "appid" : "__UNI__40CEDE2",
     "description" : "",
-    "versionName" : "1.0.37",
-    "versionCode" : 1090,
+    "versionName" : "1.0.40",
+    "versionCode" : 1093,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {

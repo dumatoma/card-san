@@ -47,6 +47,7 @@
 </template>
 
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import { getStaffDmMessages, sendStaffDm, readStaffDm, deleteStaffDm } from '@/api/index.js'
     export default {
         data() {
@@ -226,12 +227,12 @@
             chooseImage() {
                 let that = this
                 uni.hideKeyboard()
-                uni.chooseImage({ count: 1, sourceType: ['album'], success(res) { that.uploadAndSend(res.tempFilePaths[0]) } })
+                pickImage({ count: 1, sourceType: ['album'], success(res) { that.uploadAndSend(res.tempFilePaths[0]) } })
             },
             chooseCamear() {
                 let that = this
                 uni.hideKeyboard()
-                uni.chooseImage({ count: 1, sourceType: ['camera'], success(res) { that.uploadAndSend(res.tempFilePaths[0]) } })
+                pickImage({ count: 1, sourceType: ['camera'], success(res) { that.uploadAndSend(res.tempFilePaths[0]) } })
             },
             uploadAndSend(filePath) {
                 uni.uploadFile({

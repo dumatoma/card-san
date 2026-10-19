@@ -32,7 +32,8 @@
                     無料お試し期間中
                 </view>
                 <view class="tips" v-if="info.is_try == 1">
-                    アカウント作成から30日間は全てのプランが無料お試し期間の対象です。　顧客登録数が30人以下の場合は、無料期間終了後も、全てのプランが無料でご利用できます。
+                    <!-- [カスタムエイド 2026-10-18] 無料お試し延長ロジックの変更に合わせた(管理WEB utilizePlan.vue と同じ文言) -->
+                    アカウント作成から30日間は全てのプランが無料お試し期間の対象です。　顧客登録数が30人以下の場合は、最大30日無料期間が延長されます。
                 </view>
                <!-- <view class="using" v-if="info.is_try != 1 && endTime != '1970/01/01'" @click="continuePlan"
                     style="border-radius: 36upx;margin-top: 20upx;">

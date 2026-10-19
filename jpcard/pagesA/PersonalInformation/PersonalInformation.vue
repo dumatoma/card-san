@@ -14,7 +14,8 @@
         編集する
       </view>
       <view class="left-box">
-        <view class="item" v-if="configs.includes('name')">
+        <!-- [カスタムエイド 2026-10-19] 氏名はどの店舗でも必須のため、店舗の設定に関係なく表示する(設定の一覧に氏名は入らないため、表示されていなかった) -->
+        <view class="item">
           <view class="name">
             氏名
           </view>
@@ -36,7 +37,7 @@
           <view class="name">
             性別
           </view>
-          <view class="i-txt" v-text="info.sex == 1? '男性' : info.sex == 2? '女性' : 'Xジェンダー' "></view>
+          <view class="i-txt" v-text="sexLabel(info.sex)"></view><!-- [カスタムエイド 2026-10-19] 未回答(0)が「Xジェンダー」と出ていた -->
         </view>
         <view class="item" v-if="configs.includes('birthday')">
           <view class="name">
@@ -77,7 +78,7 @@
             <view class="con">
               <view class="modify-user">
                 <u--form labelPosition="top" ref="form1" :labelWidth="200">
-                  <u-form-item label="氏名" prop="userInfo.name" ref="item1" v-if="configs.includes('name')">
+                  <u-form-item label="氏名" prop="userInfo.name" ref="item1"><!-- [カスタムエイド 2026-10-19] 常に表示 -->
                     <u--input v-model="info1.name"></u--input>
                   </u-form-item>
                   <u-form-item label="カナ" prop="userInfo.name" ref="item1" v-if="configs.includes('pronunciation')">
@@ -87,7 +88,7 @@
                     <u--input v-model="info1.phone" type="number" maxlength="11"></u--input>
                   </u-form-item>
                   <u-form-item label="性別" prop="userInfo.sex" @click="showSex = true; hideKeyboard()" ref="item1" v-if="configs.includes('sex')">
-                    <u--input v-model="info1.sex == 1? '男性' : info.sex == 2? '女性' : 'Xジェンダー' " disabled disabledColor="#F6F5F8" placeholder="選択"
+                    <u--input :value="sexLabel(info1.sex)" disabled disabledColor="#F6F5F8" placeholder="選択"
                       placeholderStyle=" color:#AAAAAA ;" suffixIcon="arrow-down" suffixIconStyle="color: #A9A8AB">
             
                     </u--input>
@@ -147,6 +148,7 @@
 </template>
 
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
   import {getUserInfo,getAddress,getMyCard,getUserInfos,editUserInfo,getShopInfo} from "@/api/index.js"
   export default {
     data() {
@@ -161,12 +163,17 @@
         title: 'アカウント情報の更新',
         content: 'アカウント情報を更新しました',
         configs:[],
+        // [カスタムエイド 2026-10-19] 一番上に「------(未選択)」を追加(選ぶと 0 =未回答で保存)。表記をカード作成画面と同じ「男性」「女性」にそろえた
         actions: [{
-            name: '男',
+            name: '------(未選択)',
+            id:0
+          },
+          {
+            name: '男性',
             id:1
           },
           {
-            name: '女',
+            name: '女性',
             id:2
           },
           {
@@ -203,7 +210,7 @@
       },
       uploadImage() {
           let that = this
-          uni.chooseImage({
+          pickImage({
               count: 9,
               success: (res) => {
                   const tempPaths = res.tempFilePaths
@@ -246,6 +253,10 @@
       },
       sexSelect(e) {
         this.info1.sex = e.id
+      },
+      // [カスタムエイド 2026-10-19] 性別の表示。0(未回答)・未設定は「未回答」
+      sexLabel(sex) {
+        return sex == 1 ? '男性' : sex == 2 ? '女性' : sex == 3 ? 'Xジェンダー' : '未回答'
       },
       sub(){
         let that = this
@@ -314,7 +325,8 @@
           getUserInfo(that.query.id).then((res) => {
               if(res.code == 200){
                   that.info = res.data.member
-                  that.info1 = res.data.member
+                  // [カスタムエイド 2026-10-19] 編集用は別のコピーにする(同じものを使っていたため、保存せずに閉じても表示が書き換わっていた)
+                  that.info1 = Object.assign({}, res.data.member)
                   that.avatar = res.data.member.avatar
                   getShopInfo(res.data.member.sid).then((result) =>{
                       that.configs = result.data.shop.member_register_field

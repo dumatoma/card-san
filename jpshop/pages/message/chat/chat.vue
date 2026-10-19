@@ -1,7 +1,10 @@
 <template>
     <view class="contain">
         <scroll-view class="chatContent">
-            <view class="msgItem" v-for="(item,index) in messageArr">
+            <!-- [カスタムエイド 2026-10-20] 上までスクロールして前のメッセージを読み込んでいる間 -->
+            <view class="cs-older" v-if="loadingOlder">読み込み中…</view>
+            <!-- [カスタムエイド 2026-10-19] :key を付けて、新しいメッセージのたびに全部を作り直さないように。続けて送った写真の2枚目以降は先頭にまとめて出すので隠す -->
+            <view class="msgItem" v-for="(item,index) in messageArr" :key="item.id || ('i' + index)" v-if="!item.grpHide">
                 <view class="msgDate" v-if="item.Showdate" v-text="`${item.Showdate}  (${item.week})`"></view>
                 <view class="userItem" :style="item.sender == 1? 'flex-direction: row-reverse' : '' ">
                     <view>
@@ -16,8 +19,13 @@
                             <text v-html="formattedText(item.message)" selectable="true"
                                 style="white-space: pre-wrap;"></text>
                         </view>
-                        <view v-if="item.type == 2" class="msgDetailImage">
-                            <image @click="openBigImg(item.message)" @longpress="saveImage(item.message)" :src="item.message" mode="widthFix"></image>
+                        <!-- [カスタムエイド 2026-10-19] 続けて送った写真は LINE のように並べて1つのかたまりで表示。押すと全画面(左右にスワイプ)、長押しで保存 -->
+                        <view v-if="item.type == 2 && item.grpUrls" class="cs-imgGrid" :class="(item.grpUrls.length == 2 || item.grpUrls.length == 4) ? 'cs-col2' : 'cs-col3'">
+                            <image v-for="(u, ui) in item.grpUrls" :key="ui" class="cs-imgCell" :src="u" mode="aspectFill" lazy-load
+                                @click="openGroup(item.grpUrls, ui)" @longpress="saveImage(u)"></image>
+                        </view>
+                        <view v-if="item.type == 2 && !item.grpUrls" class="msgDetailImage">
+                            <image @click="openBigImg(item.message)" @longpress="saveImage(item.message)" @load="onImgLoad" :src="item.message" mode="widthFix" lazy-load></image>
                         </view>
                         <view v-if="item.type == 3" class="msgDetailImage" style="height: 120rpx;overflow: hidden;">
                             <image @click="openURL(item.url)" :src="item.message" style="height: 120rpx;width: 100%;" mode="aspectFill"></image>
@@ -31,7 +39,8 @@
                     </view>
                 </view>
             </view>
-            <view class="blank"></view>
+            <!-- [カスタムエイド 2026-10-20] キーボードが出ている間は、その高さの分だけ下に余白を足す(最新のメッセージを入力欄のすぐ上に出すため) -->
+            <view class="blank" :style="kbH ? 'height:' + (blankBase + kbH) + 'px' : ''"></view>
         </scroll-view>
         <view class="sendBox" :style="{bottom: h > 0 ? h + 'px' : '0'}" style="position: fixed;">
             <view class="boxLeft">
@@ -59,6 +68,8 @@
 </template>
 
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
+    import { shrinkImage, uploadImage, markImageGroups, previewGroup } from '@/utils/chatImages.js' // [カスタムエイド 2026-10-19] 写真の複数枚送信・まとめて表示
     const admin = uni.getStorageSync("admin")
     import {
         getMessageList,
@@ -78,6 +89,9 @@
             return {
                 taH: 0,
                 bigImgShow: false,
+                kbH: 0, // [カスタムエイド 2026-10-20] キーボードの高さ(px)
+                blankBase: uni.upx2px(140), // 下の余白(入力欄の分)
+                loadingOlder: false, // 前のメッセージを読み込み中
                 bigImgSrc: "",
                 myid: "",
                 fs: false,
@@ -98,15 +112,33 @@
             }
         },
         created() {
-            uni.onKeyboardHeightChange(res => {
+            // [カスタムエイド 2026-10-19] キーボードが出きったら、一番新しいメッセージが見えるように下までスクロール(LINE と同じ)
+            // 今までは入力欄を押した直後(キーボードが出る前)にスクロールしていたので、キーボードに隠れていた
+            this._kbCb = (res) => {
                 if (res.height == 0) {
                     this.fs = false
+                    this.kbH = 0 // [カスタムエイド 2026-10-20]
                 } else {
                     this.fs = true
+                    // [カスタムエイド 2026-10-20] iPhone はキーボードが出てもページの高さが変わらず、最後の数件がキーボードの裏に残っていた。
+                    // キーボードの高さの分だけ下に余白を足してから一番下へスクロールする
+                    // [カスタムエイド 2026-10-20] 入力欄の表示が0.5秒ほど遅れる対策:スクロールは1回だけ、待たずにすぐ行う(2回目のスクロールで入力欄の描き直しが遅れていた)。
+                    // キーボードの候補欄の出し入れなどで同じ高さの通知が続いたときはスクロールしない
+                    if (this.kbH != res.height) {
+                        this.kbH = res.height
+                        this.$nextTick(() => {
+                            uni.createSelectorQuery().select('.contain').boundingClientRect((r) => {
+                                uni.pageScrollTo({ scrollTop: r && r.height ? r.height : 99999999, duration: 0 })
+                            }).exec()
+                        })
+                    }
                 }
-            })
+            }
+            uni.onKeyboardHeightChange(this._kbCb)
         },
         onUnload() {
+            // [カスタムエイド 2026-10-19] 画面を閉じたらキーボードの見張りをやめる
+            if (this._kbCb && uni.offKeyboardHeightChange) uni.offKeyboardHeightChange(this._kbCb)
             let that = this
             let hasReadData = {}
             hasReadData.uid = that.query.uid
@@ -135,7 +167,7 @@
 
         },
         onPullDownRefresh() {
-            this.loadMore()
+            this.loadOlder() // [カスタムエイド 2026-10-20]
         },
         onReachBottom(e) {
             let that = this
@@ -162,9 +194,12 @@
                 })
             }
         },
+        // [カスタムエイド 2026-10-19] スクロールのたびに入力欄の位置(h)を書き換えて画面全体を描き直していたのをやめる(カクカクの原因)。
+        // h は計算上いつも 0 以下で、入力欄の位置は今までと変わらない。
+        // [カスタムエイド 2026-10-20] 一番上近くまでスクロールしたら、前の100件を自動で読み込む(画面は描き直さない軽い処理だけ)
         onPageScroll(e) {
-            this.reachBottom = false
-            this.h = this.h - e.scrollTop
+            this._lastTop = e.scrollTop
+            if (this._ready && e.scrollTop < 80) this.loadOlder() // 開いた直後(一番下へ移る前)は読まない
         },
         watch: {
             newMessage: {
@@ -187,18 +222,25 @@
             confirm(e) {
                 let that = this
                 if (e == "cancel") {
-                    let data = {}
-                    data.uid = that.query.uid
-                    data.message_id = that.delid
-                    delMsg(data).then((res) => {
-                        if (res.code == 200) {
+                    // [カスタムエイド 2026-10-19] まとめて表示している写真は、かたまりの全部を削除(画面からは通知が来たら消える)
+                    let ids = that.delids && that.delids.length ? that.delids : [that.delid]
+                    let step = (k) => {
+                        if (k >= ids.length) {
                             that.delshow = false
-                        } else {
-                            uni.showToast({
-                                title: res.message
-                            })
+                            return
                         }
-                    }).catch(() => {})
+                        delMsg({ uid: that.query.uid, message_id: ids[k] }).then((res) => {
+                            if (res.code == 200) {
+                                step(k + 1)
+                            } else {
+                                uni.showToast({
+                                    title: res.message
+                                })
+                                that.delshow = false
+                            }
+                        }).catch(() => { that.delshow = false })
+                    }
+                    step(0)
                 } else {
                     this.delshow = false
                 }
@@ -207,12 +249,13 @@
                 let that = this
                 that.delid = e.id
                 that.didx = index
+                that.delids = e.grpItems ? e.grpItems.map((v) => v.id) : [e.id] // [カスタムエイド 2026-10-19] 写真のかたまりは全部
                 that.config = {
                     type: "button",
                     cancel: true,
                     default: true,
                     title: "",
-                    content: "選択したメッセージを削除しますか？",
+                    content: e.grpItems ? "この写真(" + e.grpItems.length + "枚)を削除しますか？" : "選択したメッセージを削除しますか？",
                     cancelText: "削除",
                     defaultText: "キャンセル"
                 }
@@ -237,12 +280,7 @@
                 }
             },
             blur() {
-                let that = this
-                uni.getSystemInfo({
-                    success(res) {
-                        that.h = res.safeAreaInsets.bottom + 'px'
-                    }
-                })
+                // [カスタムエイド 2026-10-19] 入力欄の位置の書き換えをやめた(位置は今までと同じ下端)
             },
             // 入力欄の高さを8行まで追従させ、それ以上は固定して内部スクロールに任せる
             onLine(e) {
@@ -251,6 +289,8 @@
                 }
             },
             emitFocus(e) {
+                // [カスタムエイド 2026-10-19] 1秒後に急にスクロールしていたのをやめ、キーボードが出きった時にスクロールする(created の _kbCb)
+                return
                 let that = this
                 setTimeout(() => {
                     // that.$nextTick(()=>{
@@ -290,14 +330,17 @@
                     // let that = this
 
                     if (result.type == "message" && result.data[0].uid == that.query.uid) {
-                        if (result.data[0].sender == 1) {
-                            if (result.data[0].id == that.msid) {
-                                that.msid = 0
+                        // [カスタムエイド 2026-10-19] 自分が送った写真では「送信中」の印を動かさない(写真は1枚ずつ続けて送るため)
+                        if (!(result.data[0].type == 2 && result.data[0].sender == 1)) {
+                            if (result.data[0].sender == 1) {
+                                if (result.data[0].id == that.msid) {
+                                    that.msid = 0
+                                } else {
+                                    that.msid = result.data[0].id
+                                }
                             } else {
-                                that.msid = result.data[0].id
+                                that.msid = 0
                             }
-                        } else {
-                            that.msid = 0
                         }
                         result.data.forEach((v, i) => {
                             if (v.type == 3) {
@@ -306,23 +349,9 @@
                                 v.url = a.comment_button_url
                             }
                         })
-                        that.currentMessages = [...that.currentMessages, ...result.data]
-                        let currentMessages = that.currentMessages
-                        that.messageArr = [...that.history, ...currentMessages]
-                        for (let i = 0; i < that.messageArr.length; i++) {
-                            if (i > 0) {
-                                if (that.messageArr[i].date == that.messageArr[i - 1].date) {
-                                    that.messageArr[i].Showdate = ''
-                                } else {
-                                    that.messageArr[i].Showdate = that.messageArr[i].date
-                                }
-                            } else {
-                                that.messageArr[i].Showdate = that.messageArr[i].date
-                            }
-                            if (that.messageArr[i].sender == 1) {
-                                // that.messageArr[i].name = admin.name
-                            }
-                        }
+                        // [カスタムエイド 2026-10-20] 届いたメッセージを今の一覧の後ろに足す(重複は除き、番号順に並べ直す)
+                        that.setList([...that.messageArr, ...result.data])
+                        that._autoUntil = Date.now() + 3000
                         that.scollBottom()
                     }
 
@@ -345,6 +374,7 @@
                                 that.history.splice(i, 1)
                             }
                         })
+                        that.setList(that.messageArr) // [カスタムエイド 2026-10-20] 日付の見出し・写真のかたまりを付け直す
                     }
                 })
 
@@ -371,24 +401,11 @@
                                 v.url = a.comment_button_url
                             }
                         })
-                        that.history = res.data.messages.data.reverse()
-                        let currentMessages = that.currentMessages
-                        that.messageArr = [...that.history, ...currentMessages]
-                        for (let i = 0; i < that.messageArr.length; i++) {
-                            if (i > 0) {
-                                if (that.messageArr[i].date == that.messageArr[i - 1].date) {
-                                    that.messageArr[i].Showdate = ''
-                                } else {
-                                    that.messageArr[i].Showdate = that.messageArr[i].date
-                                }
-                            } else {
-                                that.messageArr[i].Showdate = that.messageArr[i].date
-                            }
-
-                            if (that.messageArr[i].sender == 1) {
-                                // that.messageArr[i].name = admin.name
-                            }
-                        }
+                        // [カスタムエイド 2026-10-20] 開いたときの最新100件。読み込み中に届いたメッセージとも合わせる
+                        that._noMore = res.data.messages.data.length < 100
+                        that.setList([...res.data.messages.data.reverse(), ...that.messageArr])
+                        that._autoUntil = Date.now() + 3000
+                        setTimeout(() => { that._ready = true }, 800) // [カスタムエイド 2026-10-20] 一番下へ移ってから、上までスクロールで前の分を読めるようにする
                         that.scollBottom()
                         let hasReadData = {}
                         hasReadData.uid = that.query.uid
@@ -415,38 +432,69 @@
                     prePage.$vm.getList()
                 }
             },
-            loadMore() {
-                let that = this
-                let data = {}
-                data.type = "detail"
-                data.timestamp = that.formatTime()
-                data.uid = that.query.uid
-                data.mid = that.history[0].id
-                getMessageList(data).then((res) => {
-                    if (res.code == 200) {
-                        if (res.data.messages.data.length > 0) {
-                            that.history = [...that.history, ...res.data.messages.data.reverse()]
-                            that.messageArr = [...that.history, ...that.messageArr]
-                            for (let i = 0; i < that.messageArr.length; i++) {
-                                if (i > 0) {
-                                    if (that.messageArr[i].date == that.messageArr[i - 1].date) {
-                                        that.messageArr[i].Showdate = ''
-                                    } else {
-                                        that.messageArr[i].Showdate = that.messageArr[i].date
-                                    }
-                                } else {
-                                    that.messageArr[i].Showdate = that.messageArr[i].date
-                                }
-
-                                if (that.messageArr[i].sender == 1) {
-                                    that.messageArr[i].name = admin.name
-                                }
-                            }
-
-                        }
-                        uni.stopPullDownRefresh()
+            // [カスタムエイド 2026-10-20] 一覧を作り直す共通の処理:重複を除き、番号順に並べ、日付の見出しと写真のかたまりを付ける
+            setList(list) {
+                let seen = {}
+                let out = []
+                ;(list || []).forEach((v) => {
+                    if (!v) return
+                    if (v.id !== undefined && v.id !== null) {
+                        if (seen[v.id]) return
+                        seen[v.id] = 1
                     }
-                }).catch(() => { uni.stopPullDownRefresh() })
+                    out.push(v)
+                })
+                out.sort((x, y) => (Number(x.id) || 0) - (Number(y.id) || 0))
+                for (let i = 0; i < out.length; i++) {
+                    out[i].Showdate = i > 0 && out[i].date == out[i - 1].date ? '' : out[i].date
+                }
+                this.messageArr = markImageGroups(out)
+            },
+            // [カスタムエイド 2026-10-20] 前の100件を読み込んで上に足す。見ていた位置はずらさない
+            loadOlder() {
+                let that = this
+                if (that._loadingOlder || that._noMore || !that.messageArr.length) {
+                    uni.stopPullDownRefresh()
+                    return
+                }
+                let first = that.messageArr[0].id
+                if (!first) {
+                    uni.stopPullDownRefresh()
+                    return
+                }
+                that._loadingOlder = true
+                that.loadingOlder = true
+                that._autoUntil = 0
+                let done = () => {
+                    that._loadingOlder = false
+                    that.loadingOlder = false
+                    uni.stopPullDownRefresh()
+                }
+                getMessageList({ type: 'detail', timestamp: that.formatTime(), uid: that.query.uid, mid: first }).then((res) => {
+                    if (res.code != 200) {
+                        done()
+                        return
+                    }
+                    let older = (res.data.messages.data || []).slice().reverse()
+                    if (older.length < 100) that._noMore = true
+                    if (!older.length) {
+                        done()
+                        return
+                    }
+                    uni.createSelectorQuery().select('.contain').boundingClientRect((r0) => {
+                        let h0 = r0 ? r0.height : 0
+                        that.setList([...older, ...that.messageArr])
+                        that.$nextTick(() => {
+                            setTimeout(() => {
+                                uni.createSelectorQuery().select('.contain').boundingClientRect((r1) => {
+                                    let h1 = r1 ? r1.height : h0
+                                    uni.pageScrollTo({ scrollTop: Math.max(0, h1 - h0 + (that._lastTop || 0)), duration: 0 })
+                                    done()
+                                }).exec()
+                            }, 50)
+                        })
+                    }).exec()
+                }).catch(done)
             },
             openBigImg(url) {
                 this.bigImgSrc = url
@@ -487,93 +535,78 @@
                 var timeStamp = Date.parse(date)
                 return timeStamp
             },
+            // [カスタムエイド 2026-10-19] 写真は最大9枚まで選べるように。小さくしてから1枚ずつ順番に送る
             chooseImage() {
                 let that = this
                 uni.hideKeyboard()
-                uni.chooseImage({
-                    count: 1,
+                pickImage({
+                    count: 9,
+                    sizeType: ['compressed'],
                     sourceType: ['album'],
                     success: (res) => {
-                        const tempPaths = res.tempFilePaths
-                        uni.uploadFile({
-                            url: that.$baseUrl + '/tool/upload/file',
-                            filePath: res.tempFilePaths[0],
-                            name: "file",
-                            success: (result) => {
-                                if (result.errMsg == "uploadFile:ok") {
-                                    let re = JSON.parse(result.data)
-                                    if (re.code == 200) {
-                                        let data = {}
-                                        data.uid = that.query.uid
-                                        data.type = 2
-                                        data.message = re.data.path
-                                        sendMessage(data).then((res) => {
-                                            if (that.msid == res.data.message_id) {
-                                                that.msid = 0
-                                            } else {
-                                                that.msid = res.data.message_id
-                                            }
-                                        }).catch(() => {})
-                                    } else if (res.code == 4003) {
-
-                                    }
-                                }
-                            }
-                        })
+                        that.sendImages(res.tempFilePaths || [])
                     }
                 });
             },
             chooseCamear() {
                 let that = this
                 uni.hideKeyboard()
-                uni.chooseImage({
+                pickImage({
                     count: 1,
+                    sizeType: ['compressed'],
                     sourceType: ['camera'],
                     success: (res) => {
-                        const tempPaths = res.tempFilePaths
-                        uni.uploadFile({
-                            url: that.$baseUrl + '/tool/upload/file',
-                            filePath: res.tempFilePaths[0],
-                            name: "file",
-                            success: (result) => {
-                                if (result.errMsg == "uploadFile:ok") {
-                                    let re = JSON.parse(result.data)
-                                    if (re.code == 200) {
-                                        let data = {}
-                                        data.uid = that.query.uid
-                                        data.type = 2
-                                        data.message = re.data.path
-                                        sendMessage(data).then((res) => {
-                                            setTimeout(() => {
-                                                if (that.msid == res.data
-                                                    .message_id) {
-                                                    that.msid = 0
-                                                } else {
-                                                    that.msid = res.data
-                                                        .message_id
-                                                }
-                                            }, 1000)
-
-                                        }).catch(() => {})
-                                    }
-                                }
-                            }
-                        })
+                        that.sendImages(res.tempFilePaths || [])
                     }
                 });
             },
+            async sendImages(paths) {
+                let that = this
+                if (!paths || !paths.length) return
+                let ng = 0
+                for (let i = 0; i < paths.length; i++) {
+                    uni.showLoading({
+                        title: paths.length > 1 ? '送信中 (' + (i + 1) + '/' + paths.length + ')' : '送信中',
+                        mask: true
+                    })
+                    try {
+                        let small = await shrinkImage(paths[i])
+                        let path = await uploadImage(that.$baseUrl, small)
+                        let res = await sendMessage({ uid: that.query.uid, type: 2, message: path })
+                        if (!res || res.code != 200) ng++
+                    } catch (e) {
+                        ng++
+                    }
+                }
+                uni.hideLoading()
+                if (ng > 0) {
+                    uni.showToast({
+                        title: '送信できなかった写真があります(' + ng + '枚)',
+                        icon: 'none'
+                    })
+                }
+            },
+            // まとめて表示している写真を全画面で
+            openGroup(urls, index) {
+                previewGroup(urls, index)
+            },
+            // 写真が読み込まれて高さが変わったとき、開いた直後・新しいメッセージの直後なら一番下に合わせ直す
+            onImgLoad() {
+                if (this._autoUntil && Date.now() < this._autoUntil) this.scollBottom()
+            },
+            // [カスタムエイド 2026-10-19] 一番下へ(アニメーションなしで一気に。カクつかないように)
             scollBottom() {
-                this.$nextTick(function() {
+                this.$nextTick(() => {
                     setTimeout(() => {
-                        uni.createSelectorQuery().select('.chatContent').boundingClientRect((res) => {
+                        // [カスタムエイド 2026-10-20] ページの実際の高さ(下の余白を含む)を測って、そこまでスクロール
+                        uni.createSelectorQuery().select('.contain').boundingClientRect((res) => {
                             uni.pageScrollTo({
-                                scrollTop: res.height,
-                                duration: 10
+                                scrollTop: res && res.height ? res.height : 99999999,
+                                duration: 0
                             })
                         }).exec()
                     }, 50)
-
-                });
+                })
             },
             sendMessages() {
                 let that = this
@@ -759,5 +792,51 @@
                 flex: 1
             }
         }
+    }
+
+    /* [カスタムエイド 2026-10-19] 続けて送った写真のかたまり(LINE のように並べる) */
+    .cs-imgGrid {
+        width: 492rpx;
+        margin: 0 8rpx;
+        display: flex;
+        flex-wrap: wrap;
+        border-radius: 20rpx;
+        overflow: hidden;
+    }
+    .cs-imgGrid .cs-imgCell {
+        display: block;
+        background: #E8E8ED;
+        margin-bottom: 4rpx;
+    }
+    .cs-imgGrid.cs-col2 .cs-imgCell {
+        width: 244rpx;
+        height: 244rpx;
+        margin-right: 4rpx;
+    }
+    .cs-imgGrid.cs-col2 .cs-imgCell:nth-child(2n) {
+        margin-right: 0;
+    }
+    .cs-imgGrid.cs-col3 .cs-imgCell {
+        width: 161rpx;
+        height: 161rpx;
+        margin-right: 4rpx;
+    }
+    .cs-imgGrid.cs-col3 .cs-imgCell:nth-child(3n) {
+        margin-right: 0;
+    }
+
+    /* [カスタムエイド 2026-10-20] 前のメッセージを読み込み中 */
+    .cs-older {
+        text-align: center;
+        font-size: 24rpx;
+        color: #86868B;
+        padding: 16rpx 0;
+    }
+
+    /* [カスタムエイド 2026-10-20] 入力欄を別の層で描いて、キーボードが出たときにすぐ表示されるように */
+    .contain .sendBox {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        will-change: transform;
     }
 </style>

@@ -1,6 +1,7 @@
 /****   request.js   ****/
 // 导入axios
 import axios from '../utils/axios/index.js'
+import { clearLoginStorage, goLogin } from './clearLoginStorage.js' // [カスタムエイド 2026-10-19]
 // 使用element-ui Message做消息提醒
 // import { Message} from 'element-ui';
 //1. 创建新的axios实例，
@@ -73,14 +74,15 @@ service.interceptors.response.use(response => {
 				duration:1500,
                 icon:"none"
 			})
-			setTimeout(function() {
-                // uni.removeStorageSync("user")
-                // uni.removeStorageSync("token")
-				uni.redirectTo({
-				    url: "@/pages/login/login"
-				})
-                return false
-			}, 1500);
+			// [カスタムエイド 2026-10-19] 移動先の書き方("@/pages/...")が正しくなく、ログイン画面へ移動できていなかった。
+			// ログイン情報を消して、全ページを閉じてログイン画面を開く。すでにログイン画面なら移動しない
+			// ログインしていない状態(ログインやSMS認証の途中など)の 401 では移動しない
+			if (uni.getStorageSync("token")) {
+				setTimeout(function() {
+					clearLoginStorage()
+					goLogin()
+				}, 1500);
+			}
            
             
         }else if(data.code == 2){

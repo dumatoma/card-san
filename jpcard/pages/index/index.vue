@@ -92,6 +92,7 @@
     import favorite from '../../static/svgjs/favorite'
     import shopInfo from "../../pagesA/indexInfo/indexInfo.vue"
     import QR from '../../static/svgjs/QR.js'
+    import { goLogin } from "@/utils/clearLoginStorage.js" // [カスタムエイド 2026-10-19]
     export default {
         components: {
             shopInfo
@@ -300,9 +301,7 @@
                             duration: 2500
                         })
                         setTimeout(() => {
-                            uni.navigateTo({
-                                url: "/pages/login/login"
-                            })
+                            goLogin() // [カスタムエイド 2026-10-19] ログイン画面が重ならないようにする
                         }, 2500)
 
                     }
@@ -341,9 +340,7 @@
                                 duration: 2500
                             })
                             setTimeout(() => {
-                                uni.navigateTo({
-                                    url: "/pages/login/login"
-                                })
+                                goLogin() // [カスタムエイド 2026-10-19] ログイン画面が重ならないようにする
                             }, 2500)
                         } else {
                             uni.showToast({

@@ -1,6 +1,7 @@
 <template>
-    <view class="con" :style="`height:${totalheight}upx`">
-        <view class="time">
+    <!-- [カスタムエイド 2026-10-19] hideTime: 時間の列を予約画面の側に出す(週を横にスライドしても時間の列は動かさない。予約WEBページと同じ) -->
+    <view class="con" :class="{'cs-notime': hideTime}" :style="`height:${totalheight}upx`">
+        <view class="time" v-if="!hideTime">
             <view class="timeItem" v-for="(item,index) in times">
                 <view class="timeName" v-text="item.time"></view>
                 <view class="point"></view>
@@ -44,7 +45,8 @@
     } from "@/api/index.js"
     export default {
         name: "week",
-        props: ["times", "weekData", "info"],
+        // [カスタムエイド 2026-10-19] nowTime = 店舗の今の日時(予約画面で1回だけ読み込んだもの)。渡されたときはサーバーに聞きに行かない
+        props: ["times", "weekData", "info", "hideTime", "nowTime"],
         data() {
             return {
                 weel: [{}, {}, {}, {}, {}, {}, {}],
@@ -56,7 +58,7 @@
             };
         },
         created() {
-            this.getConfig()
+            if (!this.nowTime) this.getConfig()
         },
         onShow() {
 
@@ -65,14 +67,26 @@
             times: function(newVal, oldVal) {
                 this.times = newVal; //newVal即是chartData
             },
-            weekData: function(newVal, oldVal) {
+            // [カスタムエイド 2026-10-19] 週をスライドで切り替えるため、読み込み済みの週のデータを持って作られたときも表示する(immediate)
+            weekData: {
+                immediate: true,
+                handler: function(newVal, oldVal) {
+                    this.buildWeek(newVal)
+                }
+            }
+        },
+        methods: {
+            buildWeek(newVal) {
                 let that = this
+                if (!newVal || !newVal.length || !that.info || !that.info.week_business) return
+                if (that.nowTime && !that.d) that.applyTime(that.nowTime)
                 let array = JSON.parse(JSON.stringify(newVal))
                 let tem = []
                 if (that.info.week_business.length == 0) {
                     that.info.week_business = that.wkbus
                 }
-                setTimeout(() => {
+                // [カスタムエイド 2026-10-19] データが届いたらすぐ表示する(今まで0.5秒+0.2秒わざと待っていた)
+                {
                     for (let i = 0; i < array.length; i++) {
                         let iosDate = array[i].date.replace(/-/g, "/")
                         let isd = new Date(iosDate)
@@ -82,8 +96,6 @@
                         let st = d1[0] + d1[1]
                         let sv = d1[2] * 1
                         let so
-                        console.log("0402",that.info)
-                        console.log("0402sv",sv)
                         if(that.info.day_business[sv]){
                             so = that.info.day_business[sv].business_time.length > 0 ? that.info
                                 .day_business[sv] : that.info.week_business[i]
@@ -200,16 +212,11 @@
                         }
                     })
 
-                    setTimeout(function() {
-                        that.weel = tem
-                        console.log("temp=" + tem)
-                        that.totalheight = 80 * tem[0].times.length
-                    }, 200)
-                }, 500)
+                    that.weel = tem
+                    that.totalheight = 80 * tem[0].times.length
+                }
 
-            }
-        },
-        methods: {
+            },
             getCurrent() {
                 let date = new Date()
                 let stamp = date.getTime()
@@ -240,7 +247,17 @@
                 let that = this
                 getConfig().then((res) => {
                     if (res.code == 200) {
-                        let array = res.data.config.time_date.split(" ")
+                        that.applyTime(res.data.config.time_date)
+                        // 先にデータが届いていたら、今の日時が分かったところで作り直す
+                        if (that.weekData && that.weekData.length) that.buildWeek(that.weekData)
+                    }
+                })
+            },
+            applyTime(timeDate) {
+                let that = this
+                {
+                    {
+                        let array = timeDate.split(" ")
                         let date = array[0]
                         let time = array[1]
                         let temp = date.split('/')
@@ -263,14 +280,9 @@
                         that.ftime = ftime
                         let d = new Date(date)
                         that.d = d.getTime()
-                        uni.showToast({
-                            title: d,
-                            icon: "none"
-                        })
-                    } else {
-
+                        // [カスタムエイド 2026-10-19] 確認用に日付をお知らせ表示していた行を削除(スライド用に3週分作るため3回出ていた)
                     }
-                })
+                }
 
             }
         }
@@ -326,6 +338,13 @@
                 }
             }
         }
+    }
+
+    .con.cs-notime {
+        width: 560upx;
+    }
+    .con.cs-notime .manager {
+        overflow: hidden;
     }
 
     .manager {

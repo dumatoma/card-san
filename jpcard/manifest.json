@@ -2,8 +2,8 @@
     "name" : "Card-San",
     "appid" : "__UNI__1ED8C1A",
     "description" : "Card-San",
-    "versionName" : "1.1.6",
-    "versionCode" : 1074,
+    "versionName" : "1.1.11",
+    "versionCode" : 1079,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
@@ -18,7 +18,6 @@
         },
         /* 模块配置 */
         "modules" : {
-            "Contacts" : {},
             "OAuth" : {},
             "Camera" : {},
             "Barcode" : {},
@@ -64,12 +63,10 @@
                     "<uses-permission android:name=\"android.permission.FLASHLIGHT\"/>",
                     "<uses-permission android:name=\"android.permission.GET_ACCOUNTS\"/>",
                     "<uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\"/>",
-                    "<uses-permission android:name=\"android.permission.READ_CONTACTS\"/>",
                     "<uses-permission android:name=\"android.permission.READ_LOGS\"/>",
                     "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
                     "<uses-permission android:name=\"android.permission.VIBRATE\"/>",
                     "<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>",
-                    "<uses-permission android:name=\"android.permission.WRITE_CONTACTS\"/>",
                     "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
                 ],
                 "minSdkVersion" : 21,
@@ -116,16 +113,7 @@
                 "push" : {
                     "unipush" : {
                         "offline" : true,
-                        "fcm" : {},
-                        "icons" : {
-                            "small" : {
-                                "ldpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/用户端 icon/Card-San App_icon_ios/16x16.png",
-                                "mdpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/用户端 icon/Card-San App_icon_ios/24x24.png",
-                                "hdpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/用户端 icon/Card-San App_icon_ios/32x32.png",
-                                "xhdpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/用户端 icon/Card-San App_icon_ios/48x48.png",
-                                "xxhdpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/用户端 icon/Card-San App_icon_ios/64x64.png"
-                            }
-                        }
+                        "fcm" : {}
                     }
                 },
                 "payment" : {

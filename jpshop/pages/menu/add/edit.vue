@@ -143,6 +143,7 @@
 </template>
 
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import {
         menuCateList,addMenu,menuList,editMenu
     } from "@/api/index.js"
@@ -282,7 +283,7 @@
             uploadImage() {
                 let that = this
                 if(that.array.length < 4){
-                    uni.chooseImage({
+                    pickImage({
                         count: 4 - that.array.length,
                         success: (res) => {
                             const tempPaths = res.tempFilePaths

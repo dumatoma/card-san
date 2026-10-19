@@ -50,6 +50,7 @@
 </template>
 
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
   import {editUser} from "@/api/index.js"
   export default {
     data() {
@@ -96,7 +97,7 @@
       },
       camera() {
           let that = this
-        uni.chooseImage({
+        pickImage({
           count: 1, //默认9
           sizeType: ['original', 'compressed'], //可以指定是原图还是压缩图，默认二者都有
           sourceType: ['camera'], //从相册选择
@@ -137,7 +138,7 @@
       },
       chooseImage() {
           let that = this
-        uni.chooseImage({
+        pickImage({
           count: 1, //默认9
           sizeType: ['original', 'compressed'], //可以指定是原图还是压缩图，默认二者都有
           sourceType: ['album'], //从相册选择

@@ -620,6 +620,7 @@
 </template>
 
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import chooseColor from "../chooseColor/chooseColor.vue"
     import {editCard,getCardDetail} from "@/api/index.js"
     import svg1 from '../../../../static/svgjs/sv_01.js'
@@ -933,7 +934,7 @@
             uploadBanner() {
                 let that = this
                 if (that.banner.length < 4) {
-                    uni.chooseImage({
+                    pickImage({
                         count: 4 - that.banner.length,
                         success: (res) => {
                             uni.showLoading({
@@ -1003,7 +1004,7 @@
 
             chooseSelfLogo() {
                 let that = this
-                uni.chooseImage({
+                pickImage({
                     count: 1,
                     success: (res) => {
                         const tempPaths = res.tempFilePaths

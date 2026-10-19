@@ -31,7 +31,7 @@
         },
         data() {
             return {
-                name: "fileName",
+                name: "画像", // [カスタムエイド 2026-10-18] 「fileName」と出ていたので固定の見出しに
                 current: 1,
                 show: false,
                 configs:{},

@@ -126,7 +126,7 @@
         <u-button class="bt" type="primary" @click="toSuccess1" shape="circle"> この内容でお申し込み</u-button>
         <view style="height: 160upx;"></view>
         <u-popup :show="show" @close="show = false">
-            <subscribe @btmnclick="changeS" :title="title" :content="content"></subscribe>
+            <subscribe @btmnclick="show = false" :title="title" :content="content"></subscribe>
         </u-popup>
     </view>
 </template>
@@ -143,7 +143,7 @@
         buyPlans,
         getConfig
     } from "@/api/index.js"
-    import subscribe from "@/components/su1b/su1b.vue"
+    import subscribe from "@/components/subscribe/subscribe.vue" // [カスタムエイド 2026-10-18] Figma の見本(黄色)の部品に切り替え
     export default {
         components: {
             subscribe
@@ -500,8 +500,9 @@
                 const onStripe = v && v.card_type == 1 && v.is_try != 1
                 if(onStripe){
                     that.show = true
-                    that.title = 'プラン・支払い周期の変更について'
-                    that.content = 'クレジットカード決済でご契約中です。プラン変更・継続は、PCブラウザよりCard-Sanウェブサイトの「ご契約内容」から行ってください。（アップグレードの差額は日割りで自動精算されます）'
+                    // [カスタムエイド 2026-10-18] Figma の見本に合わせた。カード決済の人のプラン変更はウェブサイトで行うので、「上記内容を確認しました」は閉じるだけ
+                    that.title = 'プラン変更について'
+                    that.content = 'プラン・支払い周期の変更の手続きは、お手数ではございますが、Card-San管理ウェブサイトにログインしてください。'
                     return
                 }
                 that.changeS("e")

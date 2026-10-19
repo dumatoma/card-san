@@ -2,53 +2,37 @@
     <view>
         <u-navbar title="お気に入り" :border="true" :placeholder="true" :autoBack="true" :height="56">
         </u-navbar>
-        <view v-for="(item,index) in list">
-            <view class="box"> 
-                <view class="title" style="display: flex;"> <text v-text="item.title" style=" flex: 1;"></text>
+        <!-- [カスタムエイド 2026-10-19] お気に入りを1つずつ白い角丸の枠に入れる(メニュー一覧と同じ形)。
+             価格は濃い文字の太字で所要時間と1行、写真は2枚以上のときだけ右下に枚数、押したら全画面 -->
+        <view class="cs-list">
+            <view class="box" v-for="(item,index) in list" :key="item.id">
+                <view class="title">
+                    <text class="title-txt" v-text="item.title"></text>
                     <image v-if="item.collect == 1" src="../../static/image/collection.png" @click="toCollect(item.id)" mode=""></image>
                 </view>
-                <view class="flex align-cen">
-                    <view class="price" v-text="`￥${parseFormatNum(item.price,0)}`"></view>
-                    
-                    <view class="time" v-if="item.is_order == 1">所要時間：{{item.order_time}}分</view>
+                <view class="meta">
+                    <text class="price" v-text="`￥${parseFormatNum(item.price,0)}`"></text>
+                    <text class="time" v-if="item.is_order == 1">　・　所要時間 {{item.order_time}}分</text>
                 </view>
-                <view class="flex">
-                    <view class="left">
+                <view class="body" v-if="(item.image && item.image.length) || item.des">
+                    <view class="left" v-if="item.image && item.image.length" @click="openPhotos(item.image, 0)">
                         <image :src="item.image[0]" mode="aspectFill" class="f-img"></image>
-                        <view class="tuji" @click="showMo(index)">
-                            <image src="../../static/image/heji.png" mode="" class="tu"></image>
+                        <view class="cs-count" v-if="item.image.length > 1">
+                            <image src="../../static/svg/multiPhoto.svg" class="cs-count-icon"></image>
+                            <text class="cs-count-num">{{item.image.length}}</text>
                         </view>
                     </view>
-                    <view class="right" style="white-space: pre-wrap;" v-text="item.des"></view>
+                    <view class="right" v-text="item.des"></view>
                 </view>
                 <view class="yue" v-if="item.is_order == 1" @click="yuyue(item,item.sid)">
                     このメニューで予約する
                 </view>
-            </view>
-            <view class="item1">
-                <view class="flexs align-cen aps padding-bot w" @click="toshoP(item.mid,item.sid)">
-                    <view class="tit" v-text="item.shop_name"></view>
+                <view class="shop" @click="toshoP(item.mid,item.sid)">
+                    <text class="tit" v-text="item.shop_name"></text>
                     <image src="../../static/image/arrow-right.png" mode=""></image>
                 </view>
             </view>
         </view>
-        <u-popup :show="shows" :round="10" mode="center" overlayOpacity="1">
-            <view class="tu-list">
-                <view class="icon" @click="close()">
-                    <u-icon name="close" color="#FFFFFF" size="16"></u-icon>
-                </view>
-                <swiper :indicator-dots="false" :autoplay="false" :duration="1000" :circular="true" @change="change">
-                    <swiper-item v-for="item in imgList" :key="item">
-                        <view class="swiper-item">
-                            <image :src="item" mode="" class="tu-img"></image>
-                        </view>
-                    </swiper-item>
-                </swiper>
-                <view class="shu-sum">
-                    {{sum}} / {{imgList.length}}
-                </view>
-            </view>
-        </u-popup>
     </view>
 </template>
 
@@ -81,6 +65,11 @@
             },
             change(e) {
                 this.sum = e.detail.current + 1
+            },
+            // [カスタムエイド 2026-10-19] メニューの写真を全画面で表示(拡大・左右スワイプで次の写真)
+            openPhotos(urls, idx) {
+                if (!urls || !urls.length) return
+                uni.previewImage({ current: idx || 0, urls: urls, indicator: 'number', loop: urls.length > 1 })
             },
             showMo(index){
                 let that = this
@@ -134,93 +123,112 @@
     //   color: #1D1D1F !important;
     // }
 
-    .box,
-    .item2 {
-        width: 90%;
-        margin: 0 auto;
-        margin-top: 40rpx;
+    // [カスタムエイド 2026-10-19] お気に入りを白い角丸の枠に(メニュー一覧と同じ形)
+    .cs-list {
+        padding: 24rpx 24rpx 40rpx;
+    }
+
+    .box {
+        background: #FFFFFF;
+        border: 1px solid #E8E8ED;
+        border-radius: 24rpx;
+        box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+        padding: 28rpx 28rpx 0;
+        margin-bottom: 24rpx;
 
         .title {
             display: flex;
+            align-items: flex-start;
             font-size: 32rpx;
+            line-height: 1.4;
             color: #1D1D1F;
-            margin-bottom: 28rpx;
             font-weight: 700;
+            margin-bottom: 8rpx;
+
+            .title-txt {
+                flex: 1;
+                min-width: 0;
+            }
 
             image {
                 flex-shrink: 0;
-                margin-left: 32rpx;
-                width: 60rpx;
-                height: 60rpx;
+                margin-left: 16rpx;
+                width: 56rpx;
+                height: 56rpx;
             }
         }
 
+        .meta {
+            font-size: 26rpx;
+            line-height: 1.4;
+            color: #6E6E73;
 
+            .price {
+                font-size: 28rpx;
+                font-weight: 600;
+                color: #1D1D1F;
+            }
+        }
 
-        .flex {
+        .body {
             display: flex;
-
-            margin-top: 28rpx;
-            font-size: 32rpx;
+            margin-top: 20rpx;
 
             .left {
                 flex-shrink: 0;
-                width: 246rpx;
-                height: 246rpx;
+                width: 208rpx;
+                height: 208rpx;
                 position: relative;
-                border-radius: 12rpx;
-                margin-right: 18rpx;
+                margin-right: 24rpx;
 
                 .f-img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                    border-radius: 12rpx;
+                    width: 208rpx;
+                    height: 208rpx;
+                    border-radius: 16rpx;
+                    background: #F5F5F7;
                 }
 
-                .tuji {
+                .cs-count {
                     position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 64rpx;
-                    height: 64rpx;
-                    background: rgba(29, 29, 31, 0.4);
-                    border-radius: 12rpx;
-                    text-align: center;
+                    right: 12rpx;
+                    bottom: 12rpx;
+                    height: 44rpx;
+                    padding: 0 14rpx;
+                    border-radius: 22rpx;
+                    background: rgba(0, 0, 0, 0.6);
+                    display: flex;
+                    align-items: center;
 
-                    .tu {
-                        margin-top: 6rpx;
-                        width: 45rpx;
-                        height: 51rpx;
+                    .cs-count-icon {
+                        width: 24rpx;
+                        height: 24rpx;
+                        margin-right: 8rpx;
+                    }
+
+                    .cs-count-num {
+                        color: #FFFFFF;
+                        font-size: 24rpx;
                     }
                 }
             }
 
             .right {
-                font-size: 24rpx;
-                color: #707070;
-            }
-
-            .price {
-                color: #D93025;
-            }
-
-            .time {
-                margin-left: 90rpx;
-                color: #1D1D1F;
+                flex: 1;
+                min-width: 0;
+                font-size: 26rpx;
+                line-height: 1.6;
+                color: #3A3A3C;
+                white-space: pre-line;
             }
         }
 
         .yue {
-            width: 95%;
-            margin: 0 auto;
-            margin-top: 82rpx;
-            margin-bottom: 60rpx;
-            height: 88rpx;
-            line-height: 88rpx;
-            font-size: 32rpx;
+            margin-top: 28rpx;
+            height: 80rpx;
+            line-height: 80rpx;
+            font-size: 30rpx;
             color: #1A73E8;
-            border-radius: 26rpx;
+            border-radius: 20rpx;
             text-align: center;
             background-color: #F4F7FF;
             border: 2rpx solid #1A73E8;
@@ -230,48 +238,23 @@
             }
         }
 
-    }
+        .shop {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 24rpx;
+            padding: 22rpx 0;
+            border-top: 1px solid #EFEFF2;
 
-    .padding-bot {
-        padding-bottom: 54rpx;
+            .tit {
+                font-size: 28rpx;
+                color: #515154;
+            }
 
-    }
-
-    .flexs {
-        display: flex;
-    }
-
-    .align-cen {
-        align-items: center;
-    }
-
-    .bot-des {
-        margin-top: 28rpx;
-        font-size: 24rpx;
-        color: #707070;
-    }
-
-    .aps {
-        justify-content: space-between;
-    }
-
-    .item1 {
-        margin-top: 68rpx;
-        border-bottom: 1px solid #D5D5D5;
-
-        .w {
-            width: 90%;
-            margin: 0 auto;
-        }
-
-        .tit {
-            font-size: 32rpx;
-            color: #1D1D1F;
-        }
-
-        image {
-            width: 38rpx;
-            height: 60rpx;
+            image {
+                width: 24rpx;
+                height: 38rpx;
+            }
         }
     }
 

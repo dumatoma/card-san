@@ -7,8 +7,11 @@
         </view>
         <view style="height: 112upx;"></view>
         <view class="swiper">
-            <u-swiper :list="shopInfo.carousel" height="250" :indicator="true" indicatorMode="dot" :radius="0"
-                indicatorActiveColor="#000000" :autoplay="false" indicatorInactiveColor="rgba(0,0,0,.3)"></u-swiper>
+            <!-- [カスタムエイド 2026-10-19] 点(●●●)をやめ、2枚以上のときだけ右下に「3 / 12」と今の位置を表示。
+                 画像を押したら全画面で表示し、左右にスワイプで次の画像(メニューの写真と同じ) -->
+            <u-swiper :list="shopInfo.carousel" height="250" :indicator="false" :radius="0" :autoplay="false"
+                @change="topChange" @click="topOpen"></u-swiper>
+            <view class="cs-top-count" v-if="shopInfo.carousel && shopInfo.carousel.length > 1">{{topIndex + 1}} / {{shopInfo.carousel.length}}</view>
         </view>
         <view class="items-boxs">
             <view class="jj" v-if="shopInfo.des" v-text="shopInfo.des">
@@ -45,7 +48,7 @@
                 </view>
             </view>
             <view class="items">
-                <view class="items-fle" style="height: auto !important;padding: 40upx 0;">
+                <view class="items-fle" style="height: auto !important;padding: 26upx 0;">
                     <view class="left">
                         本日
                     </view>
@@ -63,7 +66,7 @@
                     </view>
                     <view class="right ri-img" @click="toca"
                         style="border: 2upx solid #707070;display: flex;align-items: center;justify-content: center;"
-                        hover-class="hover1">
+                        hover-class="cs-btn-hover">
                         <image src="../../static/image/rili.png" mode="" style="vertical-align: middle;"></image>
                         <text>カレンダー</text>
                     </view>
@@ -91,8 +94,8 @@
                     </view>
                 </view>
             </view>
-            <view style="height: 78upx;"></view>
-            <view class="map-btn" @click="toMap" hover-class="hover1">
+            <!-- [カスタムエイド 2026-10-19] 地図ボタンの前の空白(39px)をなくし、ボタンは住所のすぐ下に並べる -->
+            <view class="map-btn" @click="toMap" hover-class="cs-btn-hover">
                 地図アプリで見る
             </view>
         </view>
@@ -114,9 +117,8 @@
                 <view class="zhu-right">
                     <view class="lian" @click="lian(shopInfo.web_url)" v-text="shopInfo.web_url"></view>
                 </view>
-            </view>
-            <view style="display: flex;justify-content: flex-end;width: 90%;margin: 0 auto 40upx;">
-                <view class="cop" hover-class="hover1" @click="copy1(shopInfo.web_url)">
+                <!-- [カスタムエイド 2026-10-19] コピーをリンクの右に並べて1行に(今までは別の行で、上下に余白があった) -->
+                <view class="cop" hover-class="cs-btn-hover" @click="copy1(shopInfo.web_url)">
                     コピー
                 </view>
             </view>
@@ -146,9 +148,12 @@
         <view class="store-popel-box" v-for="(item,index) in staff" :key="index" v-if="shopInfo.staff_des == 1">
             <view class="store-box">
                 <view class="store-left" v-if="staff.length > 0">
-                    <image :src="item.image[0]" mode="aspectFill" class="store-img"></image>
-                    <image src="../../static/image/heji.png" mode="" class="store-heji" @click="heJiShow(index)">
-                    </image>
+                    <!-- [カスタムエイド 2026-10-19] 写真を押したら全画面で表示。2枚以上のときだけ右下に枚数(メニュー一覧と同じ) -->
+                    <image :src="item.image[0]" mode="aspectFill" class="store-img" @click="heJiShow(index)"></image>
+                    <view class="cs-count" v-if="item.image && item.image.length > 1" @click="heJiShow(index)">
+                        <image src="../../static/svg/multiPhoto.svg" class="cs-count-icon"></image>
+                        <text class="cs-count-num">{{item.image.length}}</text>
+                    </view>
                 </view>
                 <view class="store-right">
                     <view class="store-name">
@@ -253,6 +258,7 @@
         props: ["sid","name"],
         data() {
             return {
+                topIndex: 0, // [カスタムエイド 2026-10-19] TOP画像の今の位置
                 value: 1,
                 showA: false,
                 show: false,
@@ -309,6 +315,15 @@
         // 	});
         // },
         methods: {
+            // [カスタムエイド 2026-10-19] TOP画像:今の位置を覚える/押したら全画面で表示
+            topChange(e) {
+                this.topIndex = (e && e.current) || 0
+            },
+            topOpen(index) {
+                let list = (this.shopInfo.carousel || []).map((v) => (typeof v == 'string' ? v : (v && (v.url || v.image)) || '')).filter((v) => v)
+                if (!list.length) return
+                uni.previewImage({ current: index || 0, urls: list, indicator: 'number', loop: list.length > 1 })
+            },
             closeThis(){
                 let that = this
                 // console.log(123123123123123123123123)
@@ -808,14 +823,27 @@
                     border-radius: 8rpx;
                 }
 
-                .store-heji {
+                .cs-count {
                     position: absolute;
-                    top: 8rpx;
-                    left: 8rpx;
-                    width: 52rpx;
-                    height: 52rpx;
-                    border-radius: 12rpx;
-                    background: rgba(29, 29, 31, 0.4);
+                    right: 12rpx;
+                    bottom: 12rpx;
+                    height: 44rpx;
+                    padding: 0 14rpx;
+                    border-radius: 22rpx;
+                    background: rgba(0, 0, 0, 0.6);
+                    display: flex;
+                    align-items: center;
+
+                    .cs-count-icon {
+                        width: 24rpx;
+                        height: 24rpx;
+                        margin-right: 8rpx;
+                    }
+
+                    .cs-count-num {
+                        color: #FFFFFF;
+                        font-size: 24rpx;
+                    }
                 }
             }
 
@@ -958,5 +986,108 @@
                 margin: 0 40rpx;
             }
         }
+    }
+
+    /* [カスタムエイド 2026-10-19] TOP画像の枚数表示(メニュー写真の枚数ラベルと同じ形) */
+    .swiper {
+        position: relative;
+    }
+    .cs-top-count {
+        position: absolute;
+        right: 24rpx;
+        bottom: 24rpx;
+        z-index: 2;
+        padding: 6rpx 20rpx;
+        border-radius: 24rpx;
+        background: rgba(0, 0, 0, 0.6);
+        color: #FFFFFF;
+        font-size: 24rpx;
+        font-weight: 500;
+        letter-spacing: 1rpx;
+        pointer-events: none;
+    }
+
+    /* ===== [カスタムエイド 2026-10-19] 店舗情報の間延びを直す(モック「Card-San App UI 改善案」) ===== */
+    /* 説明文:太字のまま、余白と行間を詰める */
+    .jj {
+        padding: 28upx 40upx !important;
+        line-height: 1.6;
+    }
+    /* TEL・営業時間などの行:高さの固定(75px)をやめ、上下の余白で決める */
+    .items-boxs .items .items-fle {
+        height: auto !important;
+        min-height: 0 !important;
+        padding: 26rpx 0 !important;
+    }
+    .items-boxs .items .items-fle .left,
+    .zhu-item .zhu-box .zhu-left {
+        width: 140rpx !important; // 「アクセス」が2行に割れないように
+    }
+    .items-boxs .items .items-fle .midd,
+    .zhu-item .zhu-box .zhu-right,
+    .ml {
+        line-height: 1.6;
+    }
+    .zhu-item .zhu-box {
+        margin: 26rpx auto !important;
+        align-items: center;
+    }
+    .zhu-item .zhu-box .zhu-right {
+        flex: 1;
+        min-width: 0;
+        word-break: break-all;
+    }
+    /* 地図アプリで見る:住所のすぐ下・右寄せ(線と重ならないように、浮かせずに並べる) */
+    .map-btn {
+        position: static !important;
+        display: block;
+        margin: -8rpx 5% 26rpx auto;
+    }
+    /* HP:リンクの右にコピー */
+    .zhu-item .zhu-box .cop {
+        flex-shrink: 0;
+        margin-left: 20rpx;
+    }
+    /* カレンダー・地図アプリで見る・コピー:地の色 #F5F5F7、押すと少し濃く */
+    .map-btn,
+    .cop,
+    .ri-img {
+        background-color: #F5F5F7 !important;
+    }
+    .cs-btn-hover {
+        background-color: #E5E5EA !important;
+    }
+    /* STAFF:写真を小さく(139×185px → 90×120px)、文字と余白も詰める */
+    .staff {
+        height: 80rpx !important;
+        line-height: 80rpx !important;
+        font-size: 32rpx !important;
+        letter-spacing: 2rpx;
+    }
+    .store-popel-box {
+        padding: 32rpx 0 !important;
+    }
+    .store-popel-box .store-box .store-left {
+        width: 180rpx !important;
+        height: 240rpx !important;
+        margin-right: 28rpx !important;
+        border-radius: 12rpx;
+        overflow: hidden;
+    }
+    .store-popel-box .store-box .store-right {
+        min-width: 0;
+    }
+    .store-popel-box .store-box .store-right .store-name {
+        font-size: 30rpx;
+        margin-bottom: 8rpx !important;
+    }
+    .store-popel-box .store-box .store-right .store-identity {
+        font-size: 26rpx;
+        color: #515154;
+        margin-bottom: 12rpx !important;
+    }
+    .store-popel-box .store-box .store-right .store-des {
+        font-size: 26rpx !important;
+        line-height: 1.6;
     }
 </style>

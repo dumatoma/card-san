@@ -8,10 +8,15 @@
         </u-navbar>
         
         <view class="top">
+            <!-- [カスタムエイド 2026-10-19] 選んだメニューを小さくまとめる:左に写真(ある時だけ)、名前は省略せず全部、
+                 価格と所要時間は1行、右に「変更」(メニューを選んだ画面に戻る) -->
             <view class="topContent">
-                <view class="to1" v-text="orderInfo.title"></view>
-                <view class="to2" v-text="`${orderInfo.price}`"></view>
-                <view class="to3" v-text="`所要時間(目安)：${orderInfo.order_time}分`"></view>
+                <image v-if="orderInfo.image && orderInfo.image.length" :src="orderInfo.image[0]" mode="aspectFill" class="to-img"></image>
+                <view class="to-body">
+                    <view class="to1" v-text="orderInfo.title"></view>
+                    <view class="to-meta"><text class="to2" v-text="`${orderInfo.price}`"></text><text class="to3" v-text="`　・　所要時間 ${orderInfo.order_time}分`"></text></view>
+                </view>
+                <view class="to-change" @click="changeMenu">変更</view>
             </view>
         </view>
         <view class="tip">
@@ -292,6 +297,14 @@
             // that.query = query
         },
         methods: {
+            // [カスタムエイド 2026-10-19] 「変更」:メニューを選んだ画面に戻る(直接開いた時はメニュー一覧へ)
+            changeMenu() {
+                if (getCurrentPages().length > 1) {
+                    uni.navigateBack()
+                    return
+                }
+                uni.reLaunch({ url: '/pages/index/index' + (this.query && this.query.id ? '?id=' + this.query.id : '') })
+            },
             getList() {
                 let that = this
                 console.log("id="+that.query.id)
@@ -805,39 +818,65 @@
     }
 
 
+    // [カスタムエイド 2026-10-19] 選んだメニューの枠を小さく(余白・行間を詰める)
     .top {
         box-sizing: border-box;
-        padding: 40upx 32upx;
+        padding: 24upx 32upx;
         background: #F5F5F7;
 
         .topContent {
             background-color: #fff;
-            border: 2upx solid #d2d2d7;
-            border-radius: 20upx;
+            border: 2upx solid #E3E3E8;
+            border-radius: 24upx;
             box-sizing: border-box;
-            box-shadow: 0px 0px 10upx 2upx rgba(0,0,0,0.16);
-            padding: 40upx;
+            padding: 20upx 24upx;
+            display: flex;
+            align-items: flex-start;
+
+            .to-img {
+                width: 116upx;
+                height: 116upx;
+                border-radius: 16upx;
+                flex-shrink: 0;
+                margin-right: 24upx;
+                background: #F5F5F7;
+            }
+
+            .to-body {
+                flex: 1;
+                min-width: 0;
+            }
 
             .to1{
-                font-size: 28upx;
-                font-family: Hiragino Sans-W3, Hiragino Sans;
-                font-weight: normal;
+                font-size: 30upx;
+                font-weight: 600;
+                line-height: 1.4;
                 color: #1D1D1F;
+                margin-bottom: 6upx;
             }
-            
+
+            .to-meta {
+                font-size: 26upx;
+                line-height: 1.4;
+                color: #6E6E73;
+            }
+
             .to2{
                 font-size: 28upx;
-                font-family: Hiragino Sans-W6, Hiragino Sans;
-                font-weight: normal;
-                color: rgba(217,48,37,0.65);
-                margin: 12upx 0;
+                font-weight: 600;
+                color: #1D1D1F;
             }
-            
+
             .to3{
-               font-size: 28upx;
-               font-family: Hiragino Sans-W3, Hiragino Sans;
-               font-weight: normal;
-               color: #1D1D1F; 
+                color: #6E6E73;
+            }
+
+            .to-change {
+                flex-shrink: 0;
+                margin-left: 16upx;
+                padding: 8upx 4upx 20upx 16upx;
+                font-size: 28upx;
+                color: #0A66D8;
             }
         }
     }

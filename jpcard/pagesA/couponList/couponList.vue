@@ -12,8 +12,13 @@
         <view class="cou-list-box" style="box-sizing:border-box;padding-top: 40upx;">
             <view class="cou-item" v-for="(item,index) in couponList" :key="index" @click.stop="toDetail(item.id)">
                 <view class="">
+                    <!-- [カスタムエイド 2026-10-19] 画像が2枚以上のときだけ右下に枚数(詳細で全部見られる) -->
                     <view class="cou-img" v-if="item.images.length > 0">
                         <image :src="item.images[0]" mode="aspectFill"></image>
+                        <view class="cs-count" v-if="item.images.length > 1">
+                            <image src="../../static/svg/multiPhoto.svg" class="cs-count-icon"></image>
+                            <text class="cs-count-num">{{item.images.length}}</text>
+                        </view>
                     </view>
                     <view class="id" style="font-weight: bold;">
                         NO ：<text v-if="item.number">{{item.number}}</text><text v-else>-</text>
@@ -208,5 +213,71 @@
                 background-color: rgba(217, 48, 37, 1) !important;
             }
         }
+    }
+
+    /* ===== [カスタムエイド 2026-10-19] クーポン一覧の間延びを直す ===== */
+    .cou-list-box {
+        padding-top: 28rpx !important;
+    }
+    .cou-list-box .cou-item {
+        margin-bottom: 28rpx !important;
+        padding-bottom: 28rpx !important;
+        border-radius: 24rpx !important;
+        overflow: hidden;
+        box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08) !important;
+        border: 1px solid #E8E8ED;
+    }
+    .cou-list-box .cou-item .cou-img {
+        position: relative;
+    }
+    .cou-list-box .cou-item .cou-img image {
+        height: 380rpx !important;
+        border-radius: 0 !important;
+        display: block;
+    }
+    .cou-list-box .cou-item .id {
+        padding: 24rpx 28rpx 0 !important;
+        font-size: 26rpx !important;
+    }
+    .cou-list-box .cou-item .cou-title {
+        padding: 0 28rpx !important;
+        margin-top: 10rpx !important;
+        margin-bottom: 8rpx !important;
+        line-height: 1.4;
+    }
+    .cou-list-box .cou-item .cou-des {
+        padding: 0 28rpx !important;
+        margin-bottom: 16rpx !important;
+        font-size: 26rpx !important;
+        line-height: 1.6;
+    }
+    .cou-list-box .cou-item .cou-time {
+        margin-bottom: 20rpx !important;
+        font-size: 26rpx !important;
+    }
+    .cou-list-box .cou-item .cou-btn {
+        height: 88rpx !important;
+        line-height: 88rpx !important;
+        border-radius: 20rpx !important;
+    }
+    .cou-list-box .cou-item .cou-img .cs-count {
+        position: absolute;
+        right: 20rpx;
+        bottom: 20rpx;
+        height: 44rpx;
+        padding: 0 14rpx;
+        border-radius: 22rpx;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+    }
+    .cou-list-box .cou-item .cou-img .cs-count .cs-count-icon {
+        width: 24rpx !important;
+        height: 24rpx !important;
+        margin-right: 8rpx;
+    }
+    .cou-list-box .cou-item .cou-img .cs-count .cs-count-num {
+        color: #FFFFFF;
+        font-size: 24rpx;
     }
 </style>

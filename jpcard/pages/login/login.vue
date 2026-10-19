@@ -39,7 +39,7 @@
     </view>
 </template>
 <script>
-    const JYGoogleSignin = uni.requireNativePlugin('JY-GoogleSignin');
+    // [カスタムエイド 2026-10-19] Google プラグイン(JY-GoogleSignin)はアプリに組み込まれていないため読み込みをやめた(Google ログインは uni.login)
     import {
         getLineUrl,
         getGoogleUrl,
@@ -50,30 +50,36 @@
         getLineInfo,
         setIosLogin
     } from "@/api/index.js"
+    // [カスタムエイド 2026-10-19] LINE ログインの受け取りを1回だけ登録するための印と、最後に処理した code
+    let customaidLineListenerAdded = false
+    let lastCode = ''
     export default {
         data() {
             return {
                 query: {},
-                env: uni.getStorageSync("env")
+                env: uni.getSystemInfoSync().platform // [カスタムエイド 2026-10-19] 端末から直接取る
             }
         },
         computed: {
 
         },
         created() {
-            JYGoogleSignin.jy_init({
-                client_id: "653081471652-tq9goiocjd1q4snjllaapu8uo90rtcau.apps.googleusercontent.com"
-            }, res => {
-            })
-            this.env = uni.getStorageSync("env")
-            let flag = false
+            // [カスタムエイド 2026-10-19] 組み込まれていないプラグインの jy_init でエラーになり、この下(LINE ログインの受け取りなど)が動いていなかったため削除
+            // 端末の種類は保存データではなく端末から直接取る(ログアウト後に保存データが消えて Apple ボタンが出なくなっていた)
+            this.env = uni.getSystemInfoSync().platform
+            // [カスタムエイド 2026-10-19] ログイン画面を開くたびに受け取りが重ならないよう、アプリ全体で1回だけ登録する。
+            // 同じ code は1回だけ処理する(ログアウト後に別の LINE アカウントでログインし直せるよう、code ごとに判定)
+            if (customaidLineListenerAdded) {
+                return
+            }
+            customaidLineListenerAdded = true
             plus.globalEvent.addEventListener('plusMessage', function(msg) {
-                if (msg.data.args.data.arg.url) {
+                if (msg && msg.data && msg.data.args && msg.data.args.data && msg.data.args.data.arg && msg.data.args.data.arg.url) {
                     let temp = msg.data.args.data.arg.url.split('?')
-                    let fin = temp[1].split("=")
+                    let fin = (temp[1] || '').split("=")
                     let code = fin[1]
-                    if (flag == false) {
-                        flag = true
+                    if (code && code !== lastCode) {
+                        lastCode = code
                         uni.showLoading({
                             title: "読み込み中"
                         })

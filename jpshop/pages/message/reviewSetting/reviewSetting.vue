@@ -68,6 +68,7 @@
 </template>
 
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import {reviewSetting,getShopInfo} from "@/api/index.js"
     export default {
         data() {
@@ -98,7 +99,9 @@
             openURL() {
                 // #ifdef APP-PLUS
                 if (plus.os.name == 'Android' || plus.os.name == 'iOS') {
-                    plus.runtime.openURL('https://cardsan.zendesk.com/hc/ja/articles/39169673962393-Google%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E3%83%97%E3%83%AD%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%81%AE%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%AF%E3%81%AE%E4%BD%9C%E6%88%90');
+                    // [カスタムエイド 2026-10-18] 古い記事(39169673962393)はリンク切れ。管理WEB reviewSetting.vue と同じ新しい記事へ
+                    // [カスタムエイド 2026-10-19] Safari に移らず、アプリの中の「ヘルプ」画面で開く(上の「<」で戻れる)
+                    uni.navigateTo({ url: '/pages/helpview/helpview?link=' + encodeURIComponent('https://cardsan.zendesk.com/hc/ja/articles/57035978592409-%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%AF%E3%81%AE%E4%BD%9C%E6%88%90-Google%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E3%83%97%E3%83%AD%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB') });
                     return
                 }
                 // #endif
@@ -126,7 +129,7 @@
             chooseImage() {
                 let that = this
                 uni.hideKeyboard()
-                uni.chooseImage({
+                pickImage({
                     count: 1,
                     success: (res) => {
                         const tempPaths = res.tempFilePaths

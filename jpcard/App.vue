@@ -412,4 +412,35 @@
         position: relative;
         top: 6upx;
     }
+
+    /* [カスタムエイド 2026-10-19] 日時選択の時間の枠(components/week/week.vue)を押したときの見た目(予約WEBページと同じ):枠全体を押せるようにし、押すと枠の色が変わる */
+    .dateItem .cs-slot {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 4px;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform .08s ease, background-color .12s ease;
+    }
+    .dateItem .cs-slot > div {
+        background-size: auto 62% !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+    }
+    .cs-slot:active {
+        transform: scale(.92) !important;
+        background-color: rgba(26, 115, 232, .22) !important;
+    }
+
+
+    /* [カスタムエイド 2026-10-19] アプリ共通の文章の表示(お店が入力した文章):行間 1.6 倍。
+       空行は utils/textParas.js で段落に分け、段落の間を少しだけ空ける(まるまる1行は空けない) */
+    .cs-para {
+        white-space: pre-wrap;
+        line-height: 1.6;
+        word-break: break-word;
+    }
+    .cs-para + .cs-para {
+        margin-top: 16rpx;
+    }
 </style>

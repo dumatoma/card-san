@@ -23,6 +23,7 @@
 </template>
 
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import mod from '@/components/mod.vue'
     import {changeChatInfo} from "@/api/index.js"
     export default {
@@ -31,7 +32,7 @@
         },
         data() {
             return {
-                name: "fileName",
+                name: "プロフィール画像", // [カスタムエイド 2026-10-18] 「fileName」と出ていたので固定の見出しに
                 current: 1,
                 show: false,
                 sname:"",
@@ -81,7 +82,7 @@
                 let that = this
                 let type = []
                 type.push(source)
-                uni.chooseImage({
+                pickImage({
                     count: 1,
                     sourceType:type,
                     success: (res) => {

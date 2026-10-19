@@ -41,7 +41,7 @@
     export default {
         data() {
             return {
-                env:uni.getStorageSync("env")
+                env: uni.getSystemInfoSync().platform // [カスタムエイド 2026-10-19] 保存データではなく端末から直接取る(ログアウト後に Apple ボタンが消えていた)
             }
         },
         computed:{

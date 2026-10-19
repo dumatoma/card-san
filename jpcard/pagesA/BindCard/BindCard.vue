@@ -137,7 +137,7 @@
                         month: '',
                         day: '',
                         time: '',
-                        sex: 2,
+                        sex: 0, // [カスタムエイド 2026-10-19] 初期値を 2(女性)から 0(未選択)に
                         sexName: "",
                         addSn: '',
                         address1: '',
@@ -146,7 +146,12 @@
                     },
                 },
                 query: {},
+                // [カスタムエイド 2026-10-19] 一番上に「------(未選択)」を追加。選ぶと 0(未回答)で保存。性別が必須の店舗では未選択のままでは登録できない
                 actions: [{
+                        name: '------(未選択)',
+                        sex: 0
+                    },
+                    {
                         name: '男性',
                         sex: 1
                     },
@@ -276,10 +281,12 @@
                 getShopInfo(id).then((res) => {
                     uni.hideLoading()
                     if (res.code == 200) {
-                        that.as = res.data.shop.member_register_field
-                        if (res.data.shop.member_register_field.includes("name")) {
-                            that.must1 = true
+                        // [カスタムエイド 2026-10-19] 氏名はどの店舗でも必須(サーバーでも必須)。店舗の設定の一覧には氏名が入らないため、ここで必須に加える
+                        that.as = (res.data.shop.member_register_field || []).slice()
+                        if (!that.as.includes("name")) {
+                            that.as.push("name")
                         }
+                        that.must1 = true
                         if (res.data.shop.member_register_field.includes("pronunciation")) {
                             that.must2 = true
                         }
@@ -359,9 +366,16 @@
                 }).catch(() => {})
             },
             sexSelect(e) {
-                this.model1.userInfo.sexName = e.name
-                this.model1.userInfo.sex = e.sex
-                this.ass[3] = "sex"
+                // [カスタムエイド 2026-10-19] 「------(未選択)」を選んだときは未入力として扱う(必須の店舗では登録ボタンが押せない)
+                if (e.sex == 0) {
+                    this.model1.userInfo.sexName = ""
+                    this.model1.userInfo.sex = 0
+                    this.ass[3] = "0"
+                } else {
+                    this.model1.userInfo.sexName = e.name
+                    this.model1.userInfo.sex = e.sex
+                    this.ass[3] = "sex"
+                }
                 this.checkMust()
             },
             searchAddress() {

@@ -1277,6 +1277,14 @@
             }
         },
         {
+            "path" : "pages/helpview/helpview",
+            "style" : 
+            {
+                "navigationBarTitleText" : "ヘルプ",
+                "navigationBarBackgroundColor": "#fbfbfd"
+            }
+        },
+        {
             "path" : "pages/message/moduleSettin/moduleSettin",
             "style" : 
             {

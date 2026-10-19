@@ -83,7 +83,7 @@
                         性別
                     </view>
                     <view class="user-right"
-                        v-text="user.sex == 1? '男性' : user.sex == 2? '女性' : user.sex == 3?'Xジェンダー' : '女性' "></view>
+                        v-text="user.sex == 1? '男性' : user.sex == 2? '女性' : user.sex == 3?'Xジェンダー' : '未回答' "></view><!-- [カスタムエイド 2026-10-19] 未回答(0)が「女性」と出ていた -->
                 </view>
             </view>
             <view class="user-info">

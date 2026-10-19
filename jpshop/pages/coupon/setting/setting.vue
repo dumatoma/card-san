@@ -89,10 +89,11 @@
                 <view class="infoPanelTitle">お支払いについて</view>
                 <scroll-view scroll-y="true" class="infoPanelScroll">
                     <view class="infoPanelWarn">
-                        お支払いについては、お手数ではございますが、PCブラウザよりCard-San管理ウェブサイトからお支払いをお願いします。
+                        お支払いについては、お手数ではございますが、Card-San管理ウェブサイトにログインしてお支払いをお願いします。
+                        <!-- [カスタムエイド 2026-10-18] 管理WEBのスマホ対応に合わせて「PCブラウザより」を外した -->
                     </view>
                     <view class="infoPanelNote">
-                        ウェブサイトでご契約し、クレジットカード決済をご利用の方は、このアプリからのお支払いの手続きができません。<br /><br />PCブラウザよりCard-San管理ウェブサイトにログインしてお支払いの手続きをお願いします。
+                        ウェブサイトでご契約し、クレジットカード決済をご利用の方は、このアプリからのお支払いの手続きができません。<br /><br />Card-San管理ウェブサイトにログインし、［ご契約内容］の［配信数の追加購入］からお支払いをお願いします。お支払い後は、このアプリからそのまま配信できます。
                     </view>
                     <view class="infoPanelBtn" @click="showStripeInfo = false">上記内容を確認しました</view>
                 </scroll-view>

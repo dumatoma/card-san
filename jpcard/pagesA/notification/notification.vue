@@ -9,10 +9,13 @@
         </u-navbar>
         <view class="news-box" v-if="type == 1">
             <view class="news-items" v-for="(item,index) in list" :key="index">
-                <u-swiper :list="item.images" height="375" :autoplay="false" :indicator="true" indicatorMode="dot"
-                    :radius="0" indicatorActiveColor="#000000" indicatorInactiveColor="rgba(0,0,0,.3)"
-                    v-if="item.images.length > 0">
-                </u-swiper>
+                <!-- [カスタムエイド 2026-10-19] 点(●●●)をやめ、2枚以上のときだけ右下に「1 / 4」。押したら全画面・左右にスワイプ -->
+                <view class="cs-swipe" v-if="item.images.length > 0">
+                    <u-swiper :list="item.images" height="375" :autoplay="false" :indicator="false" :radius="0"
+                        @change="setImgIndex(index, $event)" @click="openImages(item.images, $event)">
+                    </u-swiper>
+                    <view class="cs-top-count" v-if="item.images.length > 1">{{(imgIndex[index] || 0) + 1}} / {{item.images.length}}</view>
+                </view>
                 <view class="user-box">
                     <view class="user">
                         <view class="right">
@@ -29,8 +32,9 @@
                     <view class="title">
                         {{item.title}}
                     </view>
+                    <!-- [カスタムエイド 2026-10-19] 空行を少しの間として表示(共通の行間 1.6) -->
                     <view class="des">
-                        {{item.content}}
+                        <view class="cs-para" v-for="(t, ti) in textParas(item.content)" :key="ti">{{t}}</view>
                     </view>
                 </view>
             </view>
@@ -73,6 +77,7 @@
 </template>
 
 <script>
+    import { textParas } from '@/utils/textParas.js' // [カスタムエイド 2026-10-19] お店が入れた空行を少しの間として表示
     import list from '../../components/list.vue'
     import sp from "@/components/swiper-direct-com.vue"
     import svg30 from '../../static/svgjs/sv_30.js'
@@ -89,6 +94,7 @@
         props: ["color", "id", "sid", "bgColor", "shopName", "tabs"],
         data() {
             return {
+                imgIndex: {}, // [カスタムエイド 2026-10-19] お知らせごとの画像の今の位置
                 value: 2,
                 caiDanShow: false,
                 type: "",
@@ -115,6 +121,18 @@
             that.getInfo()
         },
         methods: {
+            setImgIndex(index, e) {
+                this.$set(this.imgIndex, index, (e && e.current) || 0)
+            },
+            // [カスタムエイド 2026-10-19] 画像を全画面で表示(押した画像から。左右にスワイプで次の画像)
+            openImages(list, index) {
+                let urls = (list || []).map((v) => (typeof v == 'string' ? v : (v && (v.url || v.image)) || '')).filter((v) => v)
+                if (!urls.length) return
+                uni.previewImage({ current: index || 0, urls: urls, indicator: 'number', loop: urls.length > 1 })
+            },
+            textParas(t) {
+                return textParas(t)
+            },
             getMore() {
                 if (this.type !== 2) return
                 uni.showLoading({
@@ -398,5 +416,66 @@
                 }
             }
         }
+    }
+
+    /* [カスタムエイド 2026-10-19] 画像の枚数表示(メニュー写真・TOP画像と同じ形) */
+    .cs-swipe {
+        position: relative;
+    }
+    .cs-top-count {
+        position: absolute;
+        right: 24rpx;
+        bottom: 24rpx;
+        z-index: 2;
+        padding: 6rpx 20rpx;
+        border-radius: 24rpx;
+        background: rgba(0, 0, 0, 0.6);
+        color: #FFFFFF;
+        font-size: 24rpx;
+        font-weight: 500;
+        letter-spacing: 1rpx;
+        pointer-events: none;
+    }
+
+    /* ===== [カスタムエイド 2026-10-19] お知らせ一覧の間延びを直す ===== */
+    .news-box {
+        margin-top: 0 !important;
+        background: #F5F5F7;
+    }
+    .news-box .news-items {
+        margin-top: 0 !important;
+        margin-bottom: 16rpx;
+        padding-bottom: 28rpx !important;
+        border-bottom: none !important;
+        background: #FFFFFF;
+    }
+    .news-box .news-items .user-box,
+    .news-box .news-items .user-box:first-child {
+        margin-top: 24rpx !important;
+    }
+    .news-box .news-items .user-box .user {
+        margin-bottom: 6rpx !important;
+    }
+    .news-box .news-items .user-box .user .right {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+    }
+    .news-box .news-items .user-box .user .right .store-name {
+        font-size: 24rpx !important;
+        font-weight: 400 !important;
+        color: #6E6E73 !important;
+        margin-right: 16rpx;
+    }
+    .news-box .news-items .user-box .user .right .time {
+        margin-top: 0 !important;
+    }
+    .news-box .news-items .user-box .title {
+        line-height: 1.4;
+        margin-bottom: 8rpx !important;
+    }
+    .news-box .news-items .user-box .des {
+        white-space: normal !important;
+        color: #515154 !important;
     }
 </style>

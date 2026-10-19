@@ -10,9 +10,8 @@
         <view>
             <view class="top-box">
                 <view class="con">
-                    <view class="left">
-                        NO:{{info.member_no || '-'}}
-                    </view>
+                    <!-- [カスタムエイド 2026-10-19] 会員番号(NO)はある時だけ表示(今までは無いと「NO:-」と出ていた) -->
+                    <view class="left" v-if="info.member_no">NO: {{info.member_no}}</view>
                     <view class="title" v-text="`${info.name} さん`"></view>
                     <view class="img" v-if="info.card_type != 3">
                         <image :src="info.qrcode" mode=""></image>
@@ -20,7 +19,7 @@
                     <view class="img" v-else>
                         <image class="tiaoxing" :src="info.qrcode" mode=""></image>
                     </view>
-                    <view class="order-sn" v-text="info.member_id" v-if="info.is_point == 0"></view>
+                    <view class="order-sn" v-text="groupDigits(info.member_id)" v-if="info.is_point == 0"></view>
                 </view>
             </view>
             <view class="cardInfo">
@@ -115,7 +114,7 @@
                         </view>
                         <view class="ciRight" v-text="info.expire_time" :style="info.expire_time == '有効期限切れ'?'color:#d93025' : ''"></view>
                     </view>
-                    <view class="ciItem" v-if="info.remark">
+                    <view class="ciItem ciTop" v-if="info.remark">
                         <view class="ciLeft">
                             備　考
                         </view>
@@ -154,8 +153,12 @@
                 <view class="specialTitle">
                     特 典
                 </view>
-                <u-swiper :list="discount_images" height="250" :indicator="true" indicatorMode="dot" :radius="0"
-                    indicatorActiveColor="#000000" :autoplay="false" indicatorInactiveColor="rgba(0,0,0,.3)"></u-swiper>
+                <!-- [カスタムエイド 2026-10-19] 点(●●●)をやめ、2枚以上のときだけ右下に「1 / 3」。押したら全画面・左右にスワイプ -->
+                <view class="cs-swipe">
+                    <u-swiper :list="discount_images" height="250" :indicator="false" :radius="0" :autoplay="false"
+                        @change="benefitChange" @click="openBenefit"></u-swiper>
+                    <view class="cs-top-count" v-if="discount_images.length > 1">{{benefitIndex + 1}} / {{discount_images.length}}</view>
+                </view>
                 <view class="remark" style="white-space: pre-wrap;" v-text="info.discount_content"></view>
             </view>
         </view>
@@ -241,6 +244,7 @@
                 svgData8: '"' + svg8 + '"',
                 svgData30: '"' + svg30 + '"',
                 discount_images: [],
+                benefitIndex: 0, // [カスタムエイド 2026-10-19] 特典画像の今の位置
                 member:{}
             };
         },
@@ -381,6 +385,21 @@
         //       }
         // },
         methods: {
+            // [カスタムエイド 2026-10-19] 会員番号を4桁ごとに区切って読みやすくする
+            groupDigits(v) {
+                if (v === undefined || v === null) return ''
+                let t = String(v)
+                return /^\d{8,}$/.test(t) ? t.replace(/(\d{4})(?=\d)/g, '$1 ') : t
+            },
+            benefitChange(e) {
+                this.benefitIndex = (e && e.current) || 0
+            },
+            // [カスタムエイド 2026-10-19] 特典画像を全画面で表示
+            openBenefit(index) {
+                let list = (this.discount_images || []).map((v) => (typeof v == 'string' ? v : (v && (v.url || v.image)) || '')).filter((v) => v)
+                if (!list.length) return
+                uni.previewImage({ current: index || 0, urls: list, indicator: 'number', loop: list.length > 1 })
+            },
             scrollR() {
 
                 this.caiDanShow = false
@@ -504,7 +523,7 @@
 
     .top-box {
         border-bottom: 1px solid #C4C4C8;
-        padding-bottom: 80rpx;
+        padding-bottom: 40rpx; // [カスタムエイド 2026-10-19] 80→40
 
         .con {
             width: 90%;
@@ -512,25 +531,25 @@
 
             .left {
                 text-align: left;
-                margin-top: 40rpx;
-                color: #1D1D1F;
-                font-size: 32rpx;
+                margin-top: 28rpx; // [カスタムエイド 2026-10-19] 小さめの灰色に
+                color: #6E6E73;
+                font-size: 24rpx;
             }
 
             .title {
-                margin-top: 10rpx;
+                margin-top: 28rpx; // [カスタムエイド 2026-10-19] NO がないときも上に余白
                 font-size: 48rpx;
                 font-weight: 700;
                 text-align: center;
             }
 
             .img {
-                margin-top: 48rpx;
+                margin-top: 24rpx; // [カスタムエイド 2026-10-19] 48→24
                 text-align: center;
 
                 image {
-                    width: 300rpx;
-                    height: 300rpx;
+                    width: 280rpx; // [カスタムエイド 2026-10-19] 300→280
+                    height: 280rpx;
                 }
 
                 .tiaoxing {
@@ -540,8 +559,9 @@
             }
 
             .order-sn {
-                margin-top: 32rpx;
+                margin-top: 12rpx; // [カスタムエイド 2026-10-19] 32→12
                 text-align: center;
+                letter-spacing: 2rpx;
                 font-size: 32rpx;
                 color: #1D1D1F;
             }
@@ -938,5 +958,36 @@
                 border-radius: 20rpx;
             }
         }
+    }
+
+    /* [カスタムエイド 2026-10-19] NO がある時は、名前との間を詰める */
+    .top-box .con .left + .title {
+        margin-top: 4rpx;
+    }
+    /* [カスタムエイド 2026-10-19] 備考:ラベルを文の1行目にそろえる */
+    .cardInfo .cardInfos .ciItem.ciTop {
+        align-items: flex-start;
+    }
+    .cardInfo .cardInfos .ciItem.ciTop .ciRight {
+        line-height: 1.6;
+        padding-top: 6rpx;
+    }
+    /* [カスタムエイド 2026-10-19] 特典画像の枚数表示(メニュー写真・TOP画像と同じ形) */
+    .cs-swipe {
+        position: relative;
+    }
+    .cs-top-count {
+        position: absolute;
+        right: 24rpx;
+        bottom: 24rpx;
+        z-index: 2;
+        padding: 6rpx 20rpx;
+        border-radius: 24rpx;
+        background: rgba(0, 0, 0, 0.6);
+        color: #FFFFFF;
+        font-size: 24rpx;
+        font-weight: 500;
+        letter-spacing: 1rpx;
+        pointer-events: none;
     }
 </style>

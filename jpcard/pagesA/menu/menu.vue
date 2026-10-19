@@ -37,13 +37,10 @@
                             <view class="tit">
                                 {{ite.title}}
                             </view>
+                            <!-- [カスタムエイド 2026-10-19] 価格と所要時間を1行に(価格は濃い文字の太字) -->
                             <view class="pri-box">
-                                <view class="pri-left">
-                                    {{ite.price}}
-                                </view>
-                                <view class="pri-right" v-if="ite.is_order == 1">
-                                    所要時間：{{ite.order_time}}分
-                                </view>
+                                <text class="pri-left">{{ite.price}}</text>
+                                <text class="pri-right" v-if="ite.is_order == 1">　・　所要時間 {{ite.order_time}}分</text>
                             </view>
                         </view>
                         <view class="right">
@@ -53,14 +50,15 @@
                                 @click="toCollect(index,idx,ite.id)"></image>
                         </view>
                     </view>
-                    <view class="btn-box">
-                        <view class="btn-left" v-if="ite.image.length > 0">
-                            <view class="tu-box">
-                                <image src="../../static/image/heji.png" mode="" class="tuji"
-                                    @click="heJiShow(index,idx)">
-                                </image>
-                            </view>
+                    <view class="btn-box" v-if="ite.image.length > 0 || ite.des">
+                        <!-- [カスタムエイド 2026-10-19] 写真を押したらすぐ全画面で表示(スマホ標準の画面)。
+                             2枚以上のときだけ、右下に枚数のラベルを出す(今までは1枚でも左上にマークが出ていた) -->
+                        <view class="btn-left" v-if="ite.image.length > 0" @click="openPhotos(ite.image, 0)">
                             <image :src="ite.image[0]" mode="aspectFill" class="img"></image>
+                            <view class="cs-count" v-if="ite.image.length > 1">
+                                <image src="../../static/svg/multiPhoto.svg" class="cs-count-icon"></image>
+                                <text class="cs-count-num">{{ite.image.length}}</text>
+                            </view>
                         </view>
                         <view class="btn-right" >
                             {{ite.des}}
@@ -75,23 +73,6 @@
             </view>
         </view>
         <view style="height: 300upx;"></view>
-        <u-popup :show="imgListShow" :round="10" mode="center" overlayOpacity="1">
-            <view class="tu-list">
-                <view class="icon" @click="imgClose()">
-                    <u-icon name="close" color="#FFFFFF" size="16"></u-icon>
-                </view>
-                <swiper :indicator-dots="false" :autoplay="false" :duration="1000" :circular="true" @change="change">
-                    <swiper-item v-for="(item,idx) in imgList" :key="item">
-                        <view class="swiper-item">
-                            <image :src="item" mode="aspectFit" class="tu-img" @click="openPreview(idx)"></image>
-                        </view>
-                    </swiper-item>
-                </swiper>
-                <view class="shu-sum">
-                    {{sum}} / {{imgList.length}}
-                </view>
-            </view>
-        </u-popup>
         <list :caiDanShow="caiDanShow" :mid="id" :sid="sid" :tabs="tabs" @seed="seed" @selected="chooseItem"></list>
     </view>
 </template>
@@ -241,6 +222,11 @@
                 this.imgListShow = true
                 this.sum = 1
             },
+            // [カスタムエイド 2026-10-19] メニューの写真を全画面で表示(拡大・左右スワイプで次の写真)
+            openPhotos(urls, idx) {
+                if (!urls || !urls.length) return
+                uni.previewImage({ current: idx || 0, urls: urls, indicator: 'number', loop: urls.length > 1 })
+            },
             openPreview(idx) {
                 uni.previewImage({
                     current: idx,
@@ -375,37 +361,42 @@
         }
     }
 
+    // [カスタムエイド 2026-10-19] カテゴリの帯を細く(52px→36px)。メニューは1つずつ白い角丸の枠に入れる
     .lei {
-        height: 100rpx;
+        height: 72rpx;
         background: #F5F5F7;
-        color: #707070;
-        font-size: 32rpx;
-        border-bottom: 1px solid #D2D2D7;
+        color: #515154;
+        font-size: 28rpx;
+        font-weight: 600;
+        border-top: 1px solid #E3E3E8;
+        border-bottom: 1px solid #E3E3E8;
+        margin-bottom: 24rpx;
 
         .lei-txt {
-            width: 90%;
-            margin: 0 auto;
-            line-height: 100rpx;
+            padding-left: 32rpx;
+            line-height: 72rpx;
         }
     }
 
 
     .box-item {
+        padding: 0 24rpx;
+
         .item {
-            padding-top: 40rpx;
-            padding-bottom: 34rpx;
-            border-bottom: 1px solid #D2D2D7;
+            background: #FFFFFF;
+            border: 1px solid #E8E8ED;
+            border-radius: 24rpx;
+            box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+            padding: 28rpx;
+            margin-bottom: 24rpx;
 
             .itms {
                 display: flex;
                 justify-content: space-between;
+                align-items: flex-start;
                 width: 100%;
                 box-sizing: border-box;
-                padding: 0 32upx;
-                margin: 0 auto;
-                // align-items: center;
             }
-
 
             ::v-deep .u-icon__icon {
                 padding-left: 7rpx;
@@ -419,86 +410,101 @@
 
             .checked {}
 
+            .yuan {
+                flex-shrink: 0;
+                margin-right: 24rpx;
+                top: 6rpx;
+            }
+
             .midd {
-                width: 530rpx;
+                flex: 1;
+                min-width: 0;
 
                 .tit {
                     font-size: 32rpx;
                     font-weight: 700;
+                    line-height: 1.4;
                     color: #1D1D1F;
-                    margin-bottom: 28rpx;
+                    margin-bottom: 8rpx;
                 }
 
                 .pri-box {
-                    display: flex;
-                    // justify-content: space-between;
-                    align-items: center;
-                    font-size: 32rpx;
+                    font-size: 26rpx;
+                    line-height: 1.4;
+                    color: #6E6E73;
 
                     .pri-left {
-                        color: #E67770;
-                        // margin-right: 90upx;
-                        width: 38%;
+                        font-size: 28rpx;
+                        font-weight: 600;
+                        color: #1D1D1F;
                     }
 
                     .pri-right {
-                        color: #1D1D1F;
+                        color: #6E6E73;
                     }
                 }
             }
 
             .right {
+                flex-shrink: 0;
+                margin-left: 16rpx;
+
                 image {
-                    width: 60rpx;
-                    height: 60rpx;
+                    width: 56rpx;
+                    height: 56rpx;
                 }
             }
 
             .btn-box {
                 width: 100%;
-                margin: 28rpx 0;
-                // margin-left: 13%;
-                // margin-right: 5%;
+                margin-top: 20rpx;
                 display: flex;
-                justify-content: space-between;
                 box-sizing: border-box;
-                padding: 0 32upx;
 
                 .btn-left {
                     position: relative;
-                     margin-right: 20rpx;
-                    .tu-box {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        z-index: 1;
-                        width: 64rpx;
-                        height: 64rpx;
-
-                        text-align: center;
-                        background: rgba(29, 29, 31, 0.4);
-                        border-radius: 12rpx;
-
-                        .tuji {
-                            margin-top: 6rpx;
-                            width: 45rpx;
-                            height: 51rpx;
-                        }
-                    }
+                    flex-shrink: 0;
+                    margin-right: 24rpx;
+                    width: 208rpx;
+                    height: 208rpx;
 
                     .img {
-                        width: 246rpx;
-                        height: 246rpx;
-                        border-radius: 12rpx;
-                        border: 2rpx solid #EAEAEA;
+                        width: 208rpx;
+                        height: 208rpx;
+                        border-radius: 16rpx;
+                        background: #F5F5F7;
+                    }
+
+                    .cs-count {
+                        position: absolute;
+                        right: 12rpx;
+                        bottom: 12rpx;
+                        height: 44rpx;
+                        padding: 0 14rpx;
+                        border-radius: 22rpx;
+                        background: rgba(0, 0, 0, 0.6);
+                        display: flex;
+                        align-items: center;
+
+                        .cs-count-icon {
+                            width: 24rpx;
+                            height: 24rpx;
+                            margin-right: 8rpx;
+                        }
+
+                        .cs-count-num {
+                            color: #FFFFFF;
+                            font-size: 24rpx;
+                        }
                     }
                 }
 
                 .btn-right {
-                   
-                    color: #1d1d1f !important;
-                    font-size: 24rpx !important;
+                    color: #3A3A3C !important;
+                    font-size: 26rpx !important;
+                    line-height: 1.6;
                     flex: 1;
+                    min-width: 0;
                     white-space: pre-line;
                 }
             }

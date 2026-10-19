@@ -141,6 +141,7 @@
     </view>
 </template>
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import {
         getTimingDetail,
         getShopInfo
@@ -263,7 +264,7 @@
             },
             uploadImage() {
                 let that = this
-                uni.chooseImage({
+                pickImage({
                     count: 1,
                     success: (res) => {
                         const tempPaths = res.tempFilePaths

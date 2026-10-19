@@ -4,7 +4,11 @@
             :border="true" @leftClick="leftClick">
         </u-navbar>
         <view class="c-img" v-if="images.length > 0">
-            <u-swiper :list="images" :autoplay="false" indicatorActiveColor="#191919" indicatorInactiveColor="rgba(0,0,0,.3)" indicator indicatorMode="dot" height="250"></u-swiper>
+            <!-- [カスタムエイド 2026-10-19] 点(●●●)をやめ、2枚以上のときだけ右下に「1 / 3」。押したら全画面・左右にスワイプ -->
+            <view class="cs-swipe">
+                <u-swiper :list="images" :autoplay="false" :indicator="false" height="250" @change="imgChange" @click="openImages(images, $event)"></u-swiper>
+                <view class="cs-top-count" v-if="images.length > 1">{{imgIndex + 1}} / {{images.length}}</view>
+            </view>
         </view>
         <view class="c-tit">
             クーポン番号
@@ -16,7 +20,10 @@
         </view>
         <view class="cou-box">
             <view class="c-title" v-text="info.title"></view>
-            <view class="c-des" v-text="info.des" style="white-space: pre-wrap;"></view>
+            <!-- [カスタムエイド 2026-10-19] 空行を少しの間として表示(共通の行間 1.6) -->
+            <view class="c-des">
+                <view class="cs-para" v-for="(t, i) in textParas(info.des)" :key="i">{{t}}</view>
+            </view>
         </view>
         <view class="c-itms">
             <view class="validity-btn">
@@ -26,17 +33,18 @@
             <view class="validity" v-else>無期限のクーポンです</view>
         </view>
         <view class="beizhu" v-if="info.count">
-            <view class="bei-btn">
-                　利用回数
-            </view>
+            <!-- [カスタムエイド 2026-10-19] 文字の前の全角スペースを消して、枠の中央にそろえる -->
+            <view class="bei-btn">利用回数</view>
             <view class="bei">残り{{info.count}}回</view>
         </view>
         <view class="beizhu" v-if="info.remark">
-            <view class="bei-btn">
-                　備考　
+            <view class="bei-btn">備考</view>
+            <view class="bei">
+                <view class="cs-para" v-for="(t, i) in textParas(info.remark)" :key="i">{{t}}</view>
             </view>
-            <view class="bei" v-text="info.remark" style="white-space: pre-wrap;"></view>
         </view>
+        <!-- [カスタムエイド 2026-10-19] 一番下に余白(iPhone の下のバーの分も) -->
+        <view class="cs-bottom-space"></view>
         <view class="mask" @click="showT = false" v-if="showT == true">
             <image class="bimage" :src="info.bar_code" mode=""></image>
         </view>
@@ -44,6 +52,7 @@
 </template>
 
 <script>
+    import { textParas } from '@/utils/textParas.js' // [カスタムエイド 2026-10-19] お店が入れた空行を少しの間として表示
     import {
         getCouponDetail
     } from "@/api/index.js"
@@ -53,7 +62,8 @@
                 info: {},
                 showT: false,
                 images: [],
-                imnt:true
+                imnt:true,
+                imgIndex: 0 // [カスタムエイド 2026-10-19] 画像の今の位置
             };
         },
         created() {
@@ -65,6 +75,18 @@
             this.getDetail(id)
         },
         methods: {
+            imgChange(e) {
+                this.imgIndex = (e && e.current) || 0
+            },
+            // [カスタムエイド 2026-10-19] 画像を全画面で表示(押した画像から。左右にスワイプで次の画像)
+            openImages(list, index) {
+                let urls = (list || []).map((v) => (typeof v == 'string' ? v : (v && (v.url || v.image)) || '')).filter((v) => v)
+                if (!urls.length) return
+                uni.previewImage({ current: index || 0, urls: urls, indicator: 'number', loop: urls.length > 1 })
+            },
+            textParas(t) {
+                return textParas(t)
+            },
             leftClick() {
                 uni.navigateBack()
             },
@@ -229,5 +251,69 @@
             font-size: 32rpx;
             color: #1D1D1F;
         }
+    }
+
+    /* [カスタムエイド 2026-10-19] 画像の枚数表示(メニュー写真・TOP画像と同じ形) */
+    .cs-swipe {
+        position: relative;
+    }
+    .cs-top-count {
+        position: absolute;
+        right: 24rpx;
+        bottom: 24rpx;
+        z-index: 2;
+        padding: 6rpx 20rpx;
+        border-radius: 24rpx;
+        background: rgba(0, 0, 0, 0.6);
+        color: #FFFFFF;
+        font-size: 24rpx;
+        font-weight: 500;
+        letter-spacing: 1rpx;
+        pointer-events: none;
+    }
+
+    /* ===== [カスタムエイド 2026-10-19] クーポン詳細の間延び・位置のずれを直す ===== */
+    .c-tit {
+        margin: 0 !important;
+        padding: 24rpx 0 20rpx;
+    }
+    .c-tit .c-sn {
+        font-size: 56rpx !important;
+        margin-top: 4rpx;
+    }
+    .ma {
+        padding: 24rpx 0 28rpx !important;
+    }
+    .ma .ma-sn {
+        letter-spacing: 2rpx;
+    }
+    .cou-box {
+        margin-top: 0 !important;
+        padding: 28rpx 32rpx !important;
+    }
+    .cou-box .c-title {
+        margin-bottom: 16rpx !important;
+    }
+    .cou-box .c-des {
+        font-size: 30rpx !important;
+    }
+    /* 有効期限・利用回数・備考の左端をそろえる(今までは 有効期限=幅90%で中央、利用回数=左右16px でずれていた) */
+    .c-itms,
+    .beizhu {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 28rpx 32rpx !important;
+    }
+    .c-itms .validity-btn,
+    .beizhu .bei-btn {
+        margin-bottom: 16rpx !important;
+        box-sizing: border-box;
+    }
+    .beizhu .bei {
+        font-size: 30rpx !important;
+    }
+    .cs-bottom-space {
+        height: calc(80rpx + env(safe-area-inset-bottom));
     }
 </style>

@@ -69,7 +69,8 @@
           <u--input v-model="userinfo.phone" type="number" maxlength="11"></u--input>
         </u-form-item>
         <u-form-item label="性別" prop="userInfo.sex" @click="showSex = true;" ref="item1">
-          <u--input v-model="userinfo.sex == 1? '男性' : userinfo.sex == 2? '女性' : userinfo.sex == 3?'Xジェンダー' : '女性' " disabled disabledColor="#F6F5F8" placeholder="選択"
+          <!-- [カスタムエイド 2026-10-19] 性別が未設定(0)のときに「女性」と出ていたのを、空欄(「選択」)にした -->
+          <u--input :value="userinfo.sex == 1? '男性' : userinfo.sex == 2? '女性' : userinfo.sex == 3?'Xジェンダー' : '' " disabled disabledColor="#F6F5F8" placeholder="選択"
             placeholderStyle=" color:#AAAAAA ;" suffixIcon="arrow-down" suffixIconStyle="color: #A9A8AB">
 
           </u--input>
@@ -131,6 +132,7 @@
   // const JYGoogleSignin = uni.requireNativePlugin('JY-GoogleSignin');
   import {getUserInfos,getAddress,editUser,takeoff} from "@/api/index.js"
   import mod from '../../components/mod.vue'
+  import { clearLoginStorage } from '@/utils/clearLoginStorage.js' // [カスタムエイド 2026-10-19]
   export default {
     components:{
         mod
@@ -225,13 +227,10 @@
         changeStatus(e){
           let that = this
           if(e == 'confirm'){
-              uni.clearStorageSync()
-              uni.clearStorage()
-              uni.removeStorageSync("token")
-              uni.removeStorageSync("user")
-              JYGoogleSignin.jy_logout(res=> {
-              //  不会返回数据，调用就成功
-              })
+              // [カスタムエイド 2026-10-19] 組み込まれていない Google プラグイン(JYGoogleSignin)の呼び出しでエラーになり、
+              // ログイン画面へ移動できていなかったため削除。Google ログインは uni.login を使っている
+              // 全部消すと端末の種類・プッシュ通知の端末IDまで消えるため、ログイン情報だけを消す
+              clearLoginStorage()
               // reLaunch: 全ページを破棄してログイン画面へ（tabBar/非tabBar両対応・キャッシュされた氏名も消える）
               uni.reLaunch({
                   url:"/pages/login/login"
@@ -241,13 +240,7 @@
           }
         },
         toLogin(){
-            uni.removeStorageSync("token")
-            uni.removeStorageSync("user")
-            uni.clearStorageSync()
-            uni.clearStorage()
-            uni.removeStorageSync("token")
-            uni.removeStorageSync("user")
-            uni.clearStorageSync();
+            clearLoginStorage() // [カスタムエイド 2026-10-19] 端末の種類・プッシュ通知の端末IDは残す
             // JYGoogleSignin.jy_logout(res=> {
             // //  不会返回数据，调用就成功
             // })

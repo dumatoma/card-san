@@ -297,6 +297,7 @@
 </template>
 
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import preview from "@/components/preview/preview.vue"
     import {
         getShopInfo,
@@ -403,7 +404,7 @@
                 // [カスタムエイド 2026-10-14] 6枚の上限をなくした。一度に選べるのは9枚まで(端末の選択画面の上限)
                 if (!Array.isArray(that.info.carousel)) that.$set(that.info, 'carousel', [])
                 if (true) {
-                    uni.chooseImage({
+                    pickImage({
                         count: 9,
                         success: (res) => {
                             const tempPaths = res.tempFilePaths

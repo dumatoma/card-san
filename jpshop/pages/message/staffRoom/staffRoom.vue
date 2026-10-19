@@ -22,6 +22,7 @@
 </template>
 
 <script>
+    import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import { getStaffRoom, updateStaffRoomSettings } from '@/api/index.js'
     export default {
         data() {
@@ -46,7 +47,7 @@
             },
             uploadImage() {
                 let that = this
-                uni.chooseImage({
+                pickImage({
                     count: 1,
                     success(res) {
                         uni.uploadFile({

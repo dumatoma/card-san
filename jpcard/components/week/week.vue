@@ -1,6 +1,7 @@
 <template>
-    <view class="con" :style="`height:${totalheight}upx`">
-        <view class="time">
+    <!-- [カスタムエイド 2026-10-19] hideTime: 時間の列を日時選択の画面側に出す(週を横にスライドしても時間の列は動かさない) -->
+    <view class="con" :class="{'cs-notime': hideTime}" :style="`height:${totalheight}upx`">
+        <view class="time" v-if="!hideTime">
             <view class="timeItem" v-for="(item,index) in times">
                 <view class="timeName" v-text="item.time"></view>
                 <view class="point"></view>
@@ -15,7 +16,8 @@
                 <view class="mItem" v-if="item.business == 1">
                     <view v-if="d <= item.stamp" class="dateItem" v-for="(ite,idx) in item.times"
                         :style="ite.status == 'selected'? 'background:#fff !important' : '' ">
-                        <image src="../../static/icons/ring.png" mode="" v-if="ite.status == 'selected'"
+                        <!-- [カスタムエイド 2026-10-19] cs-slot: 押したときの見た目(予約WEBページと同じ。枠全体を押せる) -->
+                        <image class="cs-slot" src="../../static/icons/ring.png" mode="" v-if="ite.status == 'selected'"
                             @click="addNew(ite)"></image>
                         <image style="width: 60upx;height: 60upx;" src="../../static/svg/noTime.svg" mode=""
                             v-if="ite.status == 'unselected'"></image>
@@ -42,7 +44,7 @@
     } from "@/api/index.js"
     export default {
         name: "week",
-        props: ["times", "weekData", "info"],
+        props: ["times", "weekData", "info", "hideTime"],
         data() {
             return {
                 weel: [{}, {}, {}, {}, {}, {}, {}],
@@ -63,8 +65,12 @@
             times: function(newVal, oldVal) {
                 this.times = newVal; //newVal即是chartData
             },
-            weekData: function(newVal, oldVal) {
+            // [カスタムエイド 2026-10-19] 週をスライドで切り替えるため、読み込み済みの週のデータを持って作られたときも表示する(immediate)
+            weekData: {
+                immediate: true,
+                handler: function(newVal, oldVal) {
                 let that = this
+                if (!newVal || !newVal.length || !that.info || !that.info.week_business) return
                 let array = JSON.parse(JSON.stringify(newVal))
                 console.log("array",array)
                 let tem = []
@@ -209,6 +215,7 @@
                     }, 200)
                 },500)
                 
+                }
             }
         },
         methods: {
@@ -263,10 +270,7 @@
                         that.d = d.getTime()
 
                         console.log("date", that.fdate)
-                        uni.showToast({
-                            title: d,
-                            icon: "none"
-                        })
+                        // [カスタムエイド 2026-10-19] 確認用に日付(Date)をお知らせ表示していた行を削除
                     } else {
 
                     }
@@ -327,6 +331,12 @@
         }
     }
 
+    .con.cs-notime {
+        width: 560upx;
+    }
+    .con.cs-notime .manager {
+        overflow: hidden;
+    }
     .manager {
         width: 560upx;
         overflow-x: scroll;
@@ -387,4 +397,5 @@
         }
 
     }
+
 </style>

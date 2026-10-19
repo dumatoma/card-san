@@ -6,10 +6,15 @@
             </view> -->
         <!-- </u-navbar> -->
         <view class="top">
+            <!-- [カスタムエイド 2026-10-19] 選んだメニューを小さくまとめる:左に写真(ある時だけ)、名前は省略せず全部、
+                 価格と所要時間は1行、右に「変更」(メニューを選んだ画面に戻る) -->
             <view class="topContent">
-                <view class="to1" v-text="orderInfo.title"></view>
-                <view class="to2" v-text="`${orderInfo.price}`"></view>
-                <view class="to3" v-text="`所要時間(目安)：${orderInfo.order_time}分`"></view>
+                <image v-if="orderInfo.image && orderInfo.image.length" :src="orderInfo.image[0]" mode="aspectFill" class="to-img"></image>
+                <view class="to-body">
+                    <view class="to1" v-text="orderInfo.title"></view>
+                    <view class="to-meta"><text class="to2" v-text="`${orderInfo.price}`"></text><text class="to3" v-text="`　・　所要時間 ${orderInfo.order_time}分`"></text></view>
+                </view>
+                <view class="to-change" @click="changeMenu">変更</view>
             </view>
         </view>
         <view class="tip">
@@ -38,14 +43,57 @@
                 </view>
             </view>
             <!-- 日历组件 -->
-            <u-sticky>
+            <!-- [カスタムエイド 2026-10-19] 予約WEBページと同じ:日にちと予約枠を一緒に指について横に動かして週を切り替える
+                 (左の時間の列は固定)。青い丸は今日だけ。日曜・祝日は赤。見出しは表示中の週(◯月◯日〜◯日)。
+                 担当者の選択がある店舗は、カレンダーを担当者の選択(高さ43px)のすぐ下に止める -->
+            <u-sticky :key="'cal' + (info.is_appoint == 1 ? 1 : 0)" :offsetTop="info.is_appoint == 1 ? 43 : 0">
             <view class="calendar">
-                <lxCalendar @change="change"></lxCalendar>
+                <view class="cs-wk">
+                    <view class="cs-wk-head">
+                        <view class="cs-wk-title">{{ weekTitle }}</view>
+                        <view class="cs-wk-arrows">
+                            <view class="cs-wk-arrow" :class="{ dis: weekOffset <= 0 }" @click="goWeek(-1)">
+                                <view class="cs-chev prev"></view>
+                            </view>
+                            <view class="cs-wk-arrow" @click="goWeek(1)">
+                                <view class="cs-chev next"></view>
+                            </view>
+                        </view>
+                    </view>
+                    <view class="cs-wk-labels">
+                        <view class="cs-wk-label" v-for="(w, i) in weekLabels" :key="i" :class="i == 0 ? 'sun' : i == 6 ? 'sat' : ''">{{ w }}</view>
+                    </view>
+                    <view class="cs-pager cs-day-pager" @touchstart="swStart" @touchmove="swMove" @touchend="swEnd" @touchcancel="swEnd">
+                        <view class="cs-track" :style="trackStyle">
+                            <view class="cs-pane" v-for="p in panes" :key="p.key">
+                                <view class="cs-wk-days" v-if="!p.empty">
+                                    <view class="cs-wk-day" v-for="d in p.days" :key="d.key" :class="d.cls">
+                                        <text class="cs-wk-num">{{ d.day }}</text>
+                                    </view>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
             </view>
             </u-sticky>
             <!-- 周 -->
-            <view v-if="status == 'week'">
-                <week :info="info" :times="times" @addNew="addNewAppointment" :weekData="weekData"></week>
+            <view v-if="status == 'week'" class="cs-wbody">
+                <view class="cs-timecol" :style="`height:${80 * (times.length + 1)}upx`">
+                    <view class="time">
+                        <view class="timeItem" v-for="(item, index) in times" :key="index">
+                            <view class="timeName" v-text="item.time"></view>
+                            <view class="point"></view>
+                        </view>
+                    </view>
+                </view>
+                <view class="cs-pager cs-grid-pager" @touchstart="swStart" @touchmove="swMove" @touchend="swEnd" @touchcancel="swEnd">
+                    <view class="cs-track" :style="trackStyle">
+                        <view class="cs-pane" v-for="p in panes" :key="p.key">
+                            <week v-if="!p.empty" :info="info" :times="times" :hideTime="true" @addNew="addNewAppointment" :weekData="p.data"></week>
+                        </view>
+                    </view>
+                </view>
             </view>
             <view class="btn1" hover-class="btnhover" @click="showMenu = true">
                 お問い合わせ
@@ -75,8 +123,8 @@
 </template>
 
 <script>
-    import lxCalendar from "@/components/lx-calendar/lx-calendar.vue"
     import week from "@/components/week/week.vue"
+    import { holidayName } from "@/utils/jpHoliday.js" // [カスタムエイド 2026-10-19] 祝日を赤くする
     import {
         getAppointmentList,
         getStaffList,
@@ -84,7 +132,6 @@
     } from "@/api/index.js"
     export default {
         components: {
-            lxCalendar,
             week
         },
         data() {
@@ -182,6 +229,15 @@
                 manager: [],
                 managers: [],
                 weekData: [],
+                // [カスタムエイド 2026-10-19] 週のスライド(予約WEBページと同じ)
+                weekLabels: ['日', '月', '火', '水', '木', '金', '土'],
+                weekOffset: 0,      // 今週から何週先か(0 = 今週。今週より前には戻れない)
+                weekCache: {},      // 週の初日(YYYY-MM-DD)ごとの予約データ
+                weekGen: 0,         // 担当者を切り替えたら増やす(古い読み込み結果を捨てる)
+                weekBusy: false,
+                swDx: 0,            // 指について動かしている量(px)
+                swAnim: false,
+                sw: { x: 0, y: 0, t: 0, axis: '' },
                 staff: [],
                 selectDate: "",
                 currentDate: "",
@@ -190,27 +246,60 @@
                 appointprice:0
             }
         },
+        computed: {
+            // [カスタムエイド 2026-10-19] 週のスライド
+            baseSunday() {
+                let d = new Date()
+                d.setHours(0, 0, 0, 0)
+                d.setDate(d.getDate() - d.getDay())
+                return d
+            },
+            panes() {
+                let list = []
+                for (let i = -1; i <= 1; i++) {
+                    let o = this.weekOffset + i
+                    if (o < 0) {
+                        list.push({ key: 'empty', empty: true })
+                        continue
+                    }
+                    let start = this.weekStartOf(o)
+                    let key = this.formatDate(start.getTime())
+                    list.push({ key: key, empty: false, data: this.weekCache[key] || [], days: this.weekDays(start) })
+                }
+                return list
+            },
+            weekTitle() {
+                let s = this.weekStartOf(this.weekOffset)
+                let e = new Date(s)
+                e.setDate(e.getDate() + 6)
+                return s.getFullYear() + '年 ' + (s.getMonth() + 1) + '月' + s.getDate() + '日〜' + (e.getMonth() != s.getMonth() ? (e.getMonth() + 1) + '月' : '') + e.getDate() + '日'
+            },
+            trackStyle() {
+                return {
+                    transform: 'translate3d(calc(-33.3333% + ' + this.swDx + 'px),0,0)',
+                    transition: this.swAnim ? 'transform .28s cubic-bezier(.2,.7,.2,1)' : 'none'
+                }
+            }
+        },
         created() {
-            
         },
         onLoad(options) {
             let that = this
             that.getInfo(options.id)
             let query = options
             that.query = query
-            setTimeout(() => {
-                that.getWeekList(that.formatDate(that.getWeekDate(that.getToday())))
-                that.selectDate = that.formatDate(that.getWeekDate(that.getToday()))
-                that.getStaffData()
-            },500)
+            // [カスタムエイド 2026-10-19] 今週・来週の予約データは、店舗情報の読み込み後に読み込む(getInfo)
+            that.selectDate = that.formatDate(that.getWeekDate(that.getToday()))
+            that.getStaffData()
         },
         onPullDownRefresh() {
             let that = this
+            // [カスタムエイド 2026-10-19] 読み込み済みの週を捨てて、店舗情報から読み込み直す
+            that.weekGen++
+            that.weekCache = {}
             that.getInfo(that.query.id)
+            that.getStaffData()
             setTimeout(() => {
-                that.getWeekList(that.formatDate(that.getWeekDate(that.getToday())))
-                that.selectDate = that.formatDate(that.getWeekDate(that.getToday()))
-                that.getStaffData()
                 uni.stopPullDownRefresh()
             },500)
         },
@@ -220,6 +309,10 @@
             // that.query = query
         },
         methods: {
+            // [カスタムエイド 2026-10-19] 「変更」:メニューを選んだ画面に戻る
+            changeMenu() {
+                uni.navigateBack()
+            },
             formatNumberWithCommas(number) {
                 if (!number && number !== 0) return '';
                 return String(parseInt(number)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -229,6 +322,7 @@
                     if(res.code == 200){
                         this.info = res.data.shop
                         // console.log(111111,res.data.shop.day_business["202303"])
+                        this.loadAroundWeeks(true) // [カスタムエイド 2026-10-19]
                     }
                 }).catch(() => {})
             },
@@ -391,12 +485,130 @@
                 that.current = index
                 that.staffId = e
                 that.appointprice = price
-                that.getWeekList(that.selectDate)
+                // [カスタムエイド 2026-10-19] 担当者を切り替えたら、表示中の週と前後の週を読み込み直す
+                that.weekGen++
+                that.weekCache = {}
+                that.loadAroundWeeks(true)
             },
 
             // 返回首页
             toIndex() {
                 uni.navigateBack()
+            },
+            // ===== [カスタムエイド 2026-10-19] 週のスライド(予約WEBページと同じ動き) =====
+            weekStartOf(o) {
+                let d = new Date(this.baseSunday)
+                d.setDate(d.getDate() + o * 7)
+                return d
+            },
+            weekDays(start) {
+                let today = new Date()
+                today.setHours(0, 0, 0, 0)
+                let days = []
+                for (let i = 0; i < 7; i++) {
+                    let d = new Date(start)
+                    d.setDate(d.getDate() + i)
+                    let cls = []
+                    if (d.getTime() == today.getTime()) cls.push('today')
+                    if (i == 0 || holidayName(d)) cls.push('sun')
+                    else if (i == 6) cls.push('sat')
+                    days.push({ key: i, day: d.getDate(), cls: cls.join(' ') })
+                }
+                return days
+            },
+            // 1週分の予約データを読み込む(読み込み済みなら何もしない)
+            loadWeek(o, showLoading) {
+                let that = this
+                if (o < 0) return
+                let key = that.formatDate(that.weekStartOf(o).getTime())
+                if (that.weekCache[key]) return
+                that.$set(that.weekCache, key, [])
+                let gen = that.weekGen
+                if (showLoading) uni.showLoading({ title: "読み込み中", mask: true })
+                getAppointmentList({ date: key, sid: that.query.id, id: that.staffId, smid: that.orderInfo.id }).then((res) => {
+                    if (showLoading) uni.hideLoading()
+                    if (gen != that.weekGen) return
+                    if (res.code == 200) {
+                        let array = res.data.orders
+                        array.forEach((val) => { val.times = that.times })
+                        that.$set(that.weekCache, key, array)
+                    } else {
+                        that.$delete(that.weekCache, key)
+                    }
+                }).catch(() => {
+                    if (showLoading) uni.hideLoading()
+                    if (gen == that.weekGen) that.$delete(that.weekCache, key)
+                })
+            },
+            loadAroundWeeks(showLoading) {
+                this.loadWeek(this.weekOffset, showLoading)
+                this.loadWeek(this.weekOffset + 1, false)
+                this.loadWeek(this.weekOffset - 1, false)
+            },
+            pagerWidth() {
+                return uni.upx2px(560)
+            },
+            goWeek(dir) {
+                let that = this
+                if (that.weekBusy) return
+                if (dir < 0 && that.weekOffset <= 0) {
+                    that.swAnim = true
+                    that.swDx = 0
+                    return
+                }
+                that.weekBusy = true
+                that.swAnim = true
+                that.swDx = -dir * that.pagerWidth()
+                setTimeout(() => {
+                    that.weekOffset += dir
+                    that.selectDate = that.formatDate(that.weekStartOf(that.weekOffset).getTime())
+                    that.swAnim = false
+                    that.swDx = 0
+                    that.$nextTick(() => {
+                        that.weekBusy = false
+                        that.loadAroundWeeks(true)
+                    })
+                }, 290)
+            },
+            // 日にちの行・予約枠のどちらをなぞっても、両方を一緒に動かす
+            // (アプリでは document が使えないので、指の動きはテンプレートの @touchstart などで受け取る。縦のスクロールは touch-action: pan-y で妨げない)
+            swPoint(e) {
+                let t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || {}
+                return { x: t.clientX != null ? t.clientX : t.pageX, y: t.clientY != null ? t.clientY : t.pageY }
+            },
+            swStart(e) {
+                if (this.weekBusy) return
+                let p = this.swPoint(e)
+                this.sw = { x: p.x, y: p.y, t: Date.now(), axis: '' }
+                this.swAnim = false
+            },
+            swMove(e) {
+                if (this.weekBusy || !this.sw.t) return
+                let p = this.swPoint(e)
+                let mx = p.x - this.sw.x, my = p.y - this.sw.y
+                if (!this.sw.axis) {
+                    if (Math.abs(mx) < 6 && Math.abs(my) < 6) return
+                    this.sw.axis = Math.abs(mx) > Math.abs(my) ? 'x' : 'y'
+                }
+                if (this.sw.axis != 'x') return
+                // 今週より前には戻れないので、右へ引っぱったときは少しだけ動かす
+                this.swDx = this.weekOffset <= 0 && mx > 0 ? mx / 3 : mx
+            },
+            swEnd() {
+                if (this.weekBusy || this.sw.axis != 'x') {
+                    this.sw = { x: 0, y: 0, t: 0, axis: '' }
+                    return
+                }
+                let v = this.swDx
+                let fast = Math.abs(v) > 30 && Date.now() - this.sw.t < 250
+                let w = this.pagerWidth()
+                this.sw = { x: 0, y: 0, t: 0, axis: '' }
+                if (v < -w * 0.3 || (fast && v < 0)) this.goWeek(1)
+                else if ((v > w * 0.3 || (fast && v > 0)) && this.weekOffset > 0) this.goWeek(-1)
+                else {
+                    this.swAnim = true
+                    this.swDx = 0
+                }
             },
         }
     }
@@ -551,39 +763,65 @@
     }
 
 
+    // [カスタムエイド 2026-10-19] 選んだメニューの枠を小さく(余白・行間を詰める)
     .top {
         box-sizing: border-box;
-        padding: 40upx 32upx;
+        padding: 24upx 32upx;
         background: #F5F5F7;
 
         .topContent {
             background-color: #fff;
-            border: 2upx solid #d2d2d7;
-            border-radius: 20upx;
+            border: 2upx solid #E3E3E8;
+            border-radius: 24upx;
             box-sizing: border-box;
-            box-shadow: 0px 0px 10upx 2upx rgba(0,0,0,0.16);
-            padding: 40upx;
+            padding: 20upx 24upx;
+            display: flex;
+            align-items: flex-start;
+
+            .to-img {
+                width: 116upx;
+                height: 116upx;
+                border-radius: 16upx;
+                flex-shrink: 0;
+                margin-right: 24upx;
+                background: #F5F5F7;
+            }
+
+            .to-body {
+                flex: 1;
+                min-width: 0;
+            }
 
             .to1{
-                font-size: 28upx;
-                font-family: Hiragino Sans-W3, Hiragino Sans;
-                font-weight: normal;
+                font-size: 30upx;
+                font-weight: 600;
+                line-height: 1.4;
                 color: #1D1D1F;
+                margin-bottom: 6upx;
             }
-            
+
+            .to-meta {
+                font-size: 26upx;
+                line-height: 1.4;
+                color: #6E6E73;
+            }
+
             .to2{
                 font-size: 28upx;
-                font-family: Hiragino Sans-W6, Hiragino Sans;
-                font-weight: normal;
-                color: rgba(217,48,37,0.65);
-                margin: 12upx 0;
+                font-weight: 600;
+                color: #1D1D1F;
             }
-            
+
             .to3{
-               font-size: 28upx;
-               font-family: Hiragino Sans-W3, Hiragino Sans;
-               font-weight: normal;
-               color: #1D1D1F; 
+                color: #6E6E73;
+            }
+
+            .to-change {
+                flex-shrink: 0;
+                margin-left: 16upx;
+                padding: 8upx 4upx 20upx 16upx;
+                font-size: 28upx;
+                color: #0A66D8;
             }
         }
     }
@@ -621,5 +859,53 @@
                 }
             }
         }
+    }
+    /* [カスタムエイド 2026-10-19] 週のスライド(日にち・予約枠) */
+    .cs-wk { width: 100%; background: #fff; }
+    .cs-wk-head { display: flex; align-items: center; justify-content: space-between; height: 100upx; box-sizing: border-box; padding: 0 30upx 0 60upx; border-bottom: 1px solid #f5f5f5; }
+    .cs-wk-title { font-size: 34upx; color: #1D1D1F; font-family: Hiragino Sans-W6, Hiragino Sans; }
+    .cs-wk-arrows { display: flex; align-items: center; }
+    .cs-wk-arrow { width: 80upx; height: 80upx; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .cs-wk-arrow.dis { opacity: .3; }
+    .cs-wk-labels { display: flex; margin-left: 158upx; width: 560upx; padding-top: 10upx; }
+    .cs-wk-label { width: 80upx; text-align: center; font-size: 30upx; height: 60upx; line-height: 60upx; color: #1D1D1F; }
+    .cs-pager { overflow: hidden; touch-action: pan-y; width: 560upx; }
+    .cs-day-pager { margin-left: 158upx; padding-bottom: 12upx; }
+    .cs-track { display: flex; width: 300%; transform: translate3d(-33.3333%, 0, 0); will-change: transform; }
+    .cs-pane { width: 33.3333%; flex-shrink: 0; min-height: 1px; }
+    .cs-wk-days { display: flex; }
+    .cs-wk-day { width: 80upx; height: 80upx; display: flex; align-items: center; justify-content: center; }
+    .cs-wk-num { width: 72upx; height: 72upx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32upx; color: #1D1D1F; }
+    .cs-wk-label.sun, .cs-wk-day.sun .cs-wk-num { color: #D93025; }
+    .cs-wk-label.sat, .cs-wk-day.sat .cs-wk-num { color: #1A73E8; }
+    .cs-wk-day.today .cs-wk-num { background: #1A73E8; color: #fff !important; }
+    .cs-wbody { display: flex; width: 100%; }
+    .cs-chev { width: 22upx; height: 22upx; border-top: 4upx solid #1A73E8; border-left: 4upx solid #1A73E8; }
+    .cs-chev.prev { transform: rotate(-45deg); margin-left: 8upx; }
+    .cs-chev.next { transform: rotate(135deg); margin-right: 8upx; }
+    /* 時間の列(予約枠の部品 week.vue と同じ見た目) */
+    .cs-timecol { width: 158upx; flex-shrink: 0; padding-top: 8upx; box-sizing: border-box; }
+    .cs-timecol .time { position: relative; top: -40upx; }
+    .cs-timecol .timeItem { height: 80upx; line-height: 80upx; width: 158upx; font-size: 24upx; font-family: Hiragino Sans-W3, Hiragino Sans; color: #1D1D1F; display: flex; align-items: center; justify-content: space-between; text-align: center; }
+    .cs-timecol .timeName { flex: 1; text-align: center; }
+    .cs-timecol .point { width: 20upx; height: 2upx; background-color: #EAEAEA; }
+    .cs-grid-pager { flex-shrink: 0; }
+
+    /* [カスタムエイド 2026-10-19] 担当者の選択(指名なし…)をナビゲーションバーのすぐ下(4px下)に止め、そのすぐ下にカレンダーを止める
+       (予約WEBページと同じ。行の高さは 上4px + ボタン34px + 下5px = 43px) */
+    .askForName {
+        position: sticky;
+        top: 0;
+        z-index: 971; // カレンダー(u-sticky 970)より上
+        height: 43px;
+        padding: 4px 0 5px 20px !important;
+        align-items: center;
+    }
+    .askForName .name_item {
+        height: 34px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
     }
 </style>

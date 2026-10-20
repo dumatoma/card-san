@@ -1,9 +1,12 @@
 <template>
     <view>
         <!-- <view class="topblank"></view> -->
-        <u-navbar :leftIconColor="color" :title="shopName" :titleStyle="{'color':color}" :bgColor="bgColor"
+        <!-- [カスタムエイド 2026-10-20] 店名が長いときに右のアイコンにくっつかないよう、店名の幅を 340rpx に(入りきらない分は「…」) -->
+        <u-navbar titleWidth="340rpx" :leftIconColor="color" :title="shopName" :titleStyle="{'color':color}" :bgColor="bgColor"
             :safeAreaInsetTop="true" :border="true" :placeholder="true" @rightClick="rightClick" @leftClick="leftClick">
-            <view class="u-nav-right" slot="right">
+            <view class="u-nav-right" style="display: flex;align-items: center;" slot="right">
+                <!-- [カスタムエイド 2026-10-20] 予約履歴のアイコン(会員証のタブと同じ) -->
+                <rh-icon :sid="sid" :color="color" :bgColor="bgColor"></rh-icon>
                 <view :style="`backgroundImage: url(${svgData30})`" style="width: 50upx;height: 50upx;"
                     class="iconright" @click=""></view>
             </view>
@@ -50,11 +53,13 @@
     import list from '../../components/list.vue'
     import sp from "@/components/swiper-direct-com.vue"
     import svg30 from '../../static/svgjs/sv_30.js'
+    import rhIcon from '../../components/rh-icon.vue' // [カスタムエイド 2026-10-20]
     import {
         getShopCoupon
     } from "@/api/index.js"
     export default {
         components: {
+            rhIcon,
             list,
             sp
         },

@@ -57,6 +57,19 @@
     "subPackages": [{
         "root": "pagesA",
         "pages": [{
+                // [カスタムエイド 2026-10-20] 予約履歴(お店ごと)・予約中(全店舗)
+                "path": "history/history",
+                "style": {
+                    "navigationStyle": "custom",
+                    "navigationBarBackgroundColor": "#fff"
+                }
+            }, {
+                "path": "history/upcoming",
+                "style": {
+                    "navigationStyle": "custom",
+                    "navigationBarBackgroundColor": "#fff"
+                }
+            }, {
                 "path": "Collection/Collection",
                 "style": {
                     "navigationStyle": "custom",

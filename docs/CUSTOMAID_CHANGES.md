@@ -551,6 +551,58 @@ $model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->
 | 対策 | スクロールは1回だけ、待たずにすぐ行う。同じ高さの通知が続いたときはスクロールしない。入力欄を別の層で描く(`transform: translateZ(0)`) |
 | 確認 | 実機で確認が必要(iPhone の WebView の描き直しの動きのため、完全には消えない可能性がある) |
 
+### 43. サーバー:お客様アプリの「予約中」「来店履歴」の窓口・メニューの削除を「削除済みの印」に(2026-10-20 本番反映)
+
+| 項目 | 内容 |
+|---|---|
+| 目的 | Card-San App に予約履歴(予約中・来店履歴)と、全店舗の予約中を表示する。お気に入りでお店が削除したメニューを「お取り扱いがありません」と表示する(モック「予約履歴とお気に入り(Card-San App)」運営確認済み) |
+| 新しい窓口 | `GET /api/member/history/orders?sid=`(これからの予約。sid なしで全店舗。店舗名・カード画像・メニュー名・メニュー写真・日付・曜日・開始/終了・担当者)、`GET /api/member/history/comes?sid=`(来店履歴 365日以内。日付・曜日・メニュー(名前・今のメニューの id と写真・予約できるか)・担当者・クーポン)。`app/Http/Controllers/Api/Member/HistoryController.php`(新規)、`routes/api.php`(ログインが必要な所、`card/nearby` の下) |
+| メニューの削除 | `web_shop_menu` に `deleted_at`(DATETIME NULL)を追加し、`ShopMenuModel` を SoftDeletes に。削除してもデータは残り、ふつうの一覧・予約からは自動で除かれる。お気に入り(`Member/MenuController@index` の collect)だけ削除済みも返し、`deleted` を付ける。削除済みは `is_order` 0。それ以前に削除されたメニューはデータがないため表示できない |
+| 予約できるかの判定 | お店のプランがプレミアム(vip type 3)で、メニューが予約可のとき。`Member/MenuController` と同じ判定 |
+| つながり | お客様(web_user)→ お店ごとの会員 `web_shop_member.uid` → 予約 `web_order.mid`・来店履歴 `web_come_log.mid` |
+| 手順 | `/root/customaid_history_patch.php`(md5 6eca765c4e8a13743fd483861bd24374。控え `docs/server/customaid_history_patch.php`)。欄の追加 → スクリプト実行 → 4ファイルの文法確認 → php-fpm 再読み込み |
+| バックアップ | `/www/backup_customaid_history_20261020/`(ShopMenuModel.php・MenuController.php・api.php)。戻すときはこの3つを元に戻し、HistoryController.php を消して php-fpm を再読み込み(`deleted_at` の欄は残してよい) |
+| 確認 | お客様8(cash.sakamoto)で、予約中 0件、お店11の来店履歴が新しい順に返ること(10/16・10/14 レディースカット、写真・予約可・担当者)を確認 |
+| 報告 | サーバーのソースは GitHub にないため、佐藤さんへの報告に入れる |
+
+### 44. Card-San App:予約履歴・全店舗の予約中・お気に入りの削除済み表示(1.1.11(1079) に含める)
+
+| 項目 | 内容 |
+|---|---|
+| 仕様 | モック「予約履歴とお気に入り(Card-San App)」(運営確認済み)。資料「CardSan_予約履歴・お気に入り削除表示_仕様と開発計画_20261020」 |
+| 予約履歴(お店ごと) | 新しい画面 `pagesA/history/history.vue`。タブ「予約中」(日時の近い順・次の予約に「次回」・メニュー写真・担当者、なければ「予約はありません」とお店の画面から開いたときは「メニューを見る」)、「来店履歴」(365日以内・新しい順・メニュー写真・担当者・利用クーポン、「同じメニューで予約する」でメニューを選んだ状態で予約日時の画面へ。予約できないお店・削除済み・名前の合わないメニューでは出さない) |
+| 予約中(全店舗) | 新しい画面 `pagesA/history/upcoming.vue`。店舗名・カード画像・日時・メニュー写真・担当者。押すとそのお店の予約履歴へ |
+| ヘッダーのアイコン | 運営指定のアイコン(`static/svgjs/reserveHistoryMy.js` 黒い丸に白、`reserveHistoryShop.js` 黒い線の丸・ヘッダーの文字色に合わせる)。予約中があるときだけオレンジ(#FF9500)の丸い点(数字なし)。My Card(`pages/index/index.vue`)は全店舗、各店舗の会員証(`pagesA/shopDetails/shopDetails.vue`)はそのお店の予約中で判定 |
+| お気に入り | `pagesA/Collection/Collection.vue`:お店が削除したメニューは灰色・写真は白黒、「このメニューは現在お取り扱いがありません」、「お気に入りから外す」、一番下に並べる |
+| その他 | `api/index.js` に historyOrders・historyComes。`pages.json` に2画面。`pagesA/shop/shop.vue`:予約履歴の「メニューを見る」で戻ったときメニューのタブを開く |
+| 確認 | APIの応答を模したテストで、予約中・来店履歴・全店舗の予約中・お気に入り(削除済み)・2つのヘッダー(アイコンと点)の表示を確認。実機で確認が必要 |
+
+### 45. サーバー:お客様アプリの「お店を探す」と Nearby の条件を見直す(2026-10-20 本番反映)
+
+| 項目 | 内容 |
+|---|---|
+| 症状(運営の指摘) | お店を探す画面で、何も入力しないと地域に関係なく全店舗(テスト用・サンプルのお店も)が最大100件出ていた。Nearby は持っているカードのお店の郵便番号だけで探し、1店目の地域で20件埋まると他の地域が出なかった。お客様の郵便番号は使っていなかった |
+| 新しい条件 | テスト用・サンプルのお店(`web_shop.hide_in_search=1`)と契約が切れたお店(vip の期限外)は出さない。何も入力していないとき:郵便番号の上3桁を ① お客様のアカウント → ② My Card の並び順のお店 の順に集め(重なりは1つ)、地域ごとに1件ずつ交互、同じお店は1回、最大50件(持っているお店も含む)。店名を入力したとき:全国から最大50件。Nearby:同じ条件で持っているお店を除き最大20件。郵便番号のハイフンの有無はそろえて比較 |
+| 出さないお店 | 1 kingburger、7 サンプルサロン、11 CARD SALON、26 ACTIVIST(activist0825@gmail.com)。今後テスト用のお店を作ったら `hide_in_search` を 1 にする |
+| ソース | `app/Http/Controllers/Api/Member/CardController.php`(index の一覧の作り方・nearby を差し替え、activeShop・nearbyCards を追加)。`web_shop` に `hide_in_search`(TINYINT NOT NULL DEFAULT 0)を追加 |
+| 手順 | `/root/customaid_nearby_patch.php`(md5 82d6d3b47c332b4d694c9750a557c7bd。控え `docs/server/customaid_nearby_patch.php`) |
+| バックアップ | `/www/backup_customaid_nearby_20261020/CardController.php`。戻すときはこれを元に戻して php-fpm を再読み込み(`hide_in_search` の欄は残してよい) |
+| 確認 | 今は契約が有効で出してよいお店がないため、検索・Nearby とも0件(正しい)。一時的に CARD SALON の印を外す確認(取り消しできる作業の中で実施・元に戻したことを確認)で、何も入力しない=CARD SALON 1件、「CARD」=1件、「test」=0件、Nearby=0件(持っているため)を確認 |
+| アプリ側(1.1.11 に含める) | `pagesA/search/search.vue`:0件のとき、何も入力していなければ「近くのお店は見つかりませんでした/上の欄にお店の名前を入力して探してください」、入力していれば「見つかりませんでした/お店の名前を変えて、もう一度探してください」 |
+| 今後 | 店舗数が増えたら、上3桁で絞った中をお客様の郵便番号からの距離で並べることを検討(運営と合意) |
+| 報告 | サーバーのソースは GitHub にないため、佐藤さんへの報告に入れる |
+
+### 46. 予約履歴アイコンの調整・お店の各タブにアイコン・チャットの吹き出しと行間(Card-San App 1.1.12(1080)・管理App 1.0.40(1093))
+
+| 項目 | 内容 |
+|---|---|
+| 運営の実機確認(1.1.11) | 店舗のヘッダーの予約履歴アイコンが見にくい・となりの「⋮」と近すぎる。チャットの吹き出しをやわらかく、行間を LINE くらいに |
+| 予約履歴アイコン | 店舗のアイコンは丸を外し、となりの「⋮」と同じ大きさに。間を広げ、押せる範囲を少し広げた。店名の幅を 400rpx→340rpx(長い店名は「…」で切れ、アイコンにくっつかない) |
+| お店の各タブ | 店舗情報・お知らせ・クーポン・メニューのヘッダーにも同じアイコンとオレンジの点(共通の部品 `components/rh-icon.vue`)。メッセージ(チャット)の画面は除く |
+| チャット | 相手は白い吹き出しに細い線、自分は今までどおり緑。角は丸く、しっぽ側の角だけ小さく。背景は薄い灰色、日付は灰色の帯。行間 1.45(LINE に近く)。管理ウェブサイトのチャット(2026-10-12 修正)と同じ考え方。Card-San App `pagesA/message/chat.vue`、管理App `pages/message/chat/chat.vue`・`pages/message/staffRoom/dm.vue`・`groupChat.vue`(自動送信のメッセージも同じ画面に表示) |
+| チャットの入力欄の遅れ | 1.1.11 で少し早くなった。これ以上は WebView の仕組み上むずかしく、運営は許容範囲と判断 |
+| 確認 | APIの応答を模したテストで Card-San App のチャットとヘッダーを確認。実機で確認が必要 |
+
 ## 今後の運用ルール
 
 - 修正は「ソースを修正 → ビルドして本番に配置 → 同じ日に GitHub に反映」を1セットで行う

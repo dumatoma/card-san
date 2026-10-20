@@ -5,9 +5,14 @@
             <view class="u-nav-slot" slot="left" @click="muLvList()">
                 <image src="../../static/image/list.png" mode=""></image>
             </view>
-            <view class="u-nav-right" slot="right" @click="collection()">
+            <view class="u-nav-right cs-nav-right" slot="right">
+                <!-- [カスタムエイド 2026-10-20] 予約中(全店舗)のアイコン。予約中があればオレンジの点 -->
+                <view class="cs-rh" hover-class="cs-rh-hover" @tap.stop="toUpcoming">
+                    <view :style="`backgroundImage: url(${rhIcon})`" class="icon"></view>
+                    <view class="cs-rh-dot" v-if="hasOrder"></view>
+                </view>
                 <view :style="`backgroundImage: url(${favorite})`" class="icon" @touchstart="beginTouch1"
-                    @touchend="endTouch1"></view>
+                    @touchend="endTouch1" @tap.stop="collection()"></view>
             </view>
         </u-navbar>
         <view>
@@ -87,9 +92,11 @@
         deleteCard,
         scanCode,
         getNearCards,
-        getAllUnread
+        getAllUnread,
+        historyOrders
     } from "@/api/index.js"
     import favorite from '../../static/svgjs/favorite'
+    import rhMy from '../../static/svgjs/reserveHistoryMy.js' // [カスタムエイド 2026-10-20]
     import shopInfo from "../../pagesA/indexInfo/indexInfo.vue"
     import QR from '../../static/svgjs/QR.js'
     import { goLogin } from "@/utils/clearLoginStorage.js" // [カスタムエイド 2026-10-19]
@@ -112,6 +119,8 @@
                 alrArray: [],
                 cardname: "",
                 favorite: '"' + favorite + '"',
+                rhIcon: '"' + rhMy + '"', // [カスタムエイド 2026-10-20] 予約中のアイコン
+                hasOrder: false, // [カスタムエイド 2026-10-20] 予約中があるか
                 favorite1: '"' + favorite + '"',
                 QR: '"' + QR + '"',
                 QR1: '"' + QR + '"',
@@ -127,6 +136,7 @@
         },
         onLoad() {},
         onShow() {
+            this.checkOrder() // [カスタムエイド 2026-10-20]
             this.getList()
             this.getNearby()
             getAllUnread().then((res) => {
@@ -430,6 +440,21 @@
             },
 
             open() {},
+            // [カスタムエイド 2026-10-20] 予約中があるか(オレンジの点)
+            checkOrder() {
+                if (!uni.getStorageSync('token')) {
+                    this.hasOrder = false
+                    return
+                }
+                historyOrders().then((res) => {
+                    this.hasOrder = res.code == 200 && res.data.total > 0
+                }).catch(() => {})
+            },
+            toUpcoming() {
+                uni.navigateTo({
+                    url: '../../pagesA/history/upcoming'
+                })
+            },
             collection() {
                 uni.navigateTo({
                     url: '../../pagesA/Collection/Collection'
@@ -780,5 +805,32 @@
         .blue {
             color: #007AFF;
         }
+    }
+
+    /* [カスタムエイド 2026-10-20] 予約中のアイコンとオレンジの点 */
+    .cs-nav-right {
+        display: flex;
+        align-items: center;
+    }
+    .cs-rh {
+        position: relative;
+        margin-right: 20rpx;
+    }
+    .cs-rh-hover {
+        opacity: 0.6;
+    }
+    .cs-rh .icon {
+        background-size: 100% 100%;
+        display: block;
+    }
+    .cs-rh-dot {
+        position: absolute;
+        top: -6rpx;
+        right: -6rpx;
+        width: 30rpx;
+        height: 30rpx;
+        border-radius: 50%;
+        background: #FF9500;
+        box-shadow: 0 0 0 4rpx #FFFFFF;
     }
 </style>

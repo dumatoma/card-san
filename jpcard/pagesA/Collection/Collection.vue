@@ -5,7 +5,8 @@
         <!-- [カスタムエイド 2026-10-19] お気に入りを1つずつ白い角丸の枠に入れる(メニュー一覧と同じ形)。
              価格は濃い文字の太字で所要時間と1行、写真は2枚以上のときだけ右下に枚数、押したら全画面 -->
         <view class="cs-list">
-            <view class="box" v-for="(item,index) in list" :key="item.id">
+            <!-- [カスタムエイド 2026-10-20] お店が削除したメニューは灰色にし、「お取り扱いがありません」と「お気に入りから外す」を出す(一番下に並べる) -->
+            <view class="box" :class="{ 'cs-off': item.deleted == 1 }" v-for="(item,index) in list" :key="item.id">
                 <view class="title">
                     <text class="title-txt" v-text="item.title"></text>
                     <image v-if="item.collect == 1" src="../../static/image/collection.png" @click="toCollect(item.id)" mode=""></image>
@@ -14,6 +15,7 @@
                     <text class="price" v-text="`￥${parseFormatNum(item.price,0)}`"></text>
                     <text class="time" v-if="item.is_order == 1">　・　所要時間 {{item.order_time}}分</text>
                 </view>
+                <view class="cs-offmsg" v-if="item.deleted == 1">このメニューは現在お取り扱いがありません</view>
                 <view class="body" v-if="(item.image && item.image.length) || item.des">
                     <view class="left" v-if="item.image && item.image.length" @click="openPhotos(item.image, 0)">
                         <image :src="item.image[0]" mode="aspectFill" class="f-img"></image>
@@ -24,8 +26,11 @@
                     </view>
                     <view class="right" v-text="item.des"></view>
                 </view>
-                <view class="yue" v-if="item.is_order == 1" @click="yuyue(item,item.sid)">
+                <view class="yue" v-if="item.is_order == 1 && item.deleted != 1" @click="yuyue(item,item.sid)">
                     このメニューで予約する
+                </view>
+                <view class="yue cs-remove" v-if="item.deleted == 1" @click="toCollect(item.id)">
+                    お気に入りから外す
                 </view>
                 <view class="shop" @click="toshoP(item.mid,item.sid)">
                     <text class="tit" v-text="item.shop_name"></text>
@@ -55,11 +60,16 @@
             let that = this
             collectList(that.page).then((res) => {
                 if (res.code == 200) {
-                    that.list = res.data.menus
+                    that.list = that.sortList(res.data.menus)
                 }
             })
         },
         methods: {
+            // [カスタムエイド 2026-10-20] お店が削除したメニューは一番下に
+            sortList(list) {
+                list = list || []
+                return list.filter((v) => v.deleted != 1).concat(list.filter((v) => v.deleted == 1))
+            },
             close() {
                 this.shows = false
             },
@@ -86,7 +96,7 @@
                         })
                         collectList(that.page).then((res) => {
                             if (res.code == 200) {
-                                that.list = res.data.menus
+                                that.list = that.sortList(res.data.menus)
                             }
                         })
                     }else{
@@ -307,5 +317,39 @@
                 }
             }
         }
+    }
+
+    /* [カスタムエイド 2026-10-20] お店が削除したメニュー */
+    .box.cs-off {
+        background: #F2F2F5;
+        border-color: #E2E2E7;
+        box-shadow: none;
+    }
+    .box.cs-off .title,
+    .box.cs-off .meta,
+    .box.cs-off .meta .price,
+    .box.cs-off .body .right {
+        color: #8E8E93 !important;
+    }
+    .box.cs-off .f-img {
+        filter: grayscale(1);
+        opacity: 0.55;
+    }
+    .box.cs-off .title image {
+        opacity: 0.45;
+    }
+    .cs-offmsg {
+        display: inline-block;
+        font-size: 24rpx;
+        color: #6E6E73;
+        background: #E5E5EA;
+        border-radius: 10rpx;
+        padding: 4rpx 14rpx;
+        margin: 8rpx 0 4rpx;
+    }
+    .box .yue.cs-remove {
+        border-color: #C7C7CC !important;
+        color: #3A3A3C !important;
+        background: #F5F5F7 !important;
     }
 </style>

@@ -1,5 +1,5 @@
 <template>
-    <view class="contain">
+    <view class="contain cs-chat">
         <scroll-view class="chatContent">
             <view class="msgItem" v-for="(item, index) in messageArr" :key="item.id">
                 <view class="msgDate" v-if="item.Showdate">{{ item.Showdate }}　({{ item.week }})</view>
@@ -11,7 +11,7 @@
                         <view class="chatName">{{ item.name }}</view>
                     </view>
                     <view class="detail" :style="item.admin_id == myId ? 'flex-direction: row-reverse' : ''">
-                        <view v-if="item.type == 1" class="msgDetail" :style="item.admin_id == myId ? 'background:#87FA7D' : ''">
+                        <view v-if="item.type == 1" class="msgDetail" :class="{ 'cs-me': item.admin_id == myId }" :style="item.admin_id == myId ? 'background:#87FA7D' : ''">
                             <text style="white-space: pre-wrap;">{{ item.message }}</text>
                         </view>
                         <view v-if="item.type == 2" class="msgDetailImage">
@@ -363,5 +363,43 @@
             width: 100%;
             height: 100%;
         }
+    }
+
+    /* ===== [カスタムエイド 2026-10-20] 吹き出しをやわらかく(管理ウェブサイトのチャットと同じ考え方)・行間を LINE に近く ===== */
+    .contain.cs-chat {
+        min-height: 100vh;
+        background: #F7F7F9;
+    }
+    .contain.cs-chat .chatContent {
+        background-color: transparent;
+    }
+    /* 相手:白い吹き出しに細い線。自分:緑(色は今までどおり)。しっぽ側の角だけ小さく */
+    .contain.cs-chat .chatContent .userItem .detail .msgDetail {
+        background: #FFFFFF;
+        border: 1px solid #E5E5EA;
+        border-radius: 32rpx 32rpx 32rpx 8rpx;
+        padding: 18rpx 26rpx;
+        line-height: 1.45;
+        box-sizing: border-box;
+    }
+    .contain.cs-chat .chatContent .userItem .detail .msgDetail.cs-me {
+        border-color: transparent;
+        border-radius: 32rpx 32rpx 8rpx 32rpx;
+    }
+    .contain.cs-chat .msgDetailImage,
+    .contain.cs-chat .chatContent .userItem .detail .msgDetailImage {
+        border-radius: 24rpx;
+        overflow: hidden;
+    }
+    /* 日付:小さな灰色の帯 */
+    .contain.cs-chat .chatContent .msgItem .msgDate {
+        display: table;
+        margin: 24rpx auto 8rpx;
+        padding: 6rpx 24rpx;
+        border-radius: 20rpx;
+        background: #ECECF0;
+        color: #6E6E73;
+        font-size: 24rpx;
+        line-height: 1.4;
     }
 </style>

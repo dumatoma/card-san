@@ -468,3 +468,19 @@ export const delMsg = (data) => {
         data:data
     })
 }
+
+// [カスタムエイド 2026-10-20] これからの予約(sid なしで全店舗)
+export const historyOrders = (sid) => {
+    return request({
+        url: "/api/member/history/orders" + (sid ? "?sid=" + sid : ""),
+        method: "get"
+    })
+}
+
+// [カスタムエイド 2026-10-20] 来店履歴(365日以内)
+export const historyComes = (sid) => {
+    return request({
+        url: "/api/member/history/comes" + (sid ? "?sid=" + sid : ""),
+        method: "get"
+    })
+}

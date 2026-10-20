@@ -11,6 +11,11 @@
             </view>
         </u-navbar>
         <view class="box1">
+            <!-- [カスタムエイド 2026-10-20] 0件のときの案内(何も入力していないときは近くのお店だけを出すため) -->
+            <view class="cs-empty" v-if="loaded && !list.length">
+                <view class="cs-empty-title">{{searched ? '見つかりませんでした' : '近くのお店は見つかりませんでした'}}</view>
+                <view class="cs-empty-txt">{{searched ? 'お店の名前を変えて、もう一度探してください' : '上の欄にお店の名前を入力して探してください'}}</view>
+            </view>
             <view class="items" v-for="(item,index) in list" :key="index">
                 <view class="title">
                     {{item.shop_name}}
@@ -40,7 +45,9 @@
         data() {
             return {
                 keyword: '',
-                list: []
+                list: [],
+                loaded: false, // [カスタムエイド 2026-10-20]
+                searched: false
             };
         },
         created() {
@@ -57,6 +64,10 @@
                     if(res.code == 200){
                         that.list = res.data.cards
                     }
+                    that.loaded = true
+                    that.searched = (that.keyword || '').trim() !== ''
+                }).catch(() => {
+                    that.loaded = true
                 })
             },
             toDetail(sid,mid){
@@ -153,5 +164,21 @@
                 }
             }
         }
+    }
+
+    /* [カスタムエイド 2026-10-20] 0件のときの案内 */
+    .cs-empty {
+        padding: 160rpx 48rpx;
+        text-align: center;
+    }
+    .cs-empty-title {
+        font-size: 32rpx;
+        color: #1D1D1F;
+        margin-bottom: 16rpx;
+    }
+    .cs-empty-txt {
+        font-size: 28rpx;
+        color: #6E6E73;
+        line-height: 1.6;
     }
 </style>

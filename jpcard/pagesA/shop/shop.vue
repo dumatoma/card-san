@@ -255,7 +255,15 @@
                 this.refresh = false
             },3000)
         },
+        // [カスタムエイド 2026-10-20] 予約履歴の「メニューを見る」から戻ったとき、メニューのタブを開く
+        onUnload() {
+            if (this._csTab) uni.$off('csShopTab', this._csTab)
+        },
         onLoad(options) {
+            this._csTab = (name) => {
+                this.changeTas(name)
+            }
+            uni.$on('csShopTab', this._csTab)
             let that = this 
             if(options.source == 'push'){
                 that.current = "クーポン"

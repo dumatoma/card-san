@@ -1,8 +1,14 @@
 <template>
     <view class="">
-        <u-navbar :title="info.shop_name" :leftIconColor="color" :titleStyle="{'color':color}" :bgColor="bgColor"
+        <!-- [カスタムエイド 2026-10-20] 店名が長いと右のアイコンにくっつくため、店名の幅を 400rpx→340rpx に(入りきらない分は「…」) -->
+        <u-navbar :title="info.shop_name" titleWidth="340rpx" :leftIconColor="color" :titleStyle="{'color':color}" :bgColor="bgColor"
             :placeholder="true" :safeAreaInsetTop="true" :border="true" @rightClick="rightClick" @leftClick="leftClick">
-            <view class="u-nav-right" slot="right">
+            <view class="u-nav-right cs-nav-right" slot="right">
+                <!-- [カスタムエイド 2026-10-20] 予約履歴のアイコン(丸なし・となりの「⋮」と同じ大きさ)。このお店に予約中があればオレンジの点 -->
+                <view class="cs-rh" @tap.stop="toHistory">
+                    <view :style="`backgroundImage: url(${rhIcon})`" class="cs-rh-icon"></view>
+                    <view class="cs-rh-dot" v-if="hasOrder" :style="`box-shadow: 0 0 0 4rpx ${bgColor || '#fff'}`"></view>
+                </view>
                 <view :style="`backgroundImage: url(${svgData30})`" style="width: 50upx;height: 50upx;"
                     class="iconright" @click=""></view>
             </view>
@@ -213,8 +219,10 @@
     import svg7 from '../../static/svgjs/sv_07.js'
     import svg8 from '../../static/svgjs/sv_08.js'
     import svg30 from '../../static/svgjs/sv_30.js'
+    import rhShop from '../../static/svgjs/reserveHistoryShop.js' // [カスタムエイド 2026-10-20]
     import {
-        getCardInfo
+        getCardInfo,
+        historyOrders
     } from "@/api/index.js"
     // import tabbar from '../../components/tabbar.vue'
     export default {
@@ -245,8 +253,17 @@
                 svgData30: '"' + svg30 + '"',
                 discount_images: [],
                 benefitIndex: 0, // [カスタムエイド 2026-10-19] 特典画像の今の位置
-                member:{}
+                member:{},
+                hasOrder: false // [カスタムエイド 2026-10-20] このお店に予約中があるか
             };
+        },
+        computed: {
+            // [カスタムエイド 2026-10-20] 予約履歴のアイコン(ヘッダーの文字色に合わせる)
+            rhIcon() {
+                let c = this.color || '#1d1d1f'
+                if (!/^#[0-9a-fA-F]{6}$/.test(c)) c = '#1d1d1f'
+                return this.changeColor('"' + rhShop + '"', c)
+            }
         },
         watch: {
             color: function(newVal, oldVal) {
@@ -256,6 +273,7 @@
             refresh:function(newVal, oldVal) {
                 let that = this
                 if(newVal == true){
+                    that.checkOrder() // [カスタムエイド 2026-10-20]
                     getCardInfo(this.id).then((res) => {
                         if (res.code == 200) {
                             if(res.data.member.seals.length == res.data.member.card.count && res.data.member.card.type != 3){
@@ -315,6 +333,7 @@
         },
         created() {
             let that = this
+            that.checkOrder() // [カスタムエイド 2026-10-20]
 
             getCardInfo(this.id).then((res) => {
                 if (res.code == 200) {
@@ -409,6 +428,18 @@
             },
             close() {
                 this.manShow = false
+            },
+            // [カスタムエイド 2026-10-20] このお店に予約中があるか(オレンジの点)
+            checkOrder() {
+                if (!uni.getStorageSync('token') || !this.sid) return
+                historyOrders(this.sid).then((res) => {
+                    this.hasOrder = res.code == 200 && res.data.total > 0
+                }).catch(() => {})
+            },
+            toHistory() {
+                uni.navigateTo({
+                    url: '../../pagesA/history/history?sid=' + this.sid + '&from=shop'
+                })
             },
             changeColor(url, color) {
                 let res = url.replace(/%23[a-zA-Z0-9]{6}/g, color.replace("#",
@@ -989,5 +1020,35 @@
         font-weight: 500;
         letter-spacing: 1rpx;
         pointer-events: none;
+    }
+
+    /* [カスタムエイド 2026-10-20] 予約履歴のアイコンとオレンジの点 */
+    .cs-nav-right {
+        display: flex;
+        align-items: center;
+    }
+    .cs-rh {
+        position: relative;
+        width: 50upx;
+        height: 50upx;
+        margin-right: 32rpx; /* 2026-10-20 実機確認:となりの「⋮」と近すぎたので離す(見た目の間は約40rpx) */
+        padding: 8rpx; /* 押せる範囲を少し広げる */
+        margin-top: -8rpx;
+        margin-bottom: -8rpx;
+        margin-left: -8rpx;
+    }
+    .cs-rh-icon {
+        width: 50upx;
+        height: 50upx;
+        background-size: 100% 100%;
+    }
+    .cs-rh-dot {
+        position: absolute;
+        top: -4rpx;
+        right: -6rpx;
+        width: 30rpx;
+        height: 30rpx;
+        border-radius: 50%;
+        background: #FF9500;
     }
 </style>

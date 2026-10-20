@@ -286,6 +286,8 @@
                 info: {},
                 mid:"",
                 wai:false,
+                // お休み・勤務時間外の長さ(分)。開始時刻・日付を変えても終了時刻はこの長さを保つ
+                waiDur:0,
                 menu:{},
                 show: false,
                 timeShow: false,
@@ -380,6 +382,15 @@
             save() {
                 let that = this
                 that.showm = true
+                try {
+                    that.doSave()
+                } catch (e) {
+                    // 想定外のエラーで画面全体がロックされないようにする
+                    that.showm = false
+                }
+            },
+            doSave() {
+                let that = this
                 let days 
                 if(that.info.day.indexOf("年") == -1){
                     days = that.info.day
@@ -396,7 +407,8 @@
                 data.phone = that.info.phone
                 data.sex = that.info.sex
                 data.member_id = that.info.member_id
-                data.smid = that.menu.id
+                // お休み・勤務時間外は menu が null で返るため 0 とする（null参照で透明マスクが残り操作不能になっていた）
+                data.smid = that.menu && that.menu.id ? that.menu.id : 0
                 data.start_time = days + " " + that.info.start
                 data.end_time = days + " " + that.info.end
                 data.remark = that.info.remark
@@ -434,6 +446,8 @@
                             icon:"none"
                         })
                     }
+                }).catch(() => {
+                    that.showm = false
                 })
             },
             getStaff(appoint, source) {
@@ -492,7 +506,8 @@
                     menu["order_time"] = 0
                     that.menu = menu
                     that.totalTime = 0
-                    // that.getEndTime()
+                    // 終了時刻は書き換えない（現在の開始〜終了の長さを保持）
+                    that.waiDur = Math.max(that.diffMin(that.info.start, that.info.end), 0)
                 } else {
                     array.forEach((value, index) => {
                         value.items.forEach((val, idx) => {
@@ -511,12 +526,19 @@
                 that.getEndTime()
             },
             
+            // "HH:mm" 2つの差(分)
+            diffMin(start, end) {
+                if (!start || !end) return 0
+                let a = start.split(":")
+                let b = end.split(":")
+                return (b[0] * 60 + b[1] * 1) - (a[0] * 60 + a[1] * 1)
+            },
             getEndTime() {
                 let that = this
                 let time = that.info.day1 + " " + that.info.start
                 let date = new Date(time)
                 let min = date.getMinutes()
-                date.setMinutes(min + that.totalTime * 1)
+                date.setMinutes(min + (that.wai ? that.waiDur * 1 : that.totalTime * 1))
                 let hour = date.getHours() < 10 ? '0' + (date.getHours()) : date.getHours()
                 let minute = date.getMinutes() < 10 ? '0' + (date.getMinutes()) : date.getMinutes()
                 that.info.end = hour + ":" + minute
@@ -547,8 +569,12 @@
                         // お休み・勤務時間外(menu.id が 0/なし)の編集時は「お休み・勤務時間外」を
                         // 選択状態(wai=true)にして、メニュー選択でチェックが入るようにする 2026.7.29
                         that.wai = !(that.menu && that.menu.id)
+                        if (!that.menu) {
+                            that.menu = { id: 0, title: "お休み・勤務時間外", order_time: 0 }
+                        }
+                        that.waiDur = Math.max(that.diffMin(that.info.start, that.info.end), 0)
                         that.mid = res.data.order.mid
-                        that.totalTime = res.data.order.menu.order_time
+                        that.totalTime = that.menu.order_time || 0
                     }
                 })
             },
@@ -672,6 +698,7 @@
                     return
                 }
                 that.info.end = end
+                if (that.wai) that.waiDur = that.diffMin(that.info.start, end)
                 that.endShow = false
             },
             // 查看顾客详情

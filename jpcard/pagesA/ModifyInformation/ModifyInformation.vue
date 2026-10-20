@@ -231,6 +231,7 @@
               // ログイン画面へ移動できていなかったため削除。Google ログインは uni.login を使っている
               // 全部消すと端末の種類・プッシュ通知の端末IDまで消えるため、ログイン情報だけを消す
               clearLoginStorage()
+              that.showAlert = false
               // reLaunch: 全ページを破棄してログイン画面へ（tabBar/非tabBar両対応・キャッシュされた氏名も消える）
               uni.reLaunch({
                   url:"/pages/login/login"

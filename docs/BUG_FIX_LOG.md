@@ -1566,3 +1566,18 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 `RefreshInstagramAccessToken`（60日で失効する長期トークンの更新）が scheduler に登録されておらず、店舗2/4/6/8/24 のトークンが 2025-12 に失効（お知らせのInstagram表示・GBP転載が不可）。また失敗判定が `error_type` のみで `{"error":{...}}` 形式の失敗を成功扱いしていた。→ 判定修正、毎日 03:30 に登録、店舗11は更新済み。**失効済みの店舗は「お知らせ設定」から再連携が必要。** あわせて `Instagram::children()` の fields 誤記（`idmedia_url`）でカルーセルの写真が取れなかった不具合を修正。
 
 **日付：** 2026-10-01
+
+---
+
+### 81. ユーザーAPPログアウト・スタッフルームアイコン・お休み/勤務時間外の時間変更（管理APP修正_2026.8.10 ほか）
+
+| 不具合 | 原因 | 修正 |
+|---|---|---|
+| ユーザーAPP：「ログアウト」を確定してもログイン画面へ遷移しない | `pagesA/ModifyInformation` の確定処理で `JYGoogleSignin.jy_logout()` を呼ぶが、`JYGoogleSignin` の定義行がコメントアウトされており ReferenceError → 後続の `uni.reLaunch` に到達しない | Googleログアウトを `uni.requireNativePlugin` ＋ try/catch に変更し、ダイアログを閉じて必ず `reLaunch('/pages/login/login')` |
+| 管理APP：スタッフルーム設定で選んだ写真アイコンが四角のまま | `<image mode="aspectFit">` に丸型指定なし | 写真設定時は `aspectFill`＋`border-radius:50%`（アカウント情報のアイコンと同じ丸型・現アイコンと同サイズ）。未設定時は従来のアイコン |
+| 管理APP：お休み・勤務時間外の予約で終了時刻を変更すると「変更を保存」「この予約を取り消す」が反応しない | サーバーが `menu=null` を返し、`save()` の `that.menu.id` で TypeError → 透明マスク `showm` が残り全タップ無効（`getDetail` の `menu.order_time` も同様に例外） | `getDetail` で null の場合 `{id:0, title:"お休み・勤務時間外"}` を補完、`smid` を null ガード、`save()` を try/catch＋API `.catch` で必ずマスク解除 |
+| 同：メニュー選択で「お休み・勤務時間外」を選び直すと終了時刻が開始時刻に上書き | `closeShow()` の if/else 外で `getEndTime()`（開始＋所要0分）を無条件実行 | お休み・勤務時間外は開始〜終了の長さ `waiDur` を保持し、`getEndTime()` はその長さで計算（選び直し・開始時刻/日付の変更でも終了時刻が開始に潰れない）。終了時刻の手動変更で `waiDur` を更新 |
+
+対象：`jpcard/pagesA/ModifyInformation/ModifyInformation.vue`、`jpshop/pages/message/staffRoom/staffRoom.vue`、`jpshop/pages/appointment/notice/detail/edit.vue`。アプリ：jpshop 1.0.38/1091、jpcard 1.1.7/1075。
+
+**日付：** 2026-10-20

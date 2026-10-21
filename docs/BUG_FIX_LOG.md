@@ -1603,6 +1603,6 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 | その他 | レビューリンク作成方法のヘルプURL差替え（zendesk 57035978592409）。予約WEB のタイトル「Card-San 予約」→ 店舗情報取得後「店舗名｜予約」。旧 GBP 手順書に「過去案・不使用」注記 | `jpshop/pages/message/reviewSetting/reviewSetting.vue`、`outsiteAppointment/*`、`docs/GBP_SETUP_GUIDE_ja.md` |
 
 **サーバー側（未実施・SSH 不通のため）**：OAuth 戻りページの `cardsan://` 化、`create_access_token` の候補返却＋ `select_location` 新設、`review_unread.unreplied`、`review_list.photos/last_sync_at`、`ins_posts.synced_total`、写真同期の分類判定（ADDITIONAL のみ・ロゴ/カバーは読み戻しのみ・顧客写真は取得しない）、`web_shop_pay_card` の card_no/cvv 列確認。仕様は `docs/GBP_SERVER_CONTRACT.md`。
-**ユーザー作業**：URL scheme 追加のため jpshop は**再ビルド（wgt 不可）**。jpshop 1.0.38/1091、jpcard 1.1.7/1075。予約WEB は HBuilderX でビルドして `/reserve/` へ。Android FCM は DCloud 設定＋google-services.json 待ち。
+**ユーザー作業**：URL scheme 追加のため jpshop は**再ビルド（wgt 不可）**。jpshop 1.0.43/1096、jpcard 1.1.15/1083（カスタムエイド 1.0.42/1.1.14 の次）。予約WEB は HBuilderX でビルドして `/reserve/` へ。Android FCM は DCloud 設定＋google-services.json 待ち。
 
 **日付：** 2026-10-22

@@ -306,7 +306,8 @@
                         }
                     } else if (res.code == 401) {
                         // axios 経由なので res はレスポンス本体（res.data.code では判定されなかった）。保存データ消去＋WebSocket切断＋ログイン画面へ
-                        forceLogout(res.message, 2500)
+                        // トーストは request.js のレスポンス拦截器が既に出しているので、ここでは重ねて出さない
+                        forceLogout('', 2500)
 
                     }
                 }).catch(() => {})

@@ -29,7 +29,7 @@
             <div class="cuts" v-if="item.current > 0 && index == 4">
               {{ item.current > 99 ? "99+" : item.current }}
             </div>
-            <div class="cuts" v-if="item.current > 0 && index == 5">
+            <div class="cuts rv-badge" v-if="item.current > 0 && index == 5">
               {{ item.current > 99 ? "99+" : item.current }}
             </div>
           </div>
@@ -195,6 +195,8 @@ export default {
     }, 200);
     this.getReviewUnread()
     setInterval(() => { this.getReviewUnread() }, 30000)
+    // クチコミ画面で返信したらすぐにバッジを更新
+    window.addEventListener("gbp-review-changed", this.getReviewUnread)
     setInterval(() => {
          this.getUnreadnumber() 
          // getAppointNoticeList().then((res) => {
@@ -206,6 +208,9 @@ export default {
   },
   mounted() {
        
+  },
+  beforeDestroy() {
+    window.removeEventListener("gbp-review-changed", this.getReviewUnread)
   },
   methods: {
       getInfo(){
@@ -222,7 +227,8 @@ export default {
       },
       getReviewUnread(){
         gbpReviewUnread().then((res) => {
-          if (res && res.code == 200) this.list[5].current = res.data.unread * 1
+          // クチコミタブのバッジ = 未返信件数(reply=null)。サーバーが unreplied を返すまでは unread で代用
+          if (res && res.code == 200) this.list[5].current = (res.data.unreplied != null ? res.data.unreplied : res.data.unread) * 1 || 0
         }).catch(() => {})
       },
       changeColor(url,color){
@@ -449,6 +455,9 @@ export default {
           background: #2699fb;
           border-radius: 50%;
           margin-left: 10px;
+        }
+        .cuts.rv-badge {
+          background: #1a73e8;
         }
         .top {
           margin-left: 10px;

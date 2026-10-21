@@ -25,14 +25,14 @@
                 </view>
                 <view class="payName">
                     <image src="../../../static/icons/cardLogo.png" mode=""></image>
-                    <text v-text="payinfo.name || ''"></text>
+                    <text v-text="payinfo.brand_name || 'クレジットカード'"></text>
                 </view>
+                <!-- カード番号・CVV は保持しない（PCI DSS）。Stripe のカード概要のみ表示 -->
                 <view class="payItem">
-                    下４桁 {{payinfo.cvv}}
+                    下４桁 {{payinfo.last4 || ''}}
                 </view>
-                <view class="payItem" v-text="payinfo.card_no"></view>
-                <view class="payItem">
-                    有効期限　{{payinfo.expire_date}}
+                <view class="payItem" v-if="payinfo.exp_month && payinfo.exp_year">
+                    有効期限　{{('0' + payinfo.exp_month).slice(-2)}}/{{String(payinfo.exp_year).slice(-2)}}
                 </view>
             </view>
 
@@ -85,7 +85,7 @@
 <script>
     import {
         getGoodsDetail,
-        getPayList,
+        getVipCard,
         getAddressList,
         delAddress,
         orderConfirm,
@@ -110,11 +110,11 @@
         },
         onShow() {
             let that = this
-            getPayList().then((res) => {
+            getVipCard().then((res) => {
                 if (res.code == 200) {
-                    if (res.data.cards.length > 0) {
-                        that.cardInfo = res.data.cards
-                        that.payinfo = res.data.cards[0]
+                    if (res.data.card) {
+                        that.cardInfo = [res.data.card]
+                        that.payinfo = res.data.card
                     } else {
                         uni.showToast({
                             title: "no card",
@@ -153,11 +153,11 @@
                     }
                 })
 
-                getPayList().then((res) => {
+                getVipCard().then((res) => {
                     if (res.code == 200) {
-                        if (res.data.cards.length > 0) {
-                            that.cardInfo = res.data.cards
-                            that.payinfo = res.data.cards[0]
+                        if (res.data.card) {
+                            that.cardInfo = [res.data.card]
+                            that.payinfo = res.data.card
                         } else {
                             uni.showToast({
                                 title: "no card",

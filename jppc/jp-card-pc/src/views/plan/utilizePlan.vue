@@ -166,46 +166,7 @@
                   {{ item.title }}
                 </div>
               </div>
-              <div
-                v-if="payIndex == 0 && index == 0"
-                style="padding-left: 16px"
-              >
-                <img
-                  src="@/static/index/utilize.png"
-                  style="width: 210px; margin: 10px 0 40px 12px"
-                />
-                <div style="font-weight: bold; margin-bottom: 4px">
-                  カード情報を入力して下さい
-                </div>
-                <div class="pay_top">カード番号</div>
-                <input
-                  class="pay_bottom pay_big"
-                  type="text"
-                  placeholder="3456 7898 1987 0001"
-                  v-model="inp1"
-                />
-                <div class="pay_top">有効期限</div>
-                <input
-                  class="pay_bottom pay_big"
-                  type="text"
-                  placeholder="mm/yy"
-                  v-model="inp2"
-                />
-                <div class="pay_top">CVV</div>
-                <input
-                  class="pay_bottom pay_big"
-                  type="text"
-                  placeholder="3桁or4桁の数字"
-                  v-model="inp3"
-                />
-                <div class="pay_top">ICHIROU SUZUKI</div>
-                <input
-                  class="pay_bottom pay_big"
-                  type="text"
-                  placeholder="ICHIROU SUZUKI"
-                  v-model="inp4"
-                />
-              </div>
+              <!-- カード番号・CVV の入力欄は削除（カード情報は Stripe でのみ扱う。申込みは planConfirm の Stripe フローへ） -->
             </div>
           </div>
           <div class="sur_box sur_one sur_card m-t-30 no-size">
@@ -307,15 +268,11 @@
 </template>
 
 <script>
-import {getPackageList,getBindCard,buyPlan,getStore} from "@/http/api.js" 
+import {getPackageList,getStore} from "@/http/api.js" 
 export default {
   data() {
     return {
       show: "one",
-      inp1:"",
-      inp2:"",
-      inp3:"",
-      inp4:"",
       info:{},
       monthList: [
         {
@@ -529,43 +486,9 @@ export default {
          // console.log(that.list)
       },
       sub(){
-         let that = this 
-         let data = {}
-         data['type'] = that.monIndex * 1 + 1
-         data['month'] = that.cycleIndex == 0? 12 : that.cycleIndex == 1? 6 : 1
-         data['card_type'] = 1
-         data['card_no'] = that.inp1
-         data['expire_date'] = that.inp2
-         data['cvv'] = that.inp3
-         data['name'] = that.inp4
-         buyPlan(data).then((res) => {
-             console.log(res)
-             if(res.code == 200){
-                 if(res.data.amount > 0){
-                     window.open(res.data.url)
-                 }else{
-                   that.keepShow = true
-                   that.surfaceShow = false  
-                 }
-                 
-             }else{
-                 that.$message.error(res.message)
-             }
-         })
-      },
-      getCardList(){
-          let that = this
-          getBindCard().then((res) => {
-              console.log(res)
-              if(res.code == 200){
-                  if(res.data.cards.length > 0){
-                    that.inp1 = res.data.cards[0].card_no
-                    that.inp2 = res.data.cards[0].expire_date
-                    that.inp3 = res.data.cards[0].cvv
-                    that.inp4 = res.data.cards[0].name
-                  }
-              }
-          })
+         // カード情報は当社APIへ送らない。申込み・お支払いは planConfirm（Stripe）で行う
+         this.surfaceShow = false
+         this.showSurface()
       },
       getList(){
           let that = this

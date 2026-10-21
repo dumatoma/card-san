@@ -84,6 +84,7 @@
         menuCate,
         getShopInfo
     } from "@/api/index.js"
+    import { setShopTitle } from "@/utils/pageTitle.js"
     export default {
         components: {
             list,
@@ -106,6 +107,10 @@
                 info:{}
             };
         },
+        onShow() {
+            // 店舗情報の取得前は「Card-San 予約」（別店舗の古い店舗名を出さない）
+            setShopTitle(this.info && this.info.shop_name ? this.info.shop_name : '')
+        },
         created() {
             let that = this
             let query = that.$route.query
@@ -115,6 +120,8 @@
                    this.info = res.data.shop
                    console.log('info',this.info)
                    uni.setStorageSync("shopName",res.data.shop.shop_name)
+                   // タブ名を「{店舗名}｜予約」に
+                   setShopTitle(res.data.shop.shop_name || '')
                    // console.log(111111,res.data.shop.day_business["202303"])
                }
            })

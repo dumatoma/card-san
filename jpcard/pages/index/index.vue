@@ -95,11 +95,11 @@
         getAllUnread,
         historyOrders
     } from "@/api/index.js"
+    import { forceLogout } from "@/utils/request.js"
     import favorite from '../../static/svgjs/favorite'
     import rhMy from '../../static/svgjs/reserveHistoryMy.js' // [カスタムエイド 2026-10-20]
     import shopInfo from "../../pagesA/indexInfo/indexInfo.vue"
     import QR from '../../static/svgjs/QR.js'
-    import { goLogin } from "@/utils/clearLoginStorage.js" // [カスタムエイド 2026-10-19]
     export default {
         components: {
             shopInfo
@@ -304,15 +304,9 @@
                                 that.showAle = true
                             },1000)
                         }
-                    } else if (res.data.code == 401) {
-                        uni.showToast({
-                            title: res.data.message,
-                            icon: "none",
-                            duration: 2500
-                        })
-                        setTimeout(() => {
-                            goLogin() // [カスタムエイド 2026-10-19] ログイン画面が重ならないようにする
-                        }, 2500)
+                    } else if (res.code == 401) {
+                        // axios 経由なので res はレスポンス本体（res.data.code では判定されなかった）。保存データ消去＋WebSocket切断＋ログイン画面へ
+                        forceLogout(res.message, 2500)
 
                     }
                 }).catch(() => {})
@@ -344,14 +338,8 @@
                                 that.cardList = res.data.data.members
                             }, 500)
                         } else if (res.data.code == 401) {
-                            uni.showToast({
-                                title: res.data.message,
-                                icon: "none",
-                                duration: 2500
-                            })
-                            setTimeout(() => {
-                                goLogin() // [カスタムエイド 2026-10-19] ログイン画面が重ならないようにする
-                            }, 2500)
+                            // 保存データ消去＋WebSocket切断＋ログイン画面へ（ログイン画面が重ならない goLogin を使用）
+                            forceLogout(res.data.message, 2500)
                         } else {
                             uni.showToast({
                                 title: res.data.message,

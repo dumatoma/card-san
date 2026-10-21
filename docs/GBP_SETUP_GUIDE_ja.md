@@ -1,3 +1,5 @@
+> **【過去案・不使用】本書は各店舗が独自に GCP プロジェクトを作成する旧方式の手順です。現在は Card-San 共通の OAuth クライアントを使用するため、本書の手順は不要です。**
+
 # Google Business Profile 連携設定ガイド
 
 Card-San の「Googleクチコミ管理」「GBP投稿」機能を利用するには、Google Cloud Console でプロジェクトを作成し、認証情報を取得する必要があります。

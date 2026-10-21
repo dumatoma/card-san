@@ -49,44 +49,6 @@
                 
                 
                 
-                <!-- <div class="sur_box sur_one m-t-30">
-                    <div class="sur_blue" style="">お支払い方法を選択</div>
-                    <div class="payment_bg" v-for="(item, index) in paymentList" :key="index">
-                        <div v-if="payIndex == 0 && index == 0" style="padding-left: 16px">
-                            <img src="@/static/cards.png" style="width: 275px;height: 40px; margin: 10px 0 0" />
-                            <div class="pay_top">カード番号</div>
-                            <div style="border-bottom: 1px solid #d2d2d7;width: 300px;">
-                                <input class="pay_bottom pay_big" type="text" placeholder="3456 7898 1987 0001" v-model="inp1" />
-                            </div>
-                            
-                            <div style="display: flex;align-items: center;">
-                                <div>
-                                    <div class="pay_top">有効期限</div>
-                                    <div style="border-bottom: 1px solid #d2d2d7;width: 130px;">
-                                        <input class="pay_bottom pay_big" type="text" placeholder="mm/yy" v-model="inp2" />
-                                    </div>    
-                                    
-                                </div>
-                                <div style="margin-left: 25px;">
-                                    <div class="pay_top">CVV</div>
-                                    <div style="border-bottom: 1px solid #d2d2d7;width: 130px;">
-                                        <input class="pay_bottom pay_big" type="text" placeholder="3桁or4桁の数字" v-model="inp3" />
-                                    </div>
-                                    
-                                </div>
-                            </div>
-                            
-                            
-                            
-                            <div class="pay_top">カード名義人</div>
-                            <div style="border-bottom: 1px solid #d2d2d7;width: 300px;">
-                                <input class="pay_bottom pay_big" type="text" placeholder="ICHIROU SUZUKI"
-                                    v-model="inp4" />
-                            </div>
-                           
-                        </div>
-                    </div>
-                </div> -->
                 <!-- お支払い方法（契約終了後の再契約で別のカードに変更できるように）2026-10 -->
                 <div class="sur_box sur_one m-t-30 paysel">
                     <div class="sur_blue">お支払い方法</div>
@@ -144,7 +106,7 @@
                     <div>です。</div>
                     　 上記は次月からのご請求となります。
                 </div> -->
-                <div class="saved_card" v-if="card">
+                <div class="saved_card" v-if="card && (activeStripe || payCard == 'saved')">
                     お支払い：{{card.brand_name}} **** {{card.last4}}（ご登録のカードで決済されます）
                 </div>
                 <div class="sur_btn u-flex-center shou" :style="submitting ? 'opacity:0.5;pointer-events:none' : ''" @click="sub">
@@ -158,7 +120,6 @@
 <script>
     import {
         getPackageList,
-        getBindCard,
         buyPlan,
         getStore,
         setpayOrder,
@@ -171,10 +132,6 @@
                 submitting: false,
                 card: null,
                 show: "one",
-                inp1: "",
-                inp2: "",
-                inp3: "",
-                inp4: "",
                 info: {},
                 monthList: [{
                         title: "ライト",
@@ -263,10 +220,6 @@
                         money: "¥2,200/月"
                     },
                 ],
-                paymentList: [{
-                    title: "クレジットカード",
-                }],
-                payIndex: 0,
                 payCard: 'new',
                 activeStripe: false,
                 lastCardType: 0,
@@ -389,7 +342,8 @@
                 that.sixPrice = that.selectItem.price[1]
                 that.twelvePrice = that.selectItem.price[2]
                 that.surfaceShow = true
-                that.getCardList()
+                // 支払いカードは Stripe のカード摘要（brand/last4/有効期限）のみ表示。カード番号・CVVは当社では扱わない
+                that.loadCard()
             },
             sub() {
                 // 二重送信防止（旧実装はタイムアウト時に再クリックで注文が重複していた）
@@ -443,20 +397,6 @@
                         if (this.card) this.payCard = 'saved'
                     }
                 }).catch(() => {})
-            },
-            getCardList() {
-                let that = this
-                getBindCard().then((res) => {
-                    console.log(res)
-                    if (res.code == 200) {
-                        if (res.data.cards.length > 0) {
-                            that.inp1 = res.data.cards[0].card_no
-                            that.inp2 = res.data.cards[0].expire_date
-                            that.inp3 = res.data.cards[0].cvv
-                            that.inp4 = res.data.cards[0].name
-                        }
-                    }
-                })
             },
             getList() {
                 let that = this
@@ -519,9 +459,6 @@
                     that.calculateTime(that.nowDate*1000)
                 }
 
-            },
-            payClick(index) {
-                this.payIndex = index;
             },
             change() {
                 this.$router.push({

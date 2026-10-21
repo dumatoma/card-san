@@ -44,6 +44,9 @@
 </template>
 
 <script>
+    import { setupVipCard } from '@/api/index.js'
+    // カード番号・CVV は当社サーバーで扱わない（PCI DSS）。旧 payDetail（生カード入力）は廃止し、
+    // Stripe の安全な入力画面（Checkout setup）で登録・変更する（accounts/payment/payment.vue と同じ流れ）
     export default {
         data() {
             return {
@@ -52,9 +55,29 @@
         },
         methods: {
             toDetail(e) {
-                uni.redirectTo({
-                    url: "../payment/payDetail?type=" + e + "&source=add"
-                })
+                uni.showLoading({ title: '読み込み中', mask: true })
+                setupVipCard().then((res) => {
+                    uni.hideLoading()
+                    if (res.code == 200 && res.data.url) {
+                        uni.showModal({
+                            title: 'カード情報の登録・変更',
+                            content: 'ブラウザでStripeの安全な入力画面を開きます。入力完了後、アプリに戻って再表示してください。',
+                            cancelText: 'キャンセル',
+                            confirmText: '開く',
+                            success(r) {
+                                if (!r.confirm) return
+                                // #ifdef APP-PLUS
+                                plus.runtime.openURL(res.data.url)
+                                // #endif
+                                // #ifndef APP-PLUS
+                                window.location.href = res.data.url
+                                // #endif
+                            }
+                        })
+                    } else {
+                        uni.showToast({ title: res.message || 'エラーが発生しました', icon: 'none' })
+                    }
+                }).catch(() => { uni.hideLoading() })
             }
         }
     }

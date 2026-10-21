@@ -85,12 +85,21 @@
                 ],
                 "abiFilters" : [ "armeabi-v7a", "arm64-v8a", "x86" ],
                 "minSdkVersion" : 21,
-                "targetSdkVersion" : 36
+                "targetSdkVersion" : 36,
+                /* GBP連携: 外部ブラウザでのGoogle認証後に cardsan://gbp?... でアプリへ戻る */
+                "schemes" : "cardsan"
             },
             /* ios打包配置 */
             "ios" : {
                 "dSYMs" : false,
                 "idfa" : false,
+                /* GBP連携: 外部ブラウザでのGoogle認証後に cardsan://gbp?... でアプリへ戻る */
+                "urltypes" : [
+                    {
+                        "identifier" : "jp.cardsan.shop",
+                        "urlschemes" : [ "cardsan" ]
+                    }
+                ],
                 "privacyDescription" : {
                     "NSPhotoLibraryUsageDescription" : "写真を保存および添付するには、写真へのアクセスを許可してください",
                     "NSPhotoLibraryAddUsageDescription" : "写真を保存および添付するには、写真へのアクセスを許可してください",

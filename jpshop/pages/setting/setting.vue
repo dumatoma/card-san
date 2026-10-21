@@ -242,7 +242,7 @@
                             }else if(e == 9){
                                 if(res.data.admin.privileges.includes(16)){
                                     uni.navigateTo({
-                                        url:"../settings/gbp/gbp"
+                                        url:"/pages/settings/gbpSetting/gbpSetting"
                                     })
                                 }else{
                                     that.showpermission = true
@@ -289,7 +289,7 @@
                         })
                     }else if(e == 9){
                         uni.navigateTo({
-                            url:"../settings/gbp/gbp"
+                            url:"/pages/settings/gbpSetting/gbpSetting"
                         })
                     }
                 }

@@ -456,7 +456,12 @@
                 })
                 let that = this
                 let data = {}
+                // day1 は日付を選び直した時にしか設定されないため、未設定なら info.day（"YYYY年MM月DD日" / "YYYY-MM-DD"）から同じ "YYYY/MM/DD" 形式を作る
+                // （未設定のまま "undefined HH:mm" を送っていた）
                 let date = that.info.day1
+                if (!date && that.info.day) {
+                    date = String(that.info.day).replace(/年|月/g, "/").replace(/日/, "").replace(/-/g, "/").trim()
+                }
                 data.start_time = date + " " + that.info.start
                 data.end_time = date + " " + that.info.end
                 data.id = appoint
@@ -518,6 +523,8 @@
                             }
                         })
                     })
+                    // 何も選択されていない（メニュー未読込・削除済みメニュー）場合は現状維持で閉じる
+                    if (i === undefined) return
                     that.totalTime = total
                     that.menu = array[i].items[ix]
                     that.menu["order_time"] = total
@@ -535,13 +542,16 @@
             },
             getEndTime() {
                 let that = this
-                let time = that.info.day1 + " " + that.info.start
-                let date = new Date(time)
-                let min = date.getMinutes()
-                date.setMinutes(min + (that.wai ? that.waiDur * 1 : that.totalTime * 1))
-                let hour = date.getHours() < 10 ? '0' + (date.getHours()) : date.getHours()
-                let minute = date.getMinutes() < 10 ? '0' + (date.getMinutes()) : date.getMinutes()
-                that.info.end = hour + ":" + minute
+                // info.day1 は日付を選び直すまで未設定のため new Date(day1 + start) だと Invalid Date →「NaN:NaN」になる。
+                // 終了時刻は "HH:mm" なので開始時刻から分単位で計算する（日付をまたぐ場合は従来どおり 24h で折り返し）
+                let p = String(that.info.start || "").split(":")
+                let t = p[0] * 60 + p[1] * 1 + (that.wai ? that.waiDur * 1 : that.totalTime * 1)
+                if (!isNaN(t)) {
+                    t = ((t % 1440) + 1440) % 1440
+                    let hour = Math.floor(t / 60)
+                    let minute = t % 60
+                    that.info.end = (hour < 10 ? '0' + hour : hour) + ":" + (minute < 10 ? '0' + minute : minute)
+                }
                 if(that.menu){
                     that.getStaff(that.menu.id?that.menu.id:0, 1)
                 }else{

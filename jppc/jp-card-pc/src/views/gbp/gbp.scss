@@ -1,4 +1,5 @@
-.gbp { width: 860px; padding-bottom: 60px; }
+// 3画面（Googleビジネス連携／投稿管理／クチコミ管理）とも Web版UIUX仕様でメインカラム幅 820px 固定
+.gbp { width: 820px; padding-bottom: 60px; }
 .tit { color: #1d1d1f; font-size: 21px; font-weight: bold; margin-bottom: 20px; }
 .sub-tit { font-size: 16px; font-weight: bold; margin: 30px 0 14px; color: #1d1d1f; }
 .card { background: #fff; border: 1px solid #e5e5ea; border-radius: 10px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08); }
@@ -32,10 +33,14 @@
 .last { font-size: 13px; color: #707070; }
 .btn-sync { border: 1px solid #1d1d1f; border-radius: 6px; padding: 8px 16px; background: #fff; font-size: 14px; }
 .mask { position: fixed; z-index: 3000; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(29, 29, 31, 0.45); display: flex; align-items: center; justify-content: center; }
-.dialog { background: #fff; border-radius: 10px; width: 420px; padding: 36px 30px 30px; text-align: center; }
+.dialog { background: #fff; border-radius: 10px; width: 400px; box-sizing: border-box; padding: 36px 30px 30px; text-align: center; }
 .d-title { font-size: 16px; font-weight: bold; color: #1d1d1f; line-height: 1.6; word-break: break-all; }
 .d-sub { font-size: 14px; color: #1d1d1f; margin-top: 16px; line-height: 1.6; }
 .d-btns { display: flex; gap: 14px; margin-top: 28px; }
 .d-cancel, .d-ok { flex: 1; height: 46px; line-height: 46px; border-radius: 6px; font-size: 16px; }
 .d-cancel { background: #d8d8d8; color: #555; }
 .d-ok { background: #c9412f; color: #fff; }
+// ビューポート中央に固定表示するトースト（同期しました／転載しました）
+.c-toast { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3100; background: rgba(40, 40, 40, 0.92); color: #fff; font-size: 14px; padding: 12px 24px; border-radius: 20px; white-space: nowrap; pointer-events: none; }
+.c-toast-enter-active, .c-toast-leave-active { transition: opacity 0.25s ease; }
+.c-toast-enter, .c-toast-leave-to { opacity: 0; }

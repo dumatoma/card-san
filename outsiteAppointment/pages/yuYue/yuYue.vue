@@ -122,6 +122,7 @@
 <script>
     import week from "@/components/week/week.vue"
     import { holidayName } from "@/utils/jpHoliday.js"
+    import { setShopTitle } from "@/utils/pageTitle.js"
     import {
         getAppointmentList,
         getStaffList,
@@ -292,6 +293,7 @@
            
         },
         onShow() {
+            setShopTitle(this.info && this.info.shop_name ? this.info.shop_name : undefined)
             // let that = this
             // let query = that.$route.query
             // that.query = query
@@ -349,6 +351,10 @@
                 getShopInfo(e).then((res) => {
                     if(res.code == 200){
                         this.info = res.data.shop
+                        if (res.data.shop.shop_name) {
+                            uni.setStorageSync("shopName", res.data.shop.shop_name)
+                            setShopTitle(res.data.shop.shop_name)
+                        }
                         // console.log(111111,res.data.shop.day_business["202303"])
                         this.loadAroundWeeks(true)
                     }

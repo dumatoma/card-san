@@ -139,7 +139,6 @@
     import {
         getShopInfo,
         getPackageList,
-        getCardInfo,
         getVipCard,
         buyPlan,
         buyPlans,
@@ -160,10 +159,6 @@
                 selectItem: {},
                 current: 6,
                 paymethod: 1,
-                inp1: "",
-                inp2: "",
-                inp3: "",
-                inp4: "",
                 using: {},
                 vips: [],
                 platform: "",
@@ -196,7 +191,6 @@
             let that = this
             that.type = options.type
             that.getPlanList(options.type)
-            that.getCardInfo()
             getVipCard().then((res) => {
                 if (res && res.code == 200) that.vipCard = res.data.card
             }).catch(() => {})
@@ -521,19 +515,6 @@
                 uni.navigateTo({
                     url: "/pages/accounts/package/package"
                 })
-            },
-            getCardInfo() {
-                let that = this
-                getCardInfo().then((res) => {
-                    if (res.code == 200) {
-                        if (res.data.cards.length > 0) {
-                            that.inp1 = res.data.cards[0].card_no
-                            that.inp2 = res.data.cards[0].expire_date
-                            that.inp3 = res.data.cards[0].cvv
-                            that.inp4 = res.data.cards[0].name
-                        }
-                    }
-                }).catch(() => {})
             },
             getPlanList(type) {
                 let that = this

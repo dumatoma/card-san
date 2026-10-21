@@ -432,48 +432,6 @@ export const deleteMembershipCard = (id) => {
     })
 }
 
-// 获取支付方法
-export const getPayList = () => {
-    return request({
-        url: "/api/shop/pay_card",
-        method: "get"
-    })
-}
-
-// 获取绑定的卡信息
-export const getCardInfo = () => {
-    return request({
-        url: "/api/shop/pay_card?type=1",
-        method: "get"
-    })
-}
-
-// 添加支付方式
-export const addPayMethod = (data) => {
-    return request({
-        url: "/api/shop/pay_card",
-        method: "post",
-        data:data
-    })
-}
-
-// 获取支付详情
-export const getPayDetail = (id) => {
-    return request({
-        url: "/api/shop/pay_card/"+id,
-        method: "get"
-    })
-}
-
-// 编辑支付方式
-export const editPayMethod = (data,id) => {
-    return request({
-        url: "/api/shop/pay_card/"+id,
-        method: "post",
-        data:data
-    })
-}
-
 // 删除支付方法
 export const deletePayMethod = (data) => {
     return request({

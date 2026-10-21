@@ -1581,3 +1581,28 @@ jpcard ユーザーアプリでPUSH通知がバックグラウンド・非起動
 対象：`jpcard/pagesA/ModifyInformation/ModifyInformation.vue`、`jpshop/pages/message/staffRoom/staffRoom.vue`、`jpshop/pages/appointment/notice/detail/edit.vue`。アプリ：jpshop 1.0.38/1091、jpcard 1.1.7/1075。
 
 **日付：** 2026-10-20
+
+---
+
+### 82. ToDo表 未修正分の一括対応（GBP App版UI・OAuth戻り・店舗選択・クチコミ・PCI残留・ログアウト経路 ほか）
+
+客户 ToDo 表（Google Sheets）の未修正項目と添付仕様（8.17 クチコミ、8.25 GBP/Insta、10.11・10.16 開発不備の指摘、9.7 カード情報、10.13 予約URL、7.9/8.7 ログアウト）に基づく。4 チームで実装後、3 回のクロスレビュー（計 25 件の追加修正）を実施。
+
+| 区分 | 内容 | 主なファイル |
+|---|---|---|
+| 管理APP GBP連携 | 8.25 仕様で全面作り直し（3機能スイッチ・自動同期パネル・自動同期ON時「今すぐ同期」無効・下からの解除カード）。旧 `<web-view>` 削除。各種設定からの死リンク（存在しない `settings/gbp/gbp`）修正 | `jpshop/pages/settings/gbpSetting/gbpSetting.vue`、`pages/setting/setting.vue`、`api/gbp.js`（新規） |
+| 管理APP OAuth戻り（10.11 §5） | 外部ブラウザ認証後に App へ戻れない不具合：URL scheme `cardsan://` を登録し、`App.vue` で `cardsan://gbp?code=&state=` を受けて連携画面へ（重複処理防止・iOS ホットスタート再確認） | `jpshop/manifest.json`、`jpshop/App.vue` |
+| 店舗選択（10.11 §6） | 候補が1件でも選択画面を表示（デフォルト選択）、0件はエラー。App は全画面、WEB は中央モーダル | `jpshop/pages/settings/gbpSelectLocation/`（新規）、`jppc/.../gbp/googleBusiness.vue` |
+| 管理APP Instagram×GBP投稿管理 | 8.25 仕様で作り直し（3状態・10件ずつもっと見る・下からのプレビュー・連動履歴）。仕様どおり新規GBP投稿フォーム／削除ボタンを削除 | `jpshop/pages/settings/socialMedia/socialMedia.vue`、`api/gbpContent.js`（新規） |
+| 管理APP クチコミ管理 | 8.17 仕様で作り直し（未読・タップで既読・統計で絞り込み・4096字・送信中・空状態・写真）。未読数を App アイコンバッジと TOP「クチコミ」に連動 | `jpshop/pages/message/gbpReviews/gbpReviews.vue`、`pages/index/index.vue` |
+| 管理WEB GBP/クチコミ | 自動同期ON時「今すぐ同期」無効、投稿管理リンクを ins_on 連動、中央トースト、820px。GBP投稿タブは転載分のみ。クチコミ：ナビバッジ＝未返信数、クリックで既読、返信済みは日付なし、最終更新、写真表示 | `jppc/.../views/gbp/*`、`components/headerView.vue` |
+| GBP ロゴ/カバー（10.16） | 店舗写真一覧で Google 由来のロゴ/カバーは削除不可・ラベル表示、保存時に送信しない（App/WEB） | `jpshop/pages/settings/shopInfo/shopInfo.vue`、`jppc/.../variousSet/storeInfo.vue` |
+| カード情報（9.7 PCI） | フロントに残っていた card_no/cvv の読取・表示・送信コードと旧カード入力画面（payDetail）・旧 pay_card API 関数を全削除。カード表示は Stripe 概要（ブランド・下4桁・期限）のみ | `jpshop/pages/payment/payment.vue`、`pages/accounts/payment/*`、`pages/accounts/sale/secondStep.vue`、`jppc/.../plan/*`、両 `api` |
+| ユーザーAPP ログアウト | 401 自動ログアウト（無効な `@/` パス）・TOP の 401・退会後を、ストレージ消去（env/cid は保持）＋ reLaunch に統一、二重遷移防止、WebSocket 切断 | `jpcard/utils/request.js`、`pages/index/index.vue`、`pagesA/ModifyInformation/ModifyInformation.vue` |
+| 予約内容の編集 | 日付未変更時に終了時刻が NaN:NaN／担当者取得の日付が undefined になる不具合、メニュー未選択で閉じた時の例外 | `jpshop/pages/appointment/notice/detail/edit.vue` |
+| その他 | レビューリンク作成方法のヘルプURL差替え（zendesk 57035978592409）。予約WEB のタイトル「Card-San 予約」→ 店舗情報取得後「店舗名｜予約」。旧 GBP 手順書に「過去案・不使用」注記 | `jpshop/pages/message/reviewSetting/reviewSetting.vue`、`outsiteAppointment/*`、`docs/GBP_SETUP_GUIDE_ja.md` |
+
+**サーバー側（未実施・SSH 不通のため）**：OAuth 戻りページの `cardsan://` 化、`create_access_token` の候補返却＋ `select_location` 新設、`review_unread.unreplied`、`review_list.photos/last_sync_at`、`ins_posts.synced_total`、写真同期の分類判定（ADDITIONAL のみ・ロゴ/カバーは読み戻しのみ・顧客写真は取得しない）、`web_shop_pay_card` の card_no/cvv 列確認。仕様は `docs/GBP_SERVER_CONTRACT.md`。
+**ユーザー作業**：URL scheme 追加のため jpshop は**再ビルド（wgt 不可）**。jpshop 1.0.38/1091、jpcard 1.1.7/1075。予約WEB は HBuilderX でビルドして `/reserve/` へ。Android FCM は DCloud 設定＋google-services.json 待ち。
+
+**日付：** 2026-10-22

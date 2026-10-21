@@ -24,11 +24,13 @@
             <div class="cs-top-scroll">
               <div class="cs-top-grid" ref="topGrid">
                 <div class="cs-top-tile" v-for="(item, index) in shopInfo.carousel" :key="index" :class="{ 'is-main': index == 0 }">
-                  <img :src="item" class="cs-top-img" alt="" draggable="false" @click="previewTop(item)" />
+                  <img :src="topUrl(item)" class="cs-top-img" alt="" draggable="false" @click="previewTop(topUrl(item))" />
                   <span class="cs-top-drag" aria-hidden="true">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"></circle><circle cx="15" cy="6" r="1.7"></circle><circle cx="9" cy="12" r="1.7"></circle><circle cx="15" cy="12" r="1.7"></circle><circle cx="9" cy="18" r="1.7"></circle><circle cx="15" cy="18" r="1.7"></circle></svg>
                   </span>
-                  <button type="button" class="cs-top-del" :aria-label="(index + 1) + '枚目を削除'" @click="delPicture(index)">
+                  <!-- [カスタムエイド 2026-10-22] GBPから取得したロゴ・カバーは読み取り専用・削除不可（GBP関連の修正 2026.10.16） -->
+                  <span class="cs-top-gbp" v-if="gbpLabel(item)">{{ gbpLabel(item) }}・Googleから取得</span>
+                  <button type="button" class="cs-top-del" v-else :aria-label="(index + 1) + '枚目を削除'" @click="delPicture(index)">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
                   </button>
                   <span class="cs-top-main" v-if="index == 0">メイン</span>
@@ -365,7 +367,7 @@
                 v-for="(item, index) in shopInfo.carousel"
                 :key="index"
               >
-                <img style="width: 100%; height: 100%;object-fit: cover" :src="item" alt="" />
+                <img style="width: 100%; height: 100%;object-fit: cover" :src="topUrl(item)" alt="" />
               </el-carousel-item>
             </el-carousel>
             <div class="items-boxs">
@@ -789,6 +791,7 @@ export default {
       this.shopInfo.carousel.push(res.data.path);
     },
     delPicture(i) {
+      if (this.gbpLabel(this.shopInfo.carousel[i])) return
       this.shopInfo.carousel.splice(i, 1);
       // this.fileList.splice(i, 1);
     },
@@ -797,10 +800,22 @@ export default {
       this.dialogImageUrl = item;
       this.dialogVisible = true;
     },
+    // [カスタムエイド 2026-10-22] TOP画像は URL 文字列、または { url, gbp_category, readonly }（GBPのロゴ・カバー。App版 shopInfo と同じ形式）
+    topUrl(item) {
+      return item && typeof item == "object" ? (item.url || "") : item
+    },
+    gbpLabel(item) {
+      if (!item || typeof item != "object") return ""
+      if (item.gbp_category == "PROFILE") return "ロゴ"
+      if (item.gbp_category == "COVER") return "カバー"
+      return item.readonly == 1 ? "Google" : ""
+    },
     conserveClick(){
         let that = this
-        let data = that.shopInfo
+        let data = Object.assign({}, that.shopInfo)
         data['type'] = "info"
+        // GBPのロゴ・カバー（読み取り専用）はサーバーが表示時に付け足すものなので送り返さない。写真は従来どおり URL の配列で送る
+        if (Array.isArray(data.carousel)) data.carousel = data.carousel.filter(i => !that.gbpLabel(i)).map(i => that.topUrl(i)).filter(Boolean)
         data.shop_cate = that.shopInfo.shop_cate
          editShop(data).then((res) => {
              console.log(res)
@@ -1553,6 +1568,7 @@ input::-webkit-inner-spin-button {
 .cs-top-tile { cursor: grab; }
 .cs-top-img { -webkit-user-drag: none; user-select: none; }
 .cs-top-del { right: 6px; border-radius: 13px; background: rgba(29, 29, 31, 0.72); color: #fff; cursor: pointer; }
+.cs-top-gbp { position: absolute; right: 6px; top: 8px; padding: 1px 6px; border-radius: 4px; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 10px; font-weight: bold; white-space: nowrap; }
 .cs-top-main { position: absolute; left: 6px; bottom: 6px; padding: 1px 8px; border-radius: 10px; background: #1a73e8; color: #fff; font-size: 11px; font-weight: bold; }
 .cs-top-no { position: absolute; right: 6px; bottom: 6px; min-width: 20px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: rgba(255, 255, 255, 0.92); color: #1d1d1f; font-size: 11px; line-height: 18px; text-align: center; font-weight: bold; }
 .cs-top-add { aspect-ratio: 3 / 2; border: 1.5px dashed #8ab0ee; border-radius: 8px; background: #fff; color: #1a73e8; font-size: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; }

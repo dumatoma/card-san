@@ -59,6 +59,26 @@ axios.defaults.adapter = function(config) {
 	})
 }
 
+// 強制ログアウト（退会など）。保存データの消去・ログイン画面への移動は clearLoginStorage.js（カスタムエイド 2026-10-19）を使い、
+// あわせて WebSocket を閉じる（App.vue の onSocketClose で未バインドの新接続に張り替わる）
+export function clearLoginState() {
+    clearLoginStorage()
+    try { uni.closeSocket() } catch (e) {}
+}
+export function forceLogout(message, delay) {
+    clearLoginState()
+    if (message) {
+        uni.showToast({
+            title: message,
+            duration: 1500,
+            icon: "none"
+        })
+    }
+    setTimeout(function() {
+        goLogin()
+    }, delay == null ? (message ? 1500 : 0) : delay)
+}
+
 // 3.响应拦截器
 service.interceptors.response.use(response => {
     //接收到响应数据并成功后的一些共有的处理，关闭loading等
@@ -79,7 +99,7 @@ service.interceptors.response.use(response => {
 			// ログインしていない状態(ログインやSMS認証の途中など)の 401 では移動しない
 			if (uni.getStorageSync("token")) {
 				setTimeout(function() {
-					clearLoginStorage()
+					clearLoginState()
 					goLogin()
 				}, 1500);
 			}

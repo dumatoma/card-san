@@ -473,49 +473,7 @@ export const changeEmail = (data) => {
     })
 }
 
-// 获取支付方法列表
-export const getPaymethod = () => {
-    return request({
-        url: "/api/shop/pay_card",
-        method: "get"
-    })
-}
-
-
-// 添加支付方式 
-export const addPaymethod = (data) => {
-    return request({
-        url: "/api/shop/pay_card",
-        method: "post",
-        data:data
-    })
-}
-
-// 删除支付方式
-export const deletePaymethod = (data) => {
-    return request({
-        url: "/api/shop/pay_card/"+data,
-        method: "post",
-        data:{"_method":'delete'}
-    })
-}
-
-// 获取支付方式详情  
-export const getPayDetail = (data) => {
-    return request({
-        url: "/api/shop/pay_card/"+data,
-        method: "get",
-    })
-}
-
-// 编辑支付方式
-export const editPaymethod = (data) => {
-    return request({
-        url: "/api/shop/pay_card/"+data.id,
-        method: "post",
-        data:data
-    })
-}
+// 旧 pay_card API（カード番号・CVV を当社APIへ送受信していたもの）は 2026-10 に削除。カードは Stripe（getVipCard / setupVipCard）でのみ扱う
 
 // 获取营业时间
 export const getCalendar = (data) => {
@@ -819,14 +777,6 @@ export const buyPlan = (data) => {
     })
 }
 
-// 获取绑定卡的方法
-export const getBindCard = () => {
-    return request({
-        url: "/api/shop/pay_card?type=1",
-        method: "get"
-    })
-}
-
 // 解约接口
 export const cancelPlan = () => {
     return request({
@@ -976,6 +926,8 @@ export const deleteStaffDm = (toId, id) => request({ url: "/api/shop/staff_room/
 export const gbpOverview = () => request({ url: "/api/shop/google_business/overview", method: "get" })
 export const gbpAuthUrl = () => request({ url: "/api/shop/google_business/get_auth_url", method: "get" })
 export const gbpConnect = (data) => request({ url: "/api/shop/google_business/create_access_token", method: "post", data, timeout: 30000 })
+// 店舗候補が複数ある場合の選択確定（create_access_token が need_select=1 を返したとき）
+export const gbpSelectLocation = (data) => request({ url: "/api/shop/google_business/select_location", method: "post", data, timeout: 30000 })
 export const gbpDisconnect = () => request({ url: "/api/shop/google_business/disconnect", method: "delete", data: { full: 1 } })
 export const gbpFeatures = (data) => request({ url: "/api/shop/google_business/features", method: "put", data })
 export const gbpSyncNow = () => request({ url: "/api/shop/google_business/sync_now", method: "post", data: {}, timeout: 60000 })

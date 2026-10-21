@@ -50,6 +50,17 @@
                     {{ showAll ? '閉じる' : 'すべて表示(全' + images.length + '枚)' }}
                 </view>
                 <view class="si-sub">推奨:横長(3:2)。アップロード時に自動で軽くします。</view>
+                <!-- [2026-10-22] Googleビジネスプロフィールのロゴ・カバーは表示のみ(削除・並び替え・保存の対象外。変更はGBP側で)。GBP関連の修正 2026.10.16 -->
+                <view class="si-gbp" v-if="gbpPhotos.length">
+                    <view class="si-gbp-t">Googleから取得(ロゴ・カバー)</view>
+                    <view class="si-gbp-row">
+                        <view class="si-gbp-item" v-for="(g, gi) in gbpPhotos" :key="g.url">
+                            <image class="si-gbp-img" :src="g.url" mode="aspectFill" @click="previewGbp(gi)"></image>
+                            <text class="si-gbp-lab">{{ g.gbp_category == 'PROFILE' ? 'ロゴ' : g.gbp_category == 'COVER' ? 'カバー' : 'Google' }}</text>
+                        </view>
+                    </view>
+                    <view class="si-gbp-note">ロゴ・カバーの変更はGoogleビジネスプロフィールで行ってください。</view>
+                </view>
             </view>
 
             <!-- 基本情報 -->
@@ -261,6 +272,8 @@
                 show: false,
                 show1:false,
                 carousel:[],
+                // GBP から取得したロゴ・カバー {url, gbp_category, readonly}（表示のみ）
+                gbpPhotos: [],
                 cates: [],
                 // [カスタムエイド 2026-10-20] 新しい見た目で使うもの
                 fk: '', // 入力中の欄
@@ -360,6 +373,16 @@
                         }
                         // [カスタムエイド 2026-10-20] TOP画像がないお店でも、追加・並び替えができるように
                         if (!Array.isArray(res.data.shop_info.carousel)) res.data.shop_info.carousel = []
+                        // GBP のロゴ・カバー(オブジェクト)は編集用の一覧から分け、保存時にも送らない
+                        let own = [], gbp = []
+                        res.data.shop_info.carousel.forEach((c) => {
+                            if (c && typeof c == 'object') {
+                                if (c.gbp_category || c.readonly) gbp.push(c)
+                                else if (c.url) own.push(c.url)
+                            } else if (c) own.push(c)
+                        })
+                        res.data.shop_info.carousel = own
+                        that.gbpPhotos = gbp
                         that.info = res.data.shop_info
                         that.carousel = res.data.shop_info.carousel
                     }
@@ -433,6 +456,9 @@
               that.info.carousel.splice(index,1)
             },
             // [カスタムエイド 2026-10-20] 押すと大きく表示
+            previewGbp(i) {
+                uni.previewImage({ urls: this.gbpPhotos.map((g) => g.url), current: i })
+            },
             previewImg(index) {
                 if (this.dragIndex > -1) return
                 uni.previewImage({
@@ -846,6 +872,47 @@
     .si-plus.big {
         font-size: 48rpx;
         margin-right: 0;
+    }
+
+    .si-gbp {
+        margin-top: 24rpx;
+        padding-top: 20rpx;
+        border-top: 2rpx solid #E5E5EA;
+    }
+    .si-gbp-t {
+        font-size: 26rpx;
+        color: #515154;
+        margin-bottom: 16rpx;
+    }
+    .si-gbp-row {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .si-gbp-item {
+        position: relative;
+        width: 200rpx;
+        height: 134rpx;
+        margin: 0 16rpx 16rpx 0;
+        border-radius: 12rpx;
+        overflow: hidden;
+    }
+    .si-gbp-img {
+        width: 100%;
+        height: 100%;
+    }
+    .si-gbp-lab {
+        position: absolute;
+        left: 8rpx;
+        bottom: 8rpx;
+        font-size: 20rpx;
+        color: #fff;
+        background: rgba(29, 29, 31, 0.6);
+        border-radius: 6rpx;
+        padding: 2rpx 10rpx;
+    }
+    .si-gbp-note {
+        font-size: 22rpx;
+        color: #8E8E93;
     }
 
     .si-note {

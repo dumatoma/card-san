@@ -123,47 +123,6 @@
         
         
         
-        <!-- <div class="mask" v-if="showca">
-            <div class="sur_box sur_one m-t-30">
-                <div class="sur_blue" style="">お支払い方法を選択</div>
-                <div class="payment_bg">
-                    <div style="padding-left: 16px">
-                        <img src="@/static/cards.png" style="width: 275px;height: 40px; margin: 10px 0 0" />
-                        <div class="pay_top">カード番号</div>
-                        <div style="border-bottom: 1px solid #d2d2d7;width: 300px;">
-                            <input class="pay_bottom pay_big" type="text" placeholder="3456 7898 1987 0001" v-model="cardInfo.card_no" />
-                        </div>
-                        
-                        <div style="display: flex;align-items: center;">
-                            <div>
-                                <div class="pay_top">有効期限</div>
-                                <div style="border-bottom: 1px solid #d2d2d7;width: 130px;">
-                                    <input class="pay_bottom pay_big" type="text" placeholder="mm/yy" v-model="cardInfo.expire_date" />
-                                </div>    
-                                
-                            </div>
-                            <div style="margin-left: 25px;">
-                                <div class="pay_top">CVV</div>
-                                <div style="border-bottom: 1px solid #d2d2d7;width: 130px;">
-                                    <input class="pay_bottom pay_big" type="text" placeholder="3桁or4桁の数字" v-model="cardInfo.cvv" />
-                                </div>
-                                
-                            </div>
-                        </div>
-                        <div class="pay_top">カード名義人</div>
-                        <div style="border-bottom: 1px solid #d2d2d7;width: 300px;">
-                            <input class="pay_bottom pay_big" type="text" placeholder="ICHIROU SUZUKI"
-                                v-model="cardInfo.name" />
-                        </div>
-                        <div class="payitem fe" style="margin-top: 11px;">
-                            <div class="btn" @click="saveD">
-                                保存
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
     </div>
 </template>
 
@@ -171,9 +130,6 @@
     import {
         getStore,
         getPackageList,
-        getBindCard,
-        buyPlan,
-        editPaymethod,
         getVipCard,
         setupVipCard,
         resumePlan
@@ -187,9 +143,7 @@
                 plans: {},
                 cycleList: [],
                 keepShow: false,
-                cardInfo:{},
                 cardid:"",
-                showca:false,
                 infos:{},
                 showchagne:false,
                 showCancel:false,
@@ -304,38 +258,6 @@
             tooff(){
               this.$router.push('/terminationFulfil?id='+this.id+"&refresh="+this.format(this.planInfo.end_time*1000))  
             },
-            // saveD(){
-            //     let that = this
-            //      let data = {}
-            //      data['_method'] = "put"
-            //      data['card_no'] = that.cardInfo.card_no
-            //      data['expire_date'] = that.cardInfo.expire_date
-            //      data['cvv'] = that.cardInfo.cvv
-            //      data['name'] = that.cardInfo.name
-            //      data["id"] = that.cardid
-            //      editPaymethod(data).then((res) => {
-            //          if(res.code == 200){
-            //             that.$message({
-            //             	message: res.message,
-            //             	type: 'success',
-            //                  offset: 400
-            //             });
-            //             that.showca = false
-            //          }else{
-            //              that.$message({
-            //              	message: res.message,
-            //              	type: 'error',
-            //                   offset: 400
-            //              });
-            //          }
-            //      })
-            // },
-            hideBankCard(value){
-              if (value && value.length > 8) {
-                return `${value.substring(0, 4)} ${"*".repeat(value.length - 8).replace(/(.{4})/g, `$1 `)}${value.length % 4 ? " " : ""}${value.slice(-4)}`;
-              }
-              return value;
-            },
             openModule() {
                 let that = this
                 console.log("123123123123123")
@@ -355,42 +277,6 @@
                 let result = year+"年"+month+"月"+day+"日"
                 console.log('result',result)
                 return result
-            },
-            changePlan() {
-                let that = this
-                that.Loading = this.$loading({
-                    spinner: "", //自定义加载图标类名
-                    text: "読み込み中…", //显示在加载图标下方的加载文案
-                    background: "rgba(0, 0, 0, 0.6)", //遮罩背景色
-                })
-                getBindCard().then((res) => {
-                    if (res.code == 200) {
-                        if (res.data.cards.length == 0) {
-                            that.$message("请添加支付方式")
-                        } else {
-                            let temp = {}
-                            temp['type'] = that.planInfo.type
-                            temp['month'] = that.cycleIndex == 0 ? 1 : that.cycleIndex == 1 ? 6 : 12
-                            temp['card_type'] = 1
-                            temp['card_no'] = res.data.cards[0].card_no
-                            temp['expire_date'] = res.data.cards[0].expire_date
-                            temp['cvv'] = res.data.cards[0].cvv
-                            temp['name'] = res.data.cards[0].name
-                            buyPlan(temp).then((res) => {
-                                console.log(res)
-                                if (res.code == 200) {
-                                    if (res.data.amount == 0) {
-                                        that.$message.success(res.message)
-                                    } else {
-                                        window.open(res.data.url)
-                                    }
-                                }
-                                that.Loading.close()
-                            })
-                        }
-                    }
-                })
-
             },
             changeCurrent() {
                 this.$router.push("/utilizePlan")

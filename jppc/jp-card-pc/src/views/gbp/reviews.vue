@@ -18,7 +18,10 @@
           <div class="rv-lbl">未返信</div>
         </div>
       </div>
-      <div class="unread"><span class="dot"></span>未読 {{ unreadShown }}件</div>
+      <div class="list-head">
+        <div class="unread"><span class="dot"></span>未読 {{ unreadShown }}件</div>
+        <div class="updated" v-if="lastUpdated">最終更新：{{ lastUpdated }}</div>
+      </div>
       <div class="warn" v-if="warning">{{ warning }}</div>
 
       <!-- GBP 未連携 / クチコミ管理 OFF -->
@@ -30,27 +33,30 @@
       </div>
 
       <div class="empty" v-else-if="loaded && !list.length">
-        <template v-if="filter == 'unreplied' && stats.total">未返信のクチコミはありません。</template>
+        <template v-if="filter == 'unreplied' && stats.total">未返信のクチコミはありません</template>
         <template v-else>まだクチコミがありません。<br />Googleでクチコミが投稿されると、ここに表示されます。</template>
       </div>
 
       <div class="card rv-list" v-else-if="list.length">
         <div class="rv-item" v-for="r in list" :key="r.id">
-          <div class="rv-head">
-            <img v-if="r.reviewer_photo" :src="r.reviewer_photo" class="ava" alt="" referrerpolicy="no-referrer" />
-            <div v-else class="ava ini">{{ (r.reviewer_name || '?').substr(0, 1) }}</div>
+          <div class="rv-head" @click="markRead(r)">
+            <div class="ava ini" :style="{ background: avaColor(r.reviewer_name) }">{{ (r.reviewer_name || '?').substr(0, 1) }}</div>
             <div class="who">
               <div class="name">{{ r.reviewer_name }}</div>
               <div class="stars"><span v-for="n in 5" :key="n" :class="n <= r.star ? 'on' : ''">★</span></div>
             </div>
-            <div class="date"><span class="dot" v-if="unreadIds[r.id]"></span>{{ r.date }}</div>
+            <div class="date">{{ r.date }}<span class="dot after" v-if="!r.is_read"></span></div>
           </div>
-          <div class="cmt" v-if="r.comment">{{ r.comment }}</div>
-          <div class="cmt none" v-else>（評価のみ・コメントなし）</div>
+          <div class="cmt" v-if="r.comment" @click="markRead(r)">{{ r.comment }}</div>
+          <div class="cmt none" v-else @click="markRead(r)">（評価のみ・コメントなし）</div>
+          <!-- クチコミ添付写真（reviewMediaItems） -->
+          <div class="photos" v-if="photoList(r).length">
+            <el-image v-for="(u, pi) in photoList(r)" :key="pi" class="ph" :src="u" fit="cover" :preview-src-list="photoList(r)" :initial-index="pi" referrerpolicy="no-referrer" @click.native="markRead(r)"></el-image>
+          </div>
 
           <!-- 返信の入力・編集 -->
           <template v-if="editing == r.id">
-            <textarea class="ta" v-model="draft" maxlength="4096" placeholder="返信を入力..."></textarea>
+            <textarea class="ta" v-model="draft" maxlength="4096" placeholder="返信を入力…"></textarea>
             <div class="ta-foot">
               <span class="len">{{ draft.length }}/4096</span>
               <div class="b-cancel shou" @click="cancelEdit">キャンセル</div>
@@ -59,12 +65,12 @@
           </template>
           <template v-else-if="r.reply">
             <div class="reply">
-              <div class="reply-head"><i class="el-icon-s-promotion"></i><span>{{ r.reply_date }}</span></div>
+              <div class="reply-badge"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg></div>
               <div class="reply-txt">{{ r.reply }}</div>
             </div>
             <div class="act"><div class="b-edit shou" @click="edit(r)">編集</div></div>
           </template>
-          <div class="act" v-else><div class="b-reply shou" @click="edit(r)"><i class="el-icon-back"></i> 返信する</div></div>
+          <div class="act" v-else><div class="b-reply shou" @click="markRead(r); edit(r)"><i class="el-icon-back"></i> 返信する</div></div>
         </div>
         <div class="more">
           <div class="more-btn shou" v-if="list.length < count" @click="load(true)">{{ loading ? '読み込み中…' : 'もっと見る' }}</div>
@@ -93,8 +99,8 @@ export default {
       stats: { avg_rating: null, total: 0, unreplied: 0, unread: 0 },
       list: [],
       count: 0,
-      unreadIds: {},
       unreadShown: 0,
+      lastUpdated: "",
       editing: "",
       draft: "",
       sending: false,
@@ -111,9 +117,12 @@ export default {
       this.load(false);
     },
     load(more) {
-      if (this.loading) return;
+      // 絞り込み切替（more=false）は読み込み中でも実行し、古いレスポンスは捨てる
+      if (this.loading && more) return;
       this.loading = true;
+      let seq = (this._seq = (this._seq || 0) + 1);
       gbpReviewList({ filter: this.filter, offset: more ? this.list.length : 0, limit: 10 }).then((res) => {
+        if (seq != this._seq) return;
         this.loading = false;
         this.loaded = true;
         if (!res || res.code != 200) {
@@ -125,15 +134,40 @@ export default {
         this.connected = d.connected;
         this.reviewOn = d.review_on;
         this.warning = d.warning;
-        this.stats = d.stats;
-        this.count = d.count;
-        this.list = more ? this.list.concat(d.list) : d.list;
-        if (!more) this.unreadShown = d.stats.unread;
-        // 表示した未読は既読にする（青い丸はこの画面を開いている間は残す）
-        let ids = d.list.filter((r) => !r.is_read).map((r) => r.id);
-        ids.forEach((id) => this.$set(this.unreadIds, id, 1));
-        if (ids.length) gbpReviewRead(ids).catch(() => {});
-      }).catch(() => { this.loading = false; this.loaded = true; });
+        // 未連携・クチコミ管理OFF のとき stats/list が省略されても落ちないようにする
+        this.stats = Object.assign({ avg_rating: null, total: 0, unreplied: 0, unread: 0 }, d.stats || {});
+        this.count = d.count || 0;
+        let rows = Array.isArray(d.list) ? d.list : [];
+        this.list = more ? this.list.concat(rows) : rows;
+        if (!more) this.unreadShown = this.stats.unread * 1 || 0;
+        this.lastUpdated = this.fmtTime(d.last_sync_at || d.updated_at);
+        // 既読化は本文クリック／「返信する」クリック時のみ（一覧の読み込みでは既読にしない）
+      }).catch(() => { if (seq != this._seq) return; this.loading = false; this.loaded = true; });
+    },
+    markRead(r) {
+      if (r.is_read) return;
+      this.$set(r, "is_read", 1);
+      this.unreadShown = Math.max(0, this.unreadShown - 1);
+      // バッジがサーバー未対応で unread 代用の場合に備えて通知
+      gbpReviewRead([r.id]).then(() => window.dispatchEvent(new Event("gbp-review-changed"))).catch(() => {});
+    },
+    photoList(r) {
+      let p = r.photos;
+      if (!Array.isArray(p)) return [];
+      return p.map((x) => (typeof x == "string" ? x : x && (x.url || x.googleUrl || x.thumbnail_url || x.thumbnailUrl))).filter((u) => !!u);
+    },
+    avaColor(name) {
+      let colors = ["#dbe7fb", "#fde2e1", "#e1f3e3", "#fff1cc", "#ece2fb", "#d9f1f3", "#fbe4d3"];
+      let s = String(name || "?"), h = 0;
+      for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+      return colors[h % colors.length];
+    },
+    fmtTime(v) {
+      if (!v) return "";
+      let d = typeof v == "number" || /^\d+$/.test(String(v)) ? new Date(String(v).length <= 10 ? v * 1000 : v * 1) : /T/.test(String(v)) ? new Date(String(v)) : new Date(String(v).replace(/-/g, "/"));
+      if (isNaN(d.getTime())) return String(v).substr(0, 16).replace(/-/g, "/");
+      let z = (n) => ("0" + n).slice(-2);
+      return d.getFullYear() + "/" + z(d.getMonth() + 1) + "/" + z(d.getDate()) + " " + z(d.getHours()) + ":" + z(d.getMinutes());
     },
     edit(r) {
       this.editing = r.id;
@@ -150,9 +184,13 @@ export default {
       gbpReviewReply(r.id, this.draft).then((res) => {
         this.sending = false;
         if (res && res.code == 200) {
-          r.reply = res.data.reply;
-          r.reply_date = res.data.reply_date;
-          if (wasUnreplied) this.stats.unreplied = Math.max(0, this.stats.unreplied - 1);
+          let rd = res.data || {};
+          r.reply = rd.reply || this.draft;
+          r.reply_date = rd.reply_date || "";
+          if (wasUnreplied) {
+            this.stats.unreplied = Math.max(0, this.stats.unreplied - 1);
+            window.dispatchEvent(new Event("gbp-review-changed"));
+          }
           this.cancelEdit();
           this.$message({ message: res.message, type: "success", offset: 400 });
         } else {
@@ -166,26 +204,30 @@ export default {
 
 <style lang="scss" scoped>
 @import "./gbp.scss";
-.rv { width: 680px; }
-.stats { display: flex; background: #fff; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); }
-.rv-st { flex: 1; text-align: center; padding: 12px 0 10px; border-bottom: 3px solid transparent; box-sizing: border-box; }
+.stats { display: flex; height: 68px; box-sizing: border-box; background: #fff; border: 1px solid #d2d2d7; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); }
+.rv-st { flex: 1; text-align: center; padding: 11px 0 8px; border-bottom: 3px solid transparent; box-sizing: border-box; }
 .rv-st.rv-on { background: #e8f0fe; border-bottom-color: #1a73e8; }
 .rv-num { font-size: 20px; font-weight: bold; color: #1d1d1f; text-align: center; }
 .rv-num.red { color: #d93025; }
 .rv-lbl { font-size: 12px; color: #707070; margin-top: 2px; text-align: center; }
-.unread { color: #1a73e8; font-size: 13px; margin: 8px 0 12px 14px; display: flex; align-items: center; }
+.list-head { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 12px 14px; }
+.unread { color: #1a73e8; font-size: 13px; display: flex; align-items: center; }
+.updated { font-size: 12px; color: #707070; }
 .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #1a73e8; margin-right: 6px; }
 .warn { font-size: 12px; color: #8a6d00; background: #fff8e1; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; }
 .guide { background: #f2f2f4; border-radius: 10px; padding: 34px 20px; text-align: center; }
 .g-title { font-weight: bold; font-size: 15px; color: #1d1d1f; }
 .g-sub { font-size: 12px; color: #707070; line-height: 1.7; margin-top: 12px; }
-.g-btn { display: inline-block; background: #3b73e0; color: #fff; border-radius: 4px; padding: 9px 60px; margin-top: 18px; font-size: 14px; }
+.g-btn { display: inline-block; background: #3b73e0; color: #fff; border-radius: 6px; padding: 9px 60px; margin-top: 18px; font-size: 14px; }
 .empty { text-align: center; color: #707070; font-size: 14px; line-height: 1.8; padding: 50px 0; }
 .rv-list { border-radius: 12px; overflow: hidden; }
 .rv-item { padding: 18px 16px 14px; border-bottom: 1px solid #e5e5ea; }
 .rv-head { display: flex; align-items: center; }
 .ava { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px; }
-.ava.ini { background: #4a90e2; color: #fff; text-align: center; line-height: 30px; font-size: 13px; }
+.ava.ini { color: #1f2a44; font-weight: bold; text-align: center; line-height: 30px; font-size: 13px; flex-shrink: 0; }
+.dot.after { margin: 0 0 0 6px; width: 8px; height: 8px; }
+.photos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ph { width: 80px; height: 80px; border-radius: 6px; overflow: hidden; background: #f2f2f4; cursor: zoom-in; }
 .who { flex: 1; }
 .name { font-size: 13px; font-weight: bold; color: #1d1d1f; }
 .stars span { color: #d2d2d7; font-size: 11px; }
@@ -195,15 +237,15 @@ export default {
 .cmt.none { color: #a1a1a6; }
 .act { text-align: right; margin-top: 10px; }
 .b-reply, .b-edit { display: inline-block; border: 1px solid #1a73e8; color: #1a73e8; border-radius: 4px; padding: 3px 12px; font-size: 12px; }
-.ta { width: 100%; box-sizing: border-box; height: 70px; border: 1px solid #c7c7cc; border-radius: 4px; padding: 10px 14px; font-size: 13px; margin-top: 12px; resize: vertical; outline: none; font-family: inherit; }
+.ta { width: 100%; box-sizing: border-box; height: 70px; border: 1px solid #aaaaaa; border-radius: 4px; padding: 10px 14px; font-size: 13px; margin-top: 12px; resize: vertical; outline: none; font-family: inherit; }
 .ta-foot { display: flex; align-items: center; margin-top: 8px; }
 .len { flex: 1; font-size: 11px; color: #707070; }
 .b-cancel { border: 1px solid #1d1d1f; border-radius: 4px; padding: 3px 12px; font-size: 12px; margin-right: 8px; }
 .b-send { background: #3b73e0; color: #fff; border-radius: 4px; padding: 4px 26px; font-size: 12px; }
 .b-send.dis { background: #a7c2f2; opacity: 1; }
-.reply { background: #f2f2f4; border-radius: 4px; padding: 12px 14px; margin-top: 12px; border-left: 3px solid #c7c7cc; }
-.reply-head { display: flex; justify-content: space-between; color: #707070; font-size: 12px; }
-.reply-txt { font-size: 13px; color: #1d1d1f; line-height: 1.7; margin-top: 4px; white-space: pre-wrap; }
+.reply { background: #f2f2f4; border-radius: 6px; padding: 12px 14px; margin-top: 12px; }
+.reply-badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 20px; border-radius: 6px; background: #1a73e8; }
+.reply-txt { font-size: 13px; color: #1d1d1f; line-height: 1.7; margin-top: 6px; white-space: pre-wrap; }
 .more { text-align: center; padding: 16px 0; }
 .more-btn { display: inline-block; border: 1px solid #1d1d1f; border-radius: 16px; padding: 4px 16px; font-size: 13px; }
 .count { font-size: 12px; color: #707070; margin-top: 8px; }

@@ -115,6 +115,7 @@
 </template>
 
 <script>
+    import { setShopTitle } from "@/utils/pageTitle.js"
     import {
         getStaffList,
         getUserInfo,
@@ -134,6 +135,9 @@
                 phone:"",
                 shopname:''
             };
+        },
+        onShow() {
+            setShopTitle()
         },
         onLoad(options) {
            let that = this

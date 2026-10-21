@@ -9,15 +9,15 @@
                         <view class="logo">
                             <image src="../../../static/icons/cardLogo.png" mode=""></image>
                         </view>
-                        <view class="cardName" v-text="item.name"></view>
+                        <view class="cardName" v-text="item.brand_name || 'クレジットカード'"></view>
                         <view class="cardEdit" @click.stop="toEdit(item)">
                             <image src="../../../static/icons/edit.png" mode=""></image>
                         </view>
                     </view>
                     <view class="cardsContent">
-                        <view class="nameItem" v-text="`下４桁 ${item.last4 || ''}`"></view>
-                        <view class="nameItem" v-text="`${item.card_no}`"></view>
-                        <view class="nameItem" v-text="`有効期限　${item.expire_date}`"></view>
+                        <!-- カード番号は保持しない（PCI DSS）。Stripe のカード概要（ブランド・下4桁・期限）のみ表示 -->
+                        <view class="nameItem" v-text="`${item.brand_name || ''} **** ${item.last4 || ''}`"></view>
+                        <view class="nameItem" v-if="item.exp_month && item.exp_year" v-text="`有効期限　${('0' + item.exp_month).slice(-2)}/${String(item.exp_year).slice(-2)}`"></view>
                     </view>
                 </view>
             </view>
@@ -30,7 +30,7 @@
 </template>
 
 <script>
-    import {getPayList,deletePayMethod,setupVipCard} from '@/api/index.js'
+    import {getVipCard,deletePayMethod,setupVipCard} from '@/api/index.js'
     import mod from "@/components/mod.vue"
     export default {
         components:{mod},
@@ -63,11 +63,12 @@
                 this.openCardSetup()
             },
             getList(){
-                getPayList().then((res) => {
+                // Stripe の登録カード概要（brand_name / last4 / exp_month / exp_year）
+                getVipCard().then((res) => {
                     if(res.code == 200){
-                        this.array = res.data.cards
+                        this.array = res.data.card ? [res.data.card] : []
                     }
-                })
+                }).catch(() => {})
             },
             toEdit(e){
                 this.openCardSetup()

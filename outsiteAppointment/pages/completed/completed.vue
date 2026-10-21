@@ -72,6 +72,7 @@
 </template>
 
 <script>
+    import { setShopTitle } from "@/utils/pageTitle.js"
   export default {
     data() {
       return {
@@ -80,6 +81,9 @@
     },
     created() {
      
+    },
+    onShow() {
+        setShopTitle()
     },
     onLoad(optiosn) {
         let that = this

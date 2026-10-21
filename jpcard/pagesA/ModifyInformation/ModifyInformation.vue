@@ -132,7 +132,7 @@
   // const JYGoogleSignin = uni.requireNativePlugin('JY-GoogleSignin');
   import {getUserInfos,getAddress,editUser,takeoff} from "@/api/index.js"
   import mod from '../../components/mod.vue'
-  import { clearLoginStorage } from '@/utils/clearLoginStorage.js' // [カスタムエイド 2026-10-19]
+  import { clearLoginState, forceLogout } from "@/utils/request.js" // ログアウト時に WebSocket も閉じる
   export default {
     components:{
         mod
@@ -230,7 +230,7 @@
               // [カスタムエイド 2026-10-19] 組み込まれていない Google プラグイン(JYGoogleSignin)の呼び出しでエラーになり、
               // ログイン画面へ移動できていなかったため削除。Google ログインは uni.login を使っている
               // 全部消すと端末の種類・プッシュ通知の端末IDまで消えるため、ログイン情報だけを消す
-              clearLoginStorage()
+              clearLoginState()
               that.showAlert = false
               // reLaunch: 全ページを破棄してログイン画面へ（tabBar/非tabBar両対応・キャッシュされた氏名も消える）
               uni.reLaunch({
@@ -241,7 +241,7 @@
           }
         },
         toLogin(){
-            clearLoginStorage() // [カスタムエイド 2026-10-19] 端末の種類・プッシュ通知の端末IDは残す
+            clearLoginState() // [カスタムエイド 2026-10-19] 端末の種類・プッシュ通知の端末IDは残す（＋WebSocket切断）
             // JYGoogleSignin.jy_logout(res=> {
             // //  不会返回数据，调用就成功
             // })
@@ -260,11 +260,8 @@
                             icon:"none",
                             duration:2500
                         })
-                        setTimeout(() => {
-                            uni.redirectTo({
-                                url:"../../pages/login/login"
-                            })
-                        },2500)
+                        // 退会成功: ストレージ破棄 + WebSocket 切断 + reLaunch でログイン画面へ
+                        forceLogout('', 2500)
                     }else{
                         uni.showToast({
                             title:res.message,

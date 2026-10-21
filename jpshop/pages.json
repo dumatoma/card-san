@@ -604,6 +604,14 @@
                 "app-plus": { /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false }
             }
         }, {
+            "path": "pages/settings/gbpSelectLocation/gbpSelectLocation",
+            "style": {
+                "navigationStyle": "custom",
+                "navigationBarTitleText": "Googleビジネス連携",
+                "enablePullDownRefresh": false,
+                "app-plus": { "titleNView": false }
+            }
+        }, {
             "path": "pages/message/gbpReviews/gbpReviews",
             "style": {
                 "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
@@ -615,7 +623,7 @@
             "path": "pages/settings/socialMedia/socialMedia",
             "style": {
                 "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
-                "navigationBarTitleText": "SNS・投稿管理",
+                "navigationBarTitleText": "Instagram×GBP投稿管理",
                 "enablePullDownRefresh": false,
                 "app-plus": { /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false }
             }
@@ -751,17 +759,6 @@
             "style": {
                 "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "お支払い方法を選択",
-                "enablePullDownRefresh": false,
-                "app-plus": {
-                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
-                }
-            }
-
-        }, {
-            "path": "pages/accounts/payment/payDetail",
-            "style": {
-                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
-                "navigationBarTitleText": "カード情報を編集",
                 "enablePullDownRefresh": false,
                 "app-plus": {
                     /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false

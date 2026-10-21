@@ -80,8 +80,12 @@
             if (uni.getSystemInfoSync().platform == 'android') {
                 uni.setStorageSync("platform", "android")
             }
+            // GBP連携：外部ブラウザから cardsan://gbp?... で起動された場合（コールド起動）
+            this.handleGbpScheme(true)
         },
         onShow: function() {
+            // GBP連携：外部ブラウザから cardsan://gbp?... で復帰した場合
+            this.handleGbpScheme(false)
             // #ifdef APP-PLUS
             // if (plus.os.name == 'Android') {
             //     // 判断是Android
@@ -176,6 +180,67 @@
             uni.removeStorageSync("csvData")
         },
         methods: {
+            // [GBP連携 2026-10] Google認証後、サーバーのコールバック画面が cardsan://gbp?code=...&state=...（エラー時 ?error=...）へ遷移する
+            // plus.runtime.arguments からURLを読み取り、Googleビジネス連携画面へ code/state を渡す
+            handleGbpScheme(isLaunch, isRetry) {
+                // #ifdef APP-PLUS
+                let args = ''
+                try {
+                    args = plus.runtime.arguments
+                } catch (e) {}
+                if (typeof args === 'string') args = args.trim()
+                if (!args || typeof args !== 'string' || args.toLowerCase().indexOf('cardsan://gbp') !== 0) {
+                    // iOS のホット起動では onShow 時点で arguments がまだ更新されていないことがあるため、一度だけ再確認する
+                    if (!isLaunch && !isRetry && !this._gbpRetry) {
+                        this._gbpRetry = setTimeout(() => {
+                            this._gbpRetry = null
+                            this.handleGbpScheme(false, true)
+                        }, 500)
+                    }
+                    return
+                }
+                // 二重処理防止（onLaunch と onShow の両方で拾うケース、arguments のクリアが効かない端末で復帰のたびに拾うケース）
+                // code は毎回異なるため、同じURLは二度と処理しない
+                if (this._gbpLastUrl === args) return
+                this._gbpLastUrl = args
+                try {
+                    plus.runtime.arguments = ''
+                } catch (e) {}
+                let params = {}
+                let q = args.split('?')[1] || ''
+                q = q.split('#')[0]
+                q.split('&').forEach(kv => {
+                    if (!kv) return
+                    let i = kv.indexOf('=')
+                    let k = i > -1 ? kv.slice(0, i) : kv
+                    let v = i > -1 ? kv.slice(i + 1) : ''
+                    try {
+                        params[decodeURIComponent(k)] = decodeURIComponent(v.replace(/\+/g, ' '))
+                    } catch (e) {
+                        params[k] = v
+                    }
+                })
+                let payload = { code: params.code || '', state: params.state || '', error: params.error || '' }
+                let go = () => {
+                    let pages = getCurrentPages()
+                    let top = pages.length ? pages[pages.length - 1] : null
+                    if (top && top.route == 'pages/settings/gbpSetting/gbpSetting') {
+                        // 連携画面から外部ブラウザを開いて戻ってきた場合は、その画面で処理する
+                        uni.$emit('gbpOAuthCallback', payload)
+                        return
+                    }
+                    let url = '/pages/settings/gbpSetting/gbpSetting?'
+                    if (payload.code) {
+                        url += 'gbp_code=' + encodeURIComponent(payload.code) + '&state=' + encodeURIComponent(payload.state)
+                    } else {
+                        url += 'gbp_error=' + encodeURIComponent(payload.error || 'unknown')
+                    }
+                    uni.navigateTo({ url: url })
+                }
+                // コールド起動時は最初のページの表示を待つ
+                setTimeout(go, isLaunch ? 1200 : 300)
+                // #endif
+            },
 
             connectPush() {
                 let that = this

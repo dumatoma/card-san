@@ -70,6 +70,7 @@
     },
     "vueVersion" : "2",
     "h5" : {
+        "title" : "Card-San 予約",
         "router" : {
             "mode" : "history",
             "base" : "/reserve/"

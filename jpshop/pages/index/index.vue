@@ -87,6 +87,8 @@
                 <view class="itemBot">
                     クチコミ
                 </view>
+                <!-- GBPクチコミ未読（クチコミ画面の「未読 n件」と同じ数・アプリ角標にも加算） -->
+                <view class="bdg" v-if="value4 * 1 > 0 && shopInfo.vip.type != 1" v-text="value4"></view>
             </view>
             <view class="indexItem" hover-class="click-hover" @click="toAppointmeng">
                 <view class="itemMask" v-if="shopInfo.vip.type == 1 || shopInfo.vip.type == 2" @click.stop="maskClick">
@@ -291,6 +293,7 @@
         getAdminDetail,
         getStaffRoomUnread
     } from "../../api/index.js";
+    import { gbpReviewUnread } from "@/api/gbpContent.js"
     import mod from "@/components/mod.vue"
     import permission from "@/components/permission/permission.vue"
     export default {
@@ -319,6 +322,8 @@
                 value: 0,
                 value2: 0,
                 value3: 0,
+                // GBPクチコミ未読（review_unread の unread）
+                value4: 0,
                 showPackage: false,
                 sf: false,
                 ss: false,
@@ -391,6 +396,8 @@
             }
         },
         onLoad: function() {
+            // クチコミ画面で既読にした時に即時反映（gbpReviews.vue が uni.$emit('gbpReviewUnread', n)）
+            uni.$on('gbpReviewUnread', this.onGbpReviewUnread)
             // 创建示例
             // this._iap = new Iap({
             //     products: ['premium_halfyear'] // 苹果开发者中心创建
@@ -418,6 +425,7 @@
             that.getUnread()
             that.getLists()
             that.getStaffRoomBadge()
+            that.getGbpReviewBadge()
             let cid = uni.getStorageSync("cid")
             getConfig().then((res) => {
                 let data = {}
@@ -474,14 +482,17 @@
             }).catch(() => { uni.hideLoading() })
             setTimeout(() => {
                 let that = this
-                plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1);
+                plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1 + that.value4 * 1);
             }, 220)
         },
 
+        onUnload() {
+            uni.$off('gbpReviewUnread', this.onGbpReviewUnread)
+        },
         onHide() {
             setTimeout(() => {
                 let that = this
-                plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1);
+                plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1 + that.value4 * 1);
             }, 520)
         },
         methods: {
@@ -912,7 +923,7 @@
                 getAppointNoticeList(1).then((res) => {
                     if (res.code == 200) {
                         that.value2 = res.data.unread_count
-                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1);
+                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1 + that.value4 * 1);
                     }
                 }).catch(() => {})
             },
@@ -930,7 +941,7 @@
                             number += val.unread_num
                         })
                         that.value = number
-                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1);
+                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1 + that.value4 * 1);
                     }
                 }).catch(() => {})
             },
@@ -943,9 +954,26 @@
                         let dmUnread = res.data.dm_unread || {}
                         for (let k in dmUnread) { dm += dmUnread[k] * 1 }
                         that.value3 = (res.data.group_unread * 1) + dm
-                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1);
+                        plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1 + that.value4 * 1);
                     }
                 }).catch(() => {})
+            },
+            // GBPクチコミ未読をバッジに加算（code==200 の時のみ。403・未連携・失敗は 0 で他の計数に影響させない）
+            getGbpReviewBadge() {
+                let that = this
+                gbpReviewUnread().then(res => {
+                    let n = 0
+                    if (res && res.code == 200 && res.data) n = parseInt(res.data.unread, 10) || 0
+                    that.onGbpReviewUnread(n)
+                }).catch(() => {
+                    that.onGbpReviewUnread(0)
+                })
+            },
+            onGbpReviewUnread(n) {
+                this.value4 = Math.max(0, parseInt(n, 10) || 0)
+                // #ifdef APP-PLUS
+                plus.runtime.setBadgeNumber(this.value * 1 + this.value2 * 1 + this.value3 * 1 + this.value4 * 1);
+                // #endif
             },
             toCoupon() {
                 uni.navigateTo({

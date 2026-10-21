@@ -170,7 +170,13 @@
 
 			&__title {
 				text-align: center;
-				font-size: 16px;
+				/* [カスタムエイド 2026-10-20] 全画面の見出しを 20px に(元は 16px) */
+				font-size: 20px;
+				/* [カスタムエイド 2026-10-21] 見出しの文字をすべての画面でそろえる。
+				   今までは細い文字(Noto Sans JP Regular)を機械的に太くしていたため、画面ごとに太さ・形が違って見えた。
+				   アプリに入っている本物の太字(Noto Sans JP Bold。App.vue の「Hiragino Sans-W5」)を使い、機械的な太字はやめる */
+				font-family: 'Hiragino Sans-W5', sans-serif;
+				font-weight: normal;
 				color: $u-main-color;
 			}
 

@@ -21,7 +21,7 @@ export default {
         rightIcon: '',
         title: '',
         bgColor: '#ffffff',
-        titleWidth: '400rpx',
+        titleWidth: '520rpx', // [カスタムエイド 2026-10-20] 見出しを 20px にしたので、省略されにくいよう広げた(元は 400rpx)
         height: '44px',
 		leftIconSize: 20,
 		leftIconColor: color.mainColor,

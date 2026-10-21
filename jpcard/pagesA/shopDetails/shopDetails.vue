@@ -30,8 +30,10 @@
             </view>
             <view class="cardInfo">
                 <view class="cardTitle" v-text="`${info.card_name}`"></view>
-                <view class="cardY" v-if="info.card_type == 1" :style="`background:${info.background_color}`">
-                    <view class="cardInner">
+                <view class="cardY" v-if="info.card_type == 1" :style="frameCss">
+                    <!-- [カスタムエイド 2026-10-20] スタンプが3段以上(11個以上)のときは、カードの高さを2段半に止めて、中をスクロール。開いたときは空いているマスの段が見える所まで自動で動かす -->
+                    <scroll-view class="cs-seal-scroll" scroll-y :style="sealBoxStyle" :scroll-top="sealTop">
+                    <view class="cardInner cs-inner">
                         <view class="seal" v-for="(item,index) in info.seals">
                             <text v-text="index + 1"></text>
                             <view class="sealed" v-if="item.sealed">
@@ -57,8 +59,9 @@
                             </view>
                         </view>
                     </view>
+                    </scroll-view>
                 </view>
-                <view class="app-border" v-if="info.card_type == 2" :style="`background:${info.background_color}`">
+                <view class="app-border" v-if="info.card_type == 2" :style="frameCss">
                     <view class="apps">
                         <view class="apps-top">
                             <view class="apps-top-text no" style="width: 10%;">
@@ -75,6 +78,8 @@
                             </view>
                             <view style="width: 30%;"></view>
                         </view>
+                        <!-- [カスタムエイド 2026-10-20] 高さはいつもスタンプカードAの2段半と同じ。行が多いときは中をスクロールし、開いたときは空いている行が見える所まで自動で動かす -->
+                        <scroll-view class="cs-seal-scroll" scroll-y :style="rowBoxStyle" :scroll-top="rowTop">
                         <view class="apps-items" v-for="(item,index) in info.seals" :key="index">
                             <view class="apps-ind" style="width: 10%;">
                                 {{(index + 1) + '.'}}
@@ -105,7 +110,16 @@
 
                             </view>
                         </view>
+                    </scroll-view>
                     </view>
+                </view>
+                <!-- [カスタムエイド 2026-10-20] 満了したあとは、カードのすぐ下に小さな帯。押すと満了のお知らせをもう一度出す -->
+                <view class="fl-banner" v-if="fullDone" hover-class="fl-hover" @click="manShow = true">
+                    <view class="fl-banner-text">
+                        <view class="fl-banner-b">スタンプがたまりました</view>
+                        <view>{{hasGift ? '特典はスタッフにお見せください' : 'カードの更新はスタッフにお尋ねください'}}</view>
+                    </view>
+                    <text class="fl-banner-lk">表示 ›</text>
                 </view>
                 <view class="cardInfos">
                     <view class="pri-box" v-if="info.card_type == 3 && info.is_point == 1">
@@ -168,30 +182,35 @@
                 <view class="remark" style="white-space: pre-wrap;" v-text="info.discount_content"></view>
             </view>
         </view>
-        <view class="manshows">
-            <u-popup :show="manShow" mode="center" @close="close" :safe-area-inset-bottom="false">
-                <view class="pup-con">
-                    <view class="pup-img">
-                        <image src="../../static/image/paishou.png" mode=""></image>
-                    </view>
-                    <view class="pup-tit">
-                        お手持ちのカードの
-                    </view>
-                    <view class="pup-tit">
-                        スタンプが満了しました！
-                    </view>
-                    <view class="pup-des pup-top">
-                        カードの更新や特典など
-                    </view>
-                    <view class="pup-des">
-                        詳しくはスタッフにお尋ねください。
+        <!-- [カスタムエイド 2026-10-20] スタンプ満了のお知らせ(下から出る画面)。満了したときに1回だけ自動で出し、あとはカードの下の帯から出せる。
+             満タンのカードを小さく(実際のカードと同じ縦横の割合で)見せ、特典があれば写真と内容、なければ「カードの更新はスタッフへ」 -->
+        <u-popup :show="manShow" mode="bottom" round="24" @close="close" :safe-area-inset-bottom="false">
+            <view class="fl">
+                <view class="fl-grip"></view>
+                <image class="fl-clap" src="../../static/image/paishou.png" mode="aspectFit"></image>
+                <view class="fl-h1">{{hasGift ? 'スタンプがたまりました！' : 'スタンプがすべてたまりました'}}</view>
+                <view class="fl-mini" v-if="info.card_type == 1 && miniRatio" :style="frameCss + 'padding: ' + (36 * miniScale) + 'rpx;'">
+                    <view class="fl-mini-grid">
+                        <view class="fl-mini-cell" v-for="(item, mi) in miniSeals" :key="mi" :style="{ height: (MINI_W / 5 * miniRatio) + 'rpx' }">
+                            <image v-if="item.sealed && item.seal_icon && item.seal_icon.includes('https')" :src="item.seal_icon" mode="aspectFit"
+                                :style="{ width: (80 * miniScale) + 'rpx', height: (80 * miniScale) + 'rpx' }"></image>
+                            <view v-else-if="item.sealed" class="icon" :style="'backgroundImage: url(' + miniSvg + '); width: ' + (80 * miniScale) + 'rpx; height: ' + (80 * miniScale) + 'rpx;'"></view>
+                        </view>
                     </view>
                 </view>
-                <view class="pup-close" @click="manShow = false">
-                    閉じる
+                <view class="fl-gift" v-if="hasGift">
+                    <image class="fl-gimg" v-if="discount_images.length" :src="discountUrl(discount_images[0])" mode="aspectFill" @click="openBenefit(0)"></image>
+                    <view class="fl-gtext">
+                        <view class="fl-glabel">特典</view>
+                        <view class="fl-gtitle" v-if="info.discount_title">{{info.discount_title}}</view>
+                        <view class="fl-gbody" v-if="info.discount_content">{{info.discount_content}}</view>
+                    </view>
                 </view>
-            </u-popup>
-        </view>
+                <view class="fl-show" v-if="hasGift">この画面をスタッフにお見せください</view>
+                <view class="fl-info" v-else>ご利用ありがとうございました。カードの更新については、スタッフにお尋ねください。</view>
+                <view class="fl-btn" hover-class="fl-hover" @click="close">閉じる</view>
+            </view>
+        </u-popup>
         <list :caiDanShow="caiDanShow" :mid="id" :sid="sid" :tabs="tabs" @seed="seed" @selected="chooseItem"></list>
         <view style="height: 100upx;"></view>
        <!-- <view class="mask">
@@ -225,6 +244,10 @@
         historyOrders
     } from "@/api/index.js"
     // import tabbar from '../../components/tabbar.vue'
+    // [カスタムエイド 2026-10-20] スタンプカードの高さの決まり(rpx)
+    const SEAL_ROW = 172 // スタンプカードAの1段の高さ(マス 170 + 線 2)
+    const B_ROW = 63 // スタンプカードBの1行の高さ
+    const B_MAX = SEAL_ROW * 2.5 - 63 - 21 // スタンプカードBの行の部分の最大(Aの最大から、見出しの行と下の余白を引く。5行半になり、下に続きがあると分かる)
     export default {
         components: {
             list,
@@ -254,10 +277,53 @@
                 discount_images: [],
                 benefitIndex: 0, // [カスタムエイド 2026-10-19] 特典画像の今の位置
                 member:{},
-                hasOrder: false // [カスタムエイド 2026-10-20] このお店に予約中があるか
+                hasOrder: false, // [カスタムエイド 2026-10-20] このお店に予約中があるか
+                sealTop: 0, // [カスタムエイド 2026-10-20] スタンプカードAの中のスクロール位置
+                rowTop: 0, // [カスタムエイド 2026-10-20] スタンプカードBの中のスクロール位置
+                fullDone: false, // [カスタムエイド 2026-10-20] スタンプが満了しているか
+                miniRatio: 0, // [カスタムエイド 2026-10-20] 小さいカードのマスの縦横の割合(実際のマスを測って決める)
+                MINI_W: 300 // [カスタムエイド 2026-10-20] 小さいカードのマスの部分の横幅(rpx)
             };
         },
         computed: {
+            // [カスタムエイド 2026-10-20] カードの枠:お店が画像を選んでいれば画像(柄としてならべる/全体に広げる)、なければ今までどおり色
+            frameCss() {
+                const c = this.info.background_color || ''
+                const img = this.info.frame_image
+                if (img) {
+                    return 'background-color: ' + c + '; background-image: url(' + img + '); background-position: center; ' +
+                        (this.info.frame_fit == 'tile' ? 'background-size: 160rpx 160rpx; background-repeat: repeat;' : 'background-size: cover; background-repeat: no-repeat;') // [カスタムエイド 2026-10-20] 「柄としてならべる」を選んだときだけくり返す。それ以外は「全体に広げる」
+                }
+                return 'background: ' + c + ';'
+            },
+            // [カスタムエイド 2026-10-20] 特典があるか(特典の写真・題名・内容のどれかがある)
+            hasGift() {
+                const c = this.info || {}
+                if (c.is_discount === 0 || c.is_discount === '0') return false
+                return !!((this.discount_images && this.discount_images.length) || c.discount_title || c.discount_content)
+            },
+            // [カスタムエイド 2026-10-20] 小さいカードは、最後の2段まで(すべて押してある段)
+            miniSeals() {
+                const list = this.info.seals || []
+                const rows = Math.ceil(list.length / 5)
+                return rows > 2 ? list.slice((rows - 2) * 5) : list
+            },
+            // 実際のカード(マスの部分の横幅 約644rpx)に対する、小さいカードの大きさの割合
+            miniScale() {
+                return this.MINI_W / 644
+            },
+            miniSvg() {
+                return this['svgData' + (this.iconNum || 1)]
+            },
+            // [カスタムエイド 2026-10-20] スタンプカードA:3段以上なら高さを2段半(1段 172rpx)に止める
+            sealBoxStyle() {
+                const n = (this.info.seals || []).length
+                return Math.ceil(n / 5) > 2 ? 'height: ' + (SEAL_ROW * 2.5) + 'rpx;' : ''
+            },
+            // [カスタムエイド 2026-10-20] スタンプカードB:行の数にかかわらず、いつもスタンプカードAの2段半と同じ高さ(行が少なければ下は空白、多ければ中をスクロール)
+            rowBoxStyle() {
+                return 'height: ' + B_MAX + 'rpx;'
+            },
             // [カスタムエイド 2026-10-20] 予約履歴のアイコン(ヘッダーの文字色に合わせる)
             rhIcon() {
                 let c = this.color || '#1d1d1f'
@@ -276,9 +342,8 @@
                     that.checkOrder() // [カスタムエイド 2026-10-20]
                     getCardInfo(this.id).then((res) => {
                         if (res.code == 200) {
-                            if(res.data.member.seals.length == res.data.member.card.count && res.data.member.card.type != 3){
-                                that.manShow = true
-                            }
+                            // [カスタムエイド 2026-10-20] 満了したかを覚えておき、カードを並べたあとで知らせる(onFull)
+                            that.fullDone = res.data.member.seals.length == res.data.member.card.count && res.data.member.card.type != 3
                             let array = []
                             that.info = res.data.card
                             that.orders = res.data.orders.reverse()
@@ -323,6 +388,8 @@
                                 array.push(obj)
                             }
                             that.info.seals = array
+                            that.scrollToEmpty() // [カスタムエイド 2026-10-20]
+                            that.onFull() // [カスタムエイド 2026-10-20]
                             if(that.color != '#000'){
                                 that.svgData30 = that.changeColor(that.svgData30, that.color);
                             }
@@ -337,9 +404,8 @@
 
             getCardInfo(this.id).then((res) => {
                 if (res.code == 200) {
-                    if(res.data.member.seals.length == res.data.member.card.count && res.data.member.card.type != 3){
-                        that.manShow = true
-                    }
+                    // [カスタムエイド 2026-10-20] 満了したかを覚えておき、カードを並べたあとで知らせる(onFull)
+                    that.fullDone = res.data.member.seals.length == res.data.member.card.count && res.data.member.card.type != 3
                     let array = []
                     that.info = res.data.card
                     that.member = res.data.member
@@ -386,6 +452,8 @@
                         array.push(obj)
                     }
                     that.info.seals = array
+                    that.scrollToEmpty() // [カスタムエイド 2026-10-20]
+                    that.onFull() // [カスタムエイド 2026-10-20]
                     if(that.color != '#000'){
                         that.svgData30 = that.changeColor(that.svgData30, that.color);
                     }
@@ -404,6 +472,27 @@
         //       }
         // },
         methods: {
+            // [カスタムエイド 2026-10-20] カードを開いたとき、空いているマス(行)が見える所まで、カードの中を自動で動かす
+            //   A:空いているマスの1段上から見せる(押したスタンプの最後の段+空いている段)
+            //   B:空いている行の2行上から見せる
+            scrollToEmpty() {
+                const list = this.info.seals || []
+                const n = list.length
+                let done = 0
+                list.forEach((v) => { if (v.sealed) done++ })
+                const first = done >= n ? n - 1 : done // 最初の空いているマス(全部押してあれば最後)
+                const a = uni.upx2px(Math.max(0, Math.floor(first / 5) - 1) * SEAL_ROW)
+                const b = uni.upx2px(Math.max(0, first - 2) * B_ROW)
+                // 前と同じ値だと動かないので、少しずらした値を入れてから本当の値を入れる
+                this.sealTop = a + 0.5
+                this.rowTop = b + 0.5
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        this.sealTop = a
+                        this.rowTop = b
+                    }, 80)
+                })
+            },
             // [カスタムエイド 2026-10-19] 会員番号を4桁ごとに区切って読みやすくする
             groupDigits(v) {
                 if (v === undefined || v === null) return ''
@@ -428,6 +517,29 @@
             },
             close() {
                 this.manShow = false
+            },
+            // [カスタムエイド 2026-10-20] 特典の写真のURL(文字でも、{url}でも)
+            discountUrl(v) {
+                return typeof v == 'string' ? v : (v && (v.url || v.image)) || ''
+            },
+            // [カスタムエイド 2026-10-20] スタンプが満了していたら、満了のお知らせを「満了したときに1回だけ」自動で出す(このスマホに記録)
+            onFull() {
+                if (!this.fullDone) return
+                this.$nextTick(() => {
+                    // 実際のマスの縦横の割合を測る(小さいカードを同じ割合にするため)
+                    uni.createSelectorQuery().in(this).select('.cs-inner .seal').boundingClientRect((r) => {
+                        this.miniRatio = r && r.width ? r.height / r.width : 172 / 128.8
+                    }).exec()
+                })
+                const list = this.info.seals || []
+                const last = list.length ? (list[list.length - 1].time || '') : ''
+                const key = 'cs_full_seen_' + (this.info.member_id || this.id) + '_' + (this.card_no || '') + '_' + last
+                let seen = false
+                try { seen = !!uni.getStorageSync(key) } catch (e) {}
+                if (!seen) {
+                    this.manShow = true
+                    try { uni.setStorageSync(key, 1) } catch (e) {}
+                }
             },
             // [カスタムエイド 2026-10-20] このお店に予約中があるか(オレンジの点)
             checkOrder() {
@@ -784,6 +896,20 @@
         }
     }
 
+    /* [カスタムエイド 2026-10-20] スタンプカードの中のスクロール(高さは sealBoxStyle / rowBoxStyle で決める) */
+    .cs-seal-scroll {
+        width: 100%;
+        background-color: #fff;
+    }
+
+    .cardY .cardInner.cs-inner {
+        height: auto;
+
+        .seal {
+            height: 172rpx;
+        }
+    }
+
     .app-border {
         width: 100%;
         // height: 398rpx;
@@ -1050,5 +1176,167 @@
         height: 30rpx;
         border-radius: 50%;
         background: #FF9500;
+    }
+
+    /* [カスタムエイド 2026-10-20] スタンプ満了のお知らせ・カードの下の帯 */
+    .fl {
+        padding: 20rpx 36rpx calc(40rpx + env(safe-area-inset-bottom));
+        text-align: center;
+        color: #1D1D1F;
+    }
+
+    .fl-grip {
+        width: 72rpx;
+        height: 10rpx;
+        border-radius: 6rpx;
+        background: #D2D2D7;
+        margin: 0 auto 24rpx;
+    }
+
+    .fl-clap {
+        width: 128rpx;
+        height: 128rpx;
+    }
+
+    .fl-h1 {
+        margin-top: 12rpx;
+        font-size: 40rpx;
+        font-weight: 800;
+        line-height: 1.4;
+    }
+
+    .fl-mini {
+        width: 300rpx;
+        margin: 24rpx auto 0;
+        border-radius: 12rpx;
+        box-sizing: content-box;
+    }
+
+    .fl-mini-grid {
+        display: flex;
+        flex-wrap: wrap;
+        background: #FFFFFF;
+    }
+
+    .fl-mini-cell {
+        width: 20%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        border-right: 1px solid #EAEAEA;
+        border-bottom: 1px solid #EAEAEA;
+    }
+
+    .fl-mini-cell:nth-child(5n) {
+        border-right: 0;
+    }
+
+    .fl-gift {
+        display: flex;
+        align-items: flex-start;
+        margin-top: 28rpx;
+        padding: 24rpx;
+        border-radius: 28rpx;
+        background: #FFF8E1;
+        border: 1px solid #F0D77A;
+        text-align: left;
+    }
+
+    .fl-gimg {
+        width: 168rpx;
+        height: 128rpx;
+        flex-shrink: 0;
+        margin-right: 24rpx;
+        border-radius: 20rpx;
+        background: #E5E5EA;
+    }
+
+    .fl-gtext {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .fl-glabel {
+        font-size: 22rpx;
+        font-weight: 700;
+        color: #8A6D00;
+        margin-bottom: 4rpx;
+    }
+
+    .fl-gtitle {
+        font-size: 28rpx;
+        font-weight: 700;
+        line-height: 1.5;
+    }
+
+    .fl-gbody {
+        font-size: 26rpx;
+        line-height: 1.6;
+        color: #3A3A3C;
+        white-space: pre-wrap;
+    }
+
+    .fl-show {
+        margin-top: 20rpx;
+        font-size: 24rpx;
+        font-weight: 700;
+        color: #1A73E8;
+    }
+
+    .fl-info {
+        margin-top: 28rpx;
+        padding: 24rpx 28rpx;
+        border-radius: 28rpx;
+        background: #F5F5F7;
+        font-size: 26rpx;
+        line-height: 1.7;
+        color: #3A3A3C;
+        text-align: left;
+    }
+
+    .fl-btn {
+        margin-top: 32rpx;
+        height: 100rpx;
+        line-height: 100rpx;
+        border-radius: 28rpx;
+        background: #1A73E8;
+        color: #FFFFFF;
+        font-size: 30rpx;
+        font-weight: 700;
+    }
+
+    .fl-hover {
+        opacity: 0.7;
+    }
+
+    .fl-banner {
+        display: flex;
+        align-items: center;
+        margin-top: 20rpx;
+        padding: 20rpx 24rpx;
+        border-radius: 20rpx;
+        background: #FFF8E1;
+        border: 1px solid #F0D77A;
+        font-size: 24rpx;
+        line-height: 1.5;
+        color: #5F4B00;
+    }
+
+    .fl-banner-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .fl-banner-b {
+        font-size: 26rpx;
+        font-weight: 700;
+    }
+
+    .fl-banner-lk {
+        flex-shrink: 0;
+        margin-left: 16rpx;
+        color: #1A73E8;
+        font-weight: 700;
     }
 </style>

@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="357" height="199" viewBox="0 0 357 199">
+  <defs>
+    <filter id="長方形_1954" x="-5.5" y="-7.5" width="372" height="215" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feFlood flood-opacity="0.161"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <clipPath id="clip-スタンプB">
+      <rect width="357" height="199"/>
+    </clipPath>
+  </defs>
+  <g id="スタンプB" clip-path="url(#clip-スタンプB)">
+    <rect width="357" height="199" fill="#fff"/>
+    <g id="グループ_6890" data-name="グループ 6890" transform="translate(-514 -1171)">
+      <g transform="matrix(1, 0, 0, 1, 514, 1171)" filter="url(#長方形_1954)">
+        <rect id="長方形_1954-2" data-name="長方形 1954" width="357" height="200" rx="10" transform="translate(2)" fill="#bce0fd"/>
+      </g>
+      <g id="グループ_6889" data-name="グループ 6889" transform="translate(4 228)">
+        <rect id="長方形_1789" data-name="長方形 1789" width="321" height="164" rx="5" transform="translate(530 961)" fill="#fff"/>
+        <g id="グループ_6728" data-name="グループ 6728" transform="translate(-268.5 -346)">
+          <g id="グループ_6727" data-name="グループ 6727">
+            <g id="グループ_4385" data-name="グループ 4385" transform="translate(954 1317)">
+              <path id="パス_3068" data-name="パス 3068" d="M21.849,20.423a.8.8,0,0,0-1.089.091l-2.728,3.048-2.718-1.1c-.467-.2-.892-.273-1.131.173-.239.428-.021.7.373.919l3.153,1.356c.519.237.913.264,1.068.082L22,21.369A.589.589,0,0,0,21.849,20.423Z" transform="translate(-10.132 -15.476)" fill="#707070"/>
+              <g id="グループ_4342" data-name="グループ 4342">
+                <path id="パス_3069" data-name="パス 3069" d="M17.72,31.46a8,8,0,1,1,8-8A8.009,8.009,0,0,1,17.72,31.46Zm0-14.51a6.51,6.51,0,1,0,6.51,6.51A6.513,6.513,0,0,0,17.72,16.95Z" transform="translate(-9.72 -15.46)" fill="#707070"/>
+              </g>
+            </g>
+            <g id="グループ_4392" data-name="グループ 4392" transform="translate(837.151 1319)">
+              <text id="日付" transform="translate(-0.151 2)" fill="#707070" font-size="12" font-family="HiraginoSans-W5, Hiragino Sans"><tspan x="-12" y="11">日付</tspan></text>
+            </g>
+            <g id="グループ_6720" data-name="グループ 6720" transform="translate(806.151 1317)">
+              <text id="NO" transform="translate(0.849 4)" fill="#707070" font-size="12" font-family="HiraginoSans-W5, Hiragino Sans"><tspan x="0" y="11">NO</tspan></text>
+            </g>
+            <path id="合体_8" data-name="合体 8" d="M0,16V14c0-2.2,3.6-4,8-4s8,1.8,8,4v2ZM4,4A4,4,0,1,1,8,8,4,4,0,0,1,4,4Z" transform="translate(1025 1317)" fill="#707070"/>
+          </g>
+          <line id="線_18" data-name="線 18" x2="310" transform="translate(802.5 1338)" fill="none" stroke="#d2d2d7" stroke-width="1"/>
+        </g>
+        <g id="グループ_6722" data-name="グループ 6722" transform="translate(-269.5 -351)">
+          <path id="パス_3200" data-name="パス 3200" d="M0,0H310" transform="translate(803.5 1373)" fill="none" stroke="#d2d2d7" stroke-width="1" stroke-dasharray="2 1"/>
+          <g id="グループ_6721" data-name="グループ 6721" transform="translate(0 -1)">
+            <g id="グループ_4392-2" data-name="グループ 4392" transform="translate(946.326 1351)">
+              <text id="_-" data-name="-" transform="translate(-4.326 2)" fill="#1d1d1f" font-size="12" font-family="NotoSansKannada-Regular, Noto Sans Kannada"><tspan x="-1.932" y="10">-</tspan></text>
+            </g>
+            <g id="グループ_4392-3" data-name="グループ 4392" transform="translate(1006 1351)">
+              <text id="_--2" data-name="-" transform="translate(0 2)" fill="#1d1d1f" font-size="12" font-family="NotoSansKannada-Regular, Noto Sans Kannada"><tspan x="-1.932" y="10">-</tspan></text>
+            </g>
+            <g id="グループ_5545" data-name="グループ 5545" transform="translate(814 1433)">
+              <text id="_1." data-name="1." transform="translate(-7 -80)" fill="#707070" font-size="12" font-family="NotoSansKannada-Regular, Noto Sans Kannada"><tspan x="4.96" y="10">1.</tspan></text>
+            </g>
+          </g>
+        </g>
+        <path id="パス_3200-2" data-name="パス 3200" d="M0,0H310" transform="translate(534 1053)" fill="none" stroke="#d2d2d7" stroke-width="1" stroke-dasharray="2 1"/>
+        <g id="グループ_6721-2" data-name="グループ 6721" transform="translate(-269.5 -321)">
+          <g id="グループ_5545-2" data-name="グループ 5545" transform="translate(814 1433)">
+            <text id="_2." data-name="2." transform="translate(-7 -80)" fill="#707070" font-size="12" font-family="NotoSansKannada-Regular, Noto Sans Kannada"><tspan x="4.96" y="10">2.</tspan></text>
+          </g>
+        </g>
+        <g id="グループ_6722-2" data-name="グループ 6722" transform="translate(-269.5 -289)">
+          <path id="パス_3200-3" data-name="パス 3200" d="M0,0H310" transform="translate(803.5 1373)" fill="none" stroke="#d2d2d7" stroke-width="1" stroke-dasharray="2 1"/>
+          <g id="グループ_6721-3" data-name="グループ 6721" transform="translate(0 -1)">
+            <g id="グループ_5545-3" data-name="グループ 5545" transform="translate(814 1433)">
+              <text id="_3." data-name="3." transform="translate(-7 -80)" fill="#707070" font-size="12" font-family="NotoSansKannada-Regular, Noto Sans Kannada"><tspan x="4.96" y="10">3.</tspan></text>
+            </g>
+          </g>
+        </g>
+        <g id="グループ_6722-3" data-name="グループ 6722" transform="translate(-269.5 -258)">
+          <path id="パス_3200-4" data-name="パス 3200" d="M0,0H310" transform="translate(803.5 1373)" fill="none" stroke="#d2d2d7" stroke-width="1" stroke-dasharray="2 1"/>
+          <g id="グループ_6721-4" data-name="グループ 6721" transform="translate(0 -1)">
+            <g id="グループ_5545-4" data-name="グループ 5545" transform="translate(814 1433)">
+              <text id="_4." data-name="4." transform="translate(-7 -80)" fill="#707070" font-size="12" font-family="NotoSansKannada-Regular, Noto Sans Kannada"><tspan x="4.96" y="10">4.</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g id="グループ_6240" data-name="グループ 6240" transform="translate(299.365 44.931)">
+      <g id="SMILE" transform="translate(7.507 8.92)">
+        <path id="パス_3124" data-name="パス 3124" d="M19.818,9.9A9.909,9.909,0,1,1,10.053,0,9.909,9.909,0,0,1,19.818,9.9Zm-.874.021a9.035,9.035,0,1,0-9.1,9.009A9.04,9.04,0,0,0,18.944,9.924Z" transform="translate(0.001 0.001)" fill="#d93025"/>
+        <path id="パス_3125" data-name="パス 3125" d="M16.178,10.983c-.042.09-.073.18-.114.26a7.243,7.243,0,0,1-3.438,3.476,6.349,6.349,0,0,1-6.4-.471,7.14,7.14,0,0,1-2.576-2.985c-.031-.07-.062-.13-.1-.21a.458.458,0,0,1-.436.06.445.445,0,0,1-.28-.361.475.475,0,0,1,.177-.481c.405-.3.81-.591,1.215-.891.249-.18.457-.19.623-.02a.521.521,0,0,1,0,.711l-.042.04c-.218.18-.218.18-.1.451a6.415,6.415,0,0,0,2.306,2.754,5.039,5.039,0,0,0,2.95.851A5.229,5.229,0,0,0,13.3,12.856a5.611,5.611,0,0,0,1.226-1.422c.208-.351.384-.721.571-1.082a.138.138,0,0,0-.052-.21.5.5,0,0,1-.156-.681.4.4,0,0,1,.613-.14c.426.311.852.621,1.278.942a.492.492,0,0,1,.073.731.41.41,0,0,1-.519.09C16.293,11.053,16.241,11.023,16.178,10.983Z" transform="translate(0.005 0.378)" fill="#d93025"/>
+        <path id="パス_3126" data-name="パス 3126" d="M8.163,7.343a2.164,2.164,0,0,1-.3,1.122,1.434,1.434,0,0,1-.11.15A.763.763,0,0,1,6.5,8.595a1.958,1.958,0,0,1-.391-1.4,1.813,1.813,0,0,1,.381-1.072A.763.763,0,0,1,7.753,6.1,1.9,1.9,0,0,1,8.163,7.343Z" transform="translate(0.19 0.195)" fill="#d93025"/>
+        <path id="パス_3127" data-name="パス 3127" d="M11.12,7.292a1.982,1.982,0,0,1,.411-1.2.764.764,0,0,1,1.242.01,1.943,1.943,0,0,1,.4,1.412A1.88,1.88,0,0,1,12.8,8.554a.773.773,0,0,1-1.3.02A2.076,2.076,0,0,1,11.12,7.292Z" transform="translate(0.346 0.195)" fill="#d93025"/>
+      </g>
+    </g>
+  </g>
+</svg>

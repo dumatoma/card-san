@@ -46,14 +46,11 @@
         {
             "path": "pages/confirm/confirm",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                "navigationBarTitleText": "電話番号入力",
                "enablePullDownRefresh": false,
                "app-plus": {
-                   "titleNView": {
-                       "splitLine": {
-                           "color": "#EEEEEE"
-                       }
-                   }
+                   /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                }
             }
         },
@@ -115,56 +112,44 @@
         {
             "path": "pages/customer/csv/birthday/birthday",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "誕生月",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/customer/csv/sex/sex",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "性別",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/customer/csv/time/time",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "来店期間",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/customer/csv/times/times",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "来店回数",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
@@ -185,14 +170,11 @@
         {
             "path": "pages/customer/cards/cards",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "登録カード一覧",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
@@ -206,14 +188,11 @@
         {
             "path": "pages/customer/record/record",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "来店履歴",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
@@ -244,6 +223,8 @@
                 "navigationBarTitleText": "name",
                 "enablePullDownRefresh": true,
                 "app-plus": {
+                    // [カスタムエイド 2026-10-20] チャットは入力欄の動きを変えないよう iPhone の標準の見出しのまま。文字だけ 20px に
+                    "titleNView": { "titleSize": "20px" },
                     "popGesture": "none" // 禁用侧滑
                 }
             }
@@ -251,28 +232,22 @@
         {
             "path": "pages/message/setting/setting",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "メッセージ設定",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/message/userInfo/userInfo",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "メッセージアカウント情報",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
@@ -286,23 +261,21 @@
         {
             "path": "pages/message/userInfo/edit/edit",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "予約確認",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/message/staffRoom/staffRoom",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "スタッフルーム設定",
                 "enablePullDownRefresh": false,
-                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+                "app-plus": { /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false }
             }
         },
         {
@@ -310,15 +283,17 @@
             "style": {
                 "navigationBarTitleText": "スタッフルーム",
                 "enablePullDownRefresh": true,
-                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+                // [カスタムエイド 2026-10-20] チャットは入力欄の動きを変えないよう iPhone の標準の見出しのまま。文字だけ 20px に
+                "app-plus": { "titleNView": { "titleSize": "20px", "splitLine": { "color": "#EEEEEE" } } }
             }
         },
         {
             "path": "pages/message/staffRoom/memberList",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "メンバー一覧",
                 "enablePullDownRefresh": false,
-                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+                "app-plus": { /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false }
             }
         },
         {
@@ -326,34 +301,29 @@
             "style": {
                 "navigationBarTitleText": "メッセージ",
                 "enablePullDownRefresh": true,
-                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+                // [カスタムエイド 2026-10-20] チャットは入力欄の動きを変えないよう iPhone の標準の見出しのまま。文字だけ 20px に
+                "app-plus": { "titleNView": { "titleSize": "20px", "splitLine": { "color": "#EEEEEE" } } }
             }
         },
         {
             "path": "pages/message/notice/notice",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "メッセージ一覧",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/message/notice/detail/detail",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "詳細",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
@@ -382,70 +352,55 @@
         {
             "path": "pages/message/notice/setting/setting",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "配信設定",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/message/notice/setting/birthday/birthday",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "誕生月",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/message/notice/setting/sex/sex",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "性別",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/message/notice/setting/time/time",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "来店期間",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/message/notice/setting/times/times",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "来店回数",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
@@ -459,21 +414,11 @@
         {
             "path": "pages/notice/setting/setting",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "お知らせ設定",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        },
-                        "buttons": [{
-                            "text": "保存",
-                            "fontSize": "16px",
-                            "float": "right",
-                            "width": "46px",
-                            "color": "#1A73E8"
-                        }]
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
@@ -525,14 +470,11 @@
         {
             "path": "pages/appointment/notice/notice",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "enablePullDownRefresh": false,
                 "navigationBarTitleText": "予約通知",
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
@@ -549,14 +491,11 @@
         }, {
             "path": "pages/appointment/notice/detail/edit",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "予約内容",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
@@ -577,14 +516,11 @@
         }, {
             "path": "pages/coupon/setting/setting",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "クーポン配信設定",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
@@ -625,6 +561,13 @@
             }
 
         }, {
+            // [カスタムエイド 2026-10-20] カードを作る ①カードの種類を選ぶ
+            "path": "pages/settings/membershipCard/typeSelect/typeSelect",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        }, {
             "path": "pages/settings/membershipCard/firstStep/firstStep",
             "style": {
                 "navigationStyle": "custom",
@@ -655,63 +598,57 @@
         }, {
             "path": "pages/settings/gbpSetting/gbpSetting",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "Googleビジネス連携",
                 "enablePullDownRefresh": false,
-                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+                "app-plus": { /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false }
             }
         }, {
             "path": "pages/message/gbpReviews/gbpReviews",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "Googleクチコミ管理",
                 "enablePullDownRefresh": true,
-                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+                "app-plus": { /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false }
             }
         }, {
             "path": "pages/settings/socialMedia/socialMedia",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "SNS・投稿管理",
                 "enablePullDownRefresh": false,
-                "app-plus": { "titleNView": { "splitLine": { "color": "#EEEEEE" } } }
+                "app-plus": { /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false }
             }
         }, {
             "path": "pages/settings/vipRegister/vipRegister",
             "style": {
                 "navigationBarTitleText": "会員登録情報",
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 見出しを 20px 太字の共通の見出しにするため
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/settings/menu/menu",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "カテゴリー",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/settings/menu/link/link",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "外部リンク",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
@@ -746,112 +683,88 @@
         }, {
             "path": "pages/settings/Administrators/addNew/jurisdiction",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "副管理者の編集",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/mannager/mannager",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "副管理者情報",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/admin/admin",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "オーナー情報",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/admin/changeInfo",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "編集",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/admin/changeMail",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "メールアドレス(ID)の変更",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/payment/payment",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "お支払い方法",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/payment/paylist",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "お支払い方法を選択",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/payment/payDetail",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "カード情報を編集",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
@@ -879,112 +792,88 @@
         }, {
             "path": "pages/accounts/detailed/detailed",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "ご利用明細",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/sale/sale",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "販促アイテム一覧",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/sale/detail",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "販促アイテム",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/sale/secondStep",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "販促アイテム",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/sale/confirm/confirm",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "ご注文内容確認",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/sale/addAddress",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "配送先住所",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/notice/notice",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "運営からのお知らせ",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
         }, {
             "path": "pages/accounts/rules/rules",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "利用規約・プライバシーポリシー",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
@@ -1000,14 +889,11 @@
         }, {
             "path": "pages/confirm/phoneConfirm",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "認証コードを入力",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
@@ -1015,56 +901,44 @@
         {
             "path": "pages/coupon/setting/birthday/birthday",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "誕生月",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/coupon/setting/sex/sex",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "性別",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/coupon/setting/time/time",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "来店期間",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         },
         {
             "path": "pages/coupon/setting/times/times",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "来店回数",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
         }, {
@@ -1104,14 +978,11 @@
         },{
             "path": "pages/payment/payment",
             "style": {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "お申し込み",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
 
@@ -1128,14 +999,11 @@
             "path" : "pages/accounts/contract/contract",
             "style" :                                                                                    
             {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "ご契約内容",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
             
@@ -1162,6 +1030,7 @@
             "path" : "pages/accounts/detailed/seStep",
             "style" :                                                                                    
             {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "",
                 "enablePullDownRefresh": false
             }
@@ -1180,14 +1049,11 @@
             "path" : "pages/deleteAccount/deleteAccount",
             "style" :                                                                                    
             {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "アカウント削除",
                 "enablePullDownRefresh": false,
                 "app-plus": {
-                    "titleNView": {
-                        "splitLine": {
-                            "color": "#EEEEEE"
-                        }
-                    }
+                    /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false
                 }
             }
             
@@ -1212,6 +1078,7 @@
             "path" : "pages/monthly/monthly",
             "style" :                                                                                    
             {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "月の来店数",
                 "enablePullDownRefresh": false
             }
@@ -1244,6 +1111,7 @@
             "path" : "pages/outAppoint/outAppoint",
             "style" :                                                                                    
             {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText": "予約機能外部LINK設定",
                 "enablePullDownRefresh": false
             }
@@ -1253,6 +1121,7 @@
             "path" : "pages/accounts/breakoff/breakoff",
             "style" : 
             {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText" : "解約手続き",
                 "enablePullDownRefresh" : false,
                 "navigationBarBackgroundColor": "#fbfbfd"
@@ -1262,6 +1131,7 @@
             "path" : "pages/accounts/complete/complete",
             "style" : 
             {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText" : "解約手続き完了",
                 "enablePullDownRefresh" : false,
                 "navigationBarBackgroundColor": "#fbfbfd"
@@ -1271,6 +1141,7 @@
             "path" : "pages/message/reviewSetting/reviewSetting",
             "style" : 
             {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText" : "レビューリンク",
                 "navigationBarBackgroundColor": "#fbfbfd"
                 
@@ -1281,13 +1152,16 @@
             "style" : 
             {
                 "navigationBarTitleText" : "ヘルプ",
-                "navigationBarBackgroundColor": "#fbfbfd"
+                "navigationBarBackgroundColor": "#fbfbfd",
+                // [カスタムエイド 2026-10-20] ウェブページを表示する画面は標準の見出しのまま。文字だけ 20px に
+                "app-plus": { "titleNView": { "titleSize": "20px" } }
             }
         },
         {
             "path" : "pages/message/moduleSettin/moduleSettin",
             "style" : 
             {
+                "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
                 "navigationBarTitleText" : ""
             }
         }
@@ -1300,7 +1174,8 @@
         "app-plus": {
             "softinputNavBar": "none",
             "softinputMode": "adjustResize",
-            "popGesture": "none"
+            "popGesture": "none",
+            "bounce": "none" // [カスタムエイド 2026-10-20] 画面を上下に強く引っぱったとき、画面ごと弾んでずれる(iPhone)のを止める
         }
     },
     "uniIdRouter": {},

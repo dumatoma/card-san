@@ -1071,3 +1071,12 @@ export const deleteStaffRoomMessage = (id) => {
 export const deleteStaffDm = (toId, id) => {
     return request({ url: "/api/shop/staff_room/dm/" + toId + "/" + id + "/delete", method: "post", data: {} })
 }
+
+// [カスタムエイド 2026-10-20] 来店履歴の編集(管理WEBと同じ):選べるメニュー(自店舗の全メニュー)とスタッフ(予約に対応するスタッフ)
+export const getComeOptions = () => {
+    return request({ url: "/api/shop/order/come_options", method: "get" })
+}
+// [カスタムエイド 2026-10-20] 来店履歴の編集:保存(menu_ids・admin_ids・keep_menu_names・keep_admin_names)
+export const updateCome = (id, data) => {
+    return request({ url: "/api/shop/order/come/" + id, method: "post", data: data })
+}

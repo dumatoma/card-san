@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="357" height="199" viewBox="0 0 357 199">
+  <defs>
+    <clipPath id="clip-path">
+      <rect width="350" height="203" fill="none"/>
+    </clipPath>
+    <filter id="長方形_2024" x="2.5" y="-1.5" width="350" height="203" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feFlood flood-opacity="0.161"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <pattern id="pattern" width="1" height="1" viewBox="0 -0.961 218 49">
+      <image preserveAspectRatio="none" width="218" height="49" xlink:href="data:image/gif;base64,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"/>
+    </pattern>
+    <clipPath id="clip-スタンプカードA_2">
+      <rect width="357" height="199"/>
+    </clipPath>
+  </defs>
+  <g id="スタンプカードA_2" data-name="スタンプカードA – 2" clip-path="url(#clip-スタンプカードA_2)">
+    <rect width="357" height="199" fill="#fff"/>
+    <g id="ポイントカード" transform="translate(-17.5 -21.5)">
+      <path id="パス_3402" data-name="パス 3402" d="M0,0H390V243H0Z" fill="none"/>
+      <g id="リピートグリッド_76" data-name="リピートグリッド 76" transform="translate(20 20)" clip-path="url(#clip-path)">
+        <g id="グループ_6750" data-name="グループ 6750" transform="translate(-1.5 -822.5)">
+          <g transform="matrix(1, 0, 0, 1, -1, 824)" filter="url(#長方形_2024)">
+            <rect id="長方形_2024-2" data-name="長方形 2024" width="335" height="188" rx="6" transform="translate(10 6)" fill="#f5f5f7"/>
+          </g>
+          <g id="グループ_6749" data-name="グループ 6749" transform="translate(68.029 863.396)">
+            <text id="_1923055025809" data-name="1923055025809" transform="translate(43.971 69.604)" fill="#1d1d1f" font-size="14" font-family="HiraginoSans-W3, Hiragino Sans"><tspan x="0" y="0">1923055025809</tspan></text>
+            <rect id="ITF" width="218" height="49" transform="translate(-0.029 -0.396)" fill="url(#pattern)"/>
+            <g id="グループ_5057" data-name="グループ 5057" transform="translate(11.618 98.757)">
+              <g id="グループ_5056" data-name="グループ 5056" transform="translate(0 0)">
+                <g id="グループ_5054" data-name="グループ 5054">
+                  <text id="保有ポイント数" transform="translate(0.353 16.847)" fill="#1d1d1f" font-size="14" font-family="HiraginoSans-W3, Hiragino Sans"><tspan x="0" y="0">保有ポイント数</tspan></text>
+                  <text id="_0_pt" data-name="0 pt" transform="translate(160.353 18.847)" fill="rgba(217,48,37,0.65)" font-size="24" font-family="HiraginoSans-W6, Hiragino Sans" letter-spacing="0.024em"><tspan x="-27.108" y="0">0 pt</tspan></text>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

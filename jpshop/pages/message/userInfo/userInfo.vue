@@ -1,28 +1,32 @@
 <template>
-    <view class="container">
-        <view class="avatar" @click="uploadImage">
-            
-            <u-avatar :src="avatar" size="120" mode="aspectFill"></u-avatar>
+    <view class="container cs-pg">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="メッセージアカウント情報" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <!-- [カスタムエイド 2026-10-21] 見た目をこれまでの画面に合わせた。丸い写真の右下のカメラを押すと写真を変えられる -->
+        <view class="cs-av-wrap" @click="uploadImage">
+            <image class="cs-av" :src="avatar || '../../../static/images/avatar.png'" mode="aspectFill"></image>
+            <image class="cs-cam" src="../../../static/svg/cs_camera.svg" mode="aspectFit"></image>
         </view>
-        <!-- <view class="shopName">[各種設定/店舗情報/店舗名]が反映される</view> -->
-        <view class="inpContent">
-            <view class="inpTitle">
-                ユーザー名
+        <view class="cs-card">
+            <view class="cs-fld">
+                <view class="cs-lab">ユーザー名</view>
+                <input class="cs-in" :class="{ on: fk }" v-model="name" placeholder="担当者を入力してください" placeholder-class="cs-ph"
+                    @focus="fk = true" @blur="fk = false" />
+                <view class="cs-note">お客様とのメッセージに表示される名前です</view>
             </view>
-            <view class="inp">
-                <u-input v-model="name" placeholder="担当者を入力してください"></u-input>
+        </view>
+        <view class="cs-h3">スタッフルーム</view>
+        <view class="cs-card">
+            <view class="cs-row">
+                <text class="cs-row-text">参加する</text>
+                <u-switch v-model="staffRoomJoin" activeColor="#33C75A" @change="saveMemberFlags"></u-switch>
+            </view>
+            <view class="cs-row">
+                <text class="cs-row-text">1対1チャットを許可</text>
+                <u-switch v-model="staffRoomDm" activeColor="#33C75A" @change="saveMemberFlags"></u-switch>
             </view>
         </view>
-        <view class="sectionTitle">スタッフルーム</view>
-        <view class="switchItem">
-            <view class="switchLabel">参加する</view>
-            <u-switch v-model="staffRoomJoin" activeColor="#33C75A" @change="saveMemberFlags"></u-switch>
-        </view>
-        <view class="switchItem">
-            <view class="switchLabel">1対1チャットを許可</view>
-            <u-switch v-model="staffRoomDm" activeColor="#33C75A" @change="saveMemberFlags"></u-switch>
-        </view>
-        <u-button class="btn" type="primary" @click="save">保存</u-button>
+        <view class="cs-save" hover-class="cs-hover" @click="save">保存する</view>
     </view>
 </template>
 <script>
@@ -42,6 +46,7 @@
                 avatar:"",
                 staffRoomJoin: true,
                 staffRoomDm: true,
+                fk: false // [カスタムエイド 2026-10-21] 入力中か
             }
         },
         created() {
@@ -200,5 +205,142 @@
     .switchLabel {
         font-size: 30rpx;
         color: #1D1D1F;
+    }
+
+    /* [カスタムエイド 2026-10-21] これまでの画面と同じ見た目 */
+    .container.cs-pg {
+        min-height: 100vh;
+        background: #F5F5F7;
+        padding: 0 24rpx calc(60rpx + env(safe-area-inset-bottom));
+        box-sizing: border-box;
+        color: #1D1D1F;
+        font-family: 'Hiragino Sans', sans-serif;
+    }
+
+    .cs-av-wrap {
+        position: relative;
+        width: 208rpx;
+        height: 208rpx;
+        margin: 40rpx auto 40rpx;
+    }
+
+    .cs-av {
+        width: 208rpx;
+        height: 208rpx;
+        border-radius: 50%;
+        background: #E5E5EA;
+    }
+
+    /* 右下のカメラ(押すと写真を変える) */
+    .cs-cam {
+        position: absolute;
+        right: -4rpx;
+        bottom: -4rpx;
+        width: 64rpx;
+        height: 64rpx;
+        border-radius: 50%;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 6rpx #F5F5F7;
+    }
+
+    .cs-h3 {
+        margin: 0 8rpx 16rpx;
+        font-size: 28rpx;
+        font-family: 'Hiragino Sans-W5', sans-serif;
+        color: #515154;
+    }
+
+    .cs-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 0 32rpx;
+        margin-bottom: 40rpx;
+    }
+
+    .cs-fld {
+        padding: 32rpx 0;
+    }
+
+    .cs-lab {
+        font-size: 26rpx;
+        font-weight: 500;
+        margin-bottom: 12rpx;
+    }
+
+    .cs-in {
+        width: 100%;
+        height: 88rpx;
+        padding: 0 28rpx;
+        border: 1px solid #D2D2D7;
+        border-radius: 24rpx;
+        font-size: 30rpx;
+        box-sizing: border-box;
+    }
+
+    .cs-in.on {
+        border-color: #1A73E8;
+        box-shadow: 0 0 0 6rpx rgba(26, 115, 232, 0.16);
+    }
+
+    .cs-ph {
+        color: #8A8A8E;
+    }
+
+    .cs-note {
+        margin-top: 12rpx;
+        font-size: 22rpx;
+        line-height: 1.6;
+        color: #6E6E73;
+    }
+
+    .cs-row {
+        display: flex;
+        align-items: center;
+        min-height: 104rpx;
+        padding: 16rpx 0;
+        border-bottom: 1px solid #E5E5EA;
+        box-sizing: border-box;
+    }
+
+    .cs-row:last-child {
+        border-bottom: 0;
+    }
+
+    .cs-row-text {
+        flex: 1;
+        min-width: 0;
+        margin-right: 20rpx;
+        font-size: 30rpx;
+    }
+
+    .cs-gray {
+        padding: 24rpx 28rpx;
+        margin-bottom: 40rpx;
+        border-radius: 24rpx;
+        background: #EBEBEF;
+        font-size: 24rpx;
+        line-height: 1.8;
+        color: #515154;
+    }
+
+    .cs-gray-t {
+        font-family: 'Hiragino Sans-W5', sans-serif;
+        color: #1D1D1F;
+        margin-bottom: 4rpx;
+    }
+
+    .cs-save {
+        height: 104rpx;
+        line-height: 104rpx;
+        border-radius: 28rpx;
+        background: #1A73E8;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 32rpx;
+        font-family: 'Hiragino Sans-W5', sans-serif;
+    }
+
+    .cs-hover {
+        opacity: 0.8;
     }
 </style>

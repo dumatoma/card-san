@@ -1,68 +1,56 @@
 <template>
     <view class="border_top">
-        <view class="content">
-            <view class="email" v-text="eMail"></view>
-            <view class="changeEmail" @click="changeMail">ID(登録メールアドレス)の変更</view>
-            <view class="info">
-                <view class="infoItem">
-                    <view class="infoLeft">
-                        契約番号
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="オーナー情報" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <!-- [カスタムエイド 2026-10-20] 見た目をこれまでの画面(白い角丸のまとまり・項目名は灰色・値は黒)と管理WEBのオーナー情報に合わせた -->
+        <view class="ow">
+            <view class="ow-card">
+                <view class="ow-id">
+                    <view class="ow-id-left">
+                        <view class="ow-cap">ID(登録メールアドレス)</view>
+                        <view class="ow-mail">{{eMail}}</view>
                     </view>
-                    <view class="infoRight" v-text="qyNum"></view>
+                    <view class="ow-pill" hover-class="ow-hover" @click="changeMail">変更</view>
                 </view>
-
-                <view class="infoItem">
-                    <view class="infoLeft">
-                        氏名
-                    </view>
-                    <view class="infoRight" v-text="name"></view>
-                </view>
-
-                <view class="infoItem">
-                    <view class="infoLeft">
-                        法人名
-                    </view>
-                    <view class="infoRight" v-text="frname"></view>
-                </view>
-
-                <view class="infoItem">
-                    <view class="infoLeft">
-                        店舗名
-                    </view>
-                    <view class="infoRight" v-text="shopName"></view>
-                </view>
-
-                <view class="infoItem">
-                    <view class="infoLeft">
-                        電話番号
-                    </view>
-                    <view class="infoRight" v-text="phone"></view>
-                </view>
-
-                <view class="infoItem">
-                    <view class="infoLeft">
-                        郵便番号
-                    </view>
-                    <view class="infoRight" v-text="zip"></view>
-                </view>
-
-                <view class="infoItem">
-                    <view class="infoLeft">
-                        住所
-                    </view>
-                    <view class="infoRight">
-                        <view v-text="province"></view>
-                        <view v-text="address1"></view>
-                        <view v-text="address2"></view>
-                    </view>
-                </view>
-
-                <view class="edit" @click="toEdit">
-                    編集する
+                <view class="ow-row ow-row-top">
+                    <view class="ow-cap">契約番号</view>
+                    <view class="ow-num">{{qyNum || '-'}}</view>
                 </view>
             </view>
-        </view>
 
+            <view class="ow-card">
+                <view class="ow-item">
+                    <view class="ow-label">氏名</view>
+                    <view class="ow-val">{{name || '-'}}</view>
+                </view>
+                <view class="ow-item">
+                    <view class="ow-label">法人名</view>
+                    <view class="ow-val" :class="{ empty: !frname }">{{frname || '未登録'}}</view>
+                </view>
+                <view class="ow-item">
+                    <view class="ow-label">店舗名</view>
+                    <view class="ow-val">{{shopName || '-'}}</view>
+                </view>
+                <view class="ow-item">
+                    <view class="ow-label">電話番号</view>
+                    <view class="ow-val">{{phone || '-'}}</view>
+                </view>
+                <view class="ow-item">
+                    <view class="ow-label">郵便番号</view>
+                    <view class="ow-val">{{zip || '-'}}</view>
+                </view>
+                <view class="ow-item">
+                    <view class="ow-label">住所</view>
+                    <view class="ow-val">
+                        <view>{{province}}</view>
+                        <view>{{address1}}</view>
+                        <view v-if="address2">{{address2}}</view>
+                    </view>
+                </view>
+            </view>
+
+            <view class="ow-btn" hover-class="ow-btn-hover" @click="toEdit">編集する</view>
+        </view>
     </view>
 </template>
 
@@ -129,57 +117,120 @@
 </script>
 
 <style lang="scss">
-    .content {
+    /* [カスタムエイド 2026-10-20] これまでの画面と同じ見た目 */
+    .ow {
+        min-height: 100vh;
+        background: #F5F5F7;
+        padding: 32rpx 24rpx calc(80rpx + env(safe-area-inset-bottom));
         box-sizing: border-box;
-        padding: 100upx 40upx;
-
-        .edit {
-            font-size: 32upx;
-            font-family: Hiragino Sans-W5, Hiragino Sans;
-            font-weight: normal;
-            color: #1A73E8;
-            text-align: right;
-            margin-top: 100upx;
-        }
-
-        .email {
-            font-size: 28upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-        }
-
-        .changeEmail {
-            font-size: 20upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #1A73E8;
-            margin-top: 40upx;
-            box-sizing: border-box;
-            padding-left: 40upx;
-            margin-bottom: 100upx;
-        }
+        color: #1D1D1F;
+        font-family: 'Hiragino Sans', sans-serif;
     }
 
-    .infoItem {
+    .ow-hover {
+        opacity: 0.6;
+    }
+
+    .ow-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 8rpx 32rpx;
+        margin-bottom: 32rpx;
+    }
+
+    .ow-id {
         display: flex;
-        margin-bottom: 32upx;
+        align-items: center;
+        padding: 24rpx 0;
+    }
 
-        .infoLeft {
-            width: 154upx;
-            font-size: 28upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #707070;
-            margin-right: 20upx;
-            text-align: center;
-        }
+    .ow-id-left {
+        flex: 1;
+        min-width: 0;
+        margin-right: 20rpx;
+    }
 
-        .infoRight {
-            font-size: 28upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-        }
+    .ow-cap {
+        font-size: 24rpx;
+        color: #6E6E73;
+        margin-bottom: 6rpx;
+    }
+
+    .ow-mail {
+        font-size: 30rpx;
+        font-weight: 500;
+        word-break: break-all;
+    }
+
+    .ow-pill {
+        flex-shrink: 0;
+        height: 68rpx;
+        line-height: 66rpx;
+        padding: 0 28rpx;
+        border: 1px solid #1A73E8;
+        border-radius: 34rpx;
+        color: #1A73E8;
+        font-size: 26rpx;
+        font-weight: 500;
+        box-sizing: border-box;
+    }
+
+    .ow-row {
+        padding: 24rpx 0;
+    }
+
+    .ow-row-top {
+        border-top: 1px solid #E5E5EA;
+    }
+
+    .ow-num {
+        font-size: 30rpx;
+        font-weight: 500;
+    }
+
+    .ow-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 28rpx 0;
+        border-bottom: 1px solid #E5E5EA;
+    }
+
+    .ow-item:last-child {
+        border-bottom: 0;
+    }
+
+    .ow-label {
+        width: 160rpx;
+        flex-shrink: 0;
+        font-size: 26rpx;
+        line-height: 1.6;
+        color: #6E6E73;
+    }
+
+    .ow-val {
+        flex: 1;
+        min-width: 0;
+        font-size: 30rpx;
+        line-height: 1.6;
+        word-break: break-all;
+    }
+
+    .ow-val.empty {
+        color: #AEAEB2;
+    }
+
+    .ow-btn {
+        height: 104rpx;
+        line-height: 104rpx;
+        border-radius: 28rpx;
+        background: #1A73E8;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 32rpx;
+        font-weight: 700;
+    }
+
+    .ow-btn-hover {
+        opacity: 0.8;
     }
 </style>

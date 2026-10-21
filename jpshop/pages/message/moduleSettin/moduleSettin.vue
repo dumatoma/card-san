@@ -1,5 +1,7 @@
 <template>
     <view>
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar :title="navTitle" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <view class="content">
             <view class="ftitle">
                 テンプレートの内容を入力してください。
@@ -40,6 +42,8 @@
     export default {
         data() {
             return {
+                navTitle: '', // [カスタムエイド 2026-10-20] 見出しの文字
+
                 val1:"",
                 val2:"",
                 type:""
@@ -52,13 +56,9 @@
                 backgroundColor:"#FBFBFD"
             })
             if(options.type == 1){
-                uni.setNavigationBarTitle({
-                    title:"メッセージテンプレート①"
-                })
+                this.navTitle = "メッセージテンプレート①" // [カスタムエイド 2026-10-20]
             }else{
-                uni.setNavigationBarTitle({
-                    title:"メッセージテンプレート②"
-                })
+                this.navTitle = "メッセージテンプレート②" // [カスタムエイド 2026-10-20]
             }
             
             getShopInfo().then((res) => {

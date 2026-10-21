@@ -1,42 +1,29 @@
 <template>
     <view class="contain">
-        <view class="topUser">
-            <text v-text="query.name"></text> のご利用中のカード
-        </view>
-        <view class="cards">
-            <view class="cardItem" v-for="(item,index) in array" @click="change(item)"
-                :style="item.checked? 'background:rgba(143,168,248,0.1)' : ''">
-                <view class="itemLeft">
-                    <view class="unselect" v-if="!item.checked"></view>
-                    <view class="selected" v-if="item.checked">
-                        <view class="fill"></view>
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="登録カード一覧" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <!-- [カスタムエイド 2026-10-20] メンバーズカードの一覧(設定 > メンバーズカード)と同じ見た目に。ここでは「選ぶ」だけ(作成・編集・削除はしない) -->
+        <view class="cs">
+            <view class="cs-note">
+                <text class="cs-bold">{{query.name}}</text> さんが使うカードを選んでください。選び直すと、今のカードのスタンプ数・ポイント数はリセットされます。
+            </view>
+            <view class="ml-empty" v-if="loaded && !array.length">登録されたカードはありません</view>
+            <view class="ml-card" v-for="item in array" :key="item.id" :class="{ def: item.checked }" hover-class="ml-hover" @click="!item.checked && change(item)">
+                <view class="ml-top">
+                    <image class="ml-thumb" :src="item.image" mode="aspectFill"></image>
+                    <view class="ml-text">
+                        <view class="ml-tags">
+                            <text class="ml-tag" :class="'t' + item.type">{{typeName(item.type)}}</text>
+                            <text class="ml-tag ml-tag-def" v-if="item.checked">ご利用中</text>
+                        </view>
+                        <text class="ml-name">{{item.name}}</text>
+                        <text class="ml-meta" :class="{ red: item.valid_text == '有効期限切れ' }">{{meta(item)}}</text>
+                        <view class="ml-frame" v-if="item.type != 3 && (item.background_color || item.frame_image)">
+                            <text>枠</text>
+                            <view class="ml-frame-chip" :style="frameChip(item)"></view>
+                        </view>
                     </view>
-                </view>
-                <view class="itemRight">
-                    <view class="right1" v-text="item.name"></view>
-                    <view class="right2" v-if="item.type != 3">
-                        スタンプ数 : {{item.count}}個
-                    </view>
-                    <view class="right2" v-if="item.type == 3 && item.is_point == 1">
-                        ポイント数 : {{item.amount}}円で{{item.point}}ポイント
-                    </view>
-                    <view class="right2" v-if="item.type == 3 && item.is_point == 0">
-                        ポイント数 : -
-                    </view>
-                    <view class="right3" :style="item.valid_text == '有効期限切れ'? 'color:#D93025 !important' : '' " v-if="item.valid_type != 1">
-                        有効期限：{{item.valid_text}}
-                    </view>
-                    <view class="right3" :style="item.valid_text == '有効期限切れ'? 'color:#D93025 !important' : '' " v-else>
-                        有効期限：{{item.valid_day> 200? '発行から'+(item.valid_day / 365) + "年" : '発行から'+  item.valid_day  + "日"}}
-                    </view>
-                    <view class="right4">
-                        <text>カード背景色</text>
-                        <view class="sq" v-if="item.type != 3" :style="`background:${item.background_color}`"></view>
-                        <view v-if="item.type == 3">:-</view>
-                    </view>
-                    <view class="right5">
-                        <image :src="item.image" mode="aspectFill"></image>
-                    </view>
+                    <view class="cs-radio" :class="{ on: item.checked }"><view class="cs-radio-in"></view></view>
                 </view>
             </view>
         </view>
@@ -58,7 +45,8 @@
                 query:{},
                 show:false,
                 config:{},
-                delInfo:{}
+                delInfo:{},
+                loaded: false // [カスタムエイド 2026-10-20]
             }
         },
         created() {},
@@ -69,9 +57,36 @@
             that.getList()
         },
         methods: {
+            // [カスタムエイド 2026-10-20] カードの種類の名前・説明・枠(メンバーズカードの一覧と同じ)
+            typeName(t) {
+                return t == 1 ? 'スタンプカードA' : t == 2 ? 'スタンプカードB' : 'ポイントカード'
+            },
+            meta(item) {
+                const a = []
+                if (item.type == 3) {
+                    a.push(item.is_point == 1 ? item.amount + '円で' + item.point + 'ポイント' : 'ポイントなし')
+                } else {
+                    a.push('スタンプ' + item.count + '個')
+                }
+                if (item.valid_text == '有効期限切れ') {
+                    a.push('有効期限切れ')
+                } else if (item.valid_type == 1) {
+                    a.push('有効期限 ' + (item.valid_day > 300 ? '発行から' + (item.valid_day / 365) + '年' : '発行から' + item.valid_day + '日'))
+                } else {
+                    a.push('有効期限 ' + (item.valid_text || 'なし'))
+                }
+                return a.join('・')
+            },
+            frameChip(item) {
+                if (item.frame_image) {
+                    return 'background-image: url(' + item.frame_image + '); background-size: cover; background-position: center;'
+                }
+                return 'background: ' + item.background_color + ';'
+            },
             getList(){
                 let that = this 
                 getCardList(0).then((res) => {
+                    that.loaded = true // [カスタムエイド 2026-10-20]
                     if(res.code == 200){
                         res.data.cards.forEach((val,index) => {
                             if(val.id == that.query.id){
@@ -136,118 +151,170 @@
 </script>
 
 <style lang="scss">
-    .topUser {
+    /* [カスタムエイド 2026-10-20] メンバーズカードの一覧と同じ見た目 */
+    .contain {
+        min-height: 100vh;
+        background: #F5F5F7;
+    }
+
+    .cs {
+        padding: 32rpx 24rpx calc(80rpx + env(safe-area-inset-bottom));
+        color: #1D1D1F;
+        font-family: 'Hiragino Sans', sans-serif;
+    }
+
+    .cs-note {
+        padding: 20rpx 24rpx;
+        margin-bottom: 24rpx;
+        border-radius: 20rpx;
+        background: #EAF2FE;
+        font-size: 24rpx;
+        line-height: 1.7;
+        color: #3A3A3C;
+    }
+
+    .cs-bold {
+        font-weight: 700;
+    }
+
+    .cs-radio {
+        width: 44rpx;
+        height: 44rpx;
+        flex-shrink: 0;
+        align-self: center;
+        margin-left: 16rpx;
+        border: 2px solid #C7C7CC;
+        border-radius: 50%;
         box-sizing: border-box;
-        padding: 80upx 40upx 40upx;
-        font-size: 32upx;
-        font-family: Hiragino Sans-W3, Hiragino Sans;
-        font-weight: normal;
-        color: #1D1D1F;
-        box-shadow: 0px 0px 10upx 2upx rgba(0, 0, 0, 0.16);
-        border-top: 2upx solid #d2d2d7;
-
-        text {
-            font-weight: bold;
-        }
-    }
-
-    .right1 {
-        font-size: 32upx;
-        font-family: Hiragino Sans-W6, Hiragino Sans;
-        color: #1D1D1F;
-        font-weight: bold;
-        margin-bottom: 20upx;
-    }
-
-    .right2 {
-        font-size: 32upx;
-        font-family: Hiragino Sans-W6, Hiragino Sans;
-        font-weight: normal;
-        color: #1D1D1F;
-        margin-bottom: 20upx;
-    }
-
-    .right3 {
-        font-size: 32upx;
-        font-family: Hiragino Sans-W6, Hiragino Sans;
-        font-weight: normal;
-        color: #1D1D1F;
-        margin-bottom: 20upx;
-    }
-
-    .right4 {
         display: flex;
         align-items: center;
-        font-size: 32upx;
-        font-family: Hiragino Sans-W6, Hiragino Sans;
-        font-weight: normal;
-        color: #1D1D1F;
-        margin-bottom: 40upx;
-
-        .sq {
-            width: 200upx;
-            height: 40upx;
-            background: #53B1AF;
-            box-shadow: 0px 0px 6upx 2upx rgba(0, 0, 0, 0.16);
-            border-radius: 8upx;
-            margin-left: 20upx;
-        }
+        justify-content: center;
     }
 
-    .right5 {
-        width: 550upx;
-        height: 328upx;
-        background: #FFFFFF;
-        box-shadow: 0px 0px 12upx 2upx rgba(0, 0, 0, 0.16);
-
-        image {
-            width: 100%;
-            height: 100%;
-        }
-    }
-
-    .cardItem {
-        display: flex;
-        box-sizing: border-box;
-        padding: 40upx 40upx 0;
-        padding-right: 0;
-    }
-
-    .itemLeft {
-        margin-right: 24upx;
-        flex-shrink: 0;
-    }
-
-    .itemRight {
-        flex: 1;
-        border-bottom: 2upx solid #D2D2D7;
-        padding-bottom: 80upx;
-    }
-
-    .unselect {
-        width: 40upx;
-        height: 40upx;
-        background: #FFFFFF;
-        opacity: 1;
-        box-sizing: border-box;
-        border: 2upx solid #707070;
+    .cs-radio-in {
+        width: 20rpx;
+        height: 20rpx;
         border-radius: 50%;
     }
 
-    .selected {
-        width: 40upx;
-        height: 40upx;
-        background: #FFFFFF;
-        border: 2upx solid #1A73E8;
-        border-radius: 50%;
-        box-sizing: border-box;
-        padding: 6upx;
+    .cs-radio.on {
+        border-color: #1A73E8;
 
-        .fill {
-            width: 100%;
-            height: 100%;
+        .cs-radio-in {
             background: #1A73E8;
-            border-radius: 50%;
         }
+    }
+
+    .ml-empty {
+        padding: 80rpx 32rpx;
+        text-align: center;
+        font-size: 28rpx;
+        color: #6E6E73;
+        background: #FFFFFF;
+        border-radius: 32rpx;
+    }
+
+    .ml-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 28rpx;
+        margin-bottom: 24rpx;
+    }
+
+    .ml-card.def {
+        box-shadow: 0 0 0 4rpx #1A73E8;
+    }
+
+    .ml-top {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .ml-thumb {
+        width: 192rpx;
+        height: 116rpx;
+        flex-shrink: 0;
+        border-radius: 16rpx;
+        background: #E5E5EA;
+        margin-right: 24rpx;
+    }
+
+    .ml-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ml-tags {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 8rpx;
+    }
+
+    .ml-tag {
+        font-size: 22rpx;
+        font-weight: 700;
+        padding: 4rpx 16rpx;
+        border-radius: 18rpx;
+        margin: 0 12rpx 8rpx 0;
+    }
+
+    .ml-tag.t1 {
+        background: #E6F4EA;
+        color: #137333;
+    }
+
+    .ml-tag.t2 {
+        background: #E8F0FE;
+        color: #174EA6;
+    }
+
+    .ml-tag.t3 {
+        background: #FEF3E0;
+        color: #A34A00;
+    }
+
+    .ml-tag-def {
+        background: #1A73E8;
+        color: #FFFFFF;
+    }
+
+    .ml-name {
+        display: block;
+        font-size: 30rpx;
+        font-weight: 700;
+        line-height: 1.4;
+        margin-bottom: 8rpx;
+        word-break: break-all;
+    }
+
+    .ml-meta {
+        display: block;
+        font-size: 24rpx;
+        color: #515154;
+        line-height: 1.6;
+    }
+
+    .ml-meta.red {
+        color: #D93025;
+    }
+
+    .ml-frame {
+        display: flex;
+        align-items: center;
+        font-size: 24rpx;
+        color: #515154;
+        margin-top: 8rpx;
+    }
+
+    .ml-frame-chip {
+        width: 80rpx;
+        height: 28rpx;
+        border-radius: 8rpx;
+        margin-left: 12rpx;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    .ml-hover {
+        opacity: 0.6;
     }
 </style>

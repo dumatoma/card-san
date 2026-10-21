@@ -1,57 +1,41 @@
 <template>
-    <view>
-        <view class="notices">
-            <view class="n1">
-                カード会員登録の際に、お客さんに入力していただく情報です。
+    <!-- [カスタムエイド 2026-10-20] 会員登録情報の見た目を店舗情報などと合わせた
+         ・氏名(いつも必須)は黒い文字に。オンにした項目は文字を黒く、オフの項目は今までの薄い色
+         ・見出しは共通の見出し(20px 太字)に。説明と項目を白いまとまりに -->
+    <view class="vr">
+        <u-navbar title="会員登録情報" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <view class="vr-body">
+            <view class="vr-info">
+                <text class="vr-info-1">カード会員登録のときに、お客様に入力していただく項目です。</text>
+                <text class="vr-info-2">入力を必須にする項目だけ、オンにしてください。</text>
             </view>
-            <view class="n2">
-                必須項目のみチェックを入れてください。
-            </view>
-        </view>
-
-        <view class="settingContent">
-            <view class="settingItem">
-                <view class="settingName" style="display: flex;align-items: center;">
-                   <text style="color: red;font-size: 30rpx;">※</text> <text>氏名</text> 
+            <view class="vr-card">
+                <view class="vr-row">
+                    <view class="vr-name on"><text class="vr-req">※</text>氏名</view>
+                    <text class="vr-badge">いつも必須</text>
                 </view>
-               <!-- <u-switch v-model="value" inactiveColor="#EAEAEA" :disabled="true" activeColor="#34C759" @change="handleChange('name')">
-                </u-switch> -->
-            </view>
-            <view class="settingItem">
-                <view class="settingName">
-                    カナ
+                <view class="vr-row">
+                    <view class="vr-name" :class="{ on: value1 }">カナ</view>
+                    <u-switch v-model="value1" inactiveColor="#E5E5EA" activeColor="#34C759" @change="handleChange('pronunciation')"></u-switch>
                 </view>
-                <u-switch v-model="value1" inactiveColor="#EAEAEA" activeColor="#34C759"
-                    @change="handleChange('pronunciation')"></u-switch>
-            </view>
-            <view class="settingItem">
-                <view class="settingName">
-                    電話番号
+                <view class="vr-row">
+                    <view class="vr-name" :class="{ on: value2 }">電話番号</view>
+                    <u-switch v-model="value2" inactiveColor="#E5E5EA" activeColor="#34C759" @change="handleChange('phone')"></u-switch>
                 </view>
-                <u-switch v-model="value2" inactiveColor="#EAEAEA" activeColor="#34C759"
-                    @change="handleChange('phone')"></u-switch>
-            </view>
-            <view class="settingItem">
-                <view class="settingName">
-                    性別
+                <view class="vr-row">
+                    <view class="vr-name" :class="{ on: value3 }">性別</view>
+                    <u-switch v-model="value3" inactiveColor="#E5E5EA" activeColor="#34C759" @change="handleChange('sex')"></u-switch>
                 </view>
-                <u-switch v-model="value3" inactiveColor="#EAEAEA" activeColor="#34C759" @change="handleChange('sex')">
-                </u-switch>
-            </view>
-            <view class="settingItem">
-                <view class="settingName">
-                    生年月日
+                <view class="vr-row">
+                    <view class="vr-name" :class="{ on: value4 }">生年月日</view>
+                    <u-switch v-model="value4" inactiveColor="#E5E5EA" activeColor="#34C759" @change="handleChange('birthday')"></u-switch>
                 </view>
-                <u-switch v-model="value4" inactiveColor="#EAEAEA" activeColor="#34C759"
-                    @change="handleChange('birthday')"></u-switch>
-            </view>
-            <view class="settingItem">
-                <view class="settingName">
-                    住所
+                <view class="vr-row">
+                    <view class="vr-name" :class="{ on: value5 }">住所</view>
+                    <u-switch v-model="value5" inactiveColor="#E5E5EA" activeColor="#34C759" @change="handleChange('address')"></u-switch>
                 </view>
-                <u-switch v-model="value5" inactiveColor="#EAEAEA" activeColor="#34C759"
-                    @change="handleChange('address')"></u-switch>
             </view>
+            <text class="vr-sub">オンにした項目は、お客様が登録するときに入力が必要になります。変えるとすぐに保存されます。</text>
         </view>
     </view>
 </template>
@@ -173,38 +157,89 @@
     }
 </script>
 
-<style lang="scss">
-    .settingItem {
+<style lang="scss" scoped>
+    .vr {
+        min-height: 100vh;
+        background: #F5F5F7;
+        font-family: 'Hiragino Sans', sans-serif;
+        color: #1D1D1F;
+    }
+
+    .vr-body {
+        padding: 32rpx 24rpx calc(80rpx + env(safe-area-inset-bottom));
+    }
+
+    .vr-info {
+        background: #EEF4FF;
+        border-radius: 24rpx;
+        padding: 28rpx 32rpx;
+        margin-bottom: 32rpx;
+    }
+
+    .vr-info-1 {
+        display: block;
+        font-size: 28rpx;
+        font-weight: 700;
+        line-height: 1.6;
+        margin-bottom: 8rpx;
+    }
+
+    .vr-info-2 {
+        display: block;
+        font-size: 28rpx;
+        font-weight: 700;
+        line-height: 1.6;
+        color: #1A73E8;
+    }
+
+    .vr-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 0 32rpx;
+        margin-bottom: 20rpx;
+    }
+
+    .vr-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-sizing: border-box;
-        padding: 30upx 40upx;
-        border-bottom: 2upx solid #d2d2d7;
-        color: #AAA;
+        min-height: 108rpx;
+        border-bottom: 1px solid #E5E5EA;
     }
 
-    .notices {
-        width: 100%;
-        background: #F5F5F7;
-        box-sizing: border-box;
-        padding: 80upx 70upx;
-        border-top: 2upx solid #d2d2d7;
-        border-bottom: 2upx solid #d2d2d7;
+    .vr-row:last-child {
+        border-bottom: 0;
+    }
 
-        .n1 {
-            font-size: 32upx;
-            font-family: Hiragino Sans-W5, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-            margin-bottom: 40upx;
-        }
+    .vr-name {
+        font-size: 30rpx;
+        color: #AAAAAA;
+    }
 
-        .n2 {
-            font-size: 32upx;
-            font-family: Hiragino Sans-W5, Hiragino Sans;
-            font-weight: normal;
-            color: #1A73E8;
-        }
+    .vr-name.on {
+        color: #1D1D1F;
+        font-weight: 500;
+    }
+
+    .vr-req {
+        color: #D93025;
+        margin-right: 4rpx;
+    }
+
+    .vr-badge {
+        font-size: 22rpx;
+        font-weight: 700;
+        color: #515154;
+        background: #F2F2F5;
+        border-radius: 18rpx;
+        padding: 4rpx 16rpx;
+    }
+
+    .vr-sub {
+        display: block;
+        padding: 0 8rpx;
+        font-size: 24rpx;
+        line-height: 1.6;
+        color: #6E6E73;
     }
 </style>

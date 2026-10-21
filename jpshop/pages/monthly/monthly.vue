@@ -1,5 +1,7 @@
 <template>
     <view>
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="月の来店数" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <calendar @onDayClick="selectDay" :businessArr="days" :restArr='rest' @monthChange="monthChange"></calendar>
         <view class="item bt" style="margin-top: 106upx;">
             <view class="item_left">

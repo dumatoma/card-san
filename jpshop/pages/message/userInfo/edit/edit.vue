@@ -1,5 +1,7 @@
 <template>
     <view class="container">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar :title="navTitle" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <view class="title" v-if="type == 1">
             予約確定時に送信されます
         </view>
@@ -93,6 +95,8 @@
     export default {
         data() {
             return {
+                navTitle: '予約確認', // [カスタムエイド 2026-10-20] 見出しの文字
+
                 eTitle: "【予約受付のお知らせ】",
                 name: "様",
                 edit1: "ご予約ありがとうございます。\n以下の通りご予約承りました。",
@@ -113,35 +117,27 @@
                 that.eTitle = '【予約受付のお知らせ】'
                 that.edit1 = 'ご予約ありがとうございます。 以下の通りご予約承りました。'
                 that.edit2 = 'キャンセルや来店時刻に遅れる場合は、必ずご連絡頂きますようお願いいたします。'
-                uni.setNavigationBarTitle({
-                    title:"予約確認"
-                })
+                this.navTitle = "予約確認" // [カスタムエイド 2026-10-20]
             }
             
             if (query.type == 2) {
                 that.eTitle = '【予約確認のお知らせ】'
                 that.edit1 = '明日ご来店日となりますので、お知らせいたします。'
                 that.edit2 = 'スタッフ一同、心よりご来店お待ちしております。'
-                uni.setNavigationBarTitle({
-                    title:"予約リマインダー"
-                })
+                this.navTitle = "予約リマインダー" // [カスタムエイド 2026-10-20]
             }
             
             if (query.type == 3) {
                 that.eTitle = '【予約キャンセルのお知らせ】'
                 that.edit1 = '以下内容のご予約のキャンセルを受理いたしました。'
                 that.edit2 = '内容のご確認をお願いいたします。'
-                uni.setNavigationBarTitle({
-                    title:"予約キャンセル"
-                })
+                this.navTitle = "予約キャンセル" // [カスタムエイド 2026-10-20]
             }
             
             if (query.type == 4) {
                 that.edit1 = 'この度は当店をご利用頂き、誠にありがとうございました。\n\n 今後も当店をよろしくお願い致します。'
                  that.edit2 = ''
-                uni.setNavigationBarTitle({
-                    title:"サンキューメッセージ"
-                })
+                this.navTitle = "サンキューメッセージ" // [カスタムエイド 2026-10-20]
                
             }
             
@@ -150,9 +146,7 @@
                 that.edit1 = 'ご予約の内容が変更になりましたのでお知らせします。\n\n変更内容のご確認お願いします。'
                 that.edit2 = ''
                 that.edit4 = "キャンセルや来店時刻に遅れる場合 は、直接店舗にご連絡頂きますよう お願いいたします。"
-                uni.setNavigationBarTitle({
-                    title:" 予約内容変更"
-                })
+                this.navTitle = " 予約内容変更" // [カスタムエイド 2026-10-20]
             }
             
             that.getInfo()

@@ -1,118 +1,80 @@
 <template>
     <view>
-        <view class="content">
-            <view class="aler bkblue" v-if="isexpire == true && vips.length == 1 && vips[0].cancel_time > 0">
-                <view class="ic">
-                     <image src="../../../static/svg/gt.svg" mode=""></image>
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="ご契約内容" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <!-- [カスタムエイド 2026-10-20] 見た目を管理WEB(スマホ・タブレット版)の「ご契約内容」に合わせた。処理(ボタンを押したときの動き)は今までと同じ -->
+        <view class="ct">
+            <!-- 契約期間終了(契約がない) -->
+            <view class="ct-alert red" v-if="isexpire == false">
+                <view class="ct-alert-title">ご契約期間終了のため、現在ご利用できません。</view>
+                <view class="ct-alert-text">お申し込みを再開することで、すぐにご利用ができます。</view>
+                <view class="ct-btn" hover-class="ct-hover" @click="tone">再開はこちら</view>
+            </view>
+            <!-- 解約手続き済み(終了日まで使える) -->
+            <view class="ct-alert" v-if="isexpire == true && vips[0].cancel_time > 0">
+                <view class="ct-alert-row">
+                    <view class="ct-i">!</view>
+                    <view class="ct-alert-text" v-if="vips[0].card_type == 1">ご契約は <text class="bd">{{vips[0].end_time}}</text> に終了します(解約手続き済み)。終了日までは、すべての機能をご利用いただけます。</view>
+                    <view class="ct-alert-text" v-else>ご契約は <text class="bd">{{vips[0].end_time}}</text> に終了します(解約手続き済み)。ご利用を継続するには、各端末の「設定」から手続きをお願いします。</view>
                 </view>
-                <view class="alerContent">
-                    現在のご契約は{{vips[0].end_time}}にキャンセルされます。
+                <view class="ct-btn" hover-class="ct-hover" v-if="vips[0].card_type == 1" @click="toResume">継続する</view>
+            </view>
+
+            <!-- ご契約 -->
+            <view class="ct-card">
+                <view class="ct-sec">ご契約</view>
+                <view class="ct-row">
+                    <view class="ct-row-left">
+                        <view class="ct-cap">ご利用中のプラン</view>
+                        <view class="ct-val">{{planName(isexpire == true ? vips[0].type : (vip || {}).type)}}</view>
+                    </view>
+                    <view class="ct-pill" hover-class="ct-hover" @click="changeT">プランを変更</view>
+                </view>
+                <view class="ct-row" v-if="vips[0].is_try != 1">
+                    <view class="ct-row-left">
+                        <view class="ct-cap">支払い周期</view>
+                        <view class="ct-val">{{(isexpire == true ? vips[0].month : (vip || {}).month) ? (isexpire == true ? vips[0].month : (vip || {}).month) + 'ヶ月' : '-'}}</view>
+                    </view>
+                    <view class="ct-pill" hover-class="ct-hover" @click="changeZ">周期を変更</view>
+                </view>
+                <view class="ct-row" v-if="isexpire == true && vips[0].is_try == 1">
+                    <view class="ct-row-left">
+                        <view class="ct-cap">無料お試し</view>
+                        <view class="ct-val">残り{{vips[0].end_day}}日</view>
+                    </view>
+                </view>
+                <view class="ct-row" v-if="vips[0].is_try != 1">
+                    <view class="ct-row-left">
+                        <view class="ct-cap">{{isexpire == true && vips[0].cancel_time > 0 ? '契約終了日' : '契約更新日'}}</view>
+                        <view class="ct-val">{{isexpire == true && vips[0].end_time ? vips[0].end_time : '-'}}</view>
+                    </view>
+                </view>
+                <view class="ct-box yellow" v-if="isexpire == true && vips.length == 2">
+                    次回更新日({{formatTime(vips[1].start_time).replace(' ', '')}})から「{{planName(vips[1].type)}}({{vips[1].month}}ヶ月)」に変更予定です。
+                </view>
+                <view class="ct-box blue" v-if="isexpire == true && vips[0].is_try == 1">
+                    <view class="bd">無料お試し期間中です</view>
+                    <view>お申し込みは、下の「お申し込みはこちら」から行えます。</view>
                 </view>
             </view>
-            <view class="aler" style="background-color: #d93025;" v-if="isexpire == false">
-                <view class="ic">
-                     <image src="../../../static/svg/gt.svg" mode=""></image>
+
+            <!-- お支払い方法 -->
+            <view class="ct-card">
+                <view class="ct-sec">お支払い方法</view>
+                <view class="ct-pay" v-if="isexpire == true && vips[0].is_try != 1">
+                    <view class="ct-pay-name">{{vips[0].card_type == 1 ? 'クレジットカード決済' : vips[0].card_type == 2 ? 'App Store 課金' : 'Google Play 課金'}}</view>
+                    <view class="ct-cardline" v-if="vips[0].card_type == 1 && card">
+                        <text class="ct-brand">{{card.brand_name}}</text>
+                        <text class="ct-last4">**** {{card.last4}}</text>
+                        <text class="ct-exp">有効期限 {{('0' + card.exp_month).slice(-2)}}/{{String(card.exp_year).slice(-2)}}</text>
+                    </view>
+                    <view class="ct-small" v-if="vips[0].card_type == 1">カードの変更は、Card-San管理ウェブサイトから行えます。</view>
                 </view>
-                <view class="alerContent">
-                    現在ご契約はキャンセルされています。再開するには、ページ下部の“再開する”を選択してください。
-                </view>
+                <view class="ct-pay ct-muted" v-else>{{isexpire == true && vips[0].is_try == 1 ? '無料お試し中のため、お支払い方法の登録はありません。' : '-'}}</view>
             </view>
-            <view class="c1 mb40">
-                <view class="citem bb">
-                    <view class="cTop" v-if="isexpire == true">
-                        ご利用中のプラン：<text class="bd"
-                            style="font-size: 32upx;">{{vips[0].type == 1?"ライト" : vips[0].type == 2?"スタンダード" : vips[0].type == 3?"プレミアム":''}}</text>
-                    </view>
-                    <view class="cTop" v-if="isexpire == false">
-                        ご利用中のプラン：<text class="bd"
-                            style="font-size: 32upx;">{{(vip||{}).type == 1?"ライト" : (vip||{}).type == 2?"スタンダード" : (vip||{}).type == 3?"プレミアム":''}}</text>
-                    </view>
-                    <view class="cBottom bl" @click="changeT">
-                        プランを変更
-                    </view>
-                </view>
-                <view class="citem bb" v-if="isexpire == true && vips[0].is_try == 1">
-                    <view class="cTop">
-                        現在、無料お試し中です。
-                    </view>
-                    <view class="cBottom">
-                        残り{{vips[0].end_day}}日
-                    </view>
-                </view>
-                <view class="citem bb" v-if=" vips[0].is_try != 1">
-                    <view class="cTop" v-if="isexpire == true">
-                        お支払い周期：<text class="bd">{{vips[0].month}}ヶ月</text>
-                    </view>
-                    <view class="cTop" v-else>
-                        お支払い周期：<text class="bd">{{(vip||{}).month}}ヶ月</text>
-                    </view>
-                    <view class="cBottom bl" @click="changeZ">
-                        お支払い周期を変更
-                    </view>
-                </view>
-                <view class="citem bb" v-if=" vips[0].is_try != 1">
-                    <view class="cTop" v-if=" isexpire == true && vips[0].end_time">
-                        契約更新日：{{vips[0].end_time}}
-                    </view>
-                    <view v-else>
-                        契約更新日：-
-                    </view>
-                </view>
-                <view class="citem bb" v-if="isexpire == true && vips[0].cancel_time > 0">
-                    <view class="cTop colorRed">
-                        現在、解約手続き中です。ご利用を継続するには各端末の「設定」から手続きをお願いします。
-                    </view>
-                </view>
-                <view class="citem" v-if="isexpire == true && vips.length == 2">
-                    <view class="cTop1 bd">
-                        新しいサブスクリプションの内容
-                    </view>
-                    <view class="cTop1">
-                        プラン：{{vips[1].type == 1?"ライト" : vips[1].type == 2?"スタンダード" : vips[1].type == 3?"プレミアム":''}}
-                    </view>
-                    <view class="cTop1">
-                        お支払い周期：{{vips[1].month}}ヶ月
-                    </view>
-                    <view class="cTop1">
-                        契約開始日：{{formatTime(vips[1].start_time)}}
-                    </view>
-                </view>
-            </view>
-            <view class="c1">
-                <view class="citem" v-if="isexpire == true">
-                    <view class="cTop">
-                        お支払い方法
-                    </view>
-                    <view class="cBottom" style="text-align: left !important;"
-                        v-text="vips[0].is_try == 1 ? '-' : vips[0].card_type == 1 ? 'クレジットカード' : vips[0].card_type == 2 ? 'App Store 課金' : 'Google Play 課金'"></view>
-                    <view class="cardLine" v-if="vips[0].card_type == 1 && card">
-                        {{card.brand_name}}　**** {{card.last4}}　（有効期限 {{('0' + card.exp_month).slice(-2)}}/{{String(card.exp_year).slice(-2)}}）
-                    </view>
-                </view>
-                <view class="citem" v-else>
-                    <view class="cTop">
-                        お支払い方法
-                    </view>
-                    <view class="cBottom" style="text-align: left !important;">-</view>
-                </view>
-            </view>
-            <!-- <view class="tip">
-                アプリ内課金以外のクレジットカード決済の選択、更にお得な1 年契約の設定は、Card-Sanのウェブサイトでのみ行うことができます。
-            </view> -->
-            <view class="btn" hover-class="cl" v-if="vips.length != 0 && vips[0].is_try == 1" @click="toc">
-                お申し込みはこちら
-            </view>
-            <view class="btn" hover-class="cl" v-if="isexpire == false" @click="tone">
-                再開する
-            </view>
-            <!-- 解約予約中（クレジットカード）：「継続する」で解約取消・新規課金なし -->
-            <view class="btn" hover-class="cl" v-if="isexpire == true && vips[0].cancel_time > 0 && vips[0].card_type == 1"
-                @click="toResume">
-                継続する
-            </view>
-            <view class="jie" hover-class="cj" v-if="isexpire == true && vips[0].cancel_time == 0 && vips[0].is_try == 0" @click="toff">
-                解約手続き
-            </view>
+
+            <view class="ct-btn ct-mt" hover-class="ct-hover" v-if="vips.length != 0 && vips[0].is_try == 1" @click="toc">お申し込みはこちら</view>
+            <view class="ct-link-red" hover-class="ct-hover" v-if="isexpire == true && vips[0].cancel_time == 0 && vips[0].is_try == 0" @click="toff">解約手続き</view>
         </view>
         <u-popup :show="show" @close="show = false">
             <subscribe @btmnclick="changeS" :title="title" :content="content"></subscribe>
@@ -182,6 +144,10 @@
             }).catch(() => {})
         },
         methods: {
+            // [カスタムエイド 2026-10-20] プランの名前
+            planName(t) {
+                return t == 1 ? 'ライト' : t == 2 ? 'スタンダード' : t == 3 ? 'プレミアム' : '-'
+            },
             toResume() {
                 let that = this
                 uni.showModal({
@@ -362,275 +328,225 @@
 </script>
 
 <style lang="scss">
-    .cardLine {
-        font-size: 26upx;
-        color: #1D1D1F;
-        margin-top: 10upx;
-    }
-    .ic{
-        width: 60upx;
-        height: 60upx;
-        flex-shrink: 0;
-        image{
-            width: 60upx;
-            height: 60upx;
-        }
-    }
-    
-    .bkblue {
-        background: rgba(26, 115, 232, 0.5) !important;
-    }
-
-    .colorRed {
-        color: #D93025 !important;
-        margin-bottom: 0 !important;
-    }
-
-    .cl {
-        opacity: 0.6 !important;
-    }
-
-    .aler {
-        box-sizing: border-box;
-        padding: 40upx 32upx;
-        display: flex;
-        align-items: center;
-        margin-bottom: 40upx;
-
-        .alerContent {
-            font-size: 32rpx;
-            font-weight: bold;
-            color: #1D1D1F;
-            margin-left: 8upx;
-        }
-    }
-
-    .cj {
-        background: rgba(29, 29, 31, .1) !important;
-    }
-
-    .jie {
-        height: 80rpx;
-        background: #FFFFFF;
-        border: 2rpx solid #aaa;
-        text-align: center;
-        line-height: 80upx;
-        font-size: 32rpx;
-        color: #aaa;
-        margin-top: 80upx;
-        border-radius: 20upx;
-    }
-
-    .btn {
-        width: 100%;
-        background: #105B80;
-        border-radius: 56rpx;
-        height: 112upx;
-        text-align: center;
-        line-height: 112upx;
-        font-size: 40rpx;
-        font-weight: bold;
-        color: #FFFFFF;
-        margin-top: 330upx;
-        margin-bottom: 60upx;
-    }
-
-    .content {
-        background: #f5f5f7;
-        box-sizing: border-box;
-        padding: 40upx 32upx;
+    /* [カスタムエイド 2026-10-20] 管理WEB(スマホ・タブレット版)と同じ見た目 */
+    .ct {
         min-height: 100vh;
-    }
-
-    .tip {
-        font-size: 28rpx;
-        font-family: Noto Sans Kannada, Noto Sans Kannada;
-        font-weight: 400;
+        background: #F5F5F7;
+        padding: 32rpx 32rpx calc(80rpx + env(safe-area-inset-bottom));
+        box-sizing: border-box;
         color: #1D1D1F;
-        margin-top: 20upx;
-    }
-
-    .c1 {
-        width: 100%;
-        background: #FFFFFF;
-        box-shadow: 0rpx 0rpx 10rpx 2rpx rgba(0, 0, 0, 0.16);
-        border: 2rpx solid #D2D2D7;
-        box-sizing: border-box;
-        padding: 0 32upx;
-    }
-
-    .mb40 {
-        margin-bottom: 40upx;
-    }
-
-    .citem {
-        box-sizing: border-box;
-        padding: 42upx 0;
-        font-size: 28rpx;
-    }
-
-    .bl {
-        color: #1A73E8;
-    }
-
-    .bb {
-        border-bottom: 2upx solid #d2d2d7;
-    }
-
-    .cTop {
-        color: #1d1d1f;
-        margin-bottom: 42upx;
-    }
-
-    .cTop1 {
-        color: #1d1d1f;
-        margin-bottom: 20upx;
-    }
-
-    .cBottom {
-        text-align: right;
+        font-family: 'Hiragino Sans', sans-serif;
     }
 
     .bd {
-        font-weight: bold;
+        font-weight: 700;
     }
 
-    // .btips{
-    //     background: rgba(26,115,232,0.1);
-    //     border-radius: 20upx;
-    //     opacity: 1;
-    //     box-sizing: border-box;
-    //     padding: 36upx;
-    //     font-size: 24upx;
-    //     font-family: Hiragino Sans-W3, Hiragino Sans;
-    //     font-weight: normal;
-    //     color: #1A73E8;
-    //     margin-top: 60upx;
-    //     margin-bottom: 120upx;
-    // }
+    .ct-hover {
+        opacity: 0.6;
+    }
 
-    // .list_item {
-    //     display: flex;
-    //     box-sizing: border-box;
-    //     padding: 40upx 32upx;
-    //     // border-bottom: 2upx solid #D2D2D7;
-    //     align-items: center;
-    //     font-size: 26upx;
+    .ct-card {
+        background: #FFFFFF;
+        border-radius: 28rpx;
+        overflow: hidden;
+        margin-bottom: 32rpx;
+    }
 
-    //     .item_list{
-    //         border-bottom: 2upx solid #D2D2D7;
-    //     }
+    .ct-sec {
+        padding: 28rpx 32rpx 12rpx;
+        font-size: 26rpx;
+        font-weight: 500;
+        color: #6E6E73;
+    }
 
-    //     .selectTime {
-    //         width: 15%;
-    //     }
+    .ct-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20rpx 32rpx;
+        border-bottom: 1px solid #F0F0F2;
+    }
 
-    //     .selectPrice {
-    //         width: 45%;
-    //     }
+    .ct-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 32rpx;
+    }
 
-    //     .selectDisccount {
-    //         flex: 1;
-    //         color: #D93025 !important;
-    //     }
-    // }
-    // .selectContent {
-    //     width: 32upx;
-    //     height: 32upx;
-    //     box-sizing: border-box;
-    //     padding: 6upx;
-    //     border: 2upx solid #1A73E8;
-    //     border-radius: 50%;
-    //     margin-right: 10upx;
+    .ct-row-left {
+        flex: 1;
+        min-width: 0;
+        margin-right: 24rpx;
+    }
 
-    //     .selectInner {
-    //         width: 100%;
-    //         height: 100%;
-    //         background: #1A73E8;
-    //         border-radius: 50%;
-    //     }
-    // }
+    .ct-cap {
+        font-size: 24rpx;
+        color: #6E6E73;
+        margin-bottom: 4rpx;
+    }
 
-    // .contain{
-    //     background: #fff;
-    //     box-sizing: border-box;
-    //     padding: 100upx 66upx;
+    .ct-val {
+        font-size: 34rpx;
+        font-weight: 700;
+    }
 
-    //     .btitle{
-    //         height: 80upx;
-    //         background: rgba(26,115,232,0.1);
-    //         text-align: center;
-    //         line-height: 80upx;
-    //         font-size: 32upx;
-    //         font-family: Hiragino Sans-W5, Hiragino Sans;
-    //         font-weight: normal;
-    //         color: #1D1D1F;
-    //     }
-    // }
+    .ct-pill {
+        flex-shrink: 0;
+        height: 80rpx;
+        line-height: 78rpx;
+        padding: 0 28rpx;
+        border: 1px solid #1A73E8;
+        border-radius: 40rpx;
+        color: #1A73E8;
+        font-size: 26rpx;
+        font-weight: 500;
+        box-sizing: border-box;
+    }
 
-    // .detail {
-    //     display: flex;
-    //     align-items: center;
-    //     font-size: 28upx;
-    //     font-family: Hiragino Sans-W5, Hiragino Sans;
-    //     font-weight: normal;
-    //     color: #1D1D1F;
-    //     line-height: 48upx;
-    //     padding-bottom: 40upx;
+    .ct-box {
+        margin: 0 32rpx 32rpx;
+        padding: 20rpx 24rpx;
+        border-radius: 20rpx;
+        font-size: 24rpx;
+        line-height: 1.7;
+    }
 
-    //     .detail_left {
-    //         font-size: 28upx;
-    //         font-family: Hiragino Sans-W3, Hiragino Sans;
-    //         font-weight: normal;
-    //         color: #1D1D1F;
-    //     }
-    // }
+    .ct-box.yellow {
+        background: #FFF8E1;
+        color: #5F4B00;
+    }
 
-    // .title {
-    //     height: 112upx;
-    //     background: #F5F5F7;
-    //     border-radius: 32upx;
-    //     text-align: center;
-    //     line-height: 112upx;
-    //     font-size: 40upx;
-    //     font-family: Hiragino Sans-W5, Hiragino Sans;
-    //     font-weight: normal;
-    //     color: #1D1D1F;
-    //     position: sticky;
-    //     top: 0;
-    //     left: 0;
-    //     border-bottom: #d2d2d7;
+    .ct-box.blue {
+        background: #E8F0FE;
+        color: #174EA6;
+    }
 
-    //     .closeMask {
-    //         width: 60upx; 
-    //         height: 60upx;
-    //         position: absolute;
-    //         left: 32upx;
-    //         top: 50%;
-    //         transform: translateY(-50%);
-    //     }
-    // }
+    .ct-pay {
+        padding: 16rpx 32rpx 32rpx;
+    }
 
-    // .container {
-    //     border-top: 2upx solid #d2d2d7;
-    //     box-sizing: border-box;
-    //     padding: 0 32upx;
+    .ct-pay-name {
+        font-size: 30rpx;
+        font-weight: 500;
+        margin-bottom: 20rpx;
+    }
 
-    //     .item {
-    //         border-bottom: 2upx solid #d2d2d7;
-    //         box-sizing: border-box;
-    //         padding: 82upx 42upx;
+    .ct-muted {
+        font-size: 28rpx;
+        color: #515154;
+    }
 
-    //         .changes {
-    //             text-align: right;
-    //             font-size: 28upx;
-    //             font-family: Hiragino Sans-W5, Hiragino Sans;
-    //             font-weight: normal;
-    //             color: #1A73E8;
-    //         }
+    .ct-cardline {
+        display: flex;
+        align-items: center;
+        padding: 24rpx;
+        border: 1px solid #E5E5EA;
+        border-radius: 20rpx;
+        margin-bottom: 16rpx;
+    }
 
+    .ct-brand {
+        padding: 4rpx 16rpx;
+        border-radius: 8rpx;
+        background: #1D1D1F;
+        color: #FFFFFF;
+        font-size: 22rpx;
+        font-weight: 700;
+        margin-right: 20rpx;
+    }
 
-    //     }
+    .ct-last4 {
+        font-size: 30rpx;
+        letter-spacing: 0.04em;
+    }
 
-    // }
+    .ct-exp {
+        margin-left: auto;
+        font-size: 24rpx;
+        color: #6E6E73;
+    }
+
+    .ct-small {
+        font-size: 22rpx;
+        line-height: 1.7;
+        color: #6E6E73;
+    }
+
+    .ct-alert {
+        background: #FFF8E1;
+        border: 1px solid #F0D77A;
+        border-radius: 28rpx;
+        padding: 28rpx 32rpx;
+        margin-bottom: 32rpx;
+    }
+
+    .ct-alert.red {
+        background: #FFFFFF;
+        border-color: #F3C4C2;
+        text-align: center;
+    }
+
+    .ct-alert-row {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 24rpx;
+    }
+
+    .ct-i {
+        flex-shrink: 0;
+        width: 36rpx;
+        height: 36rpx;
+        line-height: 32rpx;
+        margin: 4rpx 20rpx 0 0;
+        border: 2px solid #8A6D00;
+        border-radius: 50%;
+        box-sizing: border-box;
+        text-align: center;
+        font-size: 22rpx;
+        font-weight: 700;
+        color: #8A6D00;
+    }
+
+    .ct-alert-text {
+        font-size: 28rpx;
+        line-height: 1.7;
+        color: #5F4B00;
+    }
+
+    .ct-alert.red .ct-alert-text {
+        color: #1D1D1F;
+        margin-bottom: 24rpx;
+    }
+
+    .ct-alert-title {
+        font-size: 32rpx;
+        font-weight: 700;
+        line-height: 1.6;
+        color: #C5221F;
+        margin-bottom: 16rpx;
+    }
+
+    .ct-btn {
+        height: 96rpx;
+        line-height: 96rpx;
+        border-radius: 48rpx;
+        background: #1A73E8;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 30rpx;
+        font-weight: 700;
+    }
+
+    .ct-mt {
+        margin-top: 16rpx;
+    }
+
+    .ct-link-red {
+        margin-top: 16rpx;
+        height: 88rpx;
+        line-height: 88rpx;
+        text-align: center;
+        font-size: 28rpx;
+        color: #C5221F;
+    }
 </style>

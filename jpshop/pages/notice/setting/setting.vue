@@ -1,5 +1,9 @@
 <template>
     <view class="contain border_top">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="お知らせ設定" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD">
+            <view class="u-nav-slot" slot="right"><text style="color: #1A73E8; font-size: 16px; padding: 0 8px;" @click="onNavigationBarButtonTap">保存</text></view>
+        </u-navbar>
         <view class="title border_bottom">
             <view class="titleLeft">
                 <view :class="current == 1?'selectA' : 'select'" @click="changeTab(1)">

@@ -1,5 +1,7 @@
 <template>
     <view class="container">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="メンバー一覧" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <view class="memberItem" v-for="item in members" :key="item.id" @click="onMemberTap(item)">
             <view class="left">
                 <image :src="item.avatar || defaultImage" class="avatar" mode="aspectFill"></image>

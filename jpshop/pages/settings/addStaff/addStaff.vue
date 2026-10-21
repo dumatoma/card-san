@@ -1,33 +1,43 @@
 <template>
-    <view>
-        <u-navbar :border="true" :placeholder='true' title="スタッフ" :autoBack="false" @leftClick = "goBack" :safeAreaInsetTop="true">
+    <!-- [カスタムエイド 2026-10-20] スタッフ一覧を1人ずつのカードに(店舗情報などと同じ見た目)
+         ・写真は角を丸く。名前・役職・コメント、店舗情報ページに出すかどうかの印
+         ・編集・↑(表示順:スタッフ紹介と予約の担当者の並び)・削除をボタンに(横スワイプはやめた)
+         ・「スタッフ追加」の大きいボタン(右上の+も残す) -->
+    <view class="sf">
+        <u-navbar :border="true" :placeholder='true' title="スタッフ" :autoBack="false" @leftClick = "goBack" :safeAreaInsetTop="true" bgColor="#FBFBFD">
             <view class="u-nav-slot" slot="right">
                 <image src="../../../static/icons/addB.png" style="width: 60upx;height: 60upx;" @click="toAddnew"
                     mode=""></image>
             </view>
         </u-navbar>
-        <view class="content">
-            <u-swipe-action>
-                <u-swipe-action-item :options="options1" v-for="(item,index) in array" @click="delItem(index)">
-                    <view class="swipe-action u-border-top u-border-bottom">
-                        <view class="swipe-action__content">
-                            <view class="staffItem" @click="editItem(index)">
-                                <view class="staffImage">
-                                    <image :src="item.image[0]" mode="aspectFill"></image>
-                                </view>
-                                <view class="staffDetail">
-                                    <view class="staffName" style="display: flex;justify-content: space-between;">
-                                        <view v-text="item.name"></view>
-                                        <image v-if="index != 0" class="sor" src="../../../static/svg/upup.svg" mode="" @click.stop="sort(item,index)"></image>
-                                    </view>
-                                    <view class="staffFu" v-text="item.post"></view>
-                                    <view class="staffIntro" v-text="item.self_introduction"></view>
-                                </view>
-                            </view>
-                        </view>
+        <view class="sf-body">
+            <view class="sf-add" hover-class="sf-btn-hover" @click="toAddnew">
+                <text class="sf-plus">+</text>スタッフ追加
+            </view>
+            <text class="sf-sub">↑ で1つ上に移動します。この順番が、スタッフ紹介と予約の担当者の表示順になります。</text>
+            <view class="sf-empty" v-if="loaded && !array.length">スタッフはまだ登録されていません</view>
+            <view class="sf-card" v-for="(item,index) in array" :key="item.id">
+                <view class="sf-top" @click="editItem(index)">
+                    <image class="sf-photo" :src="(item.image && item.image[0]) || ''" mode="aspectFill"></image>
+                    <view class="sf-text">
+                        <text class="sf-name">{{item.name}}</text>
+                        <text class="sf-post" v-if="item.post">{{item.post}}</text>
+                        <text class="sf-intro" v-if="item.self_introduction">{{item.self_introduction}}</text>
+                        <text class="sf-tag" :class="{ off: item.is_show_shop == 0 }" v-if="item.is_show_shop !== undefined">{{item.is_show_shop == 0 ? '店舗情報に出さない' : '店舗情報に掲載'}}</text>
                     </view>
-                </u-swipe-action-item>
-            </u-swipe-action>
+                </view>
+                <view class="sf-actions">
+                    <view class="sf-act" hover-class="sf-hover" @click="editItem(index)">
+                        <u-icon name="edit-pen" size="16" color="#1D1D1F"></u-icon><text>編集</text>
+                    </view>
+                    <view class="sf-icon-btn" :class="{ off: index == 0 }" hover-class="sf-hover" @click="index != 0 && sort(item, index)">
+                        <u-icon name="arrow-upward" size="18" :color="index == 0 ? '#C7C7CC' : '#1D1D1F'"></u-icon>
+                    </view>
+                    <view class="sf-icon-btn" hover-class="sf-hover" @click="delItem(index)">
+                        <u-icon name="trash" size="18" color="#C5221F"></u-icon>
+                    </view>
+                </view>
+            </view>
             <mod :config="config" @getStatus="confirm" v-if="show"></mod>
         </view>
     </view>
@@ -63,7 +73,8 @@
                     cancelText:"削除",
                     defaultText:"キャンセル"
                 },
-                show:false
+                show:false,
+                loaded: false // [カスタムエイド 2026-10-20]
             };
         },
         created() {
@@ -116,6 +127,7 @@
                 data.id = ""
                 getStaffList(data).then((res) => {
                     if (res.code == 200) {
+                        that.loaded = true
                         that.array = res.data.admins
                     }else if(res.code == 403){
                         uni.showToast({
@@ -173,84 +185,27 @@
     }
 </script>
 
-<style lang="scss">
-    .sor{
-        width: 48rpx;
-        height: 48rpx;
-        flex-shrink: 0;
-    }
-    .staffItem {
-        display: flex;
-        box-sizing: border-box;
-        padding: 24upx 24upx 40upx 16upx;
-
-        .staffDetail {
-            flex: 1;
-            .staffName {
-                font-size: 32upx;
-                font-family: Hiragino Sans-W6, Hiragino Sans;
-                font-weight: bold;
-                color: #1D1D1F;
-                width: 100%;
-            }
-
-            .staffFu {
-                font-size: 28upx;
-                font-family: Hiragino Sans-W3, Hiragino Sans;
-                font-weight: normal;
-                color: rgba(29, 29, 31, 0.9);
-                margin: 20upx 0;
-            }
-
-            .staffIntro {
-                font-size: 24upx;
-                font-family: Hiragino Sans-W3, Hiragino Sans;
-                font-weight: normal;
-                color: #86868B;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-            }
-        }
-
-
-
-        .staffImage {
-            width: 160upx;
-            height: 214upx;
-            flex-shrink: 0;
-            margin-right: 20upx;
-
-            image {
-                width: 100%;
-                height: 100%;
-            }
-        }
-    }
-
-    .u-page {
-        padding: 0;
-    }
-
-    .u-demo-block__title {
-        padding: 10px 0 2px 15px;
-    }
-
-    .swipe-action {
-        &__content {
-            padding: 25rpx 0;
-
-            &__text {
-                font-size: 15px;
-                color: $u-main-color;
-                padding-left: 30rpx;
-            }
-        }
-    }
-
-    .swipe-action__content {
-        padding: 0 !important;
-    }
+<style lang="scss" scoped>
+    /* [カスタムエイド 2026-10-20] 店舗情報などと同じ決まり */
+    .sf { min-height: 100vh; background: #F5F5F7; font-family: 'Hiragino Sans', sans-serif; color: #1D1D1F; }
+    .sf-body { padding: 32rpx 24rpx calc(80rpx + env(safe-area-inset-bottom)); }
+    .sf-add { height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; font-size: 32rpx; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 20rpx; }
+    .sf-plus { font-size: 44rpx; line-height: 1; margin-right: 12rpx; position: relative; top: -2rpx; }
+    .sf-btn-hover { opacity: 0.8; }
+    .sf-hover { opacity: 0.6; }
+    .sf-sub { display: block; padding: 0 8rpx; font-size: 24rpx; line-height: 1.6; color: #6E6E73; margin-bottom: 28rpx; }
+    .sf-empty { padding: 80rpx 32rpx; text-align: center; font-size: 28rpx; color: #6E6E73; background: #FFFFFF; border-radius: 32rpx; }
+    .sf-card { background: #FFFFFF; border-radius: 32rpx; padding: 28rpx; margin-bottom: 24rpx; box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05); }
+    .sf-top { display: flex; align-items: flex-start; }
+    .sf-photo { width: 176rpx; height: 220rpx; flex-shrink: 0; border-radius: 20rpx; background: #E5E5EA; margin-right: 24rpx; }
+    .sf-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .sf-name { font-size: 32rpx; font-weight: 700; line-height: 1.4; margin-bottom: 8rpx; }
+    .sf-post { font-size: 26rpx; color: #1D1D1F; margin-bottom: 8rpx; }
+    .sf-intro { font-size: 24rpx; line-height: 1.6; color: #6E6E73; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin-bottom: 8rpx; }
+    .sf-tag { align-self: flex-start; font-size: 22rpx; font-weight: 700; color: #137333; background: #E6F4EA; border-radius: 18rpx; padding: 4rpx 14rpx; }
+    .sf-tag.off { color: #515154; background: #F2F2F5; }
+    .sf-actions { display: flex; border-top: 1px solid #E5E5EA; margin-top: 24rpx; padding-top: 20rpx; }
+    .sf-act { flex: 1; height: 76rpx; border: 1px solid #D2D2D7; border-radius: 20rpx; display: flex; align-items: center; justify-content: center; font-size: 28rpx; font-weight: 500; box-sizing: border-box; text { margin-left: 8rpx; } }
+    .sf-icon-btn { width: 88rpx; height: 76rpx; margin-left: 16rpx; border: 1px solid #D2D2D7; border-radius: 20rpx; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
+    .sf-icon-btn.off { background: #F5F5F7; border-color: #E5E5EA; }
 </style>

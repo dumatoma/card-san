@@ -1,5 +1,7 @@
 <template>
     <view class="container">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="お申し込み" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <view class="item">
             <view class="item_title">
                 プラン

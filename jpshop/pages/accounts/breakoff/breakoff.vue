@@ -1,5 +1,7 @@
 <template>
     <view class="container">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="解約手続き" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#fbfbfd"></u-navbar>
         <view class="p1 bd">
             本日解約手続きを行うと、2024年5月９日 を持ちまして契約を終了いたします。　ご解約しても契約終了日までアカウントは有効です。
         </view>

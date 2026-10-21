@@ -5,91 +5,54 @@
                 <image @click="bac" src="../../../static/icons/tclose.png" style="width: 60upx;height: 60upx;" mode="">
                 </image>
             </view>
-            <view class="u-nav-slot" slot="right">
-                <text @click="save" class="tc">保存</text>
-            </view>
         </u-navbar>
-        <view class="container">
-            <view class="userInfo">
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        ID
-                    </view>
-                    <view class="itemRight" v-text='id'></view>
+        <!-- [カスタムエイド 2026-10-20] 見た目をこれまでの画面に合わせた。ここで変えられるのは「顧客NO」「メンバーズカード」「備考」だけなので、
+             それを上の1つのまとまりにし、変えられない項目は下に灰色の「お客様の登録情報」として表示。右上の「保存」は下の保存ボタンに -->
+        <view class="me">
+            <view class="me-h3">編集できる項目</view>
+            <view class="me-card">
+                <view class="me-field">
+                    <view class="me-label">顧客NO</view>
+                    <input class="me-in" :class="{ on: fk == 'no' }" v-model="no" placeholder="お店で使っている番号(なくてもよい)" placeholder-class="me-ph"
+                        @focus="fk = 'no'" @blur="fk = ''" />
                 </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        顧客NO
-                    </view>
-                    <view class="itemRight bd">
-                        <u-input v-model="no" border="none" class="insert"></u-input>
-                    </view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        <image src="../../../static/icons/cardImg.png" mode="widthFix"></image>
-                    </view>
-                    <view class="itemRight blue" @click="toChooseCard">
-                        <text>{{cards.card_name}}</text>
-                        <image src="../../../static/icons/barr.png" mode=""></image>
+                <view class="me-field">
+                    <view class="me-label">メンバーズカード</view>
+                    <view class="me-in me-select" hover-class="me-hover" @click="toChooseCard">
+                        <text class="me-card-name">{{cards.card_name || '-'}}</text>
+                        <text class="me-change">変更</text>
+                        <view class="me-chev"></view>
                     </view>
                 </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        氏名
-                    </view>
-                    <view class="itemRight" v-text="userInfo.name"></view>
+                <view class="me-field">
+                    <view class="me-label">備考</view>
+                    <textarea class="me-ta" :class="{ on: fk == 'remark' }" v-model="userInfo.remark" :maxlength="-1"
+                        placeholder="お店だけのメモ(お客様のアプリには表示されません)" placeholder-class="me-ph"
+                        @focus="fk = 'remark'" @blur="fk = ''"></textarea>
                 </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        カナ
-                    </view>
-                    <view class="itemRight" v-text="userInfo.pronunciation"></view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        電話番号
-                    </view>
-                    <view class="itemRight blue" v-text="userInfo.phone"></view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        性別
-                    </view>
-                    <view class="itemRight" v-text="userInfo.sex"></view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        生年月日
-                    </view>
-                    <view class="itemRight">
-                        {{userInfo.birthday_year}}年　{{userInfo.birthday_month}}月　{{userInfo.birthday_day}}日
-                    </view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        住所
-                    </view>
-                    <view class="itemRight">
-                        <view v-text="userInfo.zip_code"></view>
-                        <view v-text="userInfo.province"></view>
-                        <view v-text="userInfo.address1"></view>
-                        <view v-text="userInfo.address2"></view>
-
-                    </view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        備考
-                    </view>
-                </view>
-                <scroll-view class="area" scroll-y>
-                    <u-textarea autoHeight :maxlength="-1" border="none" v-model="userInfo.remark" placeholder="お客さまのデータには反映されません"></u-textarea>
-                       
-                </scroll-view>
             </view>
+
+            <view class="me-h3">お客様の登録情報</view>
+            <view class="me-card me-ro">
+                <view class="me-item"><text class="me-k">ID</text><text class="me-v">{{id}}</text></view>
+                <view class="me-item"><text class="me-k">氏名</text><text class="me-v">{{userInfo.name || '-'}}</text></view>
+                <view class="me-item"><text class="me-k">カナ</text><text class="me-v">{{userInfo.pronunciation || '-'}}</text></view>
+                <view class="me-item"><text class="me-k">電話番号</text><text class="me-v">{{userInfo.phone || 'ー'}}</text></view>
+                <view class="me-item"><text class="me-k">性別</text><text class="me-v">{{userInfo.sex || '-'}}</text></view>
+                <view class="me-item"><text class="me-k">生年月日</text>
+                    <text class="me-v">{{userInfo.birthday_year ? userInfo.birthday_year + '年' + userInfo.birthday_month + '月' + userInfo.birthday_day + '日' : '-'}}</text></view>
+                <view class="me-item"><text class="me-k">住所</text>
+                    <view class="me-v">
+                        <view v-if="userInfo.zip_code">〒{{userInfo.zip_code}}</view>
+                        <view>{{(userInfo.province || '') + (userInfo.address1 || '') || '-'}}</view>
+                        <view v-if="userInfo.address2">{{userInfo.address2}}</view>
+                    </view>
+                </view>
+                <view class="me-ro-note">これらは、お客様がアプリで登録した内容です。お店からは変更できません。</view>
+            </view>
+
+            <view class="me-save" hover-class="me-save-hover" @click="save">保存する</view>
         </view>
-        <view class="blank"></view>
     </view>
 </template>
 
@@ -106,7 +69,8 @@
                 remark: "",
                 userId: "",
                 userInfo:{},
-                cards:{}
+                cards:{},
+                fk: '' // [カスタムエイド 2026-10-20] いま入力中の欄
             }
         },
         onLoad(options) {
@@ -171,6 +135,8 @@
                             }
                             uni.navigateBack()
                         }, 2100)
+                    } else {
+                        uni.showToast({ title: res.message || '保存できませんでした', icon: 'none' }) // [カスタムエイド 2026-10-20] 今までは何も出なかった
                     }
                 })
             }
@@ -179,75 +145,156 @@
 </script>
 
 <style lang="scss">
-    .area ::-webkit-scrollbar {
-        display: block;
-        width: 10rpx !important; 
-         height: 30rpx !important;
-        -webkit-appearance: normal !important;
-         background: #f8f8f8 !important;
-         scrollbar-color: dark !important;
-    }
-    .area ::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 20rpx !important;
-    }
-    .container {
-        border-top: 2upx solid #d2d2d7;
+    /* [カスタムエイド 2026-10-20] これまでの画面と同じ見た目 */
+    .me {
+        min-height: 100vh;
+        background: #F5F5F7;
+        padding: 32rpx 24rpx calc(80rpx + env(safe-area-inset-bottom));
         box-sizing: border-box;
-        padding-top: 80upx;
+        color: #1D1D1F;
+        font-family: 'Hiragino Sans', sans-serif;
     }
 
-    .blank {
-        height: 202upx;
+    .me-h3 {
+        margin: 0 8rpx 16rpx;
+        font-size: 30rpx;
+        font-weight: 700;
+        color: #515154;
     }
 
-    .area {
-        width: 658upx;
-        height: 320upx;
-        border-radius: 20upx;
-        border: 2upx solid #707070;
+    .me-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 32rpx;
+        margin-bottom: 40rpx;
+    }
+
+    .me-field {
+        margin-bottom: 28rpx;
+    }
+
+    .me-field:last-child {
+        margin-bottom: 0;
+    }
+
+    .me-label {
+        font-size: 26rpx;
+        font-weight: 500;
+        margin-bottom: 12rpx;
+    }
+
+    .me-in {
+        width: 100%;
+        height: 88rpx;
+        padding: 0 28rpx;
+        border: 1px solid #D2D2D7;
+        border-radius: 24rpx;
+        background: #FFFFFF;
+        font-size: 30rpx;
         box-sizing: border-box;
-        padding: 20upx;
-
-        textarea {
-            width: 100%;
-        }
     }
 
-
-    .bd {
-        border-bottom: 2upx solid #707070;
+    .me-in.on,
+    .me-ta.on {
+        border-color: #1A73E8;
+        box-shadow: 0 0 0 6rpx rgba(26, 115, 232, 0.16);
     }
 
-    .blue {
+    .me-ph {
+        color: #8A8A8E;
+        font-size: 28rpx;
+    }
+
+    .me-select {
         display: flex;
         align-items: center;
-
-        image {
-            width: 24upx;
-            height: 34upx;
-            margin-left: 40upx;
-        }
     }
 
-    .infoItem {
+    .me-card-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .me-change {
+        margin: 0 12rpx 0 16rpx;
+        font-size: 26rpx;
+        color: #1A73E8;
+    }
+
+    /* 右向きの矢印 */
+    .me-chev {
+        width: 14rpx;
+        height: 14rpx;
+        border-right: 3rpx solid #1A73E8;
+        border-bottom: 3rpx solid #1A73E8;
+        transform: rotate(-45deg);
+    }
+
+    .me-hover {
+        opacity: 0.6;
+    }
+
+    .me-ta {
+        width: 100%;
+        height: 280rpx;
+        padding: 20rpx 28rpx;
+        border: 1px solid #D2D2D7;
+        border-radius: 24rpx;
+        font-size: 30rpx;
+        line-height: 1.6;
+        box-sizing: border-box;
+    }
+
+    .me-ro {
+        padding: 8rpx 32rpx 28rpx;
+    }
+
+    .me-item {
         display: flex;
-        margin-bottom: 50upx;
+        align-items: flex-start;
+        padding: 22rpx 0;
+        border-bottom: 1px solid #E5E5EA;
+    }
 
-        .itemLeft {
-            width: 130upx;
-            text-align: center;
-            font-size: 32upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #707070;
-            margin-right: 40upx;
-            flex-shrink: 0;
+    .me-k {
+        width: 160rpx;
+        flex-shrink: 0;
+        font-size: 26rpx;
+        line-height: 1.6;
+        color: #8A8A8E;
+    }
 
-            image {
-                width: 60upx;
-                height: 44upx;
-            }
-        }
+    .me-v {
+        flex: 1;
+        min-width: 0;
+        font-size: 28rpx;
+        line-height: 1.6;
+        color: #515154;
+        word-break: break-all;
+    }
+
+    .me-ro-note {
+        margin-top: 20rpx;
+        font-size: 22rpx;
+        line-height: 1.6;
+        color: #8A8A8E;
+    }
+
+    .me-save {
+        height: 104rpx;
+        line-height: 104rpx;
+        border-radius: 28rpx;
+        background: #1A73E8;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 32rpx;
+        font-weight: 700;
+    }
+
+    .me-save-hover {
+        opacity: 0.8;
     }
 </style>

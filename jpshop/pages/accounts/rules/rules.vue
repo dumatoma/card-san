@@ -1,5 +1,7 @@
 <template>
     <view>
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="利用規約・プライバシーポリシー" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <!-- <u-navbar title="利用規約・プライバシーポリシー" :autoBack="true" :placeholder="true" :safeAreaInsetTop="true">
         </u-navbar> -->
         <view class="item">

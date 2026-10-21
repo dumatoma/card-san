@@ -1,5 +1,7 @@
 <template>
     <view class="contents">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar :title="navTitle" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <view class="titleContent">
             <view class="t1">
                 ご利用履歴
@@ -38,6 +40,8 @@
     export default {
         data() {
             return {
+                navTitle: '', // [カスタムエイド 2026-10-20] 見出しの文字
+
                currentdate:"",
                array:[],
                cmonth:'',
@@ -48,9 +52,7 @@
             let that = this
             let date = options.date
             let day = ''
-             uni.setNavigationBarTitle({
-              title:date
-            })
+             this.navTitle = date // [カスタムエイド 2026-10-20]
             let temp1 = date.split("年")
             let year = temp1[0]
             let temp2 = temp1[1].split("月")

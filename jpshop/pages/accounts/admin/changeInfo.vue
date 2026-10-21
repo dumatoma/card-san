@@ -1,89 +1,67 @@
 <template>
     <view>
-        <view class="basicInfo">
-            <view class="infoItem">
-                <view class="infoTitle">
-                    <text style="color: #D93025;">※</text>氏名
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="編集" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <!-- [カスタムエイド 2026-10-20] 見た目をこれまでの画面(白い角丸のまとまり・入力欄の枠・保存ボタン)に合わせ、間延びをなくした -->
+        <view class="ci">
+            <view class="ci-card">
+                <view class="ci-field">
+                    <view class="ci-label"><text class="ci-req">※</text>氏名</view>
+                    <input class="ci-in" :class="{ on: fk == 'name' }" v-model="info.name" placeholder="例:山田 花子" placeholder-class="ci-ph"
+                        @focus="fk = 'name'" @blur="fk = ''" />
                 </view>
-                <view class="infoDetail">
-                    <u-input placeholder="" v-model="info.name"></u-input>
+                <view class="ci-field">
+                    <view class="ci-label">法人名</view>
+                    <input class="ci-in" :class="{ on: fk == 'fr' }" v-model="info.frName" placeholder="会社名・法人名" placeholder-class="ci-ph"
+                        @focus="fk = 'fr'" @blur="fk = ''" />
+                </view>
+                <view class="ci-field">
+                    <view class="ci-label"><text class="ci-req">※</text>店舗名</view>
+                    <input class="ci-in" :class="{ on: fk == 'shop' }" v-model="info.shopName" placeholder="例:CARD SALON" placeholder-class="ci-ph"
+                        @focus="fk = 'shop'" @blur="fk = ''" />
+                </view>
+                <view class="ci-field">
+                    <view class="ci-label"><text class="ci-req">※</text>電話番号</view>
+                    <input class="ci-in" :class="{ on: fk == 'tel' }" type="number" v-model="info.phone" placeholder="ハイフンなし" placeholder-class="ci-ph"
+                        @focus="fk = 'tel'" @blur="fk = ''" />
                 </view>
             </view>
 
-            <view class="infoItem">
-                <view class="infoTitle">
-                    法人名
+            <view class="ci-h3">住所</view>
+            <view class="ci-card">
+                <view class="ci-field">
+                    <view class="ci-label">郵便番号</view>
+                    <view class="ci-zip">
+                        <input class="ci-in ci-zip-in" :class="{ on: fk == 'zip' }" type="number" v-model="info.postalCode" placeholder="ハイフンなし" placeholder-class="ci-ph"
+                            @focus="fk = 'zip'" @blur="fk = ''" />
+                        <view class="ci-zip-btn" hover-class="ci-hover" @click="searchAddress">住所検索</view>
+                    </view>
                 </view>
-                <view class="infoDetail">
-                    <u-input placeholder="会社名・法人名" v-model="info.frName"></u-input>
+                <view class="ci-gray">
+                    <view>個人:オーナーの住所または店舗所在地の住所をご記載ください。</view>
+                    <view>法人:法人登記住所または店舗所在地の住所をご記載ください。</view>
+                </view>
+                <view class="ci-field">
+                    <view class="ci-label">都道府県</view>
+                    <view class="ci-in ci-select" hover-class="ci-hover" @click="show = true">
+                        <text :class="{ 'ci-ph': !info.province }">{{info.province || '選択してください'}}</text>
+                        <view class="ci-caret"></view>
+                    </view>
+                </view>
+                <view class="ci-field">
+                    <view class="ci-label"><text class="ci-req">※</text>住所1</view>
+                    <input class="ci-in" :class="{ on: fk == 'a1' }" v-model="info.address1" placeholder="市区町村・番地" placeholder-class="ci-ph"
+                        @focus="fk = 'a1'" @blur="fk = ''" />
+                </view>
+                <view class="ci-field">
+                    <view class="ci-label">住所2</view>
+                    <input class="ci-in" :class="{ on: fk == 'a2' }" v-model="info.address2" placeholder="建物名・部屋番号" placeholder-class="ci-ph"
+                        @focus="fk = 'a2'" @blur="fk = ''" />
                 </view>
             </view>
 
-            <view class="infoItem">
-                <view class="infoTitle">
-                    <text style="color: #D93025;">※</text>店舗名
-                </view>
-                <view class="infoDetail">
-                    <u-input placeholder="" v-model="info.shopName"></u-input>
-                </view>
-            </view>
-
-            <view class="infoItem">
-                <view class="infoTitle">
-                    <text style="color: #D93025;">※</text>電話番号
-                </view>
-                <view class="infoDetail">
-                    <u-input placeholder="ハイフンなし" v-model="info.phone"></u-input>
-                </view>
-            </view>
+            <view class="ci-save" :class="{ dis: !ready }" hover-class="ci-save-hover" @click="save">登録する</view>
         </view>
-        <view class="addressContent">
-            <view class="addressItem">
-                <view class="addressItemTitle">
-                    郵便番号
-                </view>
-                <view class="addressItemContent">
-                    <view class="addItemLeft">
-                        <u-input placeholder="ハイフンなし" v-model="info.postalCode"></u-input>
-                    </view>
-                    <view class="addItemRight">
-                        <u-button type="primary" text="住所検索" id="addBtn" @click="searchAddress"></u-button>
-                    </view>
-                </view>
-            </view>
-            <view class="tips">
-                <view>個人:オーナーの住所または店舗所在地の住所をご記載ください。</view>
-                <view>法人:法人登記住所または店舗所在地の住所をご記載ください。</view>
-            </view>
-            <view class="addressItem">
-                <view class="addressItemContent">
-                    <view class="addItemLeft">
-                        <view class="pickers" @click="show = true">
-                            <view class="pickerName" v-text="info.province || '都道府県' "></view>
-                            <u-icon name="arrow-down"></u-icon>
-                        </view>
-                    </view>
-                </view>
-            </view>
-            <view class="infoItem">
-                <view class="infoTitle">
-                    <text style="color: #D93025;">※</text>住所1
-                </view>
-                <view class="infoDetail">
-                    <u-input v-model="info.address1" placeholder="市区町村・番地"></u-input>
-                </view>
-            </view>
-            <view class="infoItem">
-                <view class="infoTitle">
-                    住所2
-                </view>
-                <view class="infoDetail">
-                    <u-input v-model="info.address2" placeholder="建物名・部屋番号"></u-input>
-                </view>
-            </view>
-        </view>
-        <u-button text="登録する" class="bbtn" :class="info.name !='' && info.shopName != '' && info.phone != '' && info.address1 != ''? 'po' :'' " type="primary" @click="save"></u-button>
-        <view class="blank"></view>
         <u-popup :show="showPopup" round="32">
             <view class="pTitle">
                 <view class="closeImage">
@@ -134,12 +112,20 @@
                         '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
                     ]
                 ],
-                show: false
+                show: false,
+                fk: '' // [カスタムエイド 2026-10-20] いま入力中の欄(青い枠にする)
             };
         },
         created() {
             let that = this
             that.getOwnerInformation()
+        },
+        computed: {
+            // [カスタムエイド 2026-10-20] 必須がそろうと保存ボタンを濃い青に
+            ready() {
+                const i = this.info
+                return !!(i.name && i.shopName && i.phone && i.address1)
+            }
         },
         methods: {
             getOwnerInformation() {
@@ -193,6 +179,7 @@
                 data.address2 = that.info.address2
                 
                 if(that.info.shopName == '' ||  that.info.name == '' || that.info.phone == '' || that.info.address1 == ''){
+                    uni.showToast({ title: '※の項目を入力してください', icon: 'none' }) // [カスタムエイド 2026-10-20] 今までは何も出なかった
                     return false
                 }
                 setOwnerInformation(data).then((res) => {
@@ -217,250 +204,159 @@
 </script>
 
 <style lang="scss">
-    .bbtn {
-        width: 670upx !important;
-        height: 100upx !important;
-        background: rgb(26, 115, 232);
-        border-radius: 20upx !important;
-        opacity:0.6
-    }
-    
-    .po{
-         opacity:1 !important;
+    /* [カスタムエイド 2026-10-20] これまでの画面と同じ見た目 */
+    .ci {
+        min-height: 100vh;
+        background: #F5F5F7;
+        padding: 32rpx 24rpx calc(80rpx + env(safe-area-inset-bottom));
+        box-sizing: border-box;
+        color: #1D1D1F;
+        font-family: 'Hiragino Sans', sans-serif;
     }
 
-    .tips {
-        box-sizing: border-box;
-        padding: 30upx;
+    .ci-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 32rpx;
+        margin-bottom: 40rpx;
+    }
+
+    .ci-h3 {
+        margin: 0 8rpx 16rpx;
+        font-size: 30rpx;
+        font-weight: 700;
+        color: #515154;
+    }
+
+    .ci-field {
+        margin-bottom: 28rpx;
+    }
+
+    .ci-field:last-child {
+        margin-bottom: 0;
+    }
+
+    .ci-label {
+        font-size: 26rpx;
+        font-weight: 500;
+        margin-bottom: 12rpx;
+    }
+
+    .ci-req {
+        color: #C5221F;
+    }
+
+    .ci-in {
         width: 100%;
-        font-size: 20upx;
-        font-family: Hiragino Sans-W3, Hiragino Sans;
-        font-weight: normal;
-        color: #1A73E8;
-        background: rgba(143, 168, 248, 0.2);
-        border-radius: 20upx;
-        margin-bottom: 60upx;
+        height: 88rpx;
+        padding: 0 28rpx;
+        border: 1px solid #D2D2D7;
+        border-radius: 24rpx;
+        background: #FFFFFF;
+        font-size: 30rpx;
+        color: #1D1D1F;
+        box-sizing: border-box;
+        transition: border-color .15s, box-shadow .15s;
     }
 
-    #addBtn {
-        width: 200upx;
-        height: 76upx;
-        box-sizing: border-box;
-        padding: 0 !important;
+    .ci-in.on {
+        border-color: #1A73E8;
+        box-shadow: 0 0 0 6rpx rgba(26, 115, 232, 0.16);
+    }
+
+    .ci-ph {
+        color: #8A8A8E;
+    }
+
+    .ci-hover {
+        opacity: 0.6;
+    }
+
+    .ci-zip {
+        display: flex;
+        align-items: center;
+    }
+
+    .ci-zip-in {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ci-zip-btn {
+        flex-shrink: 0;
+        height: 88rpx;
+        line-height: 88rpx;
+        margin-left: 16rpx;
+        padding: 0 32rpx;
+        border-radius: 24rpx;
+        background: #E8F0FE;
+        color: #1A73E8;
+        font-size: 28rpx;
+        font-weight: 500;
+    }
+
+    .ci-gray {
+        padding: 20rpx 24rpx;
+        border-radius: 20rpx;
+        background: #F5F5F7;
+        font-size: 24rpx;
+        line-height: 1.7;
+        color: #515154;
+        margin-bottom: 28rpx;
+    }
+
+    .ci-select {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    /* 下向きの矢印 */
+    .ci-caret {
+        width: 16rpx;
+        height: 16rpx;
+        border-right: 3rpx solid #6E6E73;
+        border-bottom: 3rpx solid #6E6E73;
+        transform: translateY(-4rpx) rotate(45deg);
+    }
+
+    .ci-save {
+        height: 104rpx;
+        line-height: 104rpx;
+        border-radius: 28rpx;
+        background: #1A73E8;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 32rpx;
+        font-weight: 700;
+    }
+
+    .ci-save.dis {
+        background: #C6DAFC;
+    }
+
+    .ci-save-hover {
+        opacity: 0.8;
     }
 
     .pTitle {
         position: relative;
-        height: 111upx;
-        background: #FBFBFD;
-        border-radius: 32upx;
-
-        .pt {
-            width: 100%;
-            text-align: center;
-            font-size: 40upx;
-            font-family: Hiragino Sans-W5, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-            line-height: 111upx;
-        }
+        height: 112rpx;
+        line-height: 112rpx;
+        text-align: center;
+        font-size: 34rpx;
+        font-weight: 700;
 
         .closeImage {
-            width: 60upx;
-            height: 60upx;
             position: absolute;
-            top: 26upx;
-            left: 32upx;
+            left: 32rpx;
+            top: 26rpx;
+            width: 60rpx;
+            height: 60rpx;
 
             image {
-                width: 100%;
-                height: 100%;
-            }
-        }
-    }
-
-    .pContent {
-        width: 100%;
-        height: 80vh;
-        overflow-y: scroll;
-    }
-
-    .blank {
-        height: 120upx;
-    }
-
-    .switchItem {
-        display: flex;
-        box-sizing: border-box;
-        padding: 44upx 36upx;
-        justify-content: space-between;
-        border-bottom: 2upx solid #d2d2d7;
-    }
-
-    #save {
-        width: 480upx;
-        margin-top: 120upx;
-    }
-
-    .basicInfo {
-        box-sizing: border-box;
-        padding: 60upx 46upx 0;
-    }
-
-    .addressContent {
-        box-sizing: border-box;
-        padding: 0 46upx;
-    }
-
-    .addItemLeft {
-        width: 400upx;
-        height: 88upx;
-    }
-
-    .addressItem {
-        box-sizing: border-box;
-        margin-bottom: 60upx;
-
-        .addressItemTitle {
-            font-size: 28upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #86868B;
-            margin-bottom: 10upx;
-        }
-
-        .addressItemContent {
-            display: flex;
-            justify-content: space-between;
-
-
-            .addressItemContent {
-
-                .addItemLeft {
-                    width: 400upx;
-                    height: 88upx;
-                }
-
-                .addItemRight {}
-            }
-        }
-    }
-
-
-    .tip {
-        box-sizing: border-box;
-        padding: 10upx 0 80upx 46upx;
-        font-size: 24upx;
-        font-family: Hiragino Sans-W3, Hiragino Sans;
-        font-weight: normal;
-        color: #AAAAAA;
-    }
-
-    .calendarShows {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-sizing: border-box;
-        padding: 44upx 36upx;
-    }
-
-    .infoItem {
-        margin-bottom: 60upx;
-    }
-
-    .infoTitle {
-        margin-bottom: 10upx;
-        font-size: 28upx;
-        font-family: Hiragino Sans-W3, Hiragino Sans;
-        font-weight: normal;
-        color: #707070;
-    }
-
-    .pickers {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        height: 80upx;
-        background: rgba(249, 249, 249, 0.94);
-        border-radius: 20upx;
-        opacity: 1;
-        border: 2upx solid #AAAAAA;
-        box-sizing: border-box;
-        padding: 0 20upx;
-    }
-
-    .title {
-        background: #f5f5f7;
-        box-sizing: border-box;
-        padding: 44upx 46upx;
-        font-size: 32upx;
-        font-family: Hiragino Sans-W5, Hiragino Sans;
-        font-weight: normal;
-        color: rgba(29, 29, 31, 0.9);
-    }
-
-    .xz {
-        margin: 80upx 0 40upx;
-        text-align: center;
-        font-size: 22upx;
-        font-family: Hiragino Sans-W3, Hiragino Sans;
-        font-weight: normal;
-        color: #1D1D1F;
-    }
-
-    .addImage {
-        width: 480upx;
-        height: 96upx;
-        background: #F5F5F7;
-        border: 2upx solid #707070;
-        text-align: center;
-        line-height: 96upx;
-        margin: 0 auto 98upx;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32upx;
-
-        text {
-            font-size: 60upx;
-            margin-right: 26upx;
-            position: relative;
-            top: -5upx;
-        }
-    }
-
-    .topImage {
-        box-sizing: border-box;
-        padding-top: 40upx;
-        display: flex;
-        overflow-x: scroll;
-        padding-left: 28upx;
-
-        .bannerItem {
-            width: 514upx;
-            height: 344upx;
-            flex-shrink: 0;
-            margin-right: 46upx;
-            position: relative;
-
-            .close {
-                width: 52upx;
-                height: 52upx;
-                position: absolute;
-                right: 14upx;
-                top: 14upx;
-                z-index: 99;
-
-                image {
-                    width: 100%;
-                    height: 100%;
-                }
-            }
-
-            image {
-                width: 100%;
-                height: 100%;
+                width: 60rpx;
+                height: 60rpx;
             }
         }
     }

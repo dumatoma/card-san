@@ -1,5 +1,7 @@
 <template>
     <view class="contains">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="予約内容" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <view class="ct">
             <view class="ctItem" style="margin-top: 0 !important;">
                 <view class="itemName">

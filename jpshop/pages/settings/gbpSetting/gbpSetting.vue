@@ -1,5 +1,7 @@
 <template>
     <view class="container">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="Googleビジネス連携" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <!-- 連携状態ヘッダー -->
         <view class="statusCard" :class="connected ? 'connected' : 'disconnected'">
             <view class="statusIcon">

@@ -1,5 +1,7 @@
 <template>
     <view class="container">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="解約手続き完了" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#fbfbfd"></u-navbar>
         <view class="ctitle">
             解約手続きが完了しました。
         </view>

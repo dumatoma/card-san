@@ -1,5 +1,7 @@
 <template>
     <view class="content border_top">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="お支払い方法を選択" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <view class="payItem border_bottom" @click="toDetail(1)">
             <view class="payLeft">
                 <view class="payName">

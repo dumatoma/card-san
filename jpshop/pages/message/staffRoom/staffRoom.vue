@@ -1,23 +1,32 @@
 <template>
-    <view class="container">
-        <view class="roomIcon" @click="uploadImage">
-            <image :src="avatar || '/static/icons/staffroom_setting.svg'" mode="aspectFit"></image>
+    <view class="container cs-pg">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="スタッフルーム設定" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <!-- [カスタムエイド 2026-10-21] ルームの写真を丸型に(メッセージアカウント情報と同じ形)。右下のカメラを押すと写真を変えられる。ほかもこれまでの画面に合わせた -->
+        <view class="cs-av-wrap" @click="uploadImage">
+            <image class="cs-av" :src="avatar || '/static/icons/staffroom_setting.svg'" mode="aspectFill"></image>
+            <image class="cs-cam" src="../../../static/svg/cs_camera.svg" mode="aspectFit"></image>
         </view>
-        <view class="section roomNameSection">
-            <view class="label">ルーム名</view>
-            <u-input v-model="name" placeholder="スタッフルーム名を入力"></u-input>
+        <view class="cs-card">
+            <view class="cs-fld">
+                <view class="cs-lab">ルーム名</view>
+                <input class="cs-in" :class="{ on: fk }" v-model="name" placeholder="スタッフルーム名を入力" placeholder-class="cs-ph"
+                    @focus="fk = true" @blur="fk = false" />
+            </view>
         </view>
-        <view class="switchRow">
-            <view class="switchLabel">スタッフルーム</view>
-            <u-switch v-model="isOn" activeColor="#33C75A"></u-switch>
+        <view class="cs-card">
+            <view class="cs-row">
+                <text class="cs-row-text">スタッフルームを使う</text>
+                <u-switch v-model="isOn" activeColor="#33C75A"></u-switch>
+            </view>
         </view>
-        <view class="desc">
-            <view class="descTitle">スタッフルームについて</view>
-            <view class="descItem">・スタッフのみが利用できる業務連絡用のグループです。</view>
-            <view class="descItem">・プライベートな会話や業務外の話題は禁止しています。</view>
-            <view class="descItem">・1対1の個人チャットにも対応（選択可）。</view>
+        <view class="cs-gray">
+            <view class="cs-gray-t">スタッフルームについて</view>
+            <view>・スタッフのみが利用できる業務連絡用のグループです。</view>
+            <view>・プライベートな会話や業務外の話題は禁止しています。</view>
+            <view>・1対1の個人チャットにも対応(選択可)。</view>
         </view>
-        <u-button class="btn" type="primary" @click="save">保存</u-button>
+        <view class="cs-save" hover-class="cs-hover" @click="save">保存する</view>
     </view>
 </template>
 
@@ -30,6 +39,7 @@
                 name: '',
                 avatar: '',
                 isOn: false,
+                fk: false // [カスタムエイド 2026-10-21] 入力中か
             }
         },
         onLoad() {
@@ -143,4 +153,141 @@
     font-size: 32upx;
     color: #fff;
 }
+
+    /* [カスタムエイド 2026-10-21] これまでの画面と同じ見た目 */
+    .container.cs-pg {
+        min-height: 100vh;
+        background: #F5F5F7;
+        padding: 0 24rpx calc(60rpx + env(safe-area-inset-bottom));
+        box-sizing: border-box;
+        color: #1D1D1F;
+        font-family: 'Hiragino Sans', sans-serif;
+    }
+
+    .cs-av-wrap {
+        position: relative;
+        width: 208rpx;
+        height: 208rpx;
+        margin: 40rpx auto 40rpx;
+    }
+
+    .cs-av {
+        width: 208rpx;
+        height: 208rpx;
+        border-radius: 50%;
+        background: #E5E5EA;
+    }
+
+    /* 右下のカメラ(押すと写真を変える) */
+    .cs-cam {
+        position: absolute;
+        right: -4rpx;
+        bottom: -4rpx;
+        width: 64rpx;
+        height: 64rpx;
+        border-radius: 50%;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 6rpx #F5F5F7;
+    }
+
+    .cs-h3 {
+        margin: 0 8rpx 16rpx;
+        font-size: 28rpx;
+        font-family: 'Hiragino Sans-W5', sans-serif;
+        color: #515154;
+    }
+
+    .cs-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 0 32rpx;
+        margin-bottom: 40rpx;
+    }
+
+    .cs-fld {
+        padding: 32rpx 0;
+    }
+
+    .cs-lab {
+        font-size: 26rpx;
+        font-weight: 500;
+        margin-bottom: 12rpx;
+    }
+
+    .cs-in {
+        width: 100%;
+        height: 88rpx;
+        padding: 0 28rpx;
+        border: 1px solid #D2D2D7;
+        border-radius: 24rpx;
+        font-size: 30rpx;
+        box-sizing: border-box;
+    }
+
+    .cs-in.on {
+        border-color: #1A73E8;
+        box-shadow: 0 0 0 6rpx rgba(26, 115, 232, 0.16);
+    }
+
+    .cs-ph {
+        color: #8A8A8E;
+    }
+
+    .cs-note {
+        margin-top: 12rpx;
+        font-size: 22rpx;
+        line-height: 1.6;
+        color: #6E6E73;
+    }
+
+    .cs-row {
+        display: flex;
+        align-items: center;
+        min-height: 104rpx;
+        padding: 16rpx 0;
+        border-bottom: 1px solid #E5E5EA;
+        box-sizing: border-box;
+    }
+
+    .cs-row:last-child {
+        border-bottom: 0;
+    }
+
+    .cs-row-text {
+        flex: 1;
+        min-width: 0;
+        margin-right: 20rpx;
+        font-size: 30rpx;
+    }
+
+    .cs-gray {
+        padding: 24rpx 28rpx;
+        margin-bottom: 40rpx;
+        border-radius: 24rpx;
+        background: #EBEBEF;
+        font-size: 24rpx;
+        line-height: 1.8;
+        color: #515154;
+    }
+
+    .cs-gray-t {
+        font-family: 'Hiragino Sans-W5', sans-serif;
+        color: #1D1D1F;
+        margin-bottom: 4rpx;
+    }
+
+    .cs-save {
+        height: 104rpx;
+        line-height: 104rpx;
+        border-radius: 28rpx;
+        background: #1A73E8;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 32rpx;
+        font-family: 'Hiragino Sans-W5', sans-serif;
+    }
+
+    .cs-hover {
+        opacity: 0.8;
+    }
 </style>

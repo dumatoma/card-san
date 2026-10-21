@@ -1,34 +1,28 @@
 <template>
-    <view class="cont">
-        <view class="tips">
-            <view class="tipIcon">
-                <image src="../../../../static/icons/menu_d.png" mode=""></image>
+    <!-- [カスタムエイド 2026-10-20] 外部リンクの見た目を店舗情報などと合わせた
+         ・説明を青い帯に、URLの入力欄を共通の枠(#D2D2D7・角丸・入力中は青)に
+         ・「外部リンク先を上記URLに設定する」をスイッチに(オンにした時だけ黒い文字)。保存ボタンも共通の形に -->
+    <view class="lk">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="外部リンク" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <view class="lk-body">
+            <view class="lk-info">
+                <image class="lk-info-icon" src="../../../../static/icons/menu_d.png" mode=""></image>
+                <text>お客様アプリの「メニュー」アイコンを押したときに開く、リンク先のURLを入力してください。</text>
             </view>
-            <view class="tipDetail">
-                メニューアイコンをタップした際の、
-                リンク先URLを入力して下さい。
-            </view>
-        </view>
-        <view class="insertContent">
-            <view class="insertName">
-                URL
-            </view>
-            <u-input v-model="urls" placeholder="リンク先のURLを入力してください "></u-input>
-        </view>
-
-        <view class="selece">
-            <view class="selectContents" @click="changeCheck">
-                <view class="unselect" v-if="checked != 1"></view>
-                <view class="selected" v-if="checked == 1">
-                    <view class="fill"></view>
+            <view class="lk-card">
+                <view class="lk-label">URL</view>
+                <input class="lk-in" :class="{ on: fk }" v-model="urls" type="text" maxlength="-1" :cursor-spacing="120"
+                    placeholder-class="lk-ph" placeholder="https://〜" @focus="fk = true" @blur="fk = false" />
+                <view class="lk-sw-row">
+                    <view class="lk-sw-text">
+                        <text class="lk-sw-name" :class="{ on: checked == 1 }">外部リンク先を上記URLに設定する</text>
+                    </view>
+                    <u-switch :value="checked == 1" activeColor="#34C759" @change="changeCheck"></u-switch>
                 </view>
             </view>
-            <view class="seName" :style="checked?'color:#1d1d1d':''">
-                外部リンク先を上記URLに設定する
-            </view>
+            <view class="lk-save" hover-class="lk-save-hover" @click="save">保存する</view>
         </view>
-
-        <u-button type="primary" text="保存" @click="save" class="butt"></u-button>
     </view>
 </template>
 
@@ -41,7 +35,8 @@
         data() {
             return {
                 checked: 0,
-                urls: ""
+                urls: "",
+                fk: false // [カスタムエイド 2026-10-20]
             };
         },
         created() {
@@ -69,6 +64,8 @@
                         uni.showToast({
                             title: res.message
                         })
+                    } else {
+                        uni.showToast({ title: res.message, icon: 'none' }) // [カスタムエイド 2026-10-20]
                     }
                 })
             },
@@ -84,66 +81,122 @@
     }
 </script>
 
-<style lang="scss">
-    .selece {
+<style lang="scss" scoped>
+    /* [カスタムエイド 2026-10-20] 店舗情報などと同じ決まり */
+    .lk {
+        min-height: 100vh;
+        background: #F5F5F7;
+        font-family: 'Hiragino Sans', sans-serif;
+        color: #1D1D1F;
+    }
+
+    .lk-body {
+        padding: 32rpx 24rpx calc(80rpx + env(safe-area-inset-bottom));
+    }
+
+    .lk-info {
+        display: flex;
+        align-items: flex-start;
+        padding: 24rpx 28rpx;
+        border-radius: 24rpx;
+        background: #EEF4FF;
+        font-size: 28rpx;
+        line-height: 1.6;
+        margin-bottom: 32rpx;
+
+        text {
+            flex: 1;
+        }
+    }
+
+    .lk-info-icon {
+        width: 44rpx;
+        height: 44rpx;
+        margin: 2rpx 16rpx 0 0;
+        flex-shrink: 0;
+    }
+
+    .lk-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 32rpx 32rpx 8rpx;
+        margin-bottom: 40rpx;
+    }
+
+    .lk-label {
+        font-size: 26rpx;
+        font-weight: 500;
+        margin-bottom: 12rpx;
+    }
+
+    .lk-in {
+        width: 100%;
+        box-sizing: border-box;
+        height: 88rpx;
+        padding: 0 28rpx;
+        border: 1px solid #D2D2D7;
+        border-radius: 24rpx;
+        background: #FFFFFF;
+        font-size: 30rpx;
+        color: #1D1D1F;
+        margin-bottom: 24rpx;
+        transition: border-color .15s, box-shadow .15s;
+    }
+
+    .lk-in.on {
+        border-color: #1A73E8;
+        box-shadow: 0 0 0 6rpx rgba(26, 115, 232, 0.16);
+    }
+
+    .lk-ph {
+        color: #8A8A8E;
+    }
+
+    .lk-sw-row {
         display: flex;
         align-items: center;
-
-        .seName {
-            font-size: 32upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #AAAAAA;
-            margin-left: 20upx;
-        }
+        justify-content: space-between;
+        min-height: 128rpx;
+        border-top: 1px solid #E5E5EA;
     }
 
-    .butt {
-        width: 480upx;
-        height: 96upx;
+    .lk-sw-text {
+        flex: 1;
+        min-width: 0;
+        margin-right: 20rpx;
+    }
+
+    .lk-sw-name {
+        display: block;
+        font-size: 30rpx;
+        font-weight: 500;
+        color: #8A8A8E;
+        margin-bottom: 4rpx;
+    }
+
+    .lk-sw-name.on {
+        color: #1D1D1F;
+    }
+
+    .lk-sub {
+        display: block;
+        font-size: 24rpx;
+        line-height: 1.6;
+        color: #6E6E73;
+    }
+
+    .lk-save {
+        height: 104rpx;
+        line-height: 104rpx;
+        border-radius: 28rpx;
         background: #1A73E8;
-        border-radius: 20upx;
-        margin-top: 600upx;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 32rpx;
+        font-weight: 700;
     }
 
-    .cont {
-        width: 100vw;
-        height: 100vh;
-        box-sizing: border-box;
-        padding: 46upx;
-        border-top: 2upx solid #d2d2d7;
-
-        .tips {
-            display: flex;
-            background: #F5F5F7;
-            box-sizing: border-box;
-            padding: 28upx;
-            border-radius: 20upx;
-
-            .tipIcon {
-                width: 40upx;
-                height: 40upx;
-                margin-right: 14upx;
-                flex-shrink: 0;
-
-                image {
-                    width: 100%;
-                    height: 100%;
-                }
-            }
-        }
-
-        .insertContent {
-            box-sizing: border-box;
-            padding: 78upx 0 86upx;
-
-            .insertName {
-                font-size: 28upx;
-                font-family: Hiragino Sans-W3, Hiragino Sans;
-                font-weight: normal;
-                color: #86868B;
-                margin-bottom: 10upx;
-            }
-        }
+    .lk-save-hover {
+        opacity: 0.8;
     }
 </style>

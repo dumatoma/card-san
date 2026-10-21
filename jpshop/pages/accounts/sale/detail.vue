@@ -1,5 +1,7 @@
 <template>
     <view>
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="販促アイテム" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <u-swiper :list="goods.carousel" height="250" @change="change" indicatorActiveColor="#000"
             indicatorInactiveColor="rgba(0,0,0,.3)" indicatorMode="dot" keyName="image" indicator></u-swiper>
         <view class="goodsContent">

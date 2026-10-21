@@ -1,109 +1,65 @@
 <template>
     <view class="contain">
-        <view class="setTitle">
-            アカウント設定
-        </view>
-        <view class="settingContent">
-            <view class="settingItem" @click="toUserInfo">
-                <view class="icon">
-                    <image src="../../../static/icons/buser.png" mode=""></image>
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="メッセージ設定" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <!-- [カスタムエイド 2026-10-21] 見た目をこれまでの画面に合わせた(白い角丸のまとまり、アイコンは今までのもの、「>」は他の画面と同じ矢印)。
+             「メッセージを配信」のボタンは、メッセージの一覧のいちばん上に移した -->
+        <view class="st">
+            <view class="st-h3">アカウント設定</view>
+            <view class="st-card">
+                <view class="st-row" hover-class="st-row-hover" @click="toUserInfo">
+                    <image class="st-ic" src="../../../static/icons/buser.png" mode="aspectFit"></image>
+                    <text class="st-name">アカウント情報</text>
+                    <view class="st-chev st-right"></view>
                 </view>
-                <view>
-                    アカウント情報
+                <view class="st-row" hover-class="st-row-hover" @click="toSetReview">
+                    <image class="st-ic" src="../../../static/icons/review.svg" mode="aspectFit"></image>
+                    <text class="st-name">レビューリンク</text>
+                    <view class="st-chev st-right"></view>
                 </view>
-            </view>
-            <view class="settingItem" @click="toSetReview">
-                <view class="icon">
-                    <image src="../../../static/icons/review.svg" mode=""></image>
-                </view>
-                <view>
-                    レビューリンク
-                </view>
-            </view>
-            <view class="settingItem" @click="toStaffRoom" v-if="isOwner">
-                <view class="icon">
-                    <image src="../../../static/icons/staffroom.svg" mode="aspectFit"></image>
-                </view>
-                <view>
-                    スタッフルーム設定
+                <view class="st-row" hover-class="st-row-hover" @click="toStaffRoom" v-if="isOwner">
+                    <image class="st-ic" src="../../../static/icons/staffroom.svg" mode="aspectFit"></image>
+                    <text class="st-name">スタッフルーム設定</text>
+                    <view class="st-chev st-right"></view>
                 </view>
             </view>
-        </view>
-        <view class="setTitle">
-            メッセージテンプレート設定
-        </view>
-        <view class="settingContent">
-            <view class="settingItem" @click="tomodule(1)">
-                <view>
-                    テンプレート①　＞
+
+            <view class="st-h3">メッセージテンプレート設定</view>
+            <view class="st-card">
+                <view class="st-row" hover-class="st-row-hover" @click="tomodule(1)">
+                    <text class="st-name">テンプレート①</text>
+                    <view class="st-chev st-right"></view>
+                </view>
+                <view class="st-row" hover-class="st-row-hover" @click="tomodule(2)">
+                    <text class="st-name">テンプレート②</text>
+                    <view class="st-chev st-right"></view>
                 </view>
             </view>
-            <view class="settingItem" @click="tomodule(2)">
-                <view>
-                    テンプレート②　＞
-                </view>
-            </view>
-        </view>
-        <view class="setTitle">
-            自動メッセージ設定
-        </view>
-        <view class="settingContent">
-            <view class="item">
-                <view class="itemLeft">
-                    <view class="itemName" @click="toOne(1)">
-                        予約確認　＞
-                    </view>
-                </view>
-                <view class="itemRight">
+
+            <view class="st-h3">自動メッセージ設定</view>
+            <view class="st-card">
+                <view class="st-row">
+                    <view class="st-name st-tap" hover-class="st-hover" @click="toOne(1)"><text>予約確認</text><view class="st-chev"></view></view>
                     <u-switch v-model="value1" activeColor="#33C75A" @change="changeValue1"></u-switch>
                 </view>
-            </view>
-            <view class="item">
-                <view class="itemLeft">
-                    <view class="itemName" @click="toOne(2)">
-                        予約リマインダー　＞
-                    </view>
-                </view>
-                <view class="itemRight">
+                <view class="st-row">
+                    <view class="st-name st-tap" hover-class="st-hover" @click="toOne(2)"><text>予約リマインダー</text><view class="st-chev"></view></view>
                     <u-switch v-model="value2" activeColor="#33C75A" @change="changeValue2"></u-switch>
                 </view>
-            </view>
-            <view class="item">
-                <view class="itemLeft">
-                    <view class="itemName" @click="toOne(5)">
-                        予約内容変更　＞
-                    </view>
-                </view>
-                <view class="itemRight">
+                <view class="st-row">
+                    <view class="st-name st-tap" hover-class="st-hover" @click="toOne(5)"><text>予約内容変更</text><view class="st-chev"></view></view>
                     <u-switch v-model="value5" activeColor="#33C75A" @change="changeValue5"></u-switch>
                 </view>
-            </view>
-            <view class="item">
-                <view class="itemLeft">
-                    <view class="itemName" @click="toOne(3)">
-                        予約キャンセル　＞
-                    </view>
-                </view>
-                <view class="itemRight">
+                <view class="st-row">
+                    <view class="st-name st-tap" hover-class="st-hover" @click="toOne(3)"><text>予約キャンセル</text><view class="st-chev"></view></view>
                     <u-switch v-model="value3" activeColor="#33C75A" @change="changeValue3"></u-switch>
                 </view>
-            </view>
-            <view class="item">
-                <view class="itemLeft">
-                    <view class="itemName" @click="toOne(4)">
-                        サンキューメッセージ　＞
-                    </view>
-                </view>
-                <view class="itemRight">
+                <view class="st-row">
+                    <view class="st-name st-tap" hover-class="st-hover" @click="toOne(4)"><text>サンキューメッセージ</text><view class="st-chev"></view></view>
                     <u-switch v-model="value4" activeColor="#33C75A" @change="changeValue4"></u-switch>
                 </view>
             </view>
         </view>
-       <!-- <view class="setTitle">
-            アカウント設定
-        </view> -->
-        <u-button @click="toDeset" class="btn">メッセージを配信</u-button>
-        <view style="height: 116upx;"></view>
     </view>
 </template>
 
@@ -284,5 +240,82 @@
             font-weight: normal;
             color: rgba(29, 29, 31, 0.9);
         }
+    }
+
+    /* [カスタムエイド 2026-10-21] これまでの画面と同じ見た目 */
+    .st {
+        min-height: 100vh;
+        background: #F5F5F7;
+        padding: 32rpx 24rpx calc(60rpx + env(safe-area-inset-bottom));
+        box-sizing: border-box;
+        color: #1D1D1F;
+        font-family: 'Hiragino Sans', sans-serif;
+    }
+
+    .st-h3 {
+        margin: 0 8rpx 16rpx;
+        font-size: 28rpx;
+        font-family: 'Hiragino Sans-W5', sans-serif;
+        color: #515154;
+    }
+
+    .st-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        overflow: hidden;
+        margin-bottom: 40rpx;
+    }
+
+    .st-row {
+        display: flex;
+        align-items: center;
+        min-height: 104rpx;
+        padding: 0 32rpx;
+        border-bottom: 1px solid #E5E5EA;
+    }
+
+    .st-row:last-child {
+        border-bottom: 0;
+    }
+
+    .st-row-hover {
+        background: #F5F5F7;
+    }
+
+    .st-ic {
+        width: 48rpx;
+        height: 48rpx;
+        flex-shrink: 0;
+        margin-right: 24rpx;
+    }
+
+    .st-name {
+        font-size: 30rpx;
+    }
+
+    .st-tap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        min-height: 104rpx;
+    }
+
+    .st-hover {
+        opacity: 0.6;
+    }
+
+    /* 「>」(他の画面と同じ右向きの矢印) */
+    .st-chev {
+        width: 14rpx;
+        height: 14rpx;
+        flex-shrink: 0;
+        margin-left: 16rpx;
+        border-right: 3rpx solid #C7C7CC;
+        border-bottom: 3rpx solid #C7C7CC;
+        transform: rotate(-45deg);
+    }
+
+    .st-right {
+        margin-left: auto;
     }
 </style>

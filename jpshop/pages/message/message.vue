@@ -11,62 +11,52 @@
                 </image>
             </view>
         </u-navbar>
-        <!-- スタッフルームセクション -->
-        <view class="staffRoomSection" v-if="staffRoomOn && staffRoomJoin" @click="toGroupChat">
-            <view class="srLeft">
-                <image :src="staffRoomAvatar || '../../static/images/avatar.png'" class="srAvatar" mode="aspectFill"></image>
-                <view class="srInfo">
-                    <view class="srName">{{ staffRoomName }}({{ staffRoomCount }})</view>
-                    <view class="srSub">{{ staffRoomLastMessage || 'スタッフルーム' }}</view>
+        <!-- [カスタムエイド 2026-10-21] 見た目をこれまでの画面に合わせた(LINEと同じ1行ずつの一覧のまま、スタッフとお客様を白い角丸のまとまりに)。
+             「メッセージ配信」のボタンを、メッセージ設定のいちばん下からこの画面のいちばん上に移した(行き先は同じ) -->
+        <view class="ms">
+            <view class="ms-send" hover-class="ms-hover" @click="toSend">＋メッセージ配信(一斉・セグメント)</view>
+
+            <block v-if="(staffRoomOn && staffRoomJoin) || dmThreads.length">
+                <view class="ms-h3">スタッフ</view>
+                <view class="ms-card">
+                    <view class="ms-row" v-if="staffRoomOn && staffRoomJoin" hover-class="ms-row-hover" @click="toGroupChat">
+                        <image :src="staffRoomAvatar || '../../static/images/avatar.png'" class="ms-av" mode="aspectFill"></image>
+                        <view class="ms-mid">
+                            <view class="ms-name">{{ staffRoomName }}({{ staffRoomCount }})</view>
+                            <view class="ms-last">{{ staffRoomLastMessage || 'スタッフルーム' }}</view>
+                        </view>
+                        <view class="ms-badge" v-if="groupUnread > 0">{{ groupUnread }}</view>
+                    </view>
+                    <view class="ms-row" v-for="thread in dmThreads" :key="thread.to_id" hover-class="ms-row-hover" @click="toDm(thread)">
+                        <image :src="thread.avatar || '../../static/images/avatar.png'" class="ms-av" mode="aspectFill"></image>
+                        <view class="ms-mid">
+                            <view class="ms-name">{{ thread.name }}</view>
+                            <view class="ms-last">{{ thread.last_message }}</view>
+                        </view>
+                        <view class="ms-badge" v-if="thread.unread > 0">{{ thread.unread }}</view>
+                    </view>
                 </view>
+            </block>
+
+            <view class="ms-h3">お客様</view>
+            <view class="ms-search" :class="{ on: searchFocus }">
+                <image class="ms-glass" src="../../static/svg/cs_search.svg" mode="aspectFit"></image>
+                <input class="ms-search-in" v-model="keywords" placeholder="名前、電話番号、IDで検索" placeholder-class="ms-ph"
+                    @focus="searchFocus = true" @blur="searchFocus = false" />
             </view>
-            <view class="srBadge" v-if="groupUnread > 0">{{ groupUnread }}</view>
-        </view>
-        <!-- 1対1チャット一覧 -->
-        <view class="staffRoomSection" v-for="thread in dmThreads" :key="thread.to_id" @click="toDm(thread)">
-            <view class="srLeft">
-                <image :src="thread.avatar || '../../static/images/avatar.png'" class="srAvatar" mode="aspectFill"></image>
-                <view class="srInfo">
-                    <view class="srName">{{ thread.name }}</view>
-                    <view class="srSub">{{ thread.last_message }}</view>
-                </view>
-            </view>
-            <view class="srBadge" v-if="thread.unread > 0">{{ thread.unread }}</view>
-        </view>
-        <view class="con">
-            <view class="search">
-                <u--input placeholder="名前、電話番号、IDで検索" prefixIcon="search" prefixIconStyle="font-size: 22px;color: #aaa"
-                    v-model="keywords">
-                </u--input>
-            </view>
-            <view class="total">
-                メンバー数:{{array.length}}
-            </view>
-        </view>
-        <view class="listContent">
-            <view v-for="(item,index) in array" :options="options1">
-                <view class="swipe-action u-border-top u-border-bottom">
-                    <view class="swipe-action__content">
-                        <view class="itemContent" @click="toDetail(item.uid,item.name)">
-                            <view class="itemLeft">
-                                <image :src="item.avatar" v-if="item.avatar != ''" mode="aspectFill" style="border-radius: 50%;">
-                                </image>
-                                <image v-else src="../../static/images/avatar.png" mode="aspectFill" style="border-radius: 50%;">
-                                </image>
-                            </view>
-                            <view class="itemRight">
-                                <view class="rightItem">
-                                    <view class="userName" v-text="item.name"></view>
-                                    <view class="mtime" v-if="item.timestamp != 0"
-                                        v-text="showTimePipe(item.timestamp*1000)"></view>
-                                </view>
-                                <view class="rightItem">
-                                    <view class="tel" v-if="item.type == 1"
-                                        v-text="item.message.includes('<p>')? '【運営からのメッセージ】': item.message"></view>
-                                    <view class="tel" v-if="item.type == 2">[画像]</view>
-                                    <view v-if="item.unread_num > 0" class="userId" v-text="item.unread_num"></view>
-                                </view>
-                            </view>
+            <view class="ms-count">メンバー <text class="ms-count-n">{{array.length}}</text> 人</view>
+            <view class="ms-card" v-if="array.length">
+                <view class="ms-row" v-for="(item, index) in array" :key="index" hover-class="ms-row-hover" @click="toDetail(item.uid, item.name)">
+                    <image :src="item.avatar || '../../static/images/avatar.png'" class="ms-av" mode="aspectFill"></image>
+                    <view class="ms-mid">
+                        <view class="ms-top">
+                            <text class="ms-name">{{item.name}}</text>
+                            <text class="ms-time" v-if="item.timestamp != 0">{{showTimePipe(item.timestamp * 1000)}}</text>
+                        </view>
+                        <view class="ms-bottom">
+                            <text class="ms-last" v-if="item.type == 1" v-text="lastText(item)"></text>
+                            <text class="ms-last" v-if="item.type == 2">[画像]</text>
+                            <view class="ms-badge" v-if="item.unread_num > 0">{{item.unread_num}}</view>
                         </view>
                     </view>
                 </view>
@@ -108,6 +98,7 @@
                     }
                 }],
                 keywords: "",
+                searchFocus: false, // [カスタムエイド 2026-10-21]
                 allMessages: []
             }
         },
@@ -143,6 +134,17 @@
             this.getList()
         },
         methods: {
+            // [カスタムエイド 2026-10-21] メッセージ配信(一斉・セグメント)。メッセージ設定の「メッセージを配信」と同じ画面
+            // [カスタムエイド 2026-10-21] 最後のメッセージ(運営からのお知らせは見出しだけ。今までと同じ)
+            lastText(item) {
+                const m = item.message || ''
+                return m.indexOf('<p>') > -1 ? '【運営からのメッセージ】' : m
+            },
+            toSend() {
+                uni.navigateTo({
+                    url: "/pages/message/notice/notice"
+                })
+            },
             scoketClose() {
                 this.socketIo.connectNum = 1
                 const data = {}
@@ -485,5 +487,181 @@
             align-items: center;
             justify-content: space-between;
         }
+    }
+
+    /* [カスタムエイド 2026-10-21] これまでの画面と同じ見た目(LINEと同じ1行ずつの一覧) */
+    .ms {
+        min-height: 100vh;
+        background: #F5F5F7;
+        padding: 28rpx 24rpx calc(60rpx + env(safe-area-inset-bottom));
+        box-sizing: border-box;
+        color: #1D1D1F;
+        font-family: 'Hiragino Sans', sans-serif;
+    }
+
+    .ms-send {
+        height: 92rpx;
+        line-height: 92rpx;
+        border-radius: 28rpx;
+        background: #34C759;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 30rpx;
+        font-family: 'Hiragino Sans-W5', sans-serif;
+        margin-bottom: 32rpx;
+    }
+
+    .ms-hover {
+        opacity: 0.8;
+    }
+
+    .ms-h3 {
+        margin: 0 8rpx 16rpx;
+        font-size: 28rpx;
+        font-family: 'Hiragino Sans-W5', sans-serif;
+        color: #515154;
+    }
+
+    .ms-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        overflow: hidden;
+        margin-bottom: 36rpx;
+    }
+
+    .ms-row {
+        display: flex;
+        align-items: center;
+        padding: 24rpx 28rpx;
+        position: relative;
+    }
+
+    .ms-row::after {
+        content: '';
+        position: absolute;
+        left: 148rpx;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: #E5E5EA;
+    }
+
+    .ms-row:last-child::after {
+        display: none;
+    }
+
+    .ms-row-hover {
+        background: #F5F5F7;
+    }
+
+    .ms-av {
+        width: 96rpx;
+        height: 96rpx;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #E5E5EA;
+        margin-right: 24rpx;
+    }
+
+    .ms-mid {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ms-top,
+    .ms-bottom {
+        display: flex;
+        align-items: center;
+    }
+
+    .ms-name {
+        flex: 1;
+        min-width: 0;
+        display: block;
+        font-size: 31rpx;
+        font-family: 'Hiragino Sans-W5', sans-serif;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ms-time {
+        flex-shrink: 0;
+        margin-left: 12rpx;
+        font-size: 22rpx;
+        color: #8A8A8E;
+    }
+
+    .ms-last {
+        flex: 1;
+        min-width: 0;
+        display: block;
+        margin-top: 4rpx;
+        font-size: 26rpx;
+        color: #6E6E73;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* 未読の数(今までと同じ赤) */
+    .ms-badge {
+        flex-shrink: 0;
+        min-width: 40rpx;
+        height: 40rpx;
+        line-height: 40rpx;
+        padding: 0 12rpx;
+        margin-left: 16rpx;
+        border-radius: 20rpx;
+        background: #D93025;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 22rpx;
+        box-sizing: border-box;
+    }
+
+    .ms-search {
+        display: flex;
+        align-items: center;
+        height: 84rpx;
+        padding: 0 24rpx;
+        border-radius: 24rpx;
+        background: #FFFFFF;
+        border: 1px solid #D2D2D7;
+        box-sizing: border-box;
+    }
+
+    .ms-search.on {
+        border-color: #1A73E8;
+        box-shadow: 0 0 0 6rpx rgba(26, 115, 232, 0.16);
+    }
+
+    .ms-glass {
+        width: 32rpx;
+        height: 32rpx;
+        flex-shrink: 0;
+        margin-right: 16rpx;
+    }
+
+    .ms-search-in {
+        flex: 1;
+        height: 84rpx;
+        font-size: 28rpx;
+    }
+
+    .ms-ph {
+        color: #8A8A8E;
+    }
+
+    .ms-count {
+        margin: 20rpx 8rpx 16rpx;
+        font-size: 26rpx;
+        color: #515154;
+    }
+
+    .ms-count-n {
+        font-size: 30rpx;
+        font-weight: 700;
+        color: #1D1D1F;
     }
 </style>

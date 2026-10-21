@@ -1,36 +1,27 @@
 <template>
-    <view class="contents">
-        <view class="title">
-            アカウントは１度削除すると元に戻りません。
-        </view>
-        <view class="content">
-            <view class="ctitle">
-                アカウントを削除した場合：
-            </view>
-            <view class="citem">
-                <view class="c_left"></view>
-                <view class="c_right">
-                    今後、ご自分のアプリのすべてのデータ、コンテンツは削除されアクセス出来なくなります。
+    <view class="contents da-page">
+        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+        <u-navbar title="アカウント削除" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <!-- [カスタムエイド 2026-10-20] 両わきと枠の中の余白を広げ、角丸のカードに。チェックボックス・ボタンもこれまでの画面に合わせた -->
+        <view class="da">
+            <view class="da-title">アカウントは1度削除すると元に戻りません。</view>
+            <view class="da-card">
+                <view class="da-cap">アカウントを削除した場合:</view>
+                <view class="da-li">
+                    <view class="da-dot"></view>
+                    <view class="da-li-text">今後、ご自分のアプリのすべてのデータ、コンテンツは削除されアクセス出来なくなります。</view>
+                </view>
+                <view class="da-li">
+                    <view class="da-dot"></view>
+                    <view class="da-li-text">1度削除されたアカウントはいかなる理由でも元に戻すことができません。</view>
                 </view>
             </view>
-            <view class="citem">
-                <view class="c_left"></view>
-                <view class="c_right">
-                    １度削除されたアカウントはいかなる理由でも元に戻すことができません。
-                </view>
+            <view class="da-card da-check-row" @click="changCheck">
+                <view class="da-check" :class="{ on: checked }"><view class="da-tick" v-if="checked"></view></view>
+                <view class="da-check-text" :class="{ on: checked }">はい。上記事項を確認し、アカウントを完全に削除することに合意します。</view>
             </view>
-            <view class="citem">
-                <view class="c_leftCheck">
-                    <view class="checkc" @click="changCheck" :style="checked == true? 'background:#1A73E8' : 'background:#fff'">
-                        <image v-if="checked == true" src="../../static/icons/select.png" mode=""></image>
-                    </view>
-                </view>
-                <view class="c_right">
-                    はい。上記事項を確認し、アカウントを完全に削除することに合意します。
-                </view>
-            </view>
-            <u-button class="customstyle" :disabled="checked == false" text="完全に削除する" @click="confirms"></u-button>
-            <u-button class="customs-style" text="キャンセル" @click="cancels"></u-button>
+            <view class="da-del" :class="{ dis: !checked }" hover-class="da-hover" @click="confirms">完全に削除する</view>
+            <view class="da-cancel" hover-class="da-hover" @click="cancels">キャンセル</view>
         </view>
         <view class="mask" v-if="show == true">
             <view class="maskcontent">
@@ -197,5 +188,139 @@
                 margin-right: 10upx;
             }
         }
+    }
+
+    /* [カスタムエイド 2026-10-20] 新しい見た目 */
+    .contents.da-page {
+        min-height: 100vh;
+        height: auto;
+        padding: 0;
+        border-top: 0;
+        background: #F5F5F7;
+    }
+
+    .da {
+        padding: 40rpx 32rpx calc(80rpx + env(safe-area-inset-bottom));
+        color: #1D1D1F;
+        font-family: 'Hiragino Sans', sans-serif;
+    }
+
+    .da-title {
+        font-size: 36rpx;
+        font-weight: 700;
+        line-height: 1.6;
+        margin: 0 8rpx 32rpx;
+    }
+
+    .da-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 36rpx 36rpx 16rpx;
+        margin-bottom: 24rpx;
+    }
+
+    .da-cap {
+        font-size: 28rpx;
+        font-weight: 700;
+        margin-bottom: 20rpx;
+    }
+
+    .da-li {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 20rpx;
+    }
+
+    .da-dot {
+        width: 12rpx;
+        height: 12rpx;
+        flex-shrink: 0;
+        margin: 18rpx 20rpx 0 4rpx;
+        border-radius: 50%;
+        background: #C5221F;
+    }
+
+    .da-li-text {
+        font-size: 28rpx;
+        line-height: 1.7;
+        color: #3A3A3C;
+    }
+
+    .da-check-row {
+        display: flex;
+        align-items: flex-start;
+        padding: 32rpx 36rpx;
+        margin-bottom: 48rpx;
+    }
+
+    .da-check {
+        width: 44rpx;
+        height: 44rpx;
+        flex-shrink: 0;
+        margin: 2rpx 20rpx 0 0;
+        border: 2px solid #C7C7CC;
+        border-radius: 12rpx;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #FFFFFF;
+    }
+
+    .da-check.on {
+        border-color: #1A73E8;
+        background: #1A73E8;
+    }
+
+    /* 白いチェック */
+    .da-tick {
+        width: 10rpx;
+        height: 20rpx;
+        border-right: 4rpx solid #FFFFFF;
+        border-bottom: 4rpx solid #FFFFFF;
+        transform: translateY(-3rpx) rotate(45deg);
+    }
+
+    .da-check-text {
+        font-size: 28rpx;
+        line-height: 1.7;
+        color: #6E6E73;
+    }
+
+    .da-check-text.on {
+        color: #1D1D1F;
+    }
+
+    .da-del {
+        height: 104rpx;
+        line-height: 104rpx;
+        border-radius: 28rpx;
+        background: #C5221F;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 32rpx;
+        font-weight: 700;
+        margin-bottom: 24rpx;
+    }
+
+    .da-del.dis {
+        background: #F2B8B5;
+    }
+
+    .da-cancel {
+        height: 104rpx;
+        line-height: 102rpx;
+        border-radius: 28rpx;
+        border: 1px solid #D2D2D7;
+        background: #FFFFFF;
+        color: #1D1D1F;
+        text-align: center;
+        font-size: 32rpx;
+        font-weight: 500;
+        box-sizing: border-box;
+    }
+
+    .da-hover {
+        opacity: 0.7;
     }
 </style>

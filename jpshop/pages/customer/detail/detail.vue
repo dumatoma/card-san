@@ -10,105 +10,84 @@
                 <text @click="toCsv" class="tc">編集</text>
             </view>
         </u-navbar>
-        <!-- 具体内容 -->
-        <view class="container">
-            <view class="userAvatar">
-                <u-avatar mode="aspectFill" size="87" :src="userInfo.avatar"></u-avatar>
-                <view @click="toRecord" class="count" v-text="count"></view>
+        <!-- [カスタムエイド 2026-10-20] 見た目をこれまでの画面に合わせた(白い角丸のまとまり・項目名は灰色)。
+             来店回数は「来店履歴」の行に。いちばん下の「画像」は、新しい機能「カルテ」に変わる予定と分かるようにした -->
+        <view class="md">
+            <view class="md-head">
+                <u-avatar mode="aspectFill" size="84" :src="userInfo.avatar"></u-avatar>
+                <view class="md-name">{{userInfo.name || '-'}}</view>
+                <view class="md-kana" v-if="userInfo.pronunciation">{{userInfo.pronunciation}}</view>
             </view>
-            <view class="userInfo">
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        ID
-                    </view>
-                    <view class="itemRight">
-                        <text v-text="userInfo.member_id" selectable="true"></text>
-                    </view>
+
+            <view class="md-card">
+                <view class="md-link" hover-class="md-hover" @click="toRecord">
+                    <text class="md-link-name">来店履歴</text>
+                    <text class="md-link-val">{{count}}回</text>
+                    <view class="md-chev"></view>
                 </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        顧客NO
-                    </view>
-                    <view class="itemRight" v-text="userInfo.member_no"></view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        <image src="../../../static/icons/cardImg.png" mode="widthFix"></image>
-                    </view>
-                    <view class="itemRight blue" @click="toCard"
-                        v-text="`${userInfo.card_name}`"></view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        氏名
-                    </view>
-                    <view class="itemRight" v-text="userInfo.name"></view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        カナ
-                    </view>
-                    <view class="itemRight" v-text="userInfo.pronunciation"></view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        電話番号
-                    </view>
-                    <view class="itemRight blue" @click="makePhoneCall(userInfo.phone)" v-text="userInfo.phone"></view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        性別
-                    </view>
-                    <view class="itemRight" v-text="userInfo.sex"></view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        生年月日
-                    </view>
-                    <view class="itemRight" v-if="userInfo.birthday_year">
-                        {{userInfo.birthday_year}}年　{{userInfo.birthday_month}}月　{{userInfo.birthday_day}}日
-                    </view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        住所
-                    </view>
-                    <view class="itemRight">
-                        <view v-text="userInfo.zip_code"></view>
-                        <view v-text="userInfo.province"></view>
-                        <view v-text="userInfo.address1"></view>
-                        <view v-text="userInfo.address2"></view>
-                    </view>
-                </view>
-                <view class="infoItem">
-                    <view class="itemLeft">
-                        備考
-                    </view>
-                    <view style="white-space: pre-wrap;" class="itemRight" v-text="userInfo.remark"></view>
+                <view class="md-link" hover-class="md-hover" @click="toCard">
+                    <text class="md-link-name">メンバーズカード</text>
+                    <text class="md-link-val blue">{{userInfo.card_name || '-'}}</text>
+                    <view class="md-chev"></view>
                 </view>
             </view>
-        </view>
-        <view class="blank"></view>
-        <view class="userImages">
-            <view class="infoItem">
-                <view class="itemLeft">
-                    画像
+
+            <view class="md-card">
+                <view class="md-item">
+                    <view class="md-label">ID</view>
+                    <view class="md-val"><text selectable="true">{{userInfo.member_id}}</text></view>
                 </view>
-                <view class="itemRight" style="color: #707070;">
-                    アップロードした画像データは、お客様のデータには反映されません。
+                <view class="md-item">
+                    <view class="md-label">顧客NO</view>
+                    <view class="md-val" :class="{ empty: !userInfo.member_no }">{{userInfo.member_no || '未登録'}}</view>
+                </view>
+                <view class="md-item">
+                    <view class="md-label">電話番号</view>
+                    <view class="md-val blue" v-if="userInfo.phone" @click="makePhoneCall(userInfo.phone)">{{userInfo.phone}}</view>
+                    <view class="md-val empty" v-else>ー</view>
+                </view>
+                <view class="md-item">
+                    <view class="md-label">性別</view>
+                    <view class="md-val" :class="{ empty: !userInfo.sex }">{{userInfo.sex || '未登録'}}</view>
+                </view>
+                <view class="md-item">
+                    <view class="md-label">生年月日</view>
+                    <view class="md-val" v-if="userInfo.birthday_year">{{userInfo.birthday_year}}年{{userInfo.birthday_month}}月{{userInfo.birthday_day}}日</view>
+                    <view class="md-val empty" v-else>未登録</view>
+                </view>
+                <view class="md-item">
+                    <view class="md-label">住所</view>
+                    <view class="md-val" v-if="userInfo.zip_code || userInfo.province || userInfo.address1">
+                        <view v-if="userInfo.zip_code">〒{{userInfo.zip_code}}</view>
+                        <view>{{userInfo.province}}{{userInfo.address1}}</view>
+                        <view v-if="userInfo.address2">{{userInfo.address2}}</view>
+                    </view>
+                    <view class="md-val empty" v-else>未登録</view>
+                </view>
+                <view class="md-item">
+                    <view class="md-label">備考</view>
+                    <view class="md-val" :class="{ empty: !userInfo.remark }" style="white-space: pre-wrap;">{{userInfo.remark || 'なし'}}</view>
                 </view>
             </view>
-            <view class="imgs">
-                <view class="imgItem" v-for="(item,index) in userInfo.image" @click="previewImg(index)">
-                    <image :src="item" mode="aspectFit"></image>
+
+            <!-- カルテ(準備中)。公開までは今の「画像」をそのまま使える -->
+            <view class="md-h3">
+                <text>カルテ</text>
+                <text class="md-soon">準備中</text>
+            </view>
+            <view class="md-card md-karte">
+                <view class="md-karte-note">カルテ機能を準備しています。公開されると、ここがカルテに変わります。それまでは、下の「画像」をお使いください。</view>
+                <view class="md-sub">画像(お客様のアプリには表示されません)</view>
+                <view class="md-imgs" v-if="userInfo.image && userInfo.image.length">
+                    <view class="md-img" v-for="(item, index) in userInfo.image" :key="index" @click="previewImg(index)">
+                        <image :src="item" mode="aspectFill"></image>
+                    </view>
+                </view>
+                <view class="md-up" hover-class="md-hover" @click="uploadImage">
+                    <text class="md-plus">+</text>
+                    <text>画像をアップロード</text>
                 </view>
             </view>
-            <button type="default" class="addImg" @click="uploadImage">
-                <text>+</text>
-                <text>画像アップロード</text>
-            </button>
-            <view class="blank" style="border: none;"></view>
         </view>
         <view v-if="showPreview"
             style="z-index: 1002 !important;position: fixed;top: 0;left: 0;width: 100vw;height: 100vh;">
@@ -292,142 +271,210 @@
 </script>
 
 <style lang="scss" scoped>
-    page {
-        background: #fff;
-        font-family: Hiragino Sans-W3, Hiragino Sans;
-    }
-
+    /* [カスタムエイド 2026-10-20] これまでの画面と同じ見た目 */
     .tc {
-        font-size: 32upx;
-        font-family: Hiragino Sans-W5, Hiragino Sans;
-        font-weight: normal;
+        font-size: 32rpx;
+        font-weight: 700;
         color: #1A73E8;
     }
 
-    .blank {
-        width: 100%;
-        height: 50upx;
-        border-bottom: 2upx solid #D2D2D7;
-    }
-
-    .addImg {
-        width: 480upx;
-        height: 96upx;
+    .md {
+        min-height: 100vh;
         background: #F5F5F7;
-        border-radius: 20upx;
-        border: 2upx solid #707070;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-top: 82upx;
-
-        text:last-child {
-            font-size: 32upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: rgba(29, 29, 31, 0.9);
-        }
-
-        text:first-child {
-            font-size: 50upx;
-            color: #1D1D1F;
-            margin-right: 20upx;
-        }
-
-    }
-
-    .userImages {
+        padding: 0 24rpx calc(80rpx + env(safe-area-inset-bottom));
         box-sizing: border-box;
-        padding: 76upx 0 42upx;
-
-        .imgs {
-            display: flex;
-            justify-content: flex-start;
-            flex-wrap: wrap;
-
-            .imgItem {
-                width: 244upx;
-                height: 180upx;
-                flex-shrink: 0;
-                // margin-bottom: 10upx;
-                margin: 0 3upx 10upx;
-
-                image {
-                    width: 100%;
-                    height: 100%;
-                }
-            }
-        }
-
-        .infoItem {
-            box-sizing: border-box;
-            padding: 0 46upx;
-
-            .itemLeft {
-                width: 130upx !important;
-                text-align: center;
-                font-size: 32upx;
-                font-family: Hiragino Sans-W3, Hiragino Sans;
-                font-weight: normal;
-                color: #707070;
-                margin-right: 40upx;
-                flex-shrink: 0;
-
-                image {
-                    width: 60upx;
-                    height: 44upx;
-                }
-            }
-        }
-
+        color: #1D1D1F;
+        font-family: 'Hiragino Sans', sans-serif;
     }
 
-    .userAvatar {
-        height: 340upx;
+    .md-head {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40rpx 0 32rpx;
+    }
+
+    .md-name {
+        margin-top: 20rpx;
+        font-size: 36rpx;
+        font-weight: 700;
+    }
+
+    .md-kana {
+        margin-top: 4rpx;
+        font-size: 24rpx;
+        color: #8A8A8E;
+    }
+
+    .md-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 0 32rpx;
+        margin-bottom: 32rpx;
+    }
+
+    .md-hover {
+        opacity: 0.6;
+    }
+
+    .md-link {
         display: flex;
         align-items: center;
-        justify-content: center;
-        position: relative;
-
-        .count {
-            width: 80upx;
-            height: 80upx;
-            background: #1A73E8;
-            text-align: center;
-            line-height: 80upx;
-            font-size: 40upx;
-            font-family: Hiragino Sans-W6, Hiragino Sans;
-            font-weight: normal;
-            color: #FFFFFF;
-            border-radius: 50%;
-            position: absolute;
-            left: 421upx;
-            top: 180upx;
-        }
+        min-height: 104rpx;
+        border-bottom: 1px solid #E5E5EA;
     }
 
-    .infoItem {
-        display: flex;
-        margin-bottom: 50upx;
+    .md-link:last-child {
+        border-bottom: 0;
+    }
 
-        .itemLeft {
-            width: 130upx;
-            text-align: center;
-            font-size: 32upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #707070;
-            margin-right: 40upx;
-            flex-shrink: 0;
+    .md-link-name {
+        flex-shrink: 0;
+        font-size: 30rpx;
+        font-weight: 500;
+    }
 
-            image {
-                width: 60upx;
-                height: 44upx;
-            }
-        }
+    .md-link-val {
+        flex: 1;
+        min-width: 0;
+        margin: 0 16rpx 0 24rpx;
+        text-align: right;
+        font-size: 28rpx;
+        color: #515154;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .blue {
         color: #1A73E8;
+    }
+
+    /* 右向きの矢印 */
+    .md-chev {
+        width: 14rpx;
+        height: 14rpx;
+        flex-shrink: 0;
+        border-right: 3rpx solid #C7C7CC;
+        border-bottom: 3rpx solid #C7C7CC;
+        transform: rotate(-45deg);
+    }
+
+    .md-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 26rpx 0;
+        border-bottom: 1px solid #E5E5EA;
+    }
+
+    .md-item:last-child {
+        border-bottom: 0;
+    }
+
+    .md-label {
+        width: 160rpx;
+        flex-shrink: 0;
+        font-size: 26rpx;
+        line-height: 1.6;
+        color: #6E6E73;
+    }
+
+    .md-val {
+        flex: 1;
+        min-width: 0;
+        font-size: 30rpx;
+        line-height: 1.6;
+        word-break: break-all;
+    }
+
+    .md-val.empty {
+        color: #AEAEB2;
+    }
+
+    .md-h3 {
+        display: flex;
+        align-items: center;
+        margin: 8rpx 8rpx 16rpx;
+        font-size: 30rpx;
+        font-weight: 700;
+        color: #515154;
+    }
+
+    .md-soon {
+        margin-left: 16rpx;
+        padding: 2rpx 14rpx;
+        border-radius: 8rpx;
+        background: #FEF3E0;
+        color: #B06000;
+        font-size: 22rpx;
+        font-weight: 700;
+    }
+
+    .md-karte {
+        padding: 32rpx;
+    }
+
+    .md-karte-note {
+        padding: 20rpx 24rpx;
+        border-radius: 20rpx;
+        background: #F5F5F7;
+        font-size: 24rpx;
+        line-height: 1.7;
+        color: #515154;
+        margin-bottom: 28rpx;
+    }
+
+    .md-sub {
+        font-size: 26rpx;
+        font-weight: 500;
+        margin-bottom: 16rpx;
+    }
+
+    .md-imgs {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .md-img {
+        width: calc((100% - 32rpx) / 3);
+        height: 0;
+        padding-bottom: calc((100% - 32rpx) / 3);
+        margin: 0 16rpx 16rpx 0;
+        position: relative;
+        border-radius: 20rpx;
+        overflow: hidden;
+        background: #E5E5EA;
+
+        image {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    .md-img:nth-child(3n) {
+        margin-right: 0;
+    }
+
+    .md-up {
+        height: 88rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 8rpx;
+        border: 3rpx dashed #8AB0EE;
+        border-radius: 24rpx;
+        background: #F7FAFF;
+        color: #1A73E8;
+        font-size: 28rpx;
+        font-weight: 500;
+        box-sizing: border-box;
+    }
+
+    .md-plus {
+        font-size: 36rpx;
+        margin-right: 8rpx;
     }
 </style>

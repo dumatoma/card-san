@@ -7,25 +7,27 @@
             </view>
         </u-navbar>
         <view class="containe">
-            <view class="userInfo">
-                <view class="infoItem">
-                    <view class="itemname">
-                        会員ID
-                    </view>
-                    <view class="itemValue" v-text="info.member_id"></view>
+            <!-- [カスタムエイド 2026-10-20] 会員ID・顧客NOと「カルテ」を1つの白い角丸のまとまりに。カルテは準備中(押すとお知らせ) -->
+            <view class="sl-card sl-top">
+                <view class="sl-row">
+                    <text class="sl-label">会員ID</text>
+                    <text class="sl-val" selectable="true">{{info.member_id}}</text>
                 </view>
-                <view class="infoItem">
-                    <view class="itemname">
-                        顧客NO
-                    </view>
-                    <view class="itemValue" v-text="info.member_no"></view>
+                <view class="sl-row">
+                    <text class="sl-label">顧客NO</text>
+                    <text class="sl-val">{{info.member_no || '-'}}</text>
+                </view>
+                <view class="sl-karte" hover-class="sl-hover" @click="openKarte">
+                    <view class="sl-karte-ic"><view class="sl-karte-line"></view><view class="sl-karte-line"></view><view class="sl-karte-line short"></view></view>
+                    <text class="sl-karte-name">カルテ</text>
+                    <text class="sl-soon">準備中</text>
+                    <view class="sl-chev"></view>
                 </view>
             </view>
 
             <view class="cardInfo">
-                <view class="cardTitle">
-                    {{info.shop_name}}({{info.card_name}})
-                </view>
+                <!-- [カスタムエイド 2026-10-20] カードの上はスタンプカード名だけ(店舗名は出さない) -->
+                <view class="sl-title">{{info.card_name}}</view>
                 <view class="ITF">
                     <view class="itf1">
                         <image :src="info.qrcode" mode=""></image>
@@ -172,6 +174,10 @@
             that.getDetail(query.id)
         },
         methods: {
+            // [カスタムエイド 2026-10-20] カルテは準備中
+            openKarte() {
+                uni.showToast({ title: 'カルテ機能は準備中です', icon: 'none' })
+            },
             usePoint(){
                 let that = this
                 let data = {}
@@ -620,5 +626,192 @@
         .itemValue {
             color: #1D1D1F;
         }
+    }
+
+    /* [カスタムエイド 2026-10-20] 会員ID・顧客NO・カルテのまとまり、カード名、下のまとまり(これまでの画面と同じ見た目) */
+    .sl-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 0 32rpx;
+        margin: 0 24rpx 32rpx;
+    }
+
+    .sl-top {
+        margin-top: 32rpx;
+    }
+
+    .sl-row {
+        display: flex;
+        align-items: center;
+        min-height: 88rpx;
+        border-bottom: 1px solid #E5E5EA;
+    }
+
+    .sl-label {
+        width: 160rpx;
+        flex-shrink: 0;
+        font-size: 26rpx;
+        color: #6E6E73;
+    }
+
+    .sl-val {
+        flex: 1;
+        font-size: 30rpx;
+        color: #1D1D1F;
+    }
+
+    .sl-karte {
+        display: flex;
+        align-items: center;
+        min-height: 104rpx;
+    }
+
+    .sl-hover {
+        opacity: 0.6;
+    }
+
+    /* カルテの印(書類のかたち) */
+    .sl-karte-ic {
+        width: 40rpx;
+        height: 48rpx;
+        flex-shrink: 0;
+        margin-right: 20rpx;
+        padding: 10rpx 8rpx;
+        border: 3rpx solid #1A73E8;
+        border-radius: 8rpx;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .sl-karte-line {
+        height: 3rpx;
+        background: #1A73E8;
+    }
+
+    .sl-karte-line.short {
+        width: 60%;
+    }
+
+    .sl-karte-name {
+        font-size: 30rpx;
+        font-weight: 700;
+        color: #1A73E8;
+    }
+
+    .sl-soon {
+        margin-left: 16rpx;
+        padding: 2rpx 14rpx;
+        border-radius: 8rpx;
+        background: #FEF3E0;
+        color: #B06000;
+        font-size: 22rpx;
+        font-weight: 700;
+    }
+
+    /* 右向きの矢印 */
+    .sl-chev {
+        margin-left: auto;
+        width: 14rpx;
+        height: 14rpx;
+        border-right: 3rpx solid #C7C7CC;
+        border-bottom: 3rpx solid #C7C7CC;
+        transform: rotate(-45deg);
+    }
+
+    .sl-title {
+        margin: 0 32rpx 4rpx;
+        text-align: center;
+        font-size: 32rpx;
+        font-weight: 700;
+        color: #1D1D1F;
+    }
+
+    /* [カスタムエイド 2026-10-20] 下のまとまり(カード・有効期限と備考・予約・特典)を、これまでの画面と同じ白い角丸のまとまりに */
+    .containe {
+        min-height: 100vh;
+        background: #F5F5F7;
+        padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+    }
+
+    .cardInfo {
+        margin: 0 24rpx 32rpx;
+        padding: 32rpx 24rpx 8rpx;
+        border-radius: 32rpx;
+        box-shadow: none;
+    }
+
+    .cardInfo .cardInfos {
+        margin-top: 24rpx;
+        padding: 0 8rpx 16rpx;
+    }
+
+    .cardInfo .cardInfos .ciItem {
+        align-items: flex-start;
+        margin: 0;
+        padding: 22rpx 0;
+        border-top: 1px solid #E5E5EA;
+    }
+
+    .cardInfo .cardInfos .ciItem .ciLeft {
+        width: 150rpx;
+        height: auto;
+        margin-right: 16rpx;
+        background: none;
+        text-align: left;
+        line-height: 1.6;
+        font-size: 26rpx;
+        color: #6E6E73;
+    }
+
+    .cardInfo .cardInfos .ciItem .ciRight {
+        flex: 1;
+        font-size: 28rpx;
+        line-height: 1.6;
+        white-space: pre-wrap;
+    }
+
+    .appoint {
+        margin: 0 24rpx 32rpx;
+        padding: 32rpx;
+        border-radius: 32rpx;
+        background: #FFFFFF;
+        box-shadow: none;
+    }
+
+    .appoint .appointTitle,
+    .special .specialTitle {
+        display: inline-block;
+        width: auto;
+        height: 48rpx;
+        line-height: 48rpx;
+        padding: 0 22rpx;
+        border-radius: 12rpx;
+        font-size: 24rpx;
+        font-weight: 700;
+    }
+
+    .appoint .appointItem {
+        margin-top: 24rpx;
+        font-size: 28rpx;
+    }
+
+    .special {
+        margin: 0 24rpx 32rpx;
+        padding: 32rpx 0 8rpx;
+        border-radius: 32rpx;
+        overflow: hidden;
+        box-shadow: none;
+    }
+
+    .special .specialTitle {
+        left: 32rpx;
+    }
+
+    .special .remark {
+        padding: 28rpx 32rpx 24rpx;
+        font-size: 28rpx;
+        line-height: 1.8;
     }
 </style>

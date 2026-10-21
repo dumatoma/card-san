@@ -1,101 +1,91 @@
 <template>
-    <view class="contain border_top">
-        <u-navbar title="メニュー編集" :placeholder="true" :border="true" :autoBack="true" :safeAreaInsetTop="true">
+    <!-- [カスタムエイド 2026-10-20] メニューの登録・編集の見た目を店舗情報などと合わせた
+         ・写真:店舗情報のTOP画像と同じ(3列・押すと拡大・長押しで並び替え・×で削除・4枚まで・選んだ順に追加)
+         ・入力欄を共通の枠(#D2D2D7・角丸・入力中は青)に、間隔を詰めて白いまとまりに。メニュー説明の欄を大きく
+         ・「予約メニューに設定」をスイッチにし、オンにするとお客様アプリで予約できることを説明。保存ボタンも共通の形に -->
+    <page-meta :page-style="dragIndex > -1 ? 'overflow: hidden;' : ''"></page-meta>
+    <view class="mf">
+        <u-navbar title="メニュー編集" :placeholder="true" :border="true" :autoBack="true" :safeAreaInsetTop="true" bgColor="#FBFBFD">
             <view class="u-nav-slot" slot="right">
                 <image src="../../../static/svg/pre.svg" style="width: 50upx;height: 50upx;" @click="showPop = true" mode=""></image>
             </view>
         </u-navbar>
-        <view class="content">
-            <view class="images">
-                <view class="imageItem" v-for="(item,index) in array" :key="index">
-                    <image :src="item" mode="aspectFill"></image>
-                    <view class="close">
-                        <image src="../../../static/icons/wclose.png" @click="delImage(index)"></image>
+        <view class="mf-body">
+            <!-- 写真 -->
+            <view class="mf-card">
+                <view class="mf-img-head">
+                    <view class="mf-img-title">
+                        <text class="mf-h2">メニューの写真</text>
+                        <text class="mf-count">{{array.length}} / 4枚</text>
+                    </view>
+                    <view class="mf-add-btn" v-if="array.length < 4" hover-class="mf-hover" @click="uploadImage">
+                        <text class="mf-plus">+</text>追加
+                    </view>
+                </view>
+                <text class="mf-sub mf-mb">1枚目がメニュー一覧に出ます。長押しすると、つかんで順番を入れ替えられます。</text>
+                <view class="mf-grid" id="mfGrid">
+                    <view class="mf-tile" v-for="(item, index) in array" :key="item" :class="{ main: index == 0, drag: dragIndex == index }"
+                        @click="previewImg(index)" @longpress="startDrag(index)" @touchmove="moveDrag" @touchend="endDrag" @touchcancel="endDrag">
+                        <image class="mf-tile-img" :src="item" mode="aspectFill"></image>
+                        <view class="mf-x-btn" @click.stop="delImage(index)"><view class="mf-x-in"><view class="mf-x"></view></view></view>
+                        <text class="mf-no">{{index + 1}}</text>
+                    </view>
+                    <view class="mf-tile mf-add-tile" v-if="array.length < 4" hover-class="mf-hover" @click="uploadImage">
+                        <view class="mf-add-in"><text class="mf-plus big">+</text><text>追加</text></view>
                     </view>
                 </view>
             </view>
-            <view class="tips">
-                画像は4枚まで掲載可
-            </view>
-            <button type="default" class="addImg" @click="uploadImage">
-                <text>+</text>
-                <text>画像を選択</text>
-            </button>
-            <view class="insertContent">
-                <view class="insertItem" style="margin-top: 0;">
-                    <view class="insertTitle">
-                        カテゴリー
-                    </view>
-                    <view class="insertPicker" @click="p1">
-                        <view v-text="cateName"></view>
-                        <u-icon name="arrow-down"></u-icon>
+
+            <!-- メニューの内容 -->
+            <view class="mf-h3">メニューの内容</view>
+            <view class="mf-card">
+                <view class="mf-field">
+                    <view class="mf-label">カテゴリー</view>
+                    <view class="mf-in mf-select" hover-class="mf-hover" @click="p1">
+                        <text :class="{ 'mf-ph': !cateName }">{{cateName || 'カテゴリーを選ぶ'}}</text>
+                        <u-icon name="arrow-down" color="#6E6E73" size="14"></u-icon>
                     </view>
                 </view>
-                <view class="insertItem">
-                    <view class="insertTitle">
-                        <text style="color: #D93025;">※</text> メニュータイトル
-                    </view>
-                    <u-input placeholder="メニュー名を入力してください" v-model="info.title"></u-input>
+                <view class="mf-field">
+                    <view class="mf-label"><text class="mf-req">※</text>メニュータイトル</view>
+                    <input class="mf-in" :class="{ on: fk == 'title' }" v-model="info.title" maxlength="-1" :cursor-spacing="120"
+                        placeholder-class="mf-ph" placeholder="例:カット+フルカラー" @focus="fk = 'title'" @blur="fk = ''" />
                 </view>
-                <view class="insertItem">
-                    <view class="insertTitle">
-                        メニュー説明
-                    </view>
-                    <u-textarea placeholder="メニュー名を入力してください" maxlength="-1" v-model="info.des"></u-textarea>
+                <view class="mf-field">
+                    <view class="mf-label">メニュー説明</view>
+                    <textarea class="mf-ta" :class="{ on: fk == 'des' }" v-model="info.des" maxlength="-1" :show-confirm-bar="false"
+                        :cursor-spacing="120" placeholder-class="mf-ph" placeholder="メニューの内容や、おすすめの点を入力してください"
+                        @focus="fk = 'des'" @blur="fk = ''"></textarea>
                 </view>
-                <view class="insertItem">
-                    <view class="insertTitle">
-                        価格
-                    </view>
-                    <u-input placeholder="価格を入力してください" v-model="info.price"></u-input>
-                </view>
-                <view class="sTitle">
-                    <view class="titleLeft" @click="changeAppoint">
-                        <view class="select" :style="info.is_order == 0? 'border:2upx solid #d2d2d7' : ''">
-                            <view class="fill" v-if="info.is_order == 1"></view>
-                        </view>
-                    </view>
-                    <view class="titleRight">
-                        予約メニューに設定
-                    </view>
-                </view>
-                <view class="sTitle" style="margin-top: 44upx;" v-if="info.is_order == 1">
-                    <view class="titleLeft">
-                        <view class="select" style="visibility: hidden;">
-                            <view class="fill"></view>
-                        </view>
-                    </view>
-                    <view class="titleRight">
-                        所要時間(目安)
-                    </view>
-                </view>
-                <view class="sTitle" style="margin-top: 44upx;" v-if="info.is_order == 1">
-                    <view class="titleLeft">
-                        <view class="select" style="visibility: hidden;">
-                            <view class="fill"></view>
-                        </view>
-                    </view>
-                    <view class="titleRight" style="font-size: 24upx;color: #707070;">
-                        <text style="color: #D93025;">※</text>施術にかかる時間を設定してください。
-                    </view>
-                </view>
-                <view class="sTitle" style="margin-top: 20upx;"  v-if="info.is_order == 1">
-                    <view class="titleLeft">
-                        <view class="select" style="visibility: hidden;">
-                            <view class="fill"></view>
-                        </view>
-                    </view>
-                    <view class="titleRight">
-                        <view class="iPicker" @click="p2">
-                            <view v-text="`${info.order_time}分`"></view>
-                            <u-icon name="arrow-down"></u-icon>
-                        </view>
-                    </view>
+                <view class="mf-field">
+                    <view class="mf-label">価格</view>
+                    <input class="mf-in" :class="{ on: fk == 'price' }" v-model="info.price" maxlength="-1" :cursor-spacing="120"
+                        placeholder-class="mf-ph" placeholder="例:5,000円、5,000円〜" @focus="fk = 'price'" @blur="fk = ''" />
                 </view>
             </view>
+
+            <!-- 予約 -->
+            <view class="mf-h3">予約</view>
+            <view class="mf-card mf-card-list">
+                <view class="mf-sw-row">
+                    <view class="mf-sw-text">
+                        <text class="mf-sw-name">予約メニューに設定</text>
+                        <text class="mf-sub">オンにすると、お客様アプリでこのメニューを選んで予約できます</text>
+                    </view>
+                    <u-switch :value="info.is_order == 1" activeColor="#34C759" @change="changeAppoint"></u-switch>
+                </view>
+                <view class="mf-sw-body" v-if="info.is_order == 1">
+                    <view class="mf-label">所要時間(目安)</view>
+                    <view class="mf-in mf-select" hover-class="mf-hover" @click="p2">
+                        <text>{{info.order_time}}分</text>
+                        <u-icon name="arrow-down" color="#6E6E73" size="14"></u-icon>
+                    </view>
+                    <text class="mf-sub mf-mt">施術にかかる時間を設定してください。</text>
+                </view>
+            </view>
+
+            <view class="mf-save" hover-class="mf-save-hover" @click="save">保存する</view>
         </view>
-        <u-button type="primary" style="width: 80%;margin-top: 200upx;background-color: #1A73E8;height: 96upx;border-radius: 20upx;" @click="save">保存</u-button>
-        <view style="height: 110upx;"></view>
         <u-picker :show="show" :columns="columns" @confirm="show = false" @change="cateChange" keyName="name" cancelText=" " confirmText=" "
             :closeOnClickOverlay="true" @close="close1" @cancel="close1" title="カテゴリーを選択"></u-picker>
         <u-picker :show="show1" :columns="columns1" @change="timeChange" keyName="time" cancelText=" " confirmText=" "
@@ -199,6 +189,9 @@
                     ]
                 ],
                 array: [],
+                fk: '', // [カスタムエイド 2026-10-20] 入力中の欄
+                dragIndex: -1, // 長押しでつかんでいる写真
+                gridRect: null,
                 id:0
             };
         },
@@ -280,37 +273,84 @@
               })
             },
             // 选择图片并上传
+            // [カスタムエイド 2026-10-20] 軽くした画像を使い、選んだ順に追加。アップロード中はお知らせを出す
             uploadImage() {
                 let that = this
-                if(that.array.length < 4){
-                    pickImage({
-                        count: 4 - that.array.length,
-                        success: (res) => {
-                            const tempPaths = res.tempFilePaths
-                            for (let i = 0; i < tempPaths.length; i++) {
-                                uni.uploadFile({
-                                    url: that.$baseUrl+'/tool/upload/file',
-                                    filePath: res.tempFilePaths[i],
-                                    name:"file",
-                                    success: (result) => {
-                                        if (result.errMsg == "uploadFile:ok") {
-                                            let re = JSON.parse(result.data)
-                                            if (re.code == 200) {
-                                                that.array.push(re.data.path)
-                                            }
-                                        }
-                                    }
-                                })
-                            }
-                        }
-                    });
-                }else{
-                    uni.showToast({
-                        title:"画像は最大で4枚まで",
-                        icon:"none"
-                    })
+                const left = 4 - that.array.length
+                if (left <= 0) {
+                    uni.showToast({ title: "画像は最大で4枚まで", icon: "none" })
+                    return
                 }
-                
+                pickImage({
+                    count: left,
+                    sizeType: ['compressed'],
+                    success: (res) => {
+                        const paths = (res.tempFilePaths || []).slice(0, left)
+                        if (!paths.length) return
+                        uni.showLoading({ title: 'アップロード中', mask: true })
+                        Promise.all(paths.map((p) => new Promise((resolve) => {
+                            uni.uploadFile({
+                                url: that.$baseUrl + '/tool/upload/file',
+                                filePath: p,
+                                name: "file",
+                                success: (result) => {
+                                    try {
+                                        const re = JSON.parse(result.data)
+                                        resolve(re.code == 200 ? re.data.path : '')
+                                    } catch (e) {
+                                        resolve('')
+                                    }
+                                },
+                                fail: () => resolve('')
+                            })
+                        }))).then((list) => {
+                            uni.hideLoading()
+                            let failed = 0
+                            list.forEach((p) => {
+                                if (p && that.array.length < 4) that.array.push(p)
+                                else if (!p) failed++
+                            })
+                            if (failed) uni.showToast({ title: failed + '枚をアップロードできませんでした', icon: 'none' })
+                        })
+                    }
+                })
+            },
+            // [カスタムエイド 2026-10-20] 押すと拡大
+            previewImg(index) {
+                if (this.dragIndex > -1) return
+                uni.previewImage({ urls: this.array, current: index })
+            },
+            // [カスタムエイド 2026-10-20] 長押しでつかんで並び替え(店舗情報のTOP画像と同じ)
+            startDrag(index) {
+                this.dragIndex = index
+                this.gridRect = null
+                uni.vibrateShort({})
+                uni.createSelectorQuery().in(this).select('#mfGrid').boundingClientRect((r) => {
+                    this.gridRect = r
+                }).exec()
+            },
+            moveDrag(e) {
+                if (this.dragIndex < 0 || !this.gridRect) return
+                const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0])
+                if (!t) return
+                const r = this.gridRect
+                const gap = uni.upx2px(16)
+                const w = (r.width - gap * 2) / 3
+                const h = w * 2 / 3
+                const col = Math.min(2, Math.max(0, Math.floor((t.clientX - r.left) / (w + gap))))
+                const row = Math.max(0, Math.floor((t.clientY - r.top) / (h + gap)))
+                const to = Math.min(this.array.length - 1, row * 3 + col)
+                const from = this.dragIndex
+                if (to == from) return
+                const item = this.array.splice(from, 1)[0]
+                this.array.splice(to, 0, item)
+                this.dragIndex = to
+            },
+            endDrag() {
+                if (this.dragIndex < 0) return
+                setTimeout(() => {
+                    this.dragIndex = -1
+                }, 300)
             },
             p1() {
                 this.show = true
@@ -332,6 +372,7 @@
 </script>
 
 <style lang="scss">
+    /* 下はプレビュー(右上のマーク)の見た目。今までのまま */
     .dc {
         display: flex;
         justify-content: space-between;
@@ -444,159 +485,327 @@
         }
     }
 
-    .sTitle {
-        display: flex;
-        align-items: center;
-        margin: 114upx 0 0;
+
+    /* [カスタムエイド 2026-10-20] メニュー登録・編集の新しい見た目(店舗情報などと同じ決まり) */
+    .mf {
+        min-height: 100vh;
+        background: #F5F5F7;
+        font-family: 'Hiragino Sans', sans-serif;
+        color: #1D1D1F;
     }
 
-    .btn {
-        width: 480upx;
-        height: 96upx;
-        background: #1A73E8;
-        border-radius: 20upx;
-        font-size: 32upx;
-        font-family: Hiragino Sans-W6, Hiragino Sans;
-        font-weight: normal;
-        color: #FFFFFF;
-        line-height: 96upx;
-        text-align: center;
-        margin-top: 182upx;
+    .mf-body {
+        padding: 32rpx 24rpx calc(80rpx + env(safe-area-inset-bottom));
     }
 
-    .titleLeft {
-        margin-right: 20upx;
+    .mf-card {
+        background: #FFFFFF;
+        border-radius: 32rpx;
+        padding: 32rpx;
+        margin-bottom: 40rpx;
     }
 
-    .iPicker {
-        width: 400upx;
-        height: 80upx;
-        background: rgba(249, 249, 249, 0.94);
-        border-radius: 8upx;
-        opacity: 1;
-        border: 2upx solid #D2D2D7;
+    .mf-card-list {
+        padding: 8rpx 32rpx;
+    }
+
+    .mf-h3 {
+        margin: 0 8rpx 16rpx;
+        font-size: 30rpx;
+        font-weight: 700;
+        color: #515154;
+    }
+
+    .mf-field {
+        margin-bottom: 28rpx;
+    }
+
+    .mf-field:last-child {
+        margin-bottom: 0;
+    }
+
+    .mf-label {
+        font-size: 26rpx;
+        font-weight: 500;
+        color: #1D1D1F;
+        margin-bottom: 12rpx;
+    }
+
+    .mf-req {
+        color: #C5221F;
+    }
+
+    .mf-sub {
+        display: block;
+        font-size: 24rpx;
+        line-height: 1.6;
+        color: #6E6E73;
+    }
+
+    .mf-mb {
+        margin-bottom: 24rpx;
+    }
+
+    .mf-mt {
+        margin-top: 12rpx;
+    }
+
+    .mf-in {
+        width: 100%;
+        box-sizing: border-box;
+        height: 88rpx;
+        line-height: normal;
+        padding: 0 28rpx;
+        border: 1px solid #D2D2D7;
+        border-radius: 24rpx;
+        background: #FFFFFF;
+        font-size: 30rpx;
+        color: #1D1D1F;
+        transition: border-color .15s, box-shadow .15s;
+    }
+
+    .mf-in.on,
+    .mf-ta.on {
+        border-color: #1A73E8;
+        box-shadow: 0 0 0 6rpx rgba(26, 115, 232, 0.16);
+    }
+
+    .mf-ph {
+        color: #8A8A8E;
+    }
+
+    .mf-select {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-sizing: border-box;
-        padding: 0 20upx;
-        color: #86868B;
     }
 
-    .select {
-        width: 40upx;
-        height: 40upx;
+    .mf-ta {
+        width: 100%;
+        box-sizing: border-box;
+        height: 320rpx;
+        padding: 20rpx 28rpx;
+        border: 1px solid #D2D2D7;
+        border-radius: 24rpx;
         background: #FFFFFF;
-        opacity: 1;
-        border: 2upx solid #1A73E8;
-        border-radius: 50%;
-        box-sizing: border-box;
-        padding: 6upx;
-
-        .fill {
-            background: #1A73E8;
-            border-radius: 50%;
-            height: 100%;
-            width: 100%;
-        }
+        font-size: 30rpx;
+        line-height: 1.6;
+        color: #1D1D1F;
     }
 
-    .insertContent {
-        box-sizing: border-box;
-        padding: 120upx 46upx 0;
-
-        .insertItem {
-            margin-top: 80upx;
-
-            .insertTitle {
-                margin-bottom: 10upx;
-            }
-
-            .insertPicker {
-                height: 80upx;
-                background: #F5F5F7;
-                border-radius: 20upx;
-                opacity: 1;
-                border: 2upx solid #D2D2D7;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                box-sizing: border-box;
-                padding: 0 20upx;
-            }
-        }
+    .mf-hover {
+        opacity: 0.6;
     }
 
-    .addImg {
-        width: 480upx;
-        height: 96upx;
-        background: #F5F5F7;
-        border-radius: 20upx;
-        border: 2upx solid #707070;
+    .mf-img-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16rpx;
+    }
+
+    .mf-img-title {
+        display: flex;
+        align-items: baseline;
+    }
+
+    .mf-h2 {
+        font-size: 32rpx;
+        font-weight: 700;
+        margin-right: 16rpx;
+    }
+
+    .mf-count {
+        font-size: 26rpx;
+        color: #515154;
+    }
+
+    .mf-add-btn {
+        height: 72rpx;
+        padding: 0 28rpx;
+        border-radius: 36rpx;
+        background: #1A73E8;
+        color: #FFFFFF;
+        font-size: 28rpx;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+
+    .mf-plus {
+        font-size: 36rpx;
+        line-height: 1;
+        margin-right: 6rpx;
+        position: relative;
+        top: -2rpx;
+    }
+
+    .mf-plus.big {
+        font-size: 48rpx;
+        margin-right: 0;
+        top: 0;
+    }
+
+    .mf-grid {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .mf-tile {
+        position: relative;
+        width: calc((100% - 32rpx) / 3);
+        height: 0;
+        padding-bottom: calc((100% - 32rpx) / 3 * 2 / 3);
+        margin: 0 16rpx 16rpx 0;
+        border-radius: 20rpx;
+        overflow: hidden;
+        background: #E5E5EA;
+        transition: transform .12s;
+    }
+
+    .mf-tile:nth-child(3n) {
+        margin-right: 0;
+    }
+
+    .mf-tile.main {
+        box-shadow: 0 0 0 4rpx #1A73E8;
+    }
+
+    .mf-tile.drag {
+        transform: scale(1.06);
+        opacity: 0.9;
+        z-index: 5;
+        box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.25);
+    }
+
+    .mf-tile-img {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .mf-add-tile {
+        background: #F7FAFF;
+        border: 3rpx dashed #8AB0EE;
+        box-sizing: border-box;
+        color: #1A73E8;
+        font-size: 24rpx;
+        font-weight: 500;
+    }
+
+    .mf-add-in {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mf-x-btn {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 80rpx;
+        height: 80rpx;
+        display: flex;
+        justify-content: flex-end;
+        z-index: 2;
+    }
+
+    .mf-x-in {
+        margin: 10rpx;
+        width: 48rpx;
+        height: 48rpx;
+        border-radius: 24rpx;
+        background: rgba(29, 29, 31, 0.72);
         display: flex;
         align-items: center;
         justify-content: center;
-
-        text:last-child {
-            font-size: 32upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: rgba(29, 29, 31, 0.9);
-        }
-
-        text:first-child {
-            font-size: 50upx;
-            color: #1D1D1F;
-            margin-right: 10upx;
-        }
     }
 
-    .content {
-        .tips {
-            font-size: 24upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-            text-align: center;
-            margin-top: 50upx;
-            margin-bottom: 26upx;
-        }
+    .mf-x {
+        position: relative;
+        width: 22rpx;
+        height: 22rpx;
+    }
 
-        .images {
-            display: flex;
-            align-items: center;
-            overflow-x: scroll;
-            box-sizing: border-box;
-            padding-left: 32upx;
-            padding-top: 36upx;
+    .mf-x::before,
+    .mf-x::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 26rpx;
+        height: 4rpx;
+        margin: -2rpx 0 0 -13rpx;
+        border-radius: 2rpx;
+        background: #FFFFFF;
+        transform: rotate(45deg);
+    }
 
-            .imageItem {
-                position: relative;
-                width: 480upx;
-                height: 480upx;
-                border-radius: 8upx;
-                flex-shrink: 0;
-                margin-right: 20upx;
+    .mf-x::after {
+        transform: rotate(-45deg);
+    }
 
-                .close {
-                    position: absolute;
-                    width: 52upx;
-                    height: 52upx;
-                    top: 14upx;
-                    right: 14upx;
-                    z-index: 9;
+    .mf-no {
+        position: absolute;
+        right: 10rpx;
+        bottom: 10rpx;
+        min-width: 40rpx;
+        height: 36rpx;
+        line-height: 36rpx;
+        padding: 0 10rpx;
+        box-sizing: border-box;
+        border-radius: 18rpx;
+        background: rgba(255, 255, 255, 0.92);
+        font-size: 22rpx;
+        font-weight: 700;
+        text-align: center;
+    }
 
-                    image {
-                        width: 100%;
-                        height: 100%;
-                    }
-                }
+    .mf-sw-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 128rpx;
+    }
 
-                image {
-                    width: 100%;
-                    height: 100%;
-                }
-            }
-        }
+    .mf-sw-text {
+        flex: 1;
+        min-width: 0;
+        margin-right: 20rpx;
+    }
+
+    .mf-sw-name {
+        display: block;
+        font-size: 30rpx;
+        font-weight: 700;
+        margin-bottom: 4rpx;
+    }
+
+    .mf-sw-body {
+        border-top: 1px solid #E5E5EA;
+        padding: 28rpx 0 32rpx;
+    }
+
+    .mf-save {
+        height: 104rpx;
+        line-height: 104rpx;
+        border-radius: 28rpx;
+        background: #1A73E8;
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 32rpx;
+        font-weight: 700;
+    }
+
+    .mf-save-hover {
+        opacity: 0.8;
     }
 </style>

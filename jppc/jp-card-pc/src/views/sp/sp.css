@@ -17,6 +17,9 @@
 .sp-page a { color: #1a73e8; text-decoration: none; }
 .sp-page button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .sp-page input, .sp-page select { font-family: inherit; }
+/* [カスタムエイド 2026-10-22] iPhone の Safari は、文字が16pxより小さい入力欄をタップすると画面を自動で拡大し、そのまま戻さない(画面の端が切れて見える原因)。
+   PC版の共通スタイル(App.vue の input { font-size: 14px !important })がスマホ版にも効いていたため、スマホ版の入力欄は16pxに固定する */
+.sp-page input, .sp-page select, .sp-page textarea { font-size: 16px !important; }
 .sp-page input:focus, .sp-page select:focus { outline: 2px solid #1a73e8; outline-offset: 1px; }
 
 /* ヘッダー */

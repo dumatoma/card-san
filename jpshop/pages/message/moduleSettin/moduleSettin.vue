@@ -2,37 +2,21 @@
     <view>
         <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
         <u-navbar :title="navTitle" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
-        <view class="content">
-            <view class="ftitle">
-                テンプレートの内容を入力してください。
+        <!-- [カスタムエイド 2026-10-21] ほかの画面と同じ見た目に(白いカード・入力欄・保存ボタン)。テキストの枠を大きく、ボタンは上と少し離す。「戻る」は左上の < と同じなので外した -->
+        <view class="mt">
+            <view class="mt-when">チャットで、この文をすぐに呼び出して送れます。</view>
+            <view class="mt-card">
+                <view class="mt-h"><text class="mt-req">※</text>タイトル<text class="mt-sub">(お客様には表示されません)</text></view>
+                <input class="mt-in" :class="{ on: fk == 1 }" type="text" v-model="val1" placeholder="例:Google口コミ依頼"
+                    placeholder-class="mt-ph" @focus="fk = 1" @blur="fk = 0" />
             </view>
-            
-            <view class="mitem" style="margin-bottom: 26rpx;">
-                <view class="title">
-                    <text style="color: #D93025;">※</text><text>タイトル</text><text style="font-size: 24rpx;color: #707070;">(タイトルはメッセージに反映されません)</text>
-                </view>
-                <view class="inp">
-                    <input type="text" v-model="val1" placeholder="タイトルを入力してください" />
-                </view>
+            <view class="mt-card">
+                <view class="mt-h"><text class="mt-req">※</text>テキスト</view>
+                <textarea class="mt-ta" :class="{ on: fk == 2 }" placeholder="メッセージを入力してください" placeholder-class="mt-ph"
+                    maxlength="1600" :show-confirm-bar="false" v-model="val2" @focus="fk = 2" @blur="fk = 0"></textarea>
+                <view class="mt-cnt">{{ (val2 || '').length }} / 1600</view>
             </view>
-            
-            <view class="mitem">
-                <view class="title">
-                    <text style="color: #D93025;">※</text><text>テキスト</text>
-                </view>
-                <view class="txt">
-                    <textarea placeholder="メッセージを入力してください。" maxlength="1600" v-model="val2"></textarea>
-                </view>
-            </view>
-            
-            <view class="buttons">
-                <view class="btn can" @click="goback">
-                    戻　る
-                </view>
-                <view class="btn con" @click="savedata">
-                    保　存
-                </view>
-            </view>
+            <view class="mt-btn" hover-class="mt-hover" @click="savedata">保存する</view>
         </view>
     </view>
 </template>
@@ -46,7 +30,8 @@
 
                 val1:"",
                 val2:"",
-                type:""
+                type:"",
+                fk: 0 // [カスタムエイド 2026-10-21] 入力中の欄(枠を青く)
             };
         },
         onLoad(options) {
@@ -108,85 +93,21 @@
 </script>
 
 <style lang="scss">
-    .buttons{
-        display: flex;
-        align-items: center;
-        margin-top: 80rpx;
-        justify-content: center;
-        .btn{
-            width: 240rpx;
-            height: 80rpx;
-            background: #1A73E8;
-            border-radius: 52rpx;
-            font-size: 32rpx;
-            line-height: 80rpx;
-            text-align: center;
-        }
-        
-        .can{
-            background: rgba(29,29,31,0.2);
-            border: 2rpx solid #707070;
-            color: #707070;
-            margin-right: 52rpx;
-        }
-        
-        .con{
-            color: #FFFFFF;
-            background: #1A73E8;
-        }
-    }
-    .content{
-        border-top: 2rpx solid #d2d2d7;
-        box-sizing: border-box;
-        padding: 74rpx 52rpx;
-        
-        .ftitle{
-            font-weight: 600;
-            font-size: 32rpx;
-            color: rgba(29,29,31,0.9);
-            margin-bottom: 48rpx;
-        }
-        
-        .mitem{
-            .title{
-                font-size: 28rpx;
-                color: #1D1D1F;
-            }
-            
-            .inp{
-                width: 100%;
-                height: 68rpx;
-                border-radius: 12rpx;
-                border: 2rpx solid #AAAAAA;
-                margin-top: 6rpx;
-                box-sizing: border-box;
-                padding: 0 20rpx;
-                
-                input{
-                    width: 100%;
-                    height: 100%;
-                    font-size: 28rpx;
-                }
-            }
-            
-            .txt{
-                width: 100%;
-                height: 646rpx;
-                background: #FFFFFF;
-                border-radius: 20rpx;
-                border: 2rpx solid #AAAAAA;
-                box-sizing: border-box;
-                padding: 20rpx;
-                
-                textarea{
-                    width: 100%;
-                    height: 100%;
-                    display: block;
-                    font-size: 28rpx;
-                }
-            }
-        }
-        
-        
-    }
+    /* [カスタムエイド 2026-10-21] ほかの画面と同じ見た目 */
+    page { background: #F2F2F7; }
+    .mt { padding: 40rpx 32rpx calc(96rpx + env(safe-area-inset-bottom)); }
+    .mt-when { font-size: 26rpx; color: #6E6E73; margin: 0 8rpx 24rpx; }
+    .mt-card { background: #FFFFFF; border-radius: 32rpx; padding: 40rpx 32rpx; margin-bottom: 32rpx; }
+    /* [カスタムエイド 2026-10-21] 見出しの文字と入力枠の見た目のすき間を約6pxに(行の高さを詰め、余白 4px) */
+    .mt-h { font-size: 28rpx; color: #1D1D1F; font-family: 'Hiragino Sans-W5', sans-serif; margin-bottom: 8rpx; line-height: 1.2; }
+    .mt-req { color: #D93025; }
+    .mt-sub { font-size: 22rpx; color: #6E6E73; font-family: 'Hiragino Sans', sans-serif; }
+    .mt-in { height: 96rpx; border: 1px solid #D2D2D7; border-radius: 20rpx; padding: 0 24rpx; font-size: 30rpx; background: #FFFFFF; box-sizing: border-box; }
+    .mt-ta { width: 100%; height: 760rpx; border: 1px solid #D2D2D7; border-radius: 20rpx; padding: 22rpx 24rpx; font-size: 30rpx; line-height: 1.6; box-sizing: border-box; display: block; }
+    .mt-in.on, .mt-ta.on { border-color: #1A73E8; box-shadow: 0 0 0 6rpx rgba(26, 115, 232, 0.18); }
+    .mt-ph { color: #AEAEB2; }
+    .mt-cnt { text-align: right; font-size: 22rpx; color: #8A8A8E; margin-top: 10rpx; }
+    .mt-btn { margin-top: 64rpx; height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; font-size: 32rpx; font-family: 'Hiragino Sans-W5', sans-serif;
+        display: flex; align-items: center; justify-content: center; }
+    .mt-hover { opacity: 0.7; }
 </style>

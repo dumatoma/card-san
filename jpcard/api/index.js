@@ -208,6 +208,14 @@ export const getCouponDetail = (data) => {
     })
 }
 
+// [カスタムエイド 2026-10-22] お店のバーコード番号のクーポンを「今すぐ使う」
+export const selfUseCoupon = (id) => {
+    return request({
+        url: "/api/member/coupon/" + id + "/self_use",
+        method: "post"
+    })
+}
+
 // 收藏菜单
 export const collectMenu = (data) => {
     return request({

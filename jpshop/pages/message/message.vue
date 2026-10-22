@@ -539,7 +539,7 @@
     .ms-row::after {
         content: '';
         position: absolute;
-        left: 148rpx;
+        left: 28rpx; /* [カスタムエイド 2026-10-21] 区切り線を写真の左端から(以前は名前の列から) */
         right: 0;
         bottom: 0;
         height: 1px;

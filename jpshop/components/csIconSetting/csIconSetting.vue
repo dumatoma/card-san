@@ -242,19 +242,22 @@
         margin-bottom: 48rpx;
     }
 
+    /* [カスタムエイド 2026-10-21] 項目と項目のあいだを約6px広げる */
     .ic-field {
-        margin-bottom: 36rpx;
+        margin-bottom: 48rpx;
     }
 
     .ic-field:last-child {
         margin-bottom: 0;
     }
 
+    /* [カスタムエイド 2026-10-21] 見出しの文字と入力枠の見た目のすき間を約6pxに(行の高さを詰め、余白 4px) */
     .ic-label {
         display: block;
         font-size: 26rpx;
         font-weight: 500;
-        margin-bottom: 12rpx;
+        margin-bottom: 8rpx;
+        line-height: 1.2;
     }
 
     .ic-nomb {

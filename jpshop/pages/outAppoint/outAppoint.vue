@@ -1,26 +1,17 @@
 <template>
     <view class="containers">
         <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
-        <u-navbar title="予約機能外部LINK設定" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
-        <view class="words">
-            Webサイトのボタンやページに以下のLINK URLをコピーして貼り付けてください。　アプリと連携した予約ページが作成できます。
-        </view>
-        <!-- [カスタムエイド 2026-10-13] 予約ページがタブレット・PCに対応したため、「PCサイトには対応していません」の注意書きを削除(アプリの次回更新で反映) -->
-        <view style="margin-bottom: 100upx;"></view>
-        <view class="titel">
-            予約ページLINK URL
-        </view>
-        <view class="uirls" v-text="link"></view>
-        <view class="cop" hover-class="hit" @click="copy">
-            <text>URLコピー</text>
-        </view>
-        <view class="mask" v-if="showA == true">
-            <view class="maskcontent">
-                <image src="../../static/svg/gray.svg" class="mi" mode=""></image>
-                <view>
-                     コピーしました
-                </view>
+        <u-navbar title="予約ページのURL" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
+        <!-- [カスタムエイド 2026-10-22] 外部リンク(メニュー)と同じ見た目に:説明は青い帯、URLは枠の中、青い「URLをコピー」ボタン -->
+        <view class="oa-body">
+            <view class="oa-info">ホームページ・Instagram のプロフィール・Googleビジネスプロフィールなどのボタンに、このURLを貼り付けてください。お客さまはそこから予約ページを開いて予約できます(アプリと同じ予約表につながります)。</view>
+            <view class="oa-card">
+                <view class="oa-label">予約ページのURL</view>
+                <view class="oa-url" @longpress="copy">{{ link }}</view>
+                <view class="oa-cap">スマホ・タブレット・パソコンのどれでも開けます。</view>
             </view>
+            <view class="oa-btn" hover-class="oa-hover" @click="copy">URLをコピー</view>
+            <view class="oa-btn2" hover-class="oa-hover" @click="openPage">予約ページを開いて確かめる</view>
         </view>
     </view>
 </template>
@@ -39,16 +30,23 @@
             that.link = "https://order.card-san.jp/reserve/?id=" + info.sid // [カスタムエイド 2026-10-13] 新しい予約URL(アプリの次回更新で反映)
         },
         methods: {
+            // [カスタムエイド 2026-10-22] 予約ページをブラウザで開く
+            openPage() {
+                // #ifdef APP-PLUS
+                plus.runtime.openURL(this.link)
+                // #endif
+                // #ifdef H5
+                window.open(this.link)
+                // #endif
+            },
             copy() {
                 let that = this
                 uni.setClipboardData({
                     data: that.link,
                     success: () => {
                         uni.hideToast()
-                        that.showA = true
-                        setTimeout(() => {
-                            that.showA = false
-                        },1500)
+                        // [カスタムエイド 2026-10-22] アプリ共通の小さなお知らせ「✓ コピーしました」に
+                        setTimeout(() => { uni.showToast({ title: "コピーしました" }) }, 50)
                     }
                 })
             }
@@ -57,6 +55,17 @@
 </script>
 
 <style lang="less">
+    /* [カスタムエイド 2026-10-22] 外部リンク(メニュー)と同じ決まり */
+    .oa-body { padding: 48rpx 24rpx calc(80rpx + env(safe-area-inset-bottom)); }
+    .oa-info { padding: 24rpx 28rpx; border-radius: 24rpx; background: #EEF4FF; font-size: 26rpx; line-height: 1.7; color: #1D1D1F; margin-bottom: 48rpx; } /* [カスタムエイド 2026-10-22] 1.5倍 */
+    .oa-card { background: #FFFFFF; border-radius: 32rpx; padding: 40rpx 32rpx; margin-bottom: 60rpx; }
+    .oa-label { font-size: 26rpx; font-weight: 500; line-height: 1.2; margin-bottom: 8rpx; color: #1D1D1F; }
+    .oa-url { padding: 24rpx 28rpx; border: 1px solid #D2D2D7; border-radius: 24rpx; background: #F5F5F7; font-size: 30rpx; line-height: 1.5; color: #1D1D1F; word-break: break-all; }
+    .oa-cap { font-size: 24rpx; color: #6E6E73; margin-top: 24rpx; line-height: 1.5; }
+    .oa-btn { height: 104rpx; line-height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; text-align: center; font-size: 32rpx; font-weight: 700; }
+    .oa-btn2 { margin-top: 48rpx; height: 104rpx; line-height: 104rpx; border-radius: 28rpx; background: #FFFFFF; color: #1A73E8; text-align: center; font-size: 30rpx; }
+    .oa-hover { opacity: 0.7; }
+
     .hit {
         background: rgba(29, 29, 31, 0.1) !important;
     }
@@ -132,9 +141,9 @@
 
     .containers {
         width: 100vw;
-        border-top: 2upx solid #d2d2d7;
+        min-height: 100vh;
         box-sizing: border-box;
-        padding: 100upx 52upx;
+        background: #F5F5F7;
     }
 
     .words {

@@ -1235,7 +1235,8 @@
         align-items: center;
         justify-content: center;
         font-size: 30rpx;
-        font-weight: 700;
+        font-family: 'Hiragino Sans-W5', sans-serif;
+        font-weight: normal;
         box-sizing: border-box;
     }
 
@@ -1245,14 +1246,20 @@
         color: #FFFFFF;
     }
 
+    /* [カスタムエイド 2026-10-21] 「別のカードに変える」は「更新する」と色を分ける(青い枠 → 薄いグレーの面・黒い文字) */
     .fl-btn2 {
         margin-top: 20rpx;
-        border: 1px solid #1A73E8;
-        color: #1A73E8;
+        background: #F2F2F7;
+        color: #1D1D1F;
+    }
+
+    .fl-btn2 .fl-small {
+        color: #6E6E73;
     }
 
     .fl-small {
         font-size: 22rpx;
+        font-family: 'Hiragino Sans', sans-serif;
         font-weight: 400;
         margin-top: 2rpx;
     }

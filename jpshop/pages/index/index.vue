@@ -152,28 +152,26 @@
             </view>
         </view>
 
-        <u-popup :show="show" round="15">
-            <view class="cons">
-                <view class="contitle">
-                    クーポンの利用確認
-                </view>
-                <u-swiper :list="banner" height="250" :indicator="true" indicatorMode="dot" :radius="0"
-                    indicatorActiveColor="#000000" indicatorInactiveColor="rgba(0,0,0,.3)" keyName="img"></u-swiper>
-                <view class="details">
-                    <view class="de_1">
-                        <view class="tt1">
-                            クーポン番号
-                        </view>
-                        <view class="tt2" v-text="info.number"></view>
-                    </view>
-                    <view class="de_2">
-                        <view class="tt1" v-if="info.title" v-text="info.title"></view>
-                        <view class="tt1" v-else>タイトル</view>
-                    </view>
-                    <u-button class="btn1" text="クーポンを承認" @click="userCoupon"></u-button>
-                    <u-button class="btn2" text="キャンセル" @click="show = false"></u-button>
-                </view>
-                <view style="height: 50upx;"></view>
+        <!-- [カスタムエイド 2026-10-21] クーポンの利用確認(バーコードを読んだとき)を、ほかのシートと同じ見た目に -->
+        <u-popup :show="show" mode="bottom" round="24" @close="show = false">
+            <view class="cu-sheet">
+                <view class="cu-grip"></view>
+                <view class="cu-x" hover-class="cu-hover" @click="show = false">×</view>
+                <view class="cu-h">クーポンの利用確認</view>
+                <scroll-view scroll-y class="cu-body">
+                    <swiper v-if="banner && banner.length" class="cu-sw" :indicator-dots="banner.length > 1" indicator-active-color="#1D1D1F">
+                        <swiper-item v-for="(u, i) in banner" :key="i">
+                            <image class="cu-img" :src="typeof u == 'string' ? u : u.img" mode="aspectFill"></image>
+                        </swiper-item>
+                    </swiper>
+                    <view class="cu-t">{{ info.title || 'タイトル' }}</view>
+                    <view class="cu-row" v-if="info.number"><text class="cu-k">クーポン番号</text><text class="cu-v">{{ info.number }}</text></view>
+                    <view class="cu-row" v-if="info.is_indate == 1 && info.indate_start_time"><text class="cu-k">有効期限</text><text class="cu-v">{{ info.indate_start_time }} 〜 {{ info.indate_end_time }}</text></view>
+                    <view class="cu-row" v-if="Number(info.count) > 0"><text class="cu-k">回数制限</text><text class="cu-v">1人{{ info.count }}回まで</text></view>
+                    <view class="cu-note">お客様の画面と同じクーポンか確かめてから、「このクーポンを使う」を押してください。</view>
+                </scroll-view>
+                <view class="cu-ok" hover-class="cu-hover" @click="userCoupon">このクーポンを使う</view>
+                <view class="cu-cancel" hover-class="cu-hover" @click="show = false">キャンセル</view>
             </view>
         </u-popup>
 
@@ -1416,6 +1414,22 @@
     .contain {
         box-sizing: border-box;
     }
+    /* [カスタムエイド 2026-10-21] クーポンの利用確認 */
+    .cu-sheet { position: relative; padding: 24rpx 40rpx calc(48rpx + env(safe-area-inset-bottom)); }
+    .cu-grip { width: 80rpx; height: 10rpx; border-radius: 6rpx; background: #D2D2D7; margin: 0 auto 28rpx; }
+    .cu-x { position: absolute; right: 24rpx; top: 20rpx; width: 64rpx; height: 64rpx; border-radius: 50%; background: #F2F2F7; color: #6E6E73; font-size: 36rpx; line-height: 64rpx; text-align: center; z-index: 2; }
+    .cu-h { text-align: center; font-size: 34rpx; color: #1D1D1F; font-family: 'Hiragino Sans-W5', sans-serif; margin-bottom: 28rpx; }
+    .cu-body { max-height: 58vh; }
+    .cu-sw, .cu-img { width: 100%; height: 360rpx; }
+    .cu-sw { border-radius: 24rpx; overflow: hidden; margin-bottom: 28rpx; }
+    .cu-t { font-size: 34rpx; color: #1D1D1F; font-family: 'Hiragino Sans-W5', sans-serif; line-height: 1.4; overflow-wrap: anywhere; }
+    .cu-row { display: flex; font-size: 28rpx; line-height: 1.5; margin-top: 20rpx; }
+    .cu-k { width: 200rpx; flex-shrink: 0; color: #6E6E73; }
+    .cu-v { flex: 1; color: #1D1D1F; overflow-wrap: anywhere; }
+    .cu-note { font-size: 24rpx; color: #8A8A8E; line-height: 1.6; margin-top: 28rpx; }
+    .cu-ok { margin-top: 40rpx; height: 104rpx; border-radius: 28rpx; background: #D93025; color: #FFFFFF; font-size: 32rpx; font-family: 'Hiragino Sans-W5', sans-serif; display: flex; align-items: center; justify-content: center; }
+    .cu-cancel { margin-top: 24rpx; height: 104rpx; border-radius: 28rpx; background: #F2F2F7; color: #1D1D1F; font-size: 32rpx; display: flex; align-items: center; justify-content: center; }
+    .cu-hover { opacity: 0.7; }
 
     .cons {
         width: 100vw;

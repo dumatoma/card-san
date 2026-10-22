@@ -261,10 +261,12 @@
         padding: 32rpx 0;
     }
 
+    /* [カスタムエイド 2026-10-21] 見出しの文字と入力枠の見た目のすき間を約6pxに(行の高さを詰め、余白 4px) */
     .cs-lab {
         font-size: 26rpx;
         font-weight: 500;
-        margin-bottom: 12rpx;
+        margin-bottom: 8rpx;
+        line-height: 1.2;
     }
 
     .cs-in {

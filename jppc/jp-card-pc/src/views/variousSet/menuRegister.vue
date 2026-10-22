@@ -110,7 +110,7 @@
           v-model="des"
         ></textarea>
         <div class="detailed m-t-40">価格(税込)</div>
-        <input class="intTwo no-size" v-model="price" placeholder="価格を入力" />
+        <input class="intTwo no-size" v-model="price" placeholder="例:5,000円、5,000円〜" @blur="price = csPrice(price)" /><!-- [カスタムエイド 2026-10-21] 入力が終わったらカンマを付ける -->
       </div>
       <div style="padding: 40px; border-bottom: 1px solid #d2d2d7">
         <div class="u-flex">
@@ -299,6 +299,12 @@ export default {
     }
   },
   methods: {
+      // [カスタムエイド 2026-10-21] 価格:入力が終わったら、4けた以上の数字にカンマを付ける(9000円〜 → 9,000円〜)。¥・円・〜などはお店が書いたまま。全角の数字は半角に
+      csPrice(v) {
+          if (!v) return v
+          const s = String(v).replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+          return s.replace(/(^|[^\d.,])(\d{4,})(?![\d.])/g, (m, a, b) => a + b.replace(/\B(?=(\d{3})+(?!\d))/g, ','))
+      },
       goback(){
         history.go(-1)
       },
@@ -336,7 +342,7 @@ export default {
          data['image'] = that.imgList
          data["title"] = that.MenuName
          data['des'] = that.des
-         data['price'] = that.price
+         data['price'] = that.csPrice(that.price) // [カスタムエイド 2026-10-21]
          data['is_order'] = that.show? 1 : 0
          data['order_time'] = that.min
          if(that.query.type == "add"){

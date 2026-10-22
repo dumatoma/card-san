@@ -1123,18 +1123,21 @@
         padding: 8rpx 32rpx;
     }
 
+    /* [カスタムエイド 2026-10-21] 項目と項目のあいだを約6px広げる */
     .cf-field {
-        margin-bottom: 32rpx;
+        margin-bottom: 44rpx;
     }
 
     .cf-field:last-child {
         margin-bottom: 0;
     }
 
+    /* [カスタムエイド 2026-10-21] 見出しの文字と入力枠の見た目のすき間を約6pxに(行の高さを詰め、余白 4px) */
     .cf-label {
         font-size: 26rpx;
         font-weight: 500;
-        margin-bottom: 12rpx;
+        margin-bottom: 8rpx;
+        line-height: 1.2;
     }
 
     .cf-nomb {
@@ -1248,11 +1251,17 @@
         color: #515154;
     }
 
+    /* [カスタムエイド 2026-10-21] 切り替えの選んでいる方:薄い青の面+青い線+青い文字(全画面共通) */
+    .cf-seg-item {
+        border: 1px solid transparent;
+        box-sizing: border-box;
+    }
+
     .cf-seg-item.on {
-        background: #FFFFFF;
-        color: #1D1D1F;
+        background: rgba(26, 115, 232, 0.10);
+        border-color: #1A73E8;
+        color: #1A73E8;
         font-weight: 700;
-        box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.12);
     }
 
     .cf-color-row {

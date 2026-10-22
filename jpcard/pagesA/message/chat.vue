@@ -25,7 +25,8 @@
                                 @click="openGroup(item.grpUrls, ui)" @longpress="saveImage(u)"></image>
                         </view>
                         <view v-if="item.type == 2 && !item.grpUrls" class="msgDetailImage">
-                            <image @click="openBigImg(item.message)" @longpress="saveImage(item.message)" @load="onImgLoad" :src="item.message" mode="widthFix" lazy-load></image>
+                            <!-- [カスタムエイド 2026-10-21] リンク付きの写真(一斉配信)は、押すとリンクを開く(拡大しない) -->
+                            <image @click="item.url ? openURL(item.url) : openBigImg(item.message)" @longpress="saveImage(item.message)" @load="onImgLoad" :src="item.message" mode="widthFix" lazy-load></image>
                         </view>
                         <view v-if="item.type == 3" class="msgDetailImage" style="height: 120rpx;overflow: hidden">
                             <image @click="openURL(item.url)" :src="item.message" style="height: 120rpx;width: 100%;" mode="aspectFill"></image>

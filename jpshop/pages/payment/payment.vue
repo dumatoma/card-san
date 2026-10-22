@@ -1,132 +1,72 @@
 <template>
-    <view class="container">
-        <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
+    <!-- [カスタムエイド 2026-10-22] 管理WEBのスマホ版「お申し込み」と同じ見た目にそろえた(白いカード・選んだ周期は薄い青・カードは黒いブランド表示)。申し込みの処理は変更なし -->
+    <view class="pm-page">
         <u-navbar title="お申し込み" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
-        <view class="item">
-            <view class="item_title">
-                プラン
-            </view>
-            <view class="item_detail">
-                <view class="detail_item">
-                    <view class="detail_item_left">
-                        選択プラン：
-                    </view>
-                    <view class="detail_item_right">
-                        {{type == 1? 'ライト' : type == 2? 'スタンダード' : 'プレミアム'}}
-                    </view>
+        <view class="pm-body">
+            <!-- お申し込みプラン -->
+            <view class="pm-card pm-plan">
+                <view>
+                    <view class="pm-cap">お申し込みプラン</view>
+                    <view class="pm-val">{{ planName }}</view>
                 </view>
-                <view class="checkMore" @click="checkMore">
-                    プランを変更
-                </view>
+                <view class="pm-link" hover-class="pm-press" @click="checkMore">プランを変更</view>
             </view>
-        </view>
-        <view class="item">
-            <view class="item_title">
-                お支払い周期を選択してください
-            </view>
-            <view class="item_list">
-                <view class="list_item" style="display: none;">
-                    <view class="selectContent" @click="chooseTime(12)">
-                        <view class="selectInner" v-if="current == 12"></view>
-                    </view>
-                    <view class="selectTime">
-                        1年
-                    </view>
-                    <view class="selectPrice">
-                        ¥{{ formatPriceWithCommas(price3 / 12)  }} × 12ヶ月
-                    </view>
-                    <view class="selectDisccount">
-                        ¥{{ formatPriceWithCommas(price1 * 12 - price3)}} お得！
-                    </view>
-                </view>
 
-                <view class="list_item">
-                    <view class="selectContent" @click="chooseTime(6)">
-                        <view class="selectInner" v-if="current == 6"></view>
+            <!-- お支払い周期(アプリ内課金は 6ヶ月・月額 のみ) -->
+            <view class="pm-card">
+                <view class="pm-h2 pm-h2-list">お支払い周期を選択</view>
+                <view v-for="c in cycles" :key="c.m" class="pm-cycle" :class="{ on: current == c.m }" @click="chooseTime(c.m)">
+                    <view class="pm-radio" :class="{ on: current == c.m }"><view class="pm-radio-in"></view></view>
+                    <view class="pm-cycle-txt">
+                        <view class="pm-cycle-label">{{ c.label }}</view>
+                        <view class="pm-cycle-detail">{{ c.detail }}</view>
                     </view>
-                    <view class="selectTime">
-                        6ヶ月
-                    </view>
-                    <view class="selectPrice">
-                        ¥{{ formatPriceWithCommas(price2 / 6)}} × 6ヶ月
-                    </view>
-                    <view class="selectDisccount">
-                        ¥{{ formatPriceWithCommas(price1 * 6 - price2) }} お得！
-                    </view>
-                </view>
-
-                <view class="list_item">
-                    <view class="selectContent" @click="chooseTime(1)">
-                        <view class="selectInner" v-if="current == 1"></view>
-                    </view>
-                    <view class="selectTime">
-                        月額
-                    </view>
-                    <view class="selectPrice">
-                        ¥{{ formatPriceWithCommas(price1)}} × 1ヶ月
-                    </view>
-                    <view class="selectDisccount"></view>
-                </view>
-            </view>
-        </view>
-        <view class="item">
-            <view class="item_title">
-                お支払い方法
-            </view>
-            <view class="paymethod">
-                <!-- [カスタムエイド 2026-10-18] 「App 課金」の固定表示をやめ、契約・端末で出し分ける(修正一覧 No.8) -->
-                <view class="payItem" v-text="payMethodLabel"></view>
-            </view>
-        </view>
-        <view class="item pd" style="box-shadow: 0rpx 0rpx 20rpx 2rpx rgba(0,0,0,0.2);">
-            <view class="detaTitle">
-                ご契約内容
-            </view>
-            <view class="deta">
-                <view class="detaItem">
-                    {{type == 1? 'ライト' : type == 2? 'スタンダード' : 'プレミアム'}}
-                </view>
-                <view class="detaItem" v-if="current == 1" style="font-weight: bold;">
-                    ¥{{ formatPriceWithCommas(price1) }} (1ヶ月)
-                </view>
-                <view class="detaItem" v-if="current == 6" style="font-weight: bold;">
-                    ¥{{ formatPriceWithCommas(price2) }} (6ヶ月)
-                </view>
-                <view class="detaItem" v-if="current == 12" style="font-weight: bold;">
-                    ¥{{formatPriceWithCommas(price3)}} (12ヶ月)
-                </view>
-            </view>
-           <view class="deta">
-                <view class="detaItem coblue" style="font-size: 14px !important;">
-                    契約更新日
-                </view>
-                <view class="detaItem coblue" style="font-weight: bold;font-size: 14px !important;" v-text="refreshTime"></view>
-            </view>
-            <view class="deta" v-if="vips.length == 2"  style="font-size: 14px !important;">
-                <text style="color: #D93025;font-size: 14px !important;" >※</text>
-                <view class="wor"  style="font-size: 14px !important;">
-                    ご契約内容の変更は、上記の契約更新日から適用されます。
-                </view>
-            </view>
-            <view class="deta" v-if="vips.length == 1 && platform == 'ios' && type > vips[0].type">
-                <text style="color: #D93025;">※</text>
-                <view class="wor">
-                    アップグレードは今すぐ開始されます。現在のサブスクリプションの残りの期間分の料金は返金されます。
+                    <view class="pm-save" v-if="c.save">{{ c.save }}</view>
                 </view>
             </view>
 
-            <view class="deta" v-if="vips.length == 1 && platform == 'android' && type > vips[0].type">
-                <text style="color: #D93025;">※</text>
-                <view class="wor">
-                    アップグレードは今すぐ開始されます。現在のサブスクリプションの残りの期間分の料金と新しいサブスクリプションの料金の差額分をお支払いください。
+            <!-- お支払い方法 -->
+            <view class="pm-card pm-pad">
+                <view class="pm-h2">お支払い方法</view>
+                <!-- [カスタムエイド 2026-10-18] 「App 課金」の固定表示をやめ、契約・端末で出し分ける -->
+                <view class="pm-cardline" v-if="onCard && vipCard">
+                    <text class="pm-brand">{{ vipCard.brand_name || 'クレジットカード' }}</text>
+                    <text class="pm-last4">**** {{ vipCard.last4 }}</text>
+                    <text class="pm-exp" v-if="vipCard.exp_month">有効期限 {{ expText }}</text>
+                </view>
+                <view class="pm-cardline" v-else>
+                    <text class="pm-last4">{{ payMethodLabel }}</text>
+                </view>
+                <view class="pm-note" v-if="onCard">ご契約中のクレジットカードで変更されます。カードの変更は Card-San管理ウェブサイトの「ご契約内容」から行えます。</view>
+            </view>
+
+            <!-- ご契約内容 -->
+            <view class="pm-card pm-pad">
+                <view class="pm-h3">ご契約内容</view>
+                <view class="pm-line">
+                    <text>{{ planName }}</text>
+                    <text class="pm-bold">{{ totalText }}</text>
+                </view>
+                <view class="pm-line pm-blue">
+                    <text>契約更新日</text>
+                    <text class="pm-bold">{{ refreshTime }}</text>
+                </view>
+                <view class="pm-att" v-if="vips.length == 2">
+                    <text class="pm-red">※</text>ご契約内容の変更は、上記の契約更新日から適用されます。
+                </view>
+                <view class="pm-att" v-if="vips.length == 1 && platform == 'ios' && type > vips[0].type">
+                    <text class="pm-red">※</text>アップグレードは今すぐ開始されます。現在のサブスクリプションの残りの期間分の料金は返金されます。
+                </view>
+                <view class="pm-att" v-if="vips.length == 1 && platform == 'android' && type > vips[0].type">
+                    <text class="pm-red">※</text>アップグレードは今すぐ開始されます。現在のサブスクリプションの残りの期間分の料金と新しいサブスクリプションの料金の差額分をお支払いください。
                 </view>
             </view>
+
+            <view class="pm-agree">お申し込みにより、<text class="pm-agree-link" @click="toxie">利用規約・プライバシーポリシー</text>に同意したものとみなします。</view>
+
+            <view class="pm-btn" hover-class="pm-press" @click="toSuccess1">この内容でお申し込み</view>
+            <view style="height: 120rpx;"></view>
         </view>
-        <view @click="toxie" class="xie" hover-class="xie1">
-            利用規約・プライバシーポリシー
-        </view>
-        <u-button class="bt" type="primary" @click="toSuccess1" shape="circle"> この内容でお申し込み</u-button>
-        <view style="height: 160upx;"></view>
         <u-popup :show="show" @close="show = false">
             <subscribe @btmnclick="show = false" :title="title" :content="content"></subscribe>
         </u-popup>
@@ -177,6 +117,30 @@
             }
         },
         computed: {
+            // [カスタムエイド 2026-10-22] 見た目をそろえるための表示用
+            planName() {
+                return this.type == 1 ? 'ライト' : this.type == 2 ? 'スタンダード' : 'プレミアム'
+            },
+            cycles() {
+                const one = Number(this.price1) || 0, six = Number(this.price2) || 0
+                const yen = (n) => '¥' + this.formatPriceWithCommas(Math.round(n))
+                return [
+                    { m: 6, label: '6ヶ月', detail: yen(six / 6) + ' × 6ヶ月', save: one * 6 - six > 0 ? yen(one * 6 - six) + ' お得!' : '' },
+                    { m: 1, label: '月額', detail: yen(one) + ' × 1ヶ月', save: '' }
+                ]
+            },
+            totalText() {
+                const p = this.current == 1 ? this.price1 : this.current == 6 ? this.price2 : this.price3
+                return '¥' + this.formatPriceWithCommas(Number(p) || 0) + '(' + this.current + 'ヶ月)'
+            },
+            onCard() {
+                const v = this.vips.length > 0 ? this.vips[0] : null
+                return !!(v && v.card_type == 1 && v.is_try != 1)
+            },
+            expText() {
+                const c = this.vipCard || {}
+                return ('0' + c.exp_month).slice(-2) + '/' + String(c.exp_year || '').slice(-2)
+            },
             // [カスタムエイド 2026-10-18] お支払い方法の表示(No.8)
             payMethodLabel() {
                 const v = this.vips.length > 0 ? this.vips[0] : null
@@ -639,243 +603,45 @@
     }
 </script>
 
-<style lang="scss">
-    .xie{
-        margin-top: 40upx;
-        font-size: 28upx;
-        color: #1A73E8;
-    }
-    
-    .xie1{
-        opacity: 0.6 !important;
-    }
-    
-    .bt {
-        background: #1A73E8;
-        height: 112upx;
-        margin-top: 96upx;
-        line-height: 112upx;
-        color: #fff;
-    }
-
-    .wor {
-        font-size: 28rpx;
-        color: #1D1D1F;
-    }
-
-    .coblue {
-        color: #1A73E8 !important;
-        font-size: 28upx !important;
-        font-weight: normal !important;
-    }
-
-    .detaTitle {
-        font-size: 28upx;
-        font-family: Hiragino Sans-W5, Hiragino Sans;
-        font-weight: normal;
-        color: #1D1D1F;
-        padding-bottom: 20upx;
-    }
-
-    .tips {
-        box-sizing: border-box;
-        padding: 0 58upx;
-        margin: 80upx auto;
-        font-size: 28upx;
-        font-family: Hiragino Sans-W3, Hiragino Sans;
-        font-weight: normal;
-        color: #0A4B6D;
-    }
-
-    .pd {
-        box-sizing: border-box;
-        padding: 48upx 48upx 0 48upx;
-    }
-
-    .deta {
-        display: flex;
-        justify-content: space-between;
-        padding: 28upx 0;
-        border-top: 2upx solid #D2D2D7;
-       
-        .deta_item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-sizing: border-box;
-            padding-left: 36upx;
-            margin-top: 20upx;
-        }
-
-        .detaItem {
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            color: #1D1D1F;
-             font-size: 18px !important;
-            font-weight: bold;
-        }
-    }
-
-    .applePay {
-        width: 94upx;
-        height: 60upx;
-        margin-left: 36upx;
-        margin-right: 20upx;
-
-        image {
-            width: 100%;
-            height: 100%;
-        }
-    }
-
-    .googlePay {
-        width: 124upx;
-        height: 60upx;
-        margin-right: 20upx;
-        margin-left: 36upx;
-
-        image {
-            width: 100%;
-            height: 100%;
-        }
-    }
-
-    .selectContent {
-        width: 32upx;
-        height: 32upx;
-        box-sizing: border-box;
-        padding: 6upx;
-        border: 2upx solid #1A73E8;
-        border-radius: 50%;
-        margin-right: 10upx;
-
-        .selectInner {
-            width: 100%;
-            height: 100%;
-            background: #1A73E8;
-            border-radius: 50%;
-        }
-    }
-
-    .paymethod {
-        .payItem {
-            box-sizing: border-box;
-            padding: 48upx;
-            border-bottom: 2upx solid #D2D2D7;
-
-            .cardsInfo {
-                margin-top: 80upx;
-
-                .info_item {
-                    margin-top: 60upx;
-                    flex: 1;
-
-                    .info_name {
-                        font-size: 24upx;
-                        font-family: Hiragino Sans-W5, Hiragino Sans;
-                        font-weight: normal;
-                        color: #707070;
-                    }
-                }
-            }
-
-            .pTop {
-                display: flex;
-                align-items: center;
-
-                .payName {
-                    font-size: 32upx;
-                    font-family: Hiragino Sans-W5, Hiragino Sans;
-                    font-weight: normal;
-                    color: #1D1D1F;
-                }
-            }
-
-            .cards {
-                width: 413upx;
-                height: 60upx;
-                margin-top: 20upx;
-
-                image {
-                    width: 100%;
-                    height: 100%;
-                }
-            }
-        }
-    }
-
-    .container {
-        background-color: #fff;
-        box-sizing: border-box;
-        padding: 0 32upx;
-    }
-
-    .checkMore {
-        font-size: 28upx;
-        font-family: Hiragino Sans-W5, Hiragino Sans;
-        font-weight: normal;
-        color: #1A73E8;
-        text-align: right;
-    }
-
-    .list_item {
-        display: flex;
-        box-sizing: border-box;
-        padding: 40upx 32upx;
-        border-bottom: 2upx solid #D2D2D7;
-        align-items: center;
-        font-size: 14px !important;
-        .selectTime {
-            width: 15%;
-        }
-
-        .selectPrice {
-            width: 45%;
-        }
-
-        .selectDisccount {
-            flex: 1;
-            color: #D93025 !important;
-        }
-    }
-
-    .item {
-        box-shadow: 0px 0px 20upx 2upx rgba(0, 0, 0, 0.07);
-        margin-top: 60upx;
-
-        .item_title {
-            box-sizing: border-box;
-            padding: 24upx 46upx;
-            background: rgba(26, 115, 232, 0.1);
-            font-size: 28upx;
-            font-family: Hiragino Sans-W5, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-        }
-
-        .item_detail {
-            box-sizing: border-box;
-            padding: 40upx;
-
-            .detail_item {
-                display: flex;
-                align-items: center;
-                margin-bottom: 40upx;
-
-                .detail_item_left {
-                    font-size: 28upx;
-                    font-family: Hiragino Sans-W3, Hiragino Sans;
-                    font-weight: normal;
-                    color: #1D1D1F;
-                }
-
-                .detail_item_right {
-                    font-size: 28upx;
-                    font-family: Hiragino Sans-W5, Hiragino Sans;
-                    font-weight: normal;
-                    color: #1D1D1F;
-                }
-
-            }
-        }
-    }
+<style lang="scss" scoped>
+    /* [カスタムエイド 2026-10-22] 管理WEBのスマホ版(sp.css / spConfirm.vue)と同じ色・形。1px = 2rpx で写している */
+    .pm-page { min-height: 100vh; background: #f5f5f7; color: #1d1d1f; }
+    .pm-body { padding: 40rpx 32rpx 0; display: flex; flex-direction: column; gap: 32rpx; }
+    .pm-card { background: #fff; border-radius: 28rpx; overflow: hidden; }
+    .pm-pad { padding: 28rpx 32rpx 32rpx; display: flex; flex-direction: column; gap: 24rpx; }
+    .pm-plan { padding: 28rpx 32rpx; display: flex; align-items: center; justify-content: space-between; }
+    .pm-cap { font-size: 24rpx; color: #6e6e73; }
+    .pm-val { margin-top: 4rpx; font-size: 34rpx; font-weight: 700; }
+    .pm-link { padding: 16rpx 0 16rpx 24rpx; font-size: 26rpx; font-weight: 500; color: #1a73e8; }
+    .pm-press { opacity: 0.6; }
+    .pm-h2 { font-size: 30rpx; font-weight: 700; }
+    .pm-h2-list { padding: 28rpx 32rpx 16rpx; }
+    .pm-h3 { font-size: 26rpx; font-weight: 700; }
+    /* 周期の行(選んでいる行は薄い青) */
+    .pm-cycle { min-height: 128rpx; padding: 20rpx 32rpx; border-top: 2rpx solid #f0f0f2; display: flex; align-items: center; gap: 24rpx; background: #fff; box-sizing: border-box; }
+    .pm-cycle.on { background: #eef4fe; }
+    .pm-radio { width: 44rpx; height: 44rpx; flex-shrink: 0; border-radius: 50%; border: 4rpx solid #c7c7cc; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+    .pm-radio-in { width: 20rpx; height: 20rpx; border-radius: 50%; background: transparent; }
+    .pm-radio.on { border-color: #1a73e8; }
+    .pm-radio.on .pm-radio-in { background: #1a73e8; }
+    .pm-cycle-txt { flex: 1; display: flex; flex-direction: column; gap: 4rpx; }
+    .pm-cycle-label { font-size: 30rpx; font-weight: 700; }
+    .pm-cycle-detail { font-size: 26rpx; color: #515154; }
+    .pm-save { flex-shrink: 0; font-size: 26rpx; font-weight: 700; color: #c5221f; }
+    /* お支払い方法 */
+    .pm-cardline { display: flex; align-items: center; flex-wrap: wrap; gap: 20rpx; padding: 24rpx; border: 2rpx solid #e5e5ea; border-radius: 20rpx; }
+    .pm-brand { padding: 4rpx 16rpx; border-radius: 8rpx; background: #1d1d1f; color: #fff; font-size: 22rpx; font-weight: 700; }
+    .pm-last4 { font-size: 30rpx; }
+    .pm-exp { margin-left: auto; font-size: 24rpx; color: #6e6e73; }
+    .pm-note { font-size: 24rpx; line-height: 1.7; color: #515154; }
+    /* ご契約内容 */
+    .pm-line { display: flex; justify-content: space-between; font-size: 28rpx; }
+    .pm-bold { font-weight: 700; }
+    .pm-blue { color: #1a73e8; }
+    .pm-att { font-size: 24rpx; line-height: 1.7; color: #515154; }
+    .pm-red { color: #d93025; }
+    /* 同意の文とボタン */
+    .pm-agree { margin-top: 8rpx; text-align: center; font-size: 24rpx; line-height: 1.7; color: #515154; }
+    .pm-agree-link { color: #1a73e8; text-decoration: underline; }
+    .pm-btn { margin-top: 32rpx; height: 104rpx; border-radius: 52rpx; background: #1a73e8; color: #fff; font-size: 32rpx; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 </style>

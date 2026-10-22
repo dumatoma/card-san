@@ -279,19 +279,22 @@
         color: #515154;
     }
 
+    /* [カスタムエイド 2026-10-21] 項目と項目のあいだを約6px広げる */
     .mf-field {
-        margin-bottom: 28rpx;
+        margin-bottom: 40rpx;
     }
 
     .mf-field:last-child {
         margin-bottom: 0;
     }
 
+    /* [カスタムエイド 2026-10-21] 見出しの文字と入力枠の見た目のすき間を約6pxに(行の高さを詰め、余白 4px) */
     .mf-label {
         font-size: 26rpx;
         font-weight: 500;
         color: #1D1D1F;
-        margin-bottom: 12rpx;
+        margin-bottom: 8rpx;
+        line-height: 1.2;
     }
 
     .mf-req {

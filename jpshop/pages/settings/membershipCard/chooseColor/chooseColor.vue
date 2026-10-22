@@ -35,42 +35,15 @@
                 current:5645,
                 kb:false,
                 colorList:[],
+                // [カスタムエイド 2026-10-21] 最初の色は白・黒の2色だけ(以前は10色)
                 templist: [{
-                        color: "#FEECD4",
+                        color: "#FFFFFF",
                         selected: false
                     },
                     {
-                        color: "#B1DD8B",
+                        color: "#000000",
                         selected: false
-                    },
-                    {
-                        color: "#EAF28F",
-                        selected: false
-                    },
-                    {
-                        color: "#FFC5AB ",
-                        selected: false
-                    },
-                    {
-                        color: "#B51A00",
-                        selected: false
-                    },
-                    {
-                        color: "#74A7FF",
-                        selected: false
-                    }, {
-                        color: "#BE38F3",
-                        selected: false
-                    }, {
-                        color: "#00A1D8",
-                        selected: false
-                    }, {
-                        color: "#0042A9 ",
-                        selected: false
-                    },{
-                        color: "#ffac02 ",
-                        selected: false
-                    },
+                    }
                 ]
             }
         },

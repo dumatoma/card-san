@@ -2,136 +2,84 @@
     <view class="contains">
         <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
         <u-navbar title="予約内容" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
-        <view class="ct">
-            <view class="ctItem" style="margin-top: 0 !important;">
-                <view class="itemName">
-                    氏名
+        <!-- [カスタムエイド 2026-10-22] 予約内容の画面を、ほかの画面の作り直しと同じ見た目に(白いカード・行の区切り・下に青いボタン)。処理は変更なし -->
+        <view class="ed-pg">
+            <view class="ed-card">
+                <view class="ed-row" v-if="!wai">
+                    <view class="ed-lab">氏名</view>
+                    <view class="ed-val" :class="{ 'ed-link': info.mid }" @click="info.mid && toCustomer()">{{ info.name || 'ー' }}</view>
                 </view>
-                <view class="itemDetail" v-if="info.mid" style="color: rgba(26, 115, 232, 1);" @click="toCustomer"
-                    v-text="`${info.name}`"></view>
-                <view class="itemDetail" v-else style="color: #999" @click="toCustomer" v-text="`${info.name}`"></view>
-            </view>
-            <view class="ctItem">
-                <view class="itemName">
-                    電話番号
+                <view class="ed-row" v-if="!wai">
+                    <view class="ed-lab">電話番号</view>
+                    <input class="ed-in" type="text" v-model="info.phone" placeholder="入力してください" placeholder-class="ed-ph" />
                 </view>
-                <view class="itemDetail">
-                    <u--input placeholder="入力してください" border="bottom" v-model="info.phone" clearable></u--input>
+                <view class="ed-row" v-if="!wai">
+                    <view class="ed-lab">会員ID</view>
+                    <view class="ed-val ed-gray">{{ info.member_id || 'ー' }}</view>
                 </view>
-            </view>
-            <view class="ctItem">
-                <view class="itemName">
-                    会員ID
-                </view>
-                <view class="itemDetail">
-                    <u--input border="none" disabledColor="#fff" disabled v-model="info.member_id" clearable>
-                    </u--input>
-                </view>
-            </view>
-            <view class="ctItem">
-                <view class="itemName">
-                    予約番号
-                </view>
-                <view class="itemDetail">
-                    <u--input placeholder="入力してください" disabledColor="#fff" border="none" disabled v-model="info.order_no"
-                        clearable>
-                    </u--input>
-                </view>
-            </view>
-        </view>
-       <view class="ct" v-if="menu"  @click="timeShow = true" style="display: flex;align-items: center;justify-content: space-between;">
-            <view class="pickers">
-                <view class="">
-                    <view v-text="menu.title"></view>
-                    <view style="margin-top: 20upx;" v-if="wai == false">
-                        所要時間：{{menu.order_time}}分 <text
-                            style="color: rgba(217, 48, 37, 0.65);margin-left: 80upx;">￥{{menu.price}}</text>　　
-                    </view>
-                </view>
-            </view>
-            <view>
-                <u-icon name="arrow-right"></u-icon>
-            </view>
-        </view>
-        <view class="ct" v-else style="display: flex;align-items: center;justify-content: space-between;"  @click="timeShow = true">
-             <view class="pickers">
-                 <view class="">
-                     <view>お休み・勤務時間外</view>
-                 </view>
-             </view>
-             <view>
-                   <u-icon name="arrow-right"></u-icon>
-             </view>
-         </view>
-        <view class="ct" style="padding: 20upx 32upx;">
-            <view class="citem border_bottom">
-                <view class="citemLeft">
-                    日付
-                </view>
-                <view class="citemRight">
-                    <view class="dateDetail" @click="calendarShow = true" v-text="info.day"></view>
-                </view>
-            </view>
-            <view class="citem border_bottom">
-                <view class="citemLeft">
-                    開始
-                </view>
-                <view class="citemRight">
-                    <view class="dateDetail" v-text="info.start" @click="startShow = true"></view>
-                </view>
-            </view>
-            <view class="citem border_bottom">
-                <view class="citemLeft">
-                    終了
-                </view>
-                <view class="citemRight">
-                    <view class="dateDetail" v-text="info.end" @click="showEnd"></view>
+                <view class="ed-row">
+                    <view class="ed-lab">予約番号</view>
+                    <view class="ed-val ed-gray">{{ info.order_no }}</view>
                 </view>
             </view>
 
-            <view class="citem border_bottom" @click="getZhi">
-                <view class="citemLeft">
-                    指名担当
+            <view class="ed-sec">メニュー</view>
+            <view class="ed-card ed-menu" hover-class="ed-hover" @click="timeShow = true">
+                <view class="ed-menu-l">
+                    <view class="ed-menu-t" :class="{ 'ed-red': wai && waiName == 'お休み', 'ed-green': wai && waiName != 'お休み' }">{{ wai ? waiName : menu.title }}</view>
+                    <view class="ed-menu-s" v-if="!wai">所要時間 {{ menu.order_time }}分<text class="ed-price" v-if="menu.price">{{ menu.price }}</text></view>
                 </view>
-                <view class="citemRight">
-                    <view class="cperson">
-                        <!-- <view class="pcolor"
-                            :style="appoint_admin.color? 'background:'+appoint_admin.color : 'background: rgb(23,84,145);'">
-                        </view> -->
-                        <view class="pcolor" :style="`background:${appoint_admin.color == ''? 'rgb(23,84,145)' : appoint_admin.color}`"></view>
-                        <view class="pname" v-text="appoint_admin.name"></view>
-                        <u-icon name="arrow-right"></u-icon>
+                <u-icon name="arrow-right" color="#C7C7CC" size="16"></u-icon>
+            </view>
+
+            <view class="ed-sec">日時・担当</view>
+            <view class="ed-card">
+                <view class="ed-row">
+                    <view class="ed-lab">日付</view>
+                    <view class="ed-chip" hover-class="ed-hover" @click="calendarShow = true">{{ info.day }}</view>
+                </view>
+                <view class="ed-row">
+                    <view class="ed-lab">開始</view>
+                    <view class="ed-chip" hover-class="ed-hover" @click="startShow = true">{{ info.start }}</view>
+                </view>
+                <view class="ed-row">
+                    <view class="ed-lab">終了</view>
+                    <view class="ed-chip" hover-class="ed-hover" @click="showEnd">{{ info.end }}</view>
+                </view>
+                <view class="ed-row" hover-class="ed-hover" @click="getZhi">
+                    <view class="ed-lab">指名担当</view>
+                    <view class="ed-person">
+                        <view class="ed-dot" :style="{ background: appoint_admin.color || 'rgb(23,84,145)' }"></view>
+                        <text class="ed-pname">{{ appoint_admin.name }}</text>
+                        <u-icon name="arrow-right" color="#C7C7CC" size="16"></u-icon>
+                    </view>
+                </view>
+                <view class="ed-row" hover-class="ed-hover" @click="getDang">
+                    <view class="ed-lab">当日担当</view>
+                    <view class="ed-person">
+                        <view class="ed-dot" :style="{ background: day_admin.color || 'rgb(23,84,145)' }"></view>
+                        <text class="ed-pname">{{ day_admin.name }}</text>
+                        <u-icon name="arrow-right" color="#C7C7CC" size="16"></u-icon>
                     </view>
                 </view>
             </view>
 
-            <view class="citem border_bottom" @click="getDang">
-                <view class="citemLeft">
-                    当日担当
-                </view>
-                <view class="citemRight">
-                    <view class="cperson">
-                        <view class="pcolor" :style="`background:${day_admin.color == ''?'rgb(23,84,145)':day_admin.color}`"></view>
-                        <view class="pname" v-text="day_admin.name"></view>
-                        <u-icon name="arrow-right"></u-icon>
-                    </view>
-                </view>
+            <view class="ed-sec">メモ</view>
+            <view class="ed-card ed-pad">
+                <textarea class="ed-ta" v-model="info.remark" placeholder="メモを入力" placeholder-class="ed-ph" maxlength="-1" />
             </view>
-        </view>
-        <view class="ct">
-            <view>メモ</view>
-            <u-textarea placeholder="テキスト" confirmType="done" border="none" :height="35" v-model="info.remark"></u-textarea>
-        </view>
-        <view class="tips">
-            <view>予約内容の変更をお客さんにお知らせする場合</view>
-            <view class="connect" @click="show1 = true">こちら</view>
-        </view>
-        <view class="cConfirm" style="padding-bottom: 0;" @click="save" hover-class="ho1">
-            変更を保存
-        </view>
-        <!-- @click="deleteOrder" -->
-        <view class="cConfirm" style="color: rgba(217, 48, 37, 1);" hover-class="ho1" @click="showAle = true">
-            この予約を取り消す
+
+            <!-- お客さまがいる予約だけ(お休み・勤務時間外などは送る相手がいない) -->
+            <view class="ed-card ed-menu" v-if="info.mid" hover-class="ed-hover" @click="show1 = true">
+                <view class="ed-menu-l">
+                    <view class="ed-menu-t">お客さまに変更を知らせる</view>
+                    <view class="ed-menu-s">保存したあとに、予約内容の変更をメッセージで送ります</view>
+                </view>
+                <u-icon name="arrow-right" color="#C7C7CC" size="16"></u-icon>
+            </view>
+
+            <view class="ed-btn" hover-class="ed-hover" @click="save">変更を保存</view>
+            <view class="ed-del" hover-class="ed-hover" @click="showAle = true">この予約を取り消す</view>
         </view>
         <!-- 开始时间弹出层 -->
         <u-picker :show="startShow" ref="uPicker" :columns="times" @cancel="startShow = false"
@@ -143,9 +91,9 @@
         <u-calendar :show="calendarShow" @confirm="confirmDate" :showTitle = "false" @close="calendarShow = false"></u-calendar>
         <!-- 选人弹出层(担当者) -->
         <u-popup :show="peoShow" round="16">
-            <view style="height: 90vh;width: 100%;overflow-y: scroll;position: relative;">
+            <view style="height: 90vh;width: 100%;overflow-y: scroll;position: relative;box-sizing: border-box;padding-bottom: calc(48rpx + env(safe-area-inset-bottom));">
                 <view class="title">
-                    <image src="../../../../static/icons/tclose.png" mode="" @click="peoShow = false"></image>
+                    <view class="ed-x" @click="peoShow = false">×</view>
                     <view class="titleName">指名担当を選択</view>
                 </view>
                 <view class="peoContent">
@@ -165,9 +113,9 @@
         </u-popup>
         <!-- 选人弹出框 -->
         <u-popup :show="peoShow2" round="16">
-            <view style="height: 90vh;width: 100%;overflow-y: scroll;position: relative;">
+            <view style="height: 90vh;width: 100%;overflow-y: scroll;position: relative;box-sizing: border-box;padding-bottom: calc(48rpx + env(safe-area-inset-bottom));">
                 <view class="title">
-                    <image src="../../../../static/icons/tclose.png" mode="" @click="peoShow2 = false"></image>
+                    <view class="ed-x" @click="peoShow2 = false">×</view>
                     <view class="titleName">当日担当を選択</view>
                 </view>
                 <view class="peoContent">
@@ -187,22 +135,30 @@
         </u-popup>
         <u-popup :show="timeShow" @close="closeShow" mode="bottom" :safeAreaInsetTop='false' bgColor="f9f9f9"
             :round="16">
-            <view style="height: 90vh;width: 100%;overflow-y: scroll;position: relative;">
+            <view style="height: 90vh;width: 100%;overflow-y: scroll;position: relative;box-sizing: border-box;padding-bottom: calc(48rpx + env(safe-area-inset-bottom));">
                 <view class="title">
-                    <image src="../../../../static/icons/tclose.png" @click="closeShow" mode=""></image>
+                    <view class="ed-x" @click="closeShow">×</view>
                     <view class="titleName">メニュー選択</view>
                 </view>
                 <view class="detail">
-                    <view class="selectAll">
-                        <view class="selectContent" @click="changeWai">
-                            <view class="unselect" v-if="!wai"></view>
-                            <view class="selected" v-if="wai">
+                    <!-- [カスタムエイド 2026-10-22] 「お休み」(赤)と「休憩・勤務時間外」(濃い緑)に分けた -->
+                    <view class="selectAll" @click="changeWai('お休み')">
+                        <view class="selectContent">
+                            <view class="unselect" v-if="!(wai && waiName == 'お休み')"></view>
+                            <view class="selected" v-if="wai && waiName == 'お休み'">
                                 <view class="fill"></view>
                             </view>
                         </view>
-                        <view class="allname">
-                            お休み・勤務時間外
+                        <view class="allname">お休み</view>
+                    </view>
+                    <view class="selectAll" style="border-top: 2upx solid #d2d2d7;" @click="changeWai('休憩・勤務時間外')">
+                        <view class="selectContent">
+                            <view class="unselect" v-if="!(wai && waiName != 'お休み')"></view>
+                            <view class="selected" v-if="wai && waiName != 'お休み'">
+                                <view class="fill"></view>
+                            </view>
                         </view>
+                        <view class="allname ed-green">休憩・勤務時間外</view>
                     </view>
                     <view class="settingD">
                         <view class="sDitems" v-for="(item,index) in array" v-if="item.items.length > 0">
@@ -221,7 +177,7 @@
                                             <image :src="ite.image[0]" mode=""></image>
                                         </view>
                                         <view class="sDinfo">
-                                            <view class="sDprice" v-text="`￥${ite.price}`"></view>
+                                            <view class="sDprice" v-text="ite.price"></view>
                                             <view class="sDtime" v-text="`所要時間:${ite.time}分`"></view>
                                         </view>
                                     </view>
@@ -286,6 +242,7 @@
                 info: {},
                 mid:"",
                 wai:false,
+                waiName: "休憩・勤務時間外", // [カスタムエイド 2026-10-22] お休み・休憩のどちらか(サーバーに名前として保存)
                 // お休み・勤務時間外の長さ(分)。開始時刻・日付を変えても終了時刻はこの長さを保つ
                 waiDur:0,
                 menu:{},
@@ -331,7 +288,8 @@
                 selectAll: false,
                 array: [],
                 totalTime:0,
-                sending:false
+                sending:false,
+                saveTimer: null
             };
         },
         created() {
@@ -382,11 +340,15 @@
             save() {
                 let that = this
                 that.showm = true
+                // [カスタムエイド 2026-10-22] 返事が来ないときも、20秒で操作できる状態に戻す(透明のふたが残って「戻る」も押せなくなっていた)
+                clearTimeout(that.saveTimer)
+                that.saveTimer = setTimeout(() => { that.showm = false }, 20000)
                 try {
                     that.doSave()
                 } catch (e) {
                     // 想定外のエラーで画面全体がロックされないようにする
                     that.showm = false
+                    uni.showToast({ title: "保存できませんでした。もう一度お試しください", icon: "none" })
                 }
             },
             doSave() {
@@ -403,7 +365,7 @@
                 let data = {}
                 data._method = "put"
                 data.mid = that.info.mid
-                data.name = that.info.name
+                data.name = that.wai ? that.waiName : that.info.name // [カスタムエイド 2026-10-22]
                 data.phone = that.info.phone
                 data.sex = that.info.sex
                 data.member_id = that.info.member_id
@@ -424,6 +386,7 @@
                 }
                 editAppointOrder(data, that.query.id).then((res) => {
                     that.showm = false
+                    clearTimeout(that.saveTimer)
                     if(res.code == 200){
                         uni.showToast({
                             title:res.message
@@ -448,6 +411,8 @@
                     }
                 }).catch(() => {
                     that.showm = false
+                    // [カスタムエイド 2026-10-22] 通信に失敗したときも何も出なかったので、お知らせを出す
+                    uni.showToast({ title: "通信に失敗しました。電波の良い所でもう一度お試しください", icon: "none" })
                 })
             },
             getStaff(appoint, source) {
@@ -481,7 +446,7 @@
                             icon:"none"
                         })
                     }
-                })
+                }).catch(() => { uni.hideLoading() }) // [カスタムエイド 2026-10-22] 失敗しても「読み込み中」を残さない
             },
             
             chooseMenu(index, idx) {
@@ -506,7 +471,7 @@
                 let ix
                 let menu = {}
                 menu["id"] = 0
-                menu["title"] = "お休み・勤務時間外"
+                menu["title"] = that.waiName
                 if (that.wai == true) {
                     menu["order_time"] = 0
                     that.menu = menu
@@ -579,8 +544,10 @@
                         // お休み・勤務時間外(menu.id が 0/なし)の編集時は「お休み・勤務時間外」を
                         // 選択状態(wai=true)にして、メニュー選択でチェックが入るようにする 2026.7.29
                         that.wai = !(that.menu && that.menu.id)
+                        // [カスタムエイド 2026-10-22] 名前が「お休み」ならお休み、それ以外(今までの空の名前を含む)は休憩・勤務時間外
+                        that.waiName = res.data.order.name == 'お休み' ? 'お休み' : '休憩・勤務時間外'
                         if (!that.menu) {
-                            that.menu = { id: 0, title: "お休み・勤務時間外", order_time: 0 }
+                            that.menu = { id: 0, title: that.waiName, order_time: 0 }
                         }
                         that.waiDur = Math.max(that.diffMin(that.info.start, that.info.end), 0)
                         that.mid = res.data.order.mid
@@ -599,10 +566,10 @@
                 this.peoShow2 = false
             },
             
-            changeWai() {
+            changeWai(name) {
                 let that = this
                 let array = that.array
-            
+                that.waiName = name == 'お休み' ? 'お休み' : '休憩・勤務時間外'
                 that.wai = true
                 that.array.forEach((value, index) => {
                     value.items.forEach((val, idx) => {
@@ -1013,6 +980,36 @@
         width: 100vw;
         background: transparent;
     }
+    /* [カスタムエイド 2026-10-22] 予約内容(余白はほかの画面と同じ決まり) */
+    .ed-pg { padding: 8rpx 0 calc(96rpx + env(safe-area-inset-bottom)); }
+    .ed-card { background: #FFFFFF; border-radius: 32rpx; padding: 0 32rpx; margin-bottom: 56rpx; } /* [カスタムエイド 2026-10-22] カードのあいだを広めに */
+    .ed-pad { padding: 32rpx; }
+    .ed-sec { font-size: 26rpx; color: #6E6E73; padding: 0 8rpx; margin-bottom: 16rpx; line-height: 1.2; }
+    .ed-row { display: flex; align-items: center; justify-content: space-between; min-height: 104rpx; border-bottom: 1px solid #E5E5EA; }
+    .ed-row:last-child { border-bottom: 0; }
+    .ed-lab { flex-shrink: 0; width: 180rpx; font-size: 30rpx; color: #1D1D1F; }
+    .ed-val { flex: 1; text-align: right; font-size: 30rpx; color: #1D1D1F; word-break: break-all; }
+    .ed-link { color: #1A73E8; }
+    .ed-gray { color: #6E6E73; }
+    .ed-in { flex: 1; height: 104rpx; text-align: right; font-size: 30rpx; color: #1D1D1F; }
+    .ed-ph { color: #AEAEB2; }
+    .ed-chip { padding: 14rpx 24rpx; border-radius: 16rpx; background: #F2F2F7; font-size: 30rpx; color: #1D1D1F; }
+    .ed-person { display: flex; align-items: center; }
+    .ed-dot { width: 28rpx; height: 28rpx; border-radius: 8rpx; flex-shrink: 0; }
+    .ed-pname { font-size: 30rpx; color: #6E6E73; margin: 0 12rpx 0 16rpx; }
+    .ed-menu { display: flex; align-items: center; justify-content: space-between; padding: 32rpx; }
+    .ed-menu-l { flex: 1; margin-right: 16rpx; }
+    .ed-menu-t { font-size: 30rpx; color: #1D1D1F; font-family: 'Hiragino Sans-W5', sans-serif; line-height: 1.4; }
+    .ed-menu-s { font-size: 24rpx; color: #6E6E73; margin-top: 8rpx; line-height: 1.5; }
+    .ed-price { color: #D93025; margin-left: 24rpx; }
+    .ed-red { color: #D93025; }
+    .ed-green, .detail .allname.ed-green { color: #137333 !important; }
+    .ed-ta { width: 100%; height: 200rpx; border: 1px solid #D2D2D7; border-radius: 24rpx; padding: 24rpx 28rpx; font-size: 30rpx; line-height: 1.6; box-sizing: border-box; display: block; }
+    .ed-btn { margin-top: 64rpx; height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; font-size: 32rpx; font-family: 'Hiragino Sans-W5', sans-serif; display: flex; align-items: center; justify-content: center; }
+    .ed-del { margin-top: 48rpx; height: 104rpx; border-radius: 28rpx; background: #FFFFFF; color: #D93025; font-size: 32rpx; display: flex; align-items: center; justify-content: center; }
+    .ed-hover { opacity: 0.6; }
+    .ed-x { position: absolute; right: 24rpx; top: 20rpx; width: 64rpx; height: 64rpx; border-radius: 50%; background: #E5E5EA; color: #6E6E73; font-size: 36rpx; line-height: 64rpx; text-align: center; z-index: 2; }
+
     .title {
         width: 100%;
         height: 112upx;
@@ -1033,6 +1030,7 @@
         left: 0;
         z-index: 999;
         border-bottom: 2upx solid #d2d2d7;
+        font-size: 34rpx;
 
         image {
             width: 60upx;
@@ -1044,7 +1042,7 @@
     }
 
     .titleName {
-        font-size: 40upx;
+        font-size: 34rpx;
         font-family: Hiragino Sans-W5, Hiragino Sans;
         font-weight: normal;
         color: #1D1D1F;
@@ -1130,7 +1128,7 @@
         bottom: 0;
         width: 100vw;
         height: 100vh;
-        background: #f5f5f7;
+        background: #F2F2F7;
         z-index: 999;
         overflow-y: scroll;
         box-sizing: border-box;

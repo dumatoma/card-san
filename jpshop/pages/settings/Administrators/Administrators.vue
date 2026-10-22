@@ -154,9 +154,11 @@
     .ad-info { padding: 24rpx 28rpx; border-radius: 24rpx; background: #EEF4FF; font-size: 28rpx; line-height: 1.6; margin-bottom: 32rpx; }
     .ad-card { background: #FFFFFF; border-radius: 32rpx; padding: 32rpx; margin-bottom: 32rpx; }
     .ad-h3 { margin: 0 8rpx 16rpx; font-size: 30rpx; font-weight: 700; color: #515154; }
-    .ad-field { margin-bottom: 28rpx; }
+    /* [カスタムエイド 2026-10-21] 項目と項目のあいだを約6px広げる */
+    .ad-field { margin-bottom: 40rpx; }
     .ad-field:last-child { margin-bottom: 0; }
-    .ad-label { font-size: 26rpx; font-weight: 500; color: #1D1D1F; margin-bottom: 12rpx; }
+    /* [カスタムエイド 2026-10-21] 見出しの文字と入力枠の見た目のすき間を約6pxに(行の高さを詰め、余白 4px) */
+    .ad-label { font-size: 26rpx; font-weight: 500; color: #1D1D1F; margin-bottom: 8rpx; line-height: 1.2; }
     .ad-req { color: #C5221F; }
     .ad-in { width: 100%; box-sizing: border-box; height: 88rpx; padding: 0 28rpx; border: 1px solid #D2D2D7; border-radius: 24rpx; background: #FFFFFF; font-size: 30rpx; color: #1D1D1F; transition: border-color .15s, box-shadow .15s; }
     .ad-in.on { border-color: #1A73E8; box-shadow: 0 0 0 6rpx rgba(26, 115, 232, 0.16); }

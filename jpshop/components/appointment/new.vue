@@ -2,7 +2,8 @@
     <view class="contains">
         <u-navbar title="新規予約" border @leftClick="handleBack" :safeAreaInsetTop="true" bgColor="rgb(251,251,253)" :placeholder="true">
         </u-navbar>
-        <view class="ct">
+        <!-- [カスタムエイド 2026-10-22] お休み・休憩はお客さまがいないので、お客さまの欄を出さない -->
+        <view class="ct" v-if="!wai">
            <!-- <u--input placeholder="" disabled="true" @click="searchMem" prefixIcon="search"
                 prefixIconStyle="font-size: 22px;color: #909399">
             </u--input> -->
@@ -54,7 +55,7 @@
                 <view v-if="menu.id == -1">
                     メニューを選択
                 </view>
-                <view v-else v-text="menu.name"></view>
+                <view v-else v-text="menu.name" :class="{ 'cs-off': waiType == 'off', 'cs-brk': waiType == 'break' }"></view>
                 <u-icon name="arrow-right"></u-icon>
             </view>
         </view>
@@ -68,7 +69,16 @@
                 </view>
             </view>
 
-            <view class="citem border_bottom">
+            <!-- [カスタムエイド 2026-10-22] お休み:時間は営業時間から自動で決まる(変えられない) -->
+            <view class="citem border_bottom" v-if="waiType == 'off'">
+                <view class="citemLeft">
+                    時間
+                </view>
+                <view class="citemRight">
+                    <view class="cs-lock" v-text="offLabel"></view>
+                </view>
+            </view>
+            <view class="citem border_bottom" v-if="waiType != 'off'">
                 <view class="citemLeft">
                     開始
                 </view>
@@ -77,7 +87,7 @@
                 </view>
             </view>
 
-            <view class="citem border_bottom">
+            <view class="citem border_bottom" v-if="waiType != 'off'">
                 <view class="citemLeft">
                     終了
                 </view>
@@ -86,7 +96,7 @@
                 </view>
             </view>
 
-            <view class="citem border_bottom" v-if="aviliable == true" @click="openList">
+            <view class="citem border_bottom" v-if="aviliable == true && !wai" @click="openList">
                 <view class="citemLeft">
                     指名担当
                 </view>
@@ -102,8 +112,7 @@
             
             
             <view class="citem border_bottom" @click="ct">
-                <view class="citemLeft">
-                    当日担当
+                <view class="citemLeft" v-text="wai ? '担当者' : '当日担当'">
                 </view>
                 <view class="citemRight">
                     <view class="cperson">
@@ -118,9 +127,9 @@
             <view>メモ</view>
             <u-textarea placeholder="メモがあれば入力してください" v-model="remark" confirmType="done" border="none" :height="100"></u-textarea>
         </view>
+        <view class="cs-note" v-if="waiType == 'off'">その日の営業時間をすべて止めます。昼休みなどで営業時間が2つに分かれている日は、両方とも止まります。お客さまの予約画面では、この担当者はこの日に選べなくなります。この日に予約が入っているときは、お休みにできません。</view>
         <!-- @click="saveData" -->
-        <view class="cConfirm" hover-class="savehover" @click="showAle = true">
-            この内容で予約する
+        <view class="cConfirm" hover-class="savehover" @click="askSave" v-text="waiType == 'off' ? 'お休みにする' : waiType == 'break' ? 'この時間を止める' : 'この内容で予約する'">
         </view>
         <!-- 选择性别弹出层 -->
         <u-popup :show="show" @close="show = false" mode="bottom" bgColor="#f9f9f9">
@@ -135,15 +144,29 @@
                     <view class="titleName">メニュー選択</view>
                 </view>
                 <view class="detail">
-                    <view class="selectAll">
-                        <view class="selectContent" @click="changeWai">
-                            <view class="unselect" v-if="!wai"></view>
-                            <view class="selected" v-if="wai">
+                    <!-- [カスタムエイド 2026-10-22] 「お休み・勤務時間外」を「お休み(1日)」と「休憩・勤務時間外(時間を決める)」に分けた -->
+                    <view class="selectAll cs-wai" @click="changeWai('off')">
+                        <view class="selectContent">
+                            <view class="unselect" v-if="waiType != 'off'"></view>
+                            <view class="selected" v-if="waiType == 'off'">
                                 <view class="fill"></view>
                             </view>
                         </view>
-                        <view class="allname">
-                            お休み・勤務時間外
+                        <view>
+                            <view class="allname">お休み</view>
+                            <view class="cs-wai-d">担当者のその日を、営業時間の始めから終わりまで全部止めます</view>
+                        </view>
+                    </view>
+                    <view class="selectAll cs-wai" @click="changeWai('break')">
+                        <view class="selectContent">
+                            <view class="unselect" v-if="waiType != 'break'"></view>
+                            <view class="selected" v-if="waiType == 'break'">
+                                <view class="fill"></view>
+                            </view>
+                        </view>
+                        <view>
+                            <view class="allname cs-brk">休憩・勤務時間外</view>
+                            <view class="cs-wai-d">休憩・遅い出勤・早い退勤など、時間を決めて止めます</view>
                         </view>
                     </view>
                     <view class="settingD">
@@ -260,8 +283,7 @@
         <view class="mask" v-if="showmask == true">
             <view class="maskcontent">
                 <image src="../../static/images/blueright.png" class="mi" mode=""></image>
-                <view>
-                     予約しました
+                <view v-text="maskText">
                 </view>
             </view>
         </view>
@@ -277,8 +299,13 @@
         menuList,
         getStaffList,
         getShopInfo,
-        addNewAppoint
+        addNewAppoint,
+        getCalendar,
+        getAppointmentList
     } from "@/api/index.js"
+    // [カスタムエイド 2026-10-22] お休み・休憩の名前(サーバーはこの2つの名前だけ保存する)
+    var OFF_NAME = "お休み"
+    var BREAK_NAME = "休憩・勤務時間外"
     export default {
         props: {
             time: {
@@ -329,6 +356,10 @@
                 info: {},
 				tempInfo:{},
                 wai: false,
+                waiType: "", // [カスタムエイド 2026-10-22] 'off' = お休み(1日) / 'break' = 休憩・勤務時間外
+                offRanges: [], // お休みで止める時間(営業時間)
+                offLabel: "読み込み中…",
+                maskText: "予約しました",
                 menu: {
                     id: -1
                 },
@@ -437,11 +468,106 @@
                 this.$emit("cancel", "close")
             },
 
-            saveData() {
+            // [カスタムエイド 2026-10-22] 確認のダイアログ(お休み・休憩は文言を変える)
+            askSave() {
+                let that = this
+                if (that.waiType == 'off') {
+                    if (!that.todaystaff || !that.todaystaff.id) {
+                        uni.showToast({ title: "担当者を選択してください", icon: "none" })
+                        return
+                    }
+                    if (!that.offRanges.length) {
+                        uni.showToast({ title: that.offLabel == "定休日" ? "この日は定休日です" : "止める時間がありません(営業時間が終わっています)", icon: "none" })
+                        return
+                    }
+                    that.config = Object.assign({}, that.config, { title: "お休みにしますか？", content: that.date + " の " + that.todaystaff.name + " さんを、営業時間のあいだすべて止めます。", confirmText: "お休みにする" })
+                } else if (that.waiType == 'break') {
+                    that.config = Object.assign({}, that.config, { title: "この時間を止めますか？", content: that.date + " " + that.start + "〜" + that.end + " を、休憩・勤務時間外にします。", confirmText: "止める" })
+                } else {
+                    that.config = Object.assign({}, that.config, { title: "予約を決定しますか？", content: "決定すると、この予約情報はお客様に送信されます。", confirmText: "予約する" })
+                }
+                that.showAle = true
+            },
+            // [カスタムエイド 2026-10-22] お休みで止める時間 = その日の営業時間(今日なら今より後だけ)
+            loadOffRanges() {
+                let that = this
+                that.offRanges = []
+                that.offLabel = "読み込み中…"
+                let d = String(that.date || "")
+                if (!d) return
+                getCalendar({ date: d.slice(0, 7) + "-01", type: "day" }).then((res) => {
+                    if (!res || res.code != 200) { that.offLabel = "読み込みに失敗しました"; return }
+                    let day = (res.data.day_business || [])[d.slice(8, 10) * 1] || {}
+                    if (day.business == 0) { that.offLabel = "定休日"; return }
+                    let list = (day.business_time || []).filter((v) => v && v.start && v.end)
+                    if (!list.length) list = [{ start: "09:00", end: "22:00" }]
+                    let toMin = (t) => { let a = String(t).split(":"); return a[0] * 60 + a[1] * 1 }
+                    let toStr = (m) => { let h = Math.floor(m / 60), n = m % 60; return (h < 10 ? "0" + h : h) + ":" + (n < 10 ? "0" + n : n) }
+                    // 今日は、今より後(30分単位で切り上げ)だけ止める(サーバーは過去の時間を受け付けない)
+                    let now = new Date()
+                    let today = now.getFullYear() + "-" + ("0" + (now.getMonth() + 1)).slice(-2) + "-" + ("0" + now.getDate()).slice(-2)
+                    let floor = d.slice(0, 10) == today ? Math.ceil((now.getHours() * 60 + now.getMinutes() + 1) / 30) * 30 : 0
+                    let ranges = []
+                    list.forEach((v) => {
+                        let s = Math.max(toMin(v.start), floor), e = toMin(v.end)
+                        if (e > s) ranges.push({ start: toStr(s), end: toStr(e) })
+                    })
+                    that.offRanges = ranges
+                    if (!ranges.length) { that.offLabel = "営業時間が終わっています"; return }
+                    that.offLabel = ranges.map((r) => r.start + "〜" + r.end).join("・") + "(終日)"
+                    that.start = ranges[0].start
+                    that.end = ranges[ranges.length - 1].end
+                    that.getStaff(0, 1)
+                }).catch(() => { that.offLabel = "読み込みに失敗しました" })
+            },
+            // [カスタムエイド 2026-10-22] お休みの登録:その日に予約があれば止めずに知らせる。なければ営業時間ごとに止める
+            saveOff() {
                 let that = this
                 that.showm = true
+                let staff = that.todaystaff
+                let fail = (msg) => {
+                    that.showm = false
+                    that.showAle = false
+                    uni.showModal({ title: "お休みにできません", content: msg, showCancel: false, confirmText: "閉じる" })
+                }
+                getAppointmentList({ date: that.date, id: 0, type: "day" }).then((res) => {
+                    if (!res || res.code != 200) return fail((res && res.message) || "読み込みに失敗しました。もう一度お試しください")
+                    let admin = (res.data.admins || []).find((a) => a.id == staff.id)
+                    let orders = (admin && admin.orders) || []
+                    if (orders.length) {
+                        let lines = orders.map((o) => o.start_time + "〜" + o.end_time + " " + (o.name || (o.cate_name ? "" : BREAK_NAME) || "(名前なし)"))
+                        return fail(that.date + " の " + staff.name + " さんには、次の予約が入っています。\n" + lines.join("\n") + "\n先に予約の担当者を変えるか、取り消してください。")
+                    }
+                    let i = 0
+                    let next = () => {
+                        if (i >= that.offRanges.length) {
+                            that.showAle = false
+                            that.showm = false
+                            that.maskText = "お休みにしました"
+                            that.showmask = true
+                            setTimeout(() => { that.$emit("cancel", "refresh") }, 1500)
+                            return
+                        }
+                        let r = that.offRanges[i++]
+                        addNewAppoint({
+                            name: OFF_NAME, phone: "", sex: 0, member_id: "", smid: 0, mid: "",
+                            start_time: that.date + " " + r.start, end_time: that.date + " " + r.end,
+                            remark: that.remark, appoint_said: staff.id, day_said: staff.id
+                        }).then((re) => {
+                            if (re && re.code == 200) return next()
+                            fail((re && re.message) || "お休みにできませんでした")
+                            if (i > 1) that.$emit("cancel", "refresh")
+                        }).catch(() => fail("通信に失敗しました。電波の良い所でもう一度お試しください"))
+                    }
+                    next()
+                }).catch(() => fail("通信に失敗しました。電波の良い所でもう一度お試しください"))
+            },
+            saveData() {
+                let that = this
+                if (that.waiType == 'off') return that.saveOff()
+                that.showm = true
                 let data = {}
-                data.name = that.info.name
+                data.name = that.waiType == 'break' ? BREAK_NAME : that.info.name
                 data.phone = that.info.phone
                 data.sex = that.info.sex
                 data.member_id = that.ID || ''
@@ -464,6 +590,7 @@
                 addNewAppoint(data).then((res) => {
                     that.showAle = false
                     that.showm = false
+                    if (that.waiType == 'break') that.maskText = "時間を止めました"
                     if (res.code == 200) {
                         that.showmask = true
                         setTimeout(function() {
@@ -516,11 +643,12 @@
               
             },
 
-            changeWai() {
+            changeWai(type) {
                 let that = this
                 let array = that.array
                 that.end = "00:00"
                 that.wai = true
+                that.waiType = type == 'off' ? 'off' : 'break' 
                 that.array.forEach((value, index) => {
                     value.items.forEach((val, idx) => {
                         val.checked = false
@@ -692,6 +820,7 @@
                 that.array = array
                 that.array[index].items[idx].checked = true
                 that.wai = false
+                that.waiType = ""
             },
             dateConfirm(e) {
                 this.date = e[0]
@@ -701,6 +830,7 @@
                 person["name"] = "指名なし"
                 person["id"] = ""
                 this.person = person
+                if (this.waiType == 'off') return this.loadOffRanges() // [カスタムエイド 2026-10-22]
                 this.getStaff(this.menu.id, 1)
             },
             insert1() {
@@ -763,11 +893,15 @@
                 let ix
                 let menu = {}
                 menu["id"] = 0
-                menu["name"] = "お休み・勤務時間外"
+                menu["name"] = that.waiType == 'off' ? OFF_NAME : BREAK_NAME
                 if (that.wai == true) {
                     that.menu = menu
                     that.totalTime = 0
-                    that.getEndTime()
+                    if (that.waiType == 'off') {
+                        that.loadOffRanges() // [カスタムエイド 2026-10-22] お休みは営業時間をまとめて止める
+                    } else {
+                        that.getEndTime()
+                    }
                 } else {
                     array.forEach((value, index) => {
                         value.items.forEach((val, idx) => {
@@ -778,6 +912,7 @@
                             }
                         })
                     })
+                    if (i === undefined) return // [カスタムエイド 2026-10-22] 何も選ばずに閉じたときは今のまま
                     that.menu = array[i].items[ix]
                     that.totalTime = total
                     that.getStaff(that.menu.id,1)
@@ -841,6 +976,13 @@
 </script>
 
 <style lang="scss" scoped>
+    /* [カスタムエイド 2026-10-22] お休み(赤)・休憩・勤務時間外(濃い緑) */
+    .cs-off { color: #D93025; }
+    .cs-brk, .detail .allname.cs-brk { color: #137333 !important; }
+    .cs-wai { align-items: flex-start !important; border-bottom: 2upx solid #d2d2d7; }
+    .cs-wai-d { font-size: 24rpx; color: #6E6E73; margin-top: 8rpx; line-height: 1.5; }
+    .cs-lock { font-size: 30rpx; color: #6E6E73; }
+    .cs-note { margin: 8rpx 0 0; padding: 20rpx 24rpx; border-radius: 20rpx; background: #E8F0FE; color: #174EA6; font-size: 24rpx; line-height: 1.7; }
     .searchList {
         box-sizing: border-box;
         padding: 0 32upx;

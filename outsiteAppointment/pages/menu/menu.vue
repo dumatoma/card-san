@@ -30,7 +30,7 @@
                             </view>
                             <view class="pri-box">
                                 <view class="pri-left">
-                                    ￥{{ite.price}}
+                                    {{ite.price}}<!-- [カスタムエイド 2026-10-21] 価格はお店が書いたまま(以前は先頭に ￥) -->
                                 </view>
                                 <view class="pri-right" v-if="ite.is_order == 1">
                                     所要時間：{{ite.order_time}}

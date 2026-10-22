@@ -366,10 +366,12 @@
         color: #515154;
     }
 
+    /* [カスタムエイド 2026-10-21] 見出しの文字と入力枠の見た目のすき間を約6pxに(行の高さを詰め、余白 4px) */
     .rv-lab {
         font-size: 28rpx;
         font-family: 'Hiragino Sans-W5', sans-serif;
-        margin-bottom: 6rpx;
+        margin-bottom: 8rpx;
+        line-height: 1.2;
     }
 
     .rv-ta {

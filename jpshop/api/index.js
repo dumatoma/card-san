@@ -1038,3 +1038,6 @@ export const getComeOptions = () => {
 export const updateCome = (id, data) => {
     return request({ url: "/api/shop/order/come/" + id, method: "post", data: data })
 }
+
+// [カスタムエイド 2026-10-22] お知らせ一覧(Instagram 連携中):連携している Instagram の投稿(Card-San App と同じ内容)
+export const getShopInsMedia = (after) => request({ url: '/api/shop/instagram/media?after=' + (after || ''), method: 'get' })

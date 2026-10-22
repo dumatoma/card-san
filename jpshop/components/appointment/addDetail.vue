@@ -3,129 +3,91 @@
         <u-navbar title="予約詳細設定" border @leftClick="handleBack" @rightClick="save" rightText="保存"
             :safeAreaInsetTop="true" bgColor="rgb(251,251,253)" :placeholder="true">
         </u-navbar>
-        <view class="decon">
-            <view class="tabs">
-                <view class="tab">
-                    <view class="tab_item" @click="changeTab(0)" :class="status == 0? 'active' : '' ">
-                        対応メニュー
-                    </view>
-                    <view class="tab_item" @click="changeTab(1)" :class="status == 1? 'active' : '' ">
-                        その他設定
-                    </view>
-                </view>
-            </view>
+        <!-- [カスタムエイド 2026-10-22] 予約詳細設定をほかの画面と同じ見た目に。担当者の名前を上に、切り替えは薄い青+青い線、メニューはメニュー一覧と同じカード、
+             色は丸の見本から選ぶ。画面の下にも「保存する」ボタン(右上の保存も残す)。処理・送る値は変更なし -->
+        <view class="ad-head">
+            <view class="ad-dot" :style="{ background: currentColor }"></view>
+            <view class="ad-name">{{ info.name }}</view>
         </view>
-        <view class="details">
-            <view class="detail" v-if="status == 0">
-                <view class="managerName" v-text="info.name"></view>
-                <view class="selectAll">
-                    <view class="selectContent" @click="choosePerson">
+        <view class="ad-seg">
+            <view class="ad-seg-i" :class="{ on: status == 0 }" @click="changeTab(0)">対応メニュー</view>
+            <view class="ad-seg-i" :class="{ on: status == 1 }" @click="changeTab(1)">その他の設定</view>
+        </view>
+
+        <view class="ad-body" v-if="status == 0">
+            <view class="ad-card">
+                <view class="ad-row" @click="choosePerson">
+                    <view class="selectContent">
                         <view class="unselect" v-if="!selectAll"></view>
-                        <view class="selected" v-if="selectAll">
-                            <view class="fill"></view>
-                        </view>
+                        <view class="selected" v-if="selectAll"><view class="fill"></view></view>
                     </view>
-                    <view class="allname">
-                        すべてのメニューに対応
-                    </view>
-                </view>
-                <view class="settingD">
-                    <view class="sDitems" v-for="(item,index) in array">
-                        <view class="sDtitle" v-text="item.name"></view>
-                        <view class="sDitem" v-for="(ite,idx) in item.items">
-                            <view class="selectContent" @click="chooseItem(index,idx)">
-                                <view class="unselect" v-if="!ite.checked"></view>
-                                <view class="selected" v-if="ite.checked">
-                                    <view class="fill"></view>
-                                </view>
-                            </view>
-                            <view class="sDitemRight">
-                                <view class="sDtop" v-text="ite.name"></view>
-                                <view class="sDbottom">
-                                    <view class="sDimage" v-if="ite.image">
-                                        <image :src="ite.image[0]" mode="aspectFill"></image>
-                                    </view>
-                                    <view class="sDinfo">
-                                        <view class="sDprice" v-text="`${ite.price}`"></view>
-                                        <view class="sDtime" v-text="`所要時間:${ite.time}分`"></view>
-                                    </view>
-                                </view>
-                            </view>
-                        </view>
-                    </view>
+                    <view class="ad-row-t">すべてのメニューに対応</view>
                 </view>
             </view>
-            <view class="detail" v-if="status == 1">
-                <view class="managerName" v-text="info.name"></view>
-                <view class="selectAll" style="padding-bottom: 23upx;">
-                    <view class="selectContent" @click="chooseSexAll">
+            <view v-for="(item,index) in array" :key="index" v-if="item.items.length">
+                <view class="ad-sec">{{ item.name }}<text class="ad-sec-n">{{ item.items.length }}件</text></view>
+                <view class="ad-menu" v-for="(ite,idx) in item.items" :key="ite.id" :class="{ off: !ite.checked }" @click="chooseItem(index,idx)">
+                    <view class="selectContent">
+                        <view class="unselect" v-if="!ite.checked"></view>
+                        <view class="selected" v-if="ite.checked"><view class="fill"></view></view>
+                    </view>
+                    <view class="ad-menu-m">
+                        <view class="ad-menu-t">{{ ite.name }}</view>
+                        <view class="ad-menu-s"><text class="ad-price" v-if="ite.price">{{ ite.price }}</text><text>所要時間 {{ ite.time }}分</text></view>
+                    </view>
+                    <image class="ad-photo" v-if="ite.image && ite.image.length" :src="ite.image[0]" mode="aspectFill"></image>
+                </view>
+            </view>
+            <view class="ad-save" hover-class="ad-hover" @click="save">保存する</view>
+        </view>
+
+        <view class="ad-body" v-if="status == 1">
+            <view class="ad-sec">対応するお客さま</view>
+            <view class="ad-card">
+                <view class="ad-row" @click="chooseSexAll">
+                    <view class="selectContent">
                         <view class="unselect" v-if="!sexAll"></view>
-                        <view class="selected" v-if="sexAll">
-                            <view class="fill"></view>
-                        </view>
+                        <view class="selected" v-if="sexAll"><view class="fill"></view></view>
                     </view>
-                    <view class="allname">
-                        すべてのジェンダーに対応
-                    </view>
+                    <view class="ad-row-t">すべてのジェンダーに対応</view>
                 </view>
-                <view class="selectItems">
-                    <view class="sexItem" v-for="(item,index) in sexItems">
-                        <view class="selectContent" @click="chooseSex(index)">
-                            <view class="unselect" v-if="!item.checked"></view>
-                            <view class="selected" v-if="item.checked">
-                                <view class="fill"></view>
-                            </view>
-                        </view>
-                        <view class="allname" v-text="item.name"></view>
+                <view class="ad-row ad-sub" v-for="(item,index) in sexItems" :key="index" @click="chooseSex(index)">
+                    <view class="selectContent">
+                        <view class="unselect" v-if="!item.checked"></view>
+                        <view class="selected" v-if="item.checked"><view class="fill"></view></view>
                     </view>
+                    <view class="ad-row-t">{{ item.name }}</view>
                 </view>
+            </view>
 
-                <view class="pay">
-                    <view class="selectAll" style="padding-bottom: 23upx;">
-                        <view class="selectContent" @click="choosePrice">
-                            <view class="unselect" v-if="!priceSelect"></view>
-                            <view class="selected" v-if="priceSelect">
-                                <view class="fill"></view>
-                            </view>
-                        </view>
-                        <view class="allname">
-                            指名料金を設定する
-                            <br/>
-                            <text style="color: red;font-size: 24rpx;">半角数字のみ</text>
-                        </view>
+            <view class="ad-sec">指名料金</view>
+            <view class="ad-card">
+                <view class="ad-row" :class="{ 'no-line': priceSelect }" @click="choosePrice">
+                    <view class="selectContent">
+                        <view class="unselect" v-if="!priceSelect"></view>
+                        <view class="selected" v-if="priceSelect"><view class="fill"></view></view>
                     </view>
+                    <view class="ad-row-t">指名料金を設定する</view>
+                </view>
+                <view class="ad-price-in" v-if="priceSelect">
+                    <input class="ad-in" type="number" v-model="price" placeholder="0" placeholder-class="ad-ph" @blur="normalizePrice" />
+                    <text class="ad-yen">円</text>
+                    <text class="ad-half">半角数字で入力</text>
+                </view>
+            </view>
 
-                    <view class="insertContent">
-                        <view style="width: 224upx;height: 56upx;margin-right: 20upx;">
-                            <u-input type="digit" border="surround" v-model="price" :disabled="!priceSelect" shape="circle">
-                            </u-input>
+            <view class="ad-sec">予約表の色</view>
+            <view class="ad-card ad-pad">
+                <view class="ad-colors">
+                    <view class="ad-color" v-for="(item,index) in color" :key="index" :class="{ dis: !item.aviliable }" @click="chooseColor(index,item)">
+                        <view class="ad-sw" :class="{ on: item.checked }" :style="{ background: item.color }">
+                            <text class="ad-check" v-if="item.checked">✓</text>
                         </view>
-                        <view class="insertName">
-                            円
-                        </view>
-                    </view>
-
-                    <view class="colors">
-                        <view class="currentColor" @click="show = !show">
-                            <view style="display: flex;align-items: center;">
-                                <view class="colorSqu" :style="`background:${currentColor}`"></view>
-                                <view class="colorName" v-text="currentColorName"></view>
-                            </view>
-                            <u-icon name="arrow-down" :style="show?'transform:rotate(180deg)': ''"></u-icon>
-                        </view>
-                        <view class="colorsContent" v-if="show">
-                            <view class="colorItem" v-for="(item,index) in color" @click="chooseColor(index,item)">
-                                <view style="display: flex;align-items: center;">
-                                    <view class="colorSqu" :style="`background:${item.color}`"></view>
-                                    <view class="colorName" v-text="item.name"
-                                        :style="item.aviliable? '' : 'color:#BCBCBC' "></view>
-                                </view>
-                                <u-icon name="checkmark" color="#1A73E8" size="20" v-if="item.checked"></u-icon>
-                            </view>
-                        </view>
+                        <view class="ad-cname">{{ item.name }}</view>
                     </view>
                 </view>
             </view>
+            <view class="ad-save" hover-class="ad-hover" @click="save">保存する</view>
         </view>
     </view>
 </template>
@@ -237,7 +199,7 @@
         methods: {
             // 转半角输入的方法
             normalizePrice() {
-                let val = this.price;
+                let val = String(this.price == null ? '' : this.price);
 
                 // 全角数字 → 半角
                 val = val.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
@@ -325,31 +287,16 @@
                 })
             },
 
+            // [カスタムエイド 2026-10-22] 以前は途中でエラーを投げて止めていた(画面の処理が途中で止まることがあった)ため、every で判定する
             checkeSexAll() {
-                let that = this
-                that.sexItems.forEach((val, index) => {
-                    if (val.checked == false) {
-                        that.sexAll = false
-                        throw new Error("stop", index)
-                    } else {
-                        that.sexAll = true
-                    }
-                })
+                this.sexAll = this.sexItems.every((v) => v.checked)
             },
 
             checkSelectAll() {
-                let that = this
-                that.array.forEach((value, index) => {
-                    value.items.forEach((val, idx) => {
-                        if (val.checked == false) {
-                            that.selectAll = false
-                            that.checkeSexAll()
-                            throw new Error("stop")
-                        } else {
-                            that.selectAll = true
-                        }
-                    })
-                })
+                let all = []
+                this.array.forEach((v) => { all = all.concat(v.items) })
+                this.selectAll = all.length > 0 && all.every((v) => v.checked)
+                this.checkeSexAll()
             },
 
             getCate() {
@@ -464,6 +411,46 @@
 </script>
 
 <style lang="scss">
+    /* [カスタムエイド 2026-10-22] 予約詳細設定(ほかの設定画面と同じ決まり) */
+    .ad-head { display: flex; align-items: center; padding: 48rpx 32rpx 12rpx; } /* [カスタムエイド 2026-10-22] 余白を1.5倍に */
+    .ad-dot { width: 32rpx; height: 32rpx; border-radius: 10rpx; margin-right: 16rpx; flex-shrink: 0; }
+    .ad-name { font-size: 36rpx; font-weight: bold; color: #1D1D1F; }
+    .ad-seg { display: flex; margin: 36rpx 24rpx 0; padding: 6rpx; background: #E9E9EB; border-radius: 20rpx; }
+    .ad-seg-i { flex: 1; height: 72rpx; line-height: 70rpx; text-align: center; border-radius: 16rpx; font-size: 28rpx; color: #515154; border: 1px solid transparent; box-sizing: border-box; }
+    .ad-seg-i.on { background: rgba(26, 115, 232, 0.10); border-color: #1A73E8; color: #1A73E8; font-weight: bold; }
+    .ad-body { padding: 48rpx 24rpx calc(80rpx + env(safe-area-inset-bottom)); }
+    .ad-card { background: #FFFFFF; border-radius: 32rpx; padding: 0 32rpx; margin-bottom: 48rpx; }
+    .ad-pad { padding: 32rpx 24rpx 16rpx; }
+    .ad-row { display: flex; align-items: center; min-height: 120rpx; border-bottom: 1px solid #E5E5EA; }
+    .ad-row.no-line { border-bottom: 0; } /* 指名料金:チェックと入力欄は1つのまとまりなので線を引かない */
+    .ad-row:last-child { border-bottom: 0; }
+    .ad-row .selectContent, .ad-menu .selectContent { margin-right: 24rpx; }
+    .ad-row-t { font-size: 30rpx; color: #1D1D1F; }
+    .ad-sub { padding-left: 56rpx; }
+    .ad-sec { font-size: 26rpx; color: #6E6E73; padding: 8rpx 8rpx 16rpx; line-height: 1.2; }
+    .ad-sec-n { margin-left: 12rpx; }
+    .ad-menu { display: flex; align-items: center; background: #FFFFFF; border-radius: 24rpx; padding: 28rpx; margin-bottom: 24rpx; }
+    .ad-menu.off .ad-menu-t { color: #8A8A8E; }
+    .ad-menu-m { flex: 1; min-width: 0; }
+    .ad-menu-t { font-size: 30rpx; font-weight: bold; color: #1D1D1F; line-height: 1.4; }
+    .ad-menu-s { font-size: 24rpx; color: #6E6E73; margin-top: 6rpx; }
+    .ad-price { color: #1D1D1F; font-weight: 600; margin-right: 20rpx; }
+    .ad-photo { width: 112rpx; height: 112rpx; border-radius: 16rpx; margin-left: 20rpx; flex-shrink: 0; }
+    .ad-price-in { display: flex; align-items: center; padding: 0 0 36rpx 56rpx; }
+    .ad-in { width: 240rpx; height: 88rpx; padding: 0 24rpx; border: 1px solid #D2D2D7; border-radius: 24rpx; font-size: 30rpx; box-sizing: border-box; text-align: right; }
+    .ad-ph { color: #AEAEB2; }
+    .ad-yen { font-size: 30rpx; margin-left: 12rpx; color: #1D1D1F; }
+    .ad-half { font-size: 22rpx; color: #8A8A8E; margin-left: 20rpx; }
+    .ad-colors { display: flex; flex-wrap: wrap; }
+    .ad-color { width: 20%; display: flex; flex-direction: column; align-items: center; margin-bottom: 36rpx; }
+    .ad-color.dis { opacity: 0.3; }
+    .ad-sw { width: 72rpx; height: 72rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+    .ad-sw.on { box-shadow: 0 0 0 4rpx #FFFFFF, 0 0 0 8rpx #1A73E8; }
+    .ad-check { color: #FFFFFF; font-size: 32rpx; font-weight: bold; }
+    .ad-cname { font-size: 20rpx; color: #515154; margin-top: 10rpx; }
+    .ad-save { margin-top: 48rpx; height: 104rpx; line-height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; text-align: center; font-size: 32rpx; font-weight: 700; }
+    .ad-hover { opacity: 0.7; }
+
     .sexItem {
         display: flex;
         align-items: center;
@@ -521,7 +508,7 @@
         bottom: 0;
         width: 100vw;
         height: 100vh;
-        background: #fff;
+        background: #F5F5F7;
         z-index: 999;
         overflow-y: scroll;
 

@@ -8,94 +8,71 @@
                 <text style="color: #D93025;" @click="toEdit">編集</text>
             </view> -->
         </u-navbar>
-        <view class="content">
-            <view class="coTime" v-text="`${info.create_time}`"></view>
-            <view class="item">
-                <view class="item_left">
-                    氏名
+        <!-- [カスタムエイド 2026-10-22] 予約詳細を、予約内容(編集)の画面と同じカード型に。お休み・休憩はお客さまの欄を出さない -->
+        <view class="dt-pg">
+            <view class="dt-when">
+                <view class="dt-day">{{ info.day }}({{ info.week }})</view>
+                <view class="dt-hm">{{ info.time }}</view>
+                <view class="dt-cre" v-if="info.create_time">受付 {{ info.create_time }}</view>
+            </view>
+
+            <view class="dt-card" v-if="!isOff">
+                <view class="dt-row">
+                    <view class="dt-lab">氏名</view>
+                    <view class="dt-val dt-link">{{ info.name || 'ー' }}</view>
                 </view>
-                <view class="item_right">
-                    <text style="color:#1A73E8" v-text="`${info.name}`"></text>
+                <view class="dt-row">
+                    <view class="dt-lab">電話番号</view>
+                    <view class="dt-val">{{ info.phone || 'ー' }}</view>
+                </view>
+                <view class="dt-row">
+                    <view class="dt-lab">会員ID</view>
+                    <view class="dt-val dt-gray">{{ info.member_id || 'ー' }}</view>
+                </view>
+                <view class="dt-row">
+                    <view class="dt-lab">予約番号</view>
+                    <view class="dt-val dt-gray">{{ info.order_no }}</view>
                 </view>
             </view>
-            <view class="item">
-                <view class="item_left">
-                    電話番号
-                </view>
-                <view class="item_right">
-                    <text v-text="`${info.phone}`"></text>
-                </view>
+
+            <view class="dt-sec">メニュー</view>
+            <view class="dt-card dt-pad">
+                <view class="dt-mt" :class="{ 'dt-red': isOff && offName == 'お休み', 'dt-green': isOff && offName != 'お休み' }">{{ isOff ? offName : info.menu.title }}</view>
+                <view class="dt-ms" v-if="!isOff">所要時間 {{ info.menu.order_time }}分<text class="dt-price" v-if="info.menu.price">{{ info.menu.price }}</text></view>
             </view>
-            <view class="item">
-                <view class="item_left">
-                    会員ID
-                </view>
-                <view class="item_right">
-                    <text v-text="`${info.member_id}`"></text>
-                </view>
-            </view>
-            <view class="item">
-                <view class="item_left">
-                    予約番号
-                </view>
-                <view class="item_right">
-                    <text v-text="`${info.order_no}`"></text>
-                </view>
-            </view>
-        </view>
-        <view class="content" v-if="info.menu != null">
-            <view class="detail" v-text="`${info.menu.title}`"></view>
-            <view class="tiem">
-                <view class="time" v-text="`所要時間：${info.menu.order_time}分`"></view>
-                <view class="price" v-text="`￥${info.menu.price}`"></view>
-            </view>
-        </view>
-        <view class="content">
-            <view class="detail">
-                {{info.day}}  {{info.week}}曜日
-            </view>
-            <view class="detail" style="margin-top: 10upx;">
-                {{info.time}}
-            </view>
-        </view>
-        <view class="content">
-           <view class="item">
-                <view class="item_left">
-                    指名担当
-                </view>
-                <view class="item_right">
-                    <view class="squ" :style="info.appoint_admin? 'background:'+info.appoint_admin.color : 'background: #d2d2d7;'">
+
+            <view class="dt-sec">担当</view>
+            <view class="dt-card">
+                <view class="dt-row">
+                    <view class="dt-lab">指名担当</view>
+                    <view class="dt-person">
+                        <view class="dt-dot" :style="{ background: (info.appoint_admin && info.appoint_admin.color) || '#d2d2d7' }"></view>
+                        <text>{{ info.appoint_admin ? info.appoint_admin.name : '指名無し' }}</text>
                     </view>
-                    <view class="pname">
-                        {{info.appoint_admin? info.appoint_admin.name : '指名無し'}}
+                </view>
+                <view class="dt-row">
+                    <view class="dt-lab">当日担当</view>
+                    <view class="dt-person">
+                        <view class="dt-dot" :style="{ background: day_admin.color || '#d2d2d7' }"></view>
+                        <text>{{ day_admin.name }}</text>
                     </view>
                 </view>
             </view>
-            <view class="item">
-                <view class="item_left">
-                    当日担当
-                </view>
-                <view class="item_right">
-                    <view class="squ" :style="`background: ${day_admin.color == ''?'#d2d2d7':day_admin.color}`"></view>
-                    <view class="pname" v-text="day_admin.name"></view>
+
+            <view class="dt-sec">メモ</view>
+            <view class="dt-card dt-pad">
+                <view class="dt-memo" :class="{ 'dt-gray': !info.remark }">{{ info.remark || 'メモはありません' }}</view>
+            </view>
+
+            <view class="dt-card dt-pad" v-if="isOff">
+                <view class="dt-row dt-row-last">
+                    <view class="dt-lab">予約番号</view>
+                    <view class="dt-val dt-gray">{{ info.order_no }}</view>
                 </view>
             </view>
+
+            <view class="dt-btn" hover-class="dt-hover" @click="toEdit">予約内容を編集</view>
         </view>
-        <view class="content">
-            <view>メモ</view>
-            <view style="margin-top: 32upx;" v-text="`${info.remark}`"></view>
-        </view>
-       <!-- <view class="tips">
-            <view>予約内容の変更をお客さんにお知らせする場合</view>
-            <view class="connect" @click="show1 = true">こちら</view>
-        </view> -->
-        <view class="btnBlue" @click="toEdit">
-            予約内容を編集
-        </view>
-        <!-- <view class="btnRed" @click="deleteOrder">
-            この予約を削除
-        </view> -->
-        <view class="blank"></view>
         <u-popup :show="show"></u-popup>
         <u-popup :show="show1" @close="show1 = false" @cancel="show1 = false" >
             <view class="maskContent">
@@ -147,6 +124,15 @@
                 this.getDetail(this.id) 
             }
             
+        },
+        computed: {
+            // [カスタムエイド 2026-10-22] メニューのない予約 = お休み・休憩・勤務時間外
+            isOff() {
+                return !!(this.info && this.info.id) && !this.info.menu
+            },
+            offName() {
+                return this.info.name == 'お休み' ? 'お休み' : '休憩・勤務時間外'
+            }
         },
         methods: {
             sendMessage(){
@@ -211,6 +197,33 @@
 </script>
 
 <style lang="scss" scoped>
+    /* [カスタムエイド 2026-10-22] 予約詳細(予約内容の画面と同じ見た目) */
+    .dt-pg { padding: 48rpx 0 calc(96rpx + env(safe-area-inset-bottom)); }
+    .dt-when { background: #FFFFFF; border-radius: 32rpx; padding: 32rpx; margin-bottom: 56rpx; } /* [カスタムエイド 2026-10-22] カードのあいだを広めに */
+    .dt-day { font-size: 30rpx; color: #1D1D1F; }
+    .dt-hm { font-size: 44rpx; font-weight: bold; color: #1D1D1F; margin-top: 8rpx; }
+    .dt-cre { font-size: 22rpx; color: #8A8A8E; margin-top: 12rpx; }
+    .dt-card { background: #FFFFFF; border-radius: 32rpx; padding: 0 32rpx; margin-bottom: 56rpx; }
+    .dt-pad { padding: 28rpx 32rpx; }
+    .dt-sec { font-size: 26rpx; color: #6E6E73; padding: 0 8rpx; margin-bottom: 16rpx; line-height: 1.2; }
+    .dt-row { display: flex; align-items: center; justify-content: space-between; min-height: 100rpx; border-bottom: 1px solid #E5E5EA; }
+    .dt-row:last-child { border-bottom: 0; }
+    .dt-row-last { border-bottom: 0; min-height: 0; }
+    .dt-lab { flex-shrink: 0; width: 180rpx; font-size: 30rpx; color: #1D1D1F; }
+    .dt-val { flex: 1; text-align: right; font-size: 30rpx; color: #1D1D1F; word-break: break-all; }
+    .dt-link { color: #1A73E8; }
+    .dt-gray { color: #6E6E73; }
+    .dt-person { display: flex; align-items: center; font-size: 30rpx; color: #1D1D1F; }
+    .dt-dot { width: 28rpx; height: 28rpx; border-radius: 8rpx; margin-right: 16rpx; }
+    .dt-mt { font-size: 30rpx; font-weight: bold; color: #1D1D1F; line-height: 1.4; }
+    .dt-ms { font-size: 24rpx; color: #6E6E73; margin-top: 8rpx; }
+    .dt-price { color: #D93025; margin-left: 24rpx; }
+    .dt-red { color: #D93025; }
+    .dt-green { color: #137333; }
+    .dt-memo { font-size: 28rpx; line-height: 1.7; white-space: pre-wrap; color: #1D1D1F; }
+    .dt-btn { margin-top: 64rpx; height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; font-size: 32rpx; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    .dt-hover { opacity: 0.6; }
+
     .blank{
         height: 100upx;
     }
@@ -263,7 +276,9 @@
     }
     .co {
         box-sizing: border-box;
-        padding: 0 40upx;
+        padding: 0 32rpx;
+        min-height: 100vh;
+        background: #F2F2F7;
 
         .tips {
             box-sizing: border-box;

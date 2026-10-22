@@ -92,6 +92,10 @@
         return Math.min(b, Math.max(a, v))
     }
 
+    // [カスタムエイド 2026-10-21] 最初のマイカラー(白・黒)と、以前の初期の色(これだけのままなら初期状態とみなす)
+    const DEFAULT_MINE = ['#FFFFFF', '#000000']
+    const LEGACY = ['#FEECD4', '#B1DD8B', '#EAF28F', '#FFC5AB', '#B51A00', '#74A7FF', '#BE38F3', '#00A1D8', '#0042A9', '#FFAC02']
+    const LEGACY_MIN = 8
     export default {
         props: {
             show: { type: Boolean, default: false },
@@ -168,10 +172,20 @@
                     if (res.code != 200) return
                     this.loaded = true
                     const info = res.data.shop_info || {}
-                    this.mineRaw = Array.isArray(info.color) ? info.color : []
+                    // [カスタムエイド 2026-10-21] 最初のマイカラーは白・黒の2色だけ。
+                    // まだ何も保存していないお店と、以前の初期の色(LEGACY)のまま変えていないお店は、白・黒を出す(保存は + か長押しをしたとき)
+                    const saved = Array.isArray(info.color) ? info.color : []
+                    this.mineRaw = this.isLegacy(saved) ? DEFAULT_MINE.map((c) => ({ color: c, selected: false })) : saved
                     const img = Array.isArray(info.carousel) && info.carousel.length ? info.carousel[0] : ''
                     if (img) this.extract(img)
                 }).catch(() => {})
+            },
+            // [カスタムエイド 2026-10-21] 保存されている色が、空か、以前の初期の色だけでできているか
+            isLegacy(list) {
+                if (!list.length) return true
+                const cs = list.map((v) => this.norm(v && v.color ? v.color : v)).filter((v) => v)
+                if (cs.length < LEGACY_MIN) return false
+                return cs.every((c) => LEGACY.indexOf(c) > -1)
             },
             measure() {
                 ['h', 's', 'l'].forEach((k) => {

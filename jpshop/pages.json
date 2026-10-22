@@ -507,6 +507,13 @@
             }
 
         }, {
+            "path": "pages/coupon/detail/detail", // [カスタムエイド 2026-10-21] クーポンの詳しい画面(コピー・削除・予約中は編集)
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+
+        }, {
             "path": "pages/coupon/add/add",
             "style": {
                 "navigationStyle": "custom",

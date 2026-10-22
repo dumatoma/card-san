@@ -1,52 +1,45 @@
 <template>
-    <view style="position: relative;">
+    <view class="nc-page">
         <!-- [カスタムエイド 2026-10-20] 見出しを共通の見出し(20px 太字)に。今までは iPhone の標準の見出し -->
         <u-navbar title="予約通知" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
-        <view class="ttitle">
-            通知一覧 <text style="color: #1A73E8;" v-text="`(${array.length})`"></text>
+        <!-- [カスタムエイド 2026-10-22] 予約通知をカード型に(未読は青い点と薄い青、左にスライドで既読・削除は今までどおり) -->
+        <view class="nc-head">
+            <view class="nc-ttl">通知一覧<text class="nc-cnt">{{ array.length }}件</text></view>
+            <view class="nc-tip">左にスライドで「既読」「削除」</view>
         </view>
+        <view class="nc-empty" v-if="loaded && array.length == 0">予約の通知はまだありません</view>
         <u-swipe-action>
-            <u-swipe-action-item :options="options2" v-for="(item,index) in array" :name="index" @click="hasRead">
-                <view class="swipe-action u-border-top u-border-bottom">
-                    <view class="swipe-action__content" @click.stop="toDetail(item,index)">
-                        <view class="noticeItem"
-                            :style="item.is_read == 0?'background:rgba(143,168,248,0.1)' : '#fff' ">
-                            <view class="itemLeft">
-                                <view class="fill"
-                                    :style="item.is_read == 0? 'background:#1A73E8':'background:transparent' "></view>
-                            </view>
-                            <view class="itemRight">
-                                <view class="top1">
-                                    <view class="name" style="margin-right: 15upx;" v-text="`${item.title}`"></view>
-                                    <view class="cdate" v-text="item.create_time"></view>
-                                </view>
-                                <view class="top2 mgt_20">
-                                    <!-- <u-icon name="checkmark-circle"></u-icon> -->
-                                    <view v-text="item.day"></view>
-                                    <view v-text="item.time"></view>
-                                </view>
-                                <view class="top3 mgt_20" v-text="item.menu_name"></view>
-                                <view class="top4 mgt_20">
-                                    <view>指名</view>
-                                    <view class="topSqu" :style="`background:${item.appoint_admin.color}`"></view>
-                                    <view v-text="item.appoint_admin.name"></view>
-                                </view>
-                                <view class="top4 mgt_20">
-                                    <view>当日</view>
-                                    <view class="topSqu" :style="`background:${item.day_admin.color}`"></view>
-                                    <view v-text="item.day_admin.name"></view>
-                                </view>
-                                <view class="collect" @click.stop="toCollect(item.id,index)">
-                                    <image v-if="item.is_collect == 0" src="../../../static/icons/uncollected.svg"
-                                        mode=""></image>
-                                    <image v-else src="../../../static/icons/collected.svg" mode=""></image>
-                                </view>
-                            </view>
+            <view class="nc-wrap" v-for="(item,index) in array" :key="item.id">
+            <u-swipe-action-item :options="options2" :name="index" @click="hasRead">
+                <view class="nc-card" :class="{ unread: item.is_read == 0 }" @click.stop="toDetail(item,index)">
+                    <view class="nc-top">
+                        <view class="nc-dot" v-if="item.is_read == 0"></view>
+                        <view class="nc-title">{{ item.title }}</view>
+                        <view class="nc-time">{{ item.create_time }}</view>
+                    </view>
+                    <view class="nc-when">
+                        <text>{{ item.day }}</text><text class="nc-hm">{{ item.time }}</text>
+                    </view>
+                    <view class="nc-menu" v-if="item.menu_name">{{ item.menu_name }}</view>
+                    <view class="nc-bottom">
+                        <view class="nc-staff">
+                            <view class="nc-lab">指名</view>
+                            <view class="nc-sq" :style="{ background: item.appoint_admin.color }"></view>
+                            <view class="nc-sn">{{ item.appoint_admin.name }}</view>
+                            <view class="nc-lab nc-lab2">当日</view>
+                            <view class="nc-sq" :style="{ background: item.day_admin.color }"></view>
+                            <view class="nc-sn">{{ item.day_admin.name }}</view>
+                        </view>
+                        <view class="nc-collect" @click.stop="toCollect(item.id,index)">
+                            <image v-if="item.is_collect == 0" src="../../../static/icons/uncollected.svg" mode="aspectFit"></image>
+                            <image v-else src="../../../static/icons/collected.svg" mode="aspectFit"></image>
                         </view>
                     </view>
                 </view>
             </u-swipe-action-item>
+            </view>
         </u-swipe-action>
+        <view style="height: calc(48rpx + env(safe-area-inset-bottom));"></view>
     </view>
 </template>
 
@@ -72,7 +65,8 @@
                         backgroundColor: '#D93025 '
                     }
                 }],
-                array: []
+                array: [],
+                loaded: false
             }
         },
         created() {
@@ -137,6 +131,7 @@
                         })
                         that.array = res.data.notices
                     }
+                    that.loaded = true
                 })
             },
             toCollect(id, index) {
@@ -206,6 +201,33 @@
 </script>
 
 <style lang="scss">
+    /* [カスタムエイド 2026-10-22] 予約通知(カード型) */
+    page { background: #F2F2F7; }
+    .nc-page { min-height: 100vh; background: #F2F2F7; }
+    .nc-head { display: flex; align-items: flex-end; justify-content: space-between; padding: 48rpx 40rpx 24rpx; }
+    .nc-ttl { font-size: 32rpx; color: #1D1D1F; font-weight: bold; }
+    .nc-cnt { font-size: 26rpx; color: #1A73E8; margin-left: 12rpx; font-weight: normal; }
+    .nc-tip { font-size: 22rpx; color: #8A8A8E; }
+    .nc-empty { text-align: center; color: #8A8A8E; font-size: 26rpx; padding: 120rpx 0; }
+    .nc-wrap { margin: 0 32rpx 30rpx; /* [カスタムエイド 2026-10-22] カードのあいだを1.5倍に */ border-radius: 28rpx; overflow: hidden; }
+    .nc-card { background: #FFFFFF; padding: 28rpx 32rpx; width: 100%; box-sizing: border-box; }
+    .nc-card.unread { background: #F2F7FF; }
+    .nc-top { display: flex; align-items: center; }
+    .nc-dot { width: 16rpx; height: 16rpx; border-radius: 50%; background: #1A73E8; margin-right: 12rpx; flex-shrink: 0; }
+    .nc-title { flex: 1; font-size: 28rpx; font-weight: bold; color: #1D1D1F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nc-time { font-size: 22rpx; color: #8A8A8E; margin-left: 16rpx; flex-shrink: 0; }
+    .nc-when { margin-top: 16rpx; font-size: 30rpx; color: #1D1D1F; }
+    .nc-hm { margin-left: 20rpx; font-weight: bold; }
+    .nc-menu { margin-top: 8rpx; font-size: 26rpx; color: #515154; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+    .nc-bottom { margin-top: 20rpx; padding-top: 20rpx; border-top: 1px solid #EEEEF0; display: flex; align-items: center; justify-content: space-between; }
+    .nc-staff { display: flex; align-items: center; flex-wrap: wrap; font-size: 24rpx; color: #515154; flex: 1; }
+    .nc-lab { color: #8A8A8E; }
+    .nc-lab2 { margin-left: 28rpx; }
+    .nc-sq { width: 24rpx; height: 24rpx; border-radius: 6rpx; margin: 0 8rpx 0 12rpx; flex-shrink: 0; }
+    .nc-sn { color: #1D1D1F; }
+    .nc-collect { width: 56rpx; height: 56rpx; flex-shrink: 0; margin-left: 16rpx; }
+    .nc-collect image { width: 100%; height: 100%; }
+
     .collect {
         width: 60upx;
         height: 60upx;

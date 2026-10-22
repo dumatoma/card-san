@@ -27,6 +27,8 @@
                             </view>
                             <view class="time">
                                 {{item.date}}
+                                <!-- [カスタムエイド 2026-10-22] 編集したお知らせは、投稿した日のあとに編集した日を小さく -->
+                                <text v-if="item.edit_date">({{item.edit_date}} 編集)</text>
                                 <text v-text="item.is_top == 1? '固定されたメッセージ' : '' "></text>
                                 <!-- <text>{{item.zhi}}</text> -->
                             </view>

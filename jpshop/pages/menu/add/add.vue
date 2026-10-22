@@ -60,7 +60,7 @@
                 <view class="mf-field">
                     <view class="mf-label">価格</view>
                     <input class="mf-in" :class="{ on: fk == 'price' }" v-model="price" maxlength="-1" :cursor-spacing="120"
-                        placeholder-class="mf-ph" placeholder="例:5,000円、5,000円〜" @focus="fk = 'price'" @blur="fk = ''" />
+                        placeholder-class="mf-ph" placeholder="例:5,000円、5,000円〜" @focus="fk = 'price'" @blur="fk = ''; price = csPrice(price)" />
                 </view>
             </view>
 
@@ -107,7 +107,7 @@
                         </view>
                         <view class="dBottom">
                             <view class="dPrice">
-                                ￥{{price || 0}}
+                                {{price || '価格'}}<!-- [カスタムエイド 2026-10-21] 価格はお店が書いたまま(以前は先頭に ￥ を付けていたので「￥9,000円」になった) -->
                             </view>
                             <view class="dTime">
                                 所要時間：{{time}}分
@@ -207,6 +207,12 @@
             })
         },
         methods: {
+            // [カスタムエイド 2026-10-21] 価格:入力が終わったら、4けた以上の数字にカンマを付ける(9000円〜 → 9,000円〜)。¥・円・〜などはお店が書いたまま。全角の数字は半角に
+            csPrice(v) {
+                if (!v) return v
+                const s = String(v).replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+                return s.replace(/(^|[^\d.,])(\d{4,})(?![\d.])/g, (m, a, b) => a + b.replace(/\B(?=(\d{3})+(?!\d))/g, ','))
+            },
             changeAppoint(){
               this.appoint = !this.appoint  
             },
@@ -230,7 +236,7 @@
               data.image = that.array
               data.title = that.title
               data.des = that.details
-              data.price = that.price
+              data.price = that.csPrice(that.price) // [カスタムエイド 2026-10-21]
               data.is_order = that.appoint == true? 1 : 0
               data.order_time = that.time
               addMenu(data).then((res) => {
@@ -500,19 +506,22 @@
         color: #515154;
     }
 
+    /* [カスタムエイド 2026-10-21] 項目と項目のあいだを約6px広げる */
     .mf-field {
-        margin-bottom: 28rpx;
+        margin-bottom: 40rpx;
     }
 
     .mf-field:last-child {
         margin-bottom: 0;
     }
 
+    /* [カスタムエイド 2026-10-21] 見出しの文字と入力枠の見た目のすき間を約6pxに(行の高さを詰め、余白 4px) */
     .mf-label {
         font-size: 26rpx;
         font-weight: 500;
         color: #1D1D1F;
-        margin-bottom: 12rpx;
+        margin-bottom: 8rpx;
+        line-height: 1.2;
     }
 
     .mf-req {

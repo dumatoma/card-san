@@ -69,6 +69,8 @@ function minutes(t) {
 function sameGroup(a, b) {
     if (!a || !b) return false
     if (a.type != 2 || b.type != 2) return false
+    // [カスタムエイド 2026-10-21] リンク付きの写真(一斉配信)は、押すとリンクが開く1枚の写真なので、かたまりにしない
+    if (a.url || b.url) return false
     if (a.sender != b.sender) return false
     if (a.said !== undefined && b.said !== undefined && a.said != b.said) return false
     if (a.date != b.date) return false
@@ -102,6 +104,15 @@ export function markImageGroups(arr) {
             head.grpUrls = items.map((v) => v.message)
         }
         i = j
+    }
+    // [カスタムエイド 2026-10-21] リンク付きの写真のすぐ後ろに届く「リンクの文字だけ」のメッセージ(古いアプリ向けにサーバーが一緒に送る)は出さない。
+    // 写真を押せばリンクが開くので、二重に見えないようにする
+    for (let k = 1; k < arr.length; k++) {
+        const a = arr[k - 1]
+        const b = arr[k]
+        if (b.type == 1 && a.type == 2 && a.url && a.sender == b.sender && String(b.message || '').trim() == String(a.url).trim()) {
+            b.grpHide = true
+        }
     }
     return arr
 }

@@ -9,20 +9,18 @@
                     @click="showSetting"></image>
             </view>
         </u-navbar>
-        <view class="top">
-            <view class="topContent">
-                <view class="content_item" @click="toNotice">
-                    <view class="item_left">
-                        予約通知
-                    </view>
-                    <view class="item_right bk" v-text="totalNum"></view>
+        <!-- [カスタムエイド 2026-10-22] 予約通知・今日の予約を横に2つ並べ、高さを半分ほどに -->
+        <view class="cs-top">
+            <view class="cs-tile" hover-class="cs-hover" @click="toNotice">
+                <view class="cs-tile-l">予約通知</view>
+                <view class="cs-tile-r">
+                    <text class="cs-badge" :class="{ zero: !(totalNum > 0) }">{{ totalNum || 0 }}</text>
+                    <view class="cs-tile-chev"></view>
                 </view>
-                <view class="content_item">
-                    <view class="item_left">
-                        今日の予約
-                    </view>
-                    <view class="item_right" v-text="todayNum"></view>
-                </view>
+            </view>
+            <view class="cs-tile">
+                <view class="cs-tile-l">今日の予約</view>
+                <view class="cs-tile-r"><text class="cs-num">{{ todayNum || 0 }}</text><text class="cs-unit">件</text></view>
             </view>
         </view>
         <view class="content">
@@ -36,16 +34,17 @@
                     </view>
                 </view>
             </view>
-            <view class="askForName" v-if="status == 'week'">
-                <view class="name_item" v-if="no_appoint == 1" :class="current == 0? 'active' : ''" @click="changeName(0,0)">指名なし</view>
-                <view class="name_item" :class="current == index + 1? 'active' : ''"
-                    @click="changeName(item.id,index+1)" v-for="(item,index) in staff" v-text="item.name"></view>
-            </view>
             <!-- [カスタムエイド 2026-10-19] 日付の帯(予約WEBページと同じ作り。日・週どちらもこの帯を使う)
                  週:日にちと予約枠を一緒に指について横に動かす/青い丸は今日だけ/見出しは表示中の週
                  日:予約枠を左右にスワイプで次の日・前の日/青い丸は選んでいる日/担当者名の行を帯の下で止める
                  日曜・祝日は赤、土曜は青(utils/jpHoliday.js)。修正一覧 管理 No.21・22・5 -->
             <u-sticky :offset-top="totalDing" customNavHeight="44">
+            <!-- [カスタムエイド 2026-10-22] 週:担当者の切り替えも日付の帯と一緒に上で止める(日の担当者名の行と同じ) -->
+            <view class="askForName" v-if="status == 'week'">
+                <view class="name_item" v-if="no_appoint == 1" :class="current == 0? 'active' : ''" @click="changeName(0,0)">指名なし</view>
+                <view class="name_item" :class="current == index + 1? 'active' : ''"
+                    @click="changeName(item.id,index+1)" v-for="(item,index) in staff" v-text="item.name"></view>
+            </view>
             <view class="calendar" :class="status == 'day' ? 'cs-cal-d' : ''" style="background: #ffffff;">
                 <view class="cs-wk">
                     <view class="cs-wk-head">
@@ -99,7 +98,10 @@
                 </view>
                 <view class="cs-pager cs-grid-pager" @touchstart="dayStart" @touchmove="dayMove" @touchend="dayEnd" @touchcancel="dayEnd">
                     <view class="cs-track" :style="trackStyle(gridDx, gridAnim)">
-                        <view class="cs-pane" v-for="p in dayPanes" :key="p.key">
+                        <!-- [カスタムエイド 2026-10-22] 3枚の枠は日付ではなく位置(前・今日・次)で固定する。
+                             日付で区別すると、日を変えるたびに枠が入れかわり、アプリでは押したマスが別の日の枠として扱われて
+                             予約がある所でも「新規予約」が開くことがあった -->
+                        <view class="cs-pane" v-for="(p, pi) in dayPanes" :key="'dpane' + pi">
                             <progres v-if="p.data && p.cal && shopTime" :manager="p.data" :tdate="p.date" :times="times" :hideTime="true" :hideNames="true"
                                 :nowTime="shopTime" :calendar="p.cal"
                                 :offsetX="p.center ? staffX : 0" :quiet="!p.center" @addNew="addNewAppointment" @checkdetail="godetail"></progres>
@@ -450,6 +452,22 @@
                     that.loadAroundWeeks()
                 }
             },
+            // [カスタムエイド 2026-10-22] 表示中の日の、その担当者・時間にかかる予約の id(なければ 0)
+            findOrderAt(adid, time) {
+                let toMin = (t) => { let a = String(t || '').split(':'); return a[0] * 60 + (a[1] || 0) * 1 }
+                let list = this.dayCache[this.dDate] || []
+                let m = list.find((x) => x.adid == adid)
+                if (!m || !time) return 0
+                let tv = toMin(time)
+                for (let i = 0; i < m.events.length; i++) {
+                    let ev = m.events[i]
+                    let s = toMin(ev.start)
+                    let en = ev.end ? toMin(ev.end) : s + Math.round((ev.duration || 0) * 60)
+                    if (en <= s) en = s + Math.round((ev.duration || 0) * 60)
+                    if (tv >= s && tv < en) return ev.id
+                }
+                return 0
+            },
             godetail(e){ 
               uni.navigateTo({
                   url:"notice/detail/edit?id="+e
@@ -636,7 +654,7 @@
                                     t.start = value.start_time
                                     t.end = value.end_time
                                     t.duration = value.m / 60
-                                    t.name = value.name
+                                    t.name = value.name || (value.cate_name ? '' : '休憩・勤務時間外') // [カスタムエイド 2026-10-22] 名前のない枠(今までの休憩・勤務時間外)
                                     t.event = value.cate_name
                                     t.id = value.id
                                     t.appoint_said = value.appoint_said
@@ -762,7 +780,7 @@
                                         start: value.start_time,
                                         end: value.end_time,
                                         duration: value.m / 60,
-                                        name: value.name,
+                                        name: value.name || (value.cate_name ? '' : '休憩・勤務時間外'), // [カスタムエイド 2026-10-22] 名前のない枠(今までの休憩・勤務時間外)
                                         event: value.cate_name,
                                         id: value.id,
                                         appoint_said: value.appoint_said
@@ -1060,6 +1078,11 @@
             },
             // 新增预约
             addNewAppointment(e) {
+                // [カスタムエイド 2026-10-22] 念のための確認:押した担当者・時間に予約が入っていたら、新規予約ではなく予約内容を開く
+                if (e.aptype != 'week') {
+                    let hit = this.findOrderAt(e.adid, e.time)
+                    if (hit) return this.godetail(hit)
+                }
                 this.ctime = e.time
                 this.aptype = e.aptype
                 if(e.aptype == 'week'){
@@ -1088,33 +1111,47 @@
          border-top: 2upx solid #d2d2d7;
          margin-bottom: 12upx;
     }
+    /* [カスタムエイド 2026-10-22] 週の担当者の切り替え:上で止まるので白地に。選んでいる人は薄い青+青い線+太字(ほかのスイッチと同じ) */
     .askForName {
         display: flex;
         align-items: center;
         width: 100%;
         overflow-x: scroll;
         box-sizing: border-box;
-        padding: 40upx 0 40upx 40upx;
-        background: rgba(249, 249, 249, 0.94);
+        padding: 20rpx 0 20rpx 32rpx;
+        background: #ffffff;
+        border-top: 1px solid #E5E5EA;
 
         .name_item {
-            padding: 8upx 16upx;
-            border: 2upx solid #AAAAAA;
-            font-size: 28upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #AAAAAA;
+            height: 64rpx;
+            line-height: 62rpx;
+            padding: 0 24rpx;
+            border: 1px solid #D2D2D7;
+            font-size: 26rpx;
+            color: #6E6E73;
             flex-shrink: 0;
-            border-radius: 8upx;
-            margin-right: 20upx;
+            border-radius: 32rpx;
+            margin-right: 16rpx;
+            box-sizing: border-box;
         }
 
         .active {
             background: rgba(26, 115, 232, 0.1);
-            color: #007AFF;
-            border: 2upx solid #1A73E8;
+            color: #1A73E8;
+            border: 1px solid #1A73E8;
+            font-weight: bold;
         }
     }
+    .cs-top { display: flex; gap: 20rpx; padding: 24rpx 32rpx; background: #F5F5F7; }
+    .cs-tile { flex: 1; background: #fff; border-radius: 24rpx; padding: 20rpx 24rpx; display: flex; align-items: center; justify-content: space-between; min-height: 96rpx; box-sizing: border-box; }
+    .cs-tile-l { font-size: 26rpx; color: #1D1D1F; }
+    .cs-tile-r { display: flex; align-items: center; }
+    .cs-badge { min-width: 48rpx; height: 48rpx; padding: 0 12rpx; border-radius: 24rpx; background: #1A73E8; color: #fff; font-size: 26rpx; font-weight: bold; line-height: 48rpx; text-align: center; box-sizing: border-box; }
+    .cs-badge.zero { background: #E5E5EA; color: #6E6E73; }
+    .cs-tile-chev { width: 14rpx; height: 14rpx; border-top: 3rpx solid #C7C7CC; border-right: 3rpx solid #C7C7CC; transform: rotate(45deg); margin-left: 12rpx; }
+    .cs-num { font-size: 36rpx; font-weight: bold; color: #1D1D1F; }
+    .cs-unit { font-size: 22rpx; color: #6E6E73; margin-left: 4rpx; }
+    .cs-hover { opacity: 0.6; }
 
 
     .top {
@@ -1207,7 +1244,7 @@
         .tabs {
             width: 100%;
             box-sizing: border-box;
-            padding: 40upx 26upx;
+            padding: 24rpx 32rpx; /* [カスタムエイド 2026-10-22] 余白を詰めた(以前は 40upx 26upx) */
             background:#fff;
 
             .tab {
@@ -1218,7 +1255,7 @@
 
                 .tab_item {
                     box-sizing: border-box;
-                    padding: 20upx 0;
+                    padding: 14rpx 0;
                     border-radius: 16upx;
                     flex: 1;
                     text-align: center;

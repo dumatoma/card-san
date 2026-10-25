@@ -70,24 +70,46 @@
                 </view>
             </view>
 
-            <!-- カルテ(準備中)。公開までは今の「画像」をそのまま使える -->
-            <view class="md-h3">
-                <text>カルテ</text>
-                <text class="md-soon">準備中</text>
+            <!-- [カスタムエイド 2026-10-23] カルテ:カルテ(1ページ目の見本)と最新の写真4枚。押すとカルテの画面へ -->
+            <view class="md-h3"><text>カルテ</text></view>
+            <view class="md-card md-karte" v-if="kLock">
+                <view class="mk-lock"><image class="k-lock" src="/static/karte/lock.svg"></image>カルテを見る権限がありません。{{'\n'}}オーナーに「カルテ」の権限を付けてもらってください。</view>
             </view>
-            <view class="md-card md-karte">
-                <view class="md-karte-note">カルテ機能を準備しています。公開されると、ここがカルテに変わります。それまでは、下の「画像」をお使いください。</view>
-                <view class="md-sub">画像(お客様のアプリには表示されません)</view>
-                <view class="md-imgs" v-if="userInfo.image && userInfo.image.length">
-                    <view class="md-img" v-for="(item, index) in userInfo.image" :key="index" @click="previewImg(index)">
-                        <image :src="item" mode="aspectFill"></image>
+            <view class="md-card md-karte" hover-class="md-hover" v-else-if="kLoaded" @click="toKarte">
+                <block v-if="kFirst || kPhotos.length">
+                    <view class="mk-row" v-if="kFirst">
+                        <view class="mk-thumb">
+                            <image v-if="kFirst.cover" :src="kFirst.cover.url" mode="aspectFill"></image>
+                            <text class="mk-cnt">{{kFirst.pages}}</text>
+                        </view>
+                        <view class="mk-tt">
+                            <view class="mk-name">{{kFirst.title}}</view>
+                            <view class="mk-sub"><text class="mk-tag" :class="{ pic: kFirst.source != 1 }">{{kFirst.source == 1 ? 'PDF' : '写真'}}</text>{{kFirst.pages}}ページ<text v-if="kKarte.length > 1"> ・ ほか{{kKarte.length - 1}}件</text></view>
+                            <view class="mk-sub2" v-if="kFirst.job && kFirst.job.status == 'converting'">取り込み中… {{kFirst.job.done}} / {{kFirst.job.total || '?'}}</view>
+                            <view class="mk-sub2" v-else-if="kFirst.updated_by">最後に書いた人:{{kFirst.updated_by}}・{{kDate(kFirst.updated_at)}}</view>
+                        </view>
+                        <view class="md-chev"></view>
                     </view>
-                </view>
-                <view class="md-up" hover-class="md-hover" @click="uploadImage">
-                    <text class="md-plus">+</text>
-                    <text>画像をアップロード</text>
+                    <view class="mk-ph" :class="{ line: kFirst }" v-if="kPhotos.length">
+                        <view class="mk-ph-h"><text>写真</text><text class="mk-ph-n">{{kPhotoCount}}枚 ›</text></view>
+                        <view class="mk-grid">
+                            <view class="mk-pic" v-for="p in kPhotos" :key="p.id">
+                                <image :src="p.page.url" mode="aspectFill"></image>
+                                <text class="mk-pen" v-if="p.marked">✎</text>
+                            </view>
+                        </view>
+                    </view>
+                </block>
+                <view class="mk-row" v-else>
+                    <view class="mk-empty-i"><image class="k-ic" src="/static/karte/clipboard.svg"></image></view>
+                    <view class="mk-tt">
+                        <view class="mk-name blue">＋ カルテを読み込む</view>
+                        <view class="mk-sub2">紙の撮影・写真・テンプレートから</view>
+                    </view>
+                    <view class="md-chev"></view>
                 </view>
             </view>
+            <!-- [カスタムエイド 2026-10-24] 以前の「画像」欄は不要になったので外した(カルテに一本化) -->
         </view>
         <view v-if="showPreview"
             style="z-index: 1002 !important;position: fixed;top: 0;left: 0;width: 100vw;height: 100vh;">
@@ -107,6 +129,7 @@
     } from "../../../api/index.js"
     import previewImage from '@/components/previewImg/previewImg.vue'
     import permission from "@/components/permission/permission.vue"
+    import { karteList, shortDate } from '@/api/karte.js' // [カスタムエイド 2026-10-23] カルテ
     export default {
         components: {
             previewImage,
@@ -120,7 +143,13 @@
                 userId: "",
                 showPreview: false,
                 current: 0,
-                query:{}
+                query:{},
+                // [カスタムエイド 2026-10-23] カルテ
+                kLoaded: false,
+                kLock: false,
+                kKarte: [],
+                kPhotos: [],
+                kPhotoCount: 0
             }
         },
         created() {
@@ -136,13 +165,46 @@
                 that.getTimes(query.id)
             }
         },
+        onShow() {
+            // カルテの画面から戻ったときも最新に
+            if (this.userInfo && this.userInfo.id) this.loadKarte()
+        },
+        computed: {
+            kFirst() {
+                return this.kKarte[0] || null
+            }
+        },
         methods: {
+            // [カスタムエイド 2026-10-23] カルテ(カルテと最新の写真4枚)
+            loadKarte() {
+                karteList(this.userInfo.id, 4).then((res) => {
+                    if (!res) return
+                    if (res.code == 403) {
+                        this.kLock = true
+                    } else if (res.code == 200) {
+                        this.kLock = false
+                        this.kKarte = res.data.karte || []
+                        this.kPhotos = res.data.photos || []
+                        this.kPhotoCount = res.data.photo_count || 0
+                    }
+                    this.kLoaded = true
+                })
+            },
+            kDate(t) {
+                return shortDate(t)
+            },
+            toKarte() {
+                uni.navigateTo({
+                    url: '/pages/karte/karte?mid=' + this.userInfo.id + '&name=' + encodeURIComponent(this.userInfo.name || '')
+                })
+            },
             // 获取详情
             getDetail(e) {
                 let that = this
                 getMemberDetail(e).then((res) => {
                     if (res.code == 200) {
                         that.userInfo = res.data
+                        that.loadKarte() // [カスタムエイド 2026-10-23]
                     }
                 })
             },
@@ -410,38 +472,124 @@
         font-weight: 700;
     }
 
+    /* [カスタムエイド 2026-10-23] カルテの欄 */
     .md-karte {
-        padding: 32rpx;
+        padding: 28rpx 32rpx;
     }
 
-    .md-karte-note {
-        padding: 20rpx 24rpx;
-        border-radius: 20rpx;
-        background: #F5F5F7;
-        font-size: 24rpx;
-        line-height: 1.7;
-        color: #515154;
-        margin-bottom: 28rpx;
-    }
-
-    .md-sub {
+    .mk-lock {
+        text-align: center;
         font-size: 26rpx;
-        font-weight: 500;
-        margin-bottom: 16rpx;
+        line-height: 1.7;
+        color: #6E6E73;
+        white-space: pre-wrap;
+        padding: 12rpx 0;
     }
 
-    .md-imgs {
+    .mk-row {
         display: flex;
-        flex-wrap: wrap;
+        align-items: center;
     }
 
-    .md-img {
-        width: calc((100% - 32rpx) / 3);
-        height: 0;
-        padding-bottom: calc((100% - 32rpx) / 3);
-        margin: 0 16rpx 16rpx 0;
+    .mk-thumb {
         position: relative;
-        border-radius: 20rpx;
+        width: 104rpx;
+        height: 140rpx;
+        flex-shrink: 0;
+        border-radius: 8rpx;
+        overflow: hidden;
+        background: #FBFAF6;
+        border: 1px solid #E5E5EA;
+
+        image {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    .mk-cnt {
+        position: absolute;
+        right: 6rpx;
+        bottom: 6rpx;
+        padding: 0 10rpx;
+        border-radius: 14rpx;
+        background: rgba(0, 0, 0, 0.55);
+        color: #FFFFFF;
+        font-size: 20rpx;
+        line-height: 32rpx;
+    }
+
+    .mk-tt {
+        flex: 1;
+        min-width: 0;
+        margin: 0 16rpx 0 24rpx;
+    }
+
+    .mk-name {
+        font-size: 30rpx;
+        font-weight: 700;
+    }
+
+    .mk-sub {
+        margin-top: 8rpx;
+        font-size: 24rpx;
+        color: #6E6E73;
+    }
+
+    .mk-tag {
+        display: inline-block;
+        margin-right: 10rpx;
+        padding: 0 12rpx;
+        border-radius: 8rpx;
+        background: #FCE8E6;
+        color: #C5221F;
+        font-size: 20rpx;
+        line-height: 32rpx;
+    }
+
+    .mk-tag.pic {
+        background: #E8F0FE;
+        color: #1A73E8;
+    }
+
+    .mk-sub2 {
+        margin-top: 6rpx;
+        font-size: 22rpx;
+        color: #8E8E93;
+    }
+
+    .mk-ph.line {
+        margin-top: 24rpx;
+        padding-top: 24rpx;
+        border-top: 1px solid #E5E5EA;
+    }
+
+    .mk-ph-h {
+        display: flex;
+        font-size: 26rpx;
+        font-weight: 700;
+        color: #3C3C43;
+        margin-bottom: 12rpx;
+    }
+
+    .mk-ph-n {
+        margin-left: auto;
+        font-weight: 400;
+        color: #6E6E73;
+        font-size: 24rpx;
+    }
+
+    .mk-grid {
+        display: flex;
+    }
+
+    .mk-pic {
+        position: relative;
+        width: calc((100% - 30rpx) / 4);
+        height: 0;
+        padding-bottom: calc((100% - 30rpx) / 4);
+        margin-right: 10rpx;
+        border-radius: 12rpx;
         overflow: hidden;
         background: #E5E5EA;
 
@@ -454,27 +602,34 @@
         }
     }
 
-    .md-img:nth-child(3n) {
+    .mk-pic:last-child {
         margin-right: 0;
     }
 
-    .md-up {
-        height: 88rpx;
+    .mk-pen {
+        position: absolute;
+        right: 6rpx;
+        bottom: 6rpx;
+        padding: 0 8rpx;
+        border-radius: 10rpx;
+        background: rgba(0, 0, 0, 0.6);
+        color: #FFFFFF;
+        font-size: 18rpx;
+    }
+
+    .mk-empty-i {
+        width: 96rpx;
+        height: 96rpx;
+        flex-shrink: 0;
+        border-radius: 24rpx;
+        background: #EEF4FF;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-top: 8rpx;
-        border: 3rpx dashed #8AB0EE;
-        border-radius: 24rpx;
-        background: #F7FAFF;
-        color: #1A73E8;
-        font-size: 28rpx;
-        font-weight: 500;
-        box-sizing: border-box;
+        font-size: 44rpx;
     }
 
-    .md-plus {
-        font-size: 36rpx;
-        margin-right: 8rpx;
-    }
+    /* [カスタムエイド 2026-10-23] 単色のアイコン */
+    .k-ic { width: 48rpx; height: 48rpx; }
+    .k-lock { width: 30rpx; height: 30rpx; vertical-align: -4rpx; margin-right: 8rpx; }
 </style>

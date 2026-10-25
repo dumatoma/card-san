@@ -64,16 +64,18 @@
         </view>
         <u-button text="この住所を使用" type="primary" class="btn" @click="save"></u-button>
         <view style="height: 200upx;"></view>
-        <u-picker :show="show" @confirm="confirm" :columns="city"></u-picker>
+        <cs-picker title="都道府県を選ぶ" :show="show" @confirm="confirm" :columns="city"></cs-picker>
     </view>
 </template>
 
 <script>
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22] 新しいドラムロール
     import {
         addAddress,
         getAddress
     } from '@/api/index.js'
     export default {
+        components: { csPicker },
         data() {
             return {
                 show: false,

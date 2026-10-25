@@ -513,8 +513,8 @@
         <u-calendar :show="showCalendar" @close="showCalendar = false" monthNum="36" :showTitle="false" mode="single"
             @confirm="confirm"></u-calendar>
         <!-- 有効期限の日数 -->
-        <u-picker @confirm="selectDayNum" @cancel="show3 = false" @close="show3 = false" cancelText="キャンセル"
-            confirmText="保存" :show="show3" :columns="columns2"></u-picker>
+        <cs-picker title="有効期限" @confirm="selectDayNum" @cancel="show3 = false" @close="show3 = false" cancelText="キャンセル"
+            confirmText="保存" :show="show3" :columns="columns2"></cs-picker>
         <!-- 編集では変えられない項目の案内 -->
         <u-modal :show="ale" title="スタンプ数・有効期限は変えられません"
             content="スタンプ数・有効期限を変えるときは、新しいカードを作成してください。" confirmText="OK" @confirm="ale = false"></u-modal>
@@ -522,6 +522,7 @@
 </template>
 
 <script>
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22] 新しいドラムロール
     import pickImage from '@/utils/pickImage.js'
     import csColorPanel from '@/components/csColorPanel/csColorPanel.vue'
     import {
@@ -540,7 +541,7 @@
     const SVGS = [svg1, svg2, svg3, svg4, svg5, svg6, svg7, svg8]
 
     export default {
-        components: {
+        components: { csPicker,
             csColorPanel
         },
         props: {

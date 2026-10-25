@@ -17,10 +17,17 @@
                     <text class="sl-label">顧客NO</text>
                     <text class="sl-val">{{info.member_no || '-'}}</text>
                 </view>
+                <!-- [カスタムエイド 2026-10-24] 来店履歴(QRで呼び出したときに、カルテと一緒に見られるように) -->
+                <view class="sl-row sl-link" hover-class="sl-hover" @click="openRecord">
+                    <text class="sl-label">来店履歴</text>
+                    <!-- [カスタムエイド 2026-10-25] 来店回数(メンバー情報の来店履歴と同じ) -->
+                    <text class="sl-val sl-cnt">{{visitCount === null ? '' : visitCount + '回'}}</text>
+                    <view class="sl-chev"></view>
+                </view>
+                <!-- [カスタムエイド 2026-10-24] カルテ(準備中を外し、カルテの画面を開く)。目立つように多色のアイコン -->
                 <view class="sl-karte" hover-class="sl-hover" @click="openKarte">
-                    <view class="sl-karte-ic"><view class="sl-karte-line"></view><view class="sl-karte-line"></view><view class="sl-karte-line short"></view></view>
+                    <image class="sl-karte-img" src="/static/karte/karte_icon.svg" mode="aspectFit"></image><!-- [カスタムエイド 2026-10-25] 指定のアイコンに -->
                     <text class="sl-karte-name">カルテ</text>
-                    <text class="sl-soon">準備中</text>
                     <view class="sl-chev"></view>
                 </view>
             </view>
@@ -146,11 +153,13 @@
 <script>
     import {
         getMemberDetaill,
-        addPoints
+        addPoints,
+        getCome // [カスタムエイド 2026-10-25] 来店回数
     } from "@/api/index.js"
     export default {
         data() {
             return {
+                visitCount: null, // [カスタムエイド 2026-10-25] 来店回数
                 title: "name",
                 number: 3,
                 banner: [],
@@ -174,9 +183,15 @@
             that.getDetail(query.id)
         },
         methods: {
-            // [カスタムエイド 2026-10-20] カルテは準備中
+            // [カスタムエイド 2026-10-24] カルテの画面を開く(見られない人には、カルテの画面がお知らせを出す)
             openKarte() {
-                uni.showToast({ title: 'カルテ機能は準備中です', icon: 'none' })
+                if (!this.info || !this.info.id) return
+                uni.navigateTo({ url: '/pages/karte/karte?mid=' + this.info.id + '&name=' + encodeURIComponent(this.info.name || '') })
+            },
+            // [カスタムエイド 2026-10-24] 来店履歴を開く(メンバー情報の「来店履歴」と同じ画面)
+            openRecord() {
+                if (!this.info || !this.info.id) return
+                uni.navigateTo({ url: '/pages/customer/record/record?id=' + this.info.id })
             },
             usePoint(){
                 let that = this
@@ -221,6 +236,10 @@
                 getMemberDetaill(data).then((res) => {
                     if(res.code == 200){
                         that.info = res.data
+                        // [カスタムエイド 2026-10-25] 来店回数(メンバー情報の「来店履歴」と同じ取り方)
+                        getCome({ type: 'come', id: res.data.id }).then((r2) => {
+                            if (r2.code == 200) that.visitCount = r2.data.total
+                        }).catch(() => {})
                         that.card = res.data.card
                         that.orders = res.data.orders
                         that.banner = res.data.card.discount_images
@@ -636,8 +655,10 @@
         margin: 0 24rpx 32rpx;
     }
 
+    /* [カスタムエイド 2026-10-24] 上が詰まって見えた件:余白はまとまりの外側(margin)ではなく、灰色の背景の内側(padding)で取る。
+       margin だと外にはみ出して、ナビの下に白い帯ができ、まとまりが上に詰まって見えていた */
     .sl-top {
-        margin-top: 32rpx;
+        margin-top: 0;
     }
 
     .sl-row {
@@ -694,6 +715,18 @@
         width: 60%;
     }
 
+    .sl-karte-img {
+        width: 56rpx;
+        height: 56rpx;
+        flex-shrink: 0;
+        margin-right: 20rpx;
+    }
+
+    .sl-link .sl-label {
+        color: #1D1D1F;
+        font-size: 30rpx;
+    }
+
     .sl-karte-name {
         font-size: 30rpx;
         font-weight: 700;
@@ -732,7 +765,9 @@
     .containe {
         min-height: 100vh;
         background: #F5F5F7;
+        padding-top: 40rpx;
         padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+        box-sizing: border-box;
     }
 
     .cardInfo {
@@ -813,5 +848,11 @@
         padding: 28rpx 32rpx 24rpx;
         font-size: 28rpx;
         line-height: 1.8;
+    }
+
+    /* [カスタムエイド 2026-10-25] 来店回数は右寄せ(メンバー情報の来店履歴と同じ) */
+    .sl-cnt {
+        text-align: right;
+        margin-right: 16rpx;
     }
 </style>

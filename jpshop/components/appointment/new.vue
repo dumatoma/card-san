@@ -83,7 +83,7 @@
                     開始
                 </view>
                 <view class="citemRight">
-                    <view class="dateDetail" v-text="start" @click="menu.id != -1? startShow = true : ''"></view>
+                    <view class="dateDetail" v-text="start" @click="menu.id != -1 ? tdOpen('start') : ''"></view>
                 </view>
             </view>
 
@@ -198,11 +198,12 @@
             </view>
         </u-popup>
         <!-- 开始时间弹出层 -->
-        <u-picker :show="startShow" ref="uPicker" :columns="times" @close="startShow = false"
-            :closeOnClickOverlay="true" @cancel='startShow = false' @confirm="changeHandler"></u-picker>
+        <!-- [カスタムエイド 2026-10-22] 新しいドラムロール(見出し・選んでいる時刻を大きく・2けた・その日の営業時間の中だけ) -->
+        <cs-picker :show="startShow" ref="startPicker" title="開始時間" sep=":" :columns="tdCols" :defaultIndex="tdDefault" :note="tdNote" @close="startShow = false" @change="tdHourChange($event, 'startPicker')"
+            @cancel='startShow = false' @confirm="changeHandler"></cs-picker>
         <!-- 结束时间弹出层 -->
-        <u-picker :show="endShow" ref="uPicker" :columns="times" @close="endShow = false" :closeOnClickOverlay="true"
-            @cancel='endShow = false' @confirm="changeHandler1"></u-picker>
+        <cs-picker :show="endShow" ref="endPicker" title="終了時間" sep=":" :columns="tdCols" :defaultIndex="tdDefault" :note="tdNote" @close="endShow = false" @change="tdHourChange($event, 'endPicker')"
+            @cancel='endShow = false' @confirm="changeHandler1"></cs-picker>
         <!-- 日历弹出层 -->
         <u-calendar :show="calendarShow" @confirm="dateConfirm" @close="calendarShow = false" monthNum="24" :defaultDate="dDate"></u-calendar>
         <!-- 选人弹出层(指名担当者) -->
@@ -293,6 +294,8 @@
 </template>
 <script>
     import mod from "@/components/mod.vue"
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22]
+    import csTimeDrum from "@/utils/csTimeDrum.js"
     import {
         getMemberList,
         menuCateList,
@@ -325,7 +328,8 @@
                 default: ""
             }
         },
-        components:{mod},
+        components:{mod, csPicker},
+        mixins: [csTimeDrum],
         data() {
             return {
                 showm:false,
@@ -385,10 +389,6 @@
                     checked: true,
                     id: 0
                 }, ],
-                times: [
-                    [ 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22],
-                    ["00", "30"]
-                ],
                 selectAll: false,
                 array: []
             };
@@ -608,7 +608,7 @@
             showEnd() {
                 let that = this
                 if (that.wai == true) {
-                    that.endShow = true
+                    that.tdOpen('end') // [カスタムエイド 2026-10-22]
                 }
             },
 
@@ -843,15 +843,18 @@
                 this.info.sex = index + 1
                 this.info.id = ""
             },
+            // [カスタムエイド 2026-10-22] 時間えらび(csTimeDrum)で使う:その日と今の時刻
+            tdDate() { return this.date },
+            tdValue(k) { return k == 'start' ? this.start : this.end },
             changeHandler(e) {
                 let that = this
-                that.start = e.value[0] + ":" + e.value[1]
+                that.start = that.tdText(e)
                 that.startShow = false
                 that.getEndTime()
             },
             changeHandler1(e) {
                 let that = this
-                that.end = e.value[0] + ":" + e.value[1]
+                that.end = that.tdText(e)
                 that.endShow = false
             },
             searchMem() {
@@ -937,6 +940,7 @@
                 let hour = date.getHours() < 10 ? '0' + (date.getHours()) : date.getHours()
                 let minute = date.getMinutes() < 10 ? '0' + (date.getMinutes()) : date.getMinutes()
                 that.end = hour + ":" + minute
+                if (that.end == "00:00") that.end = "24:00" // [カスタムエイド 2026-10-22] 夜0時ちょうどに終わるときは 24:00(次の日の 0:00)
                 that.getStaff(that.menu.id, 1)
             },
             scrollToBottom() {

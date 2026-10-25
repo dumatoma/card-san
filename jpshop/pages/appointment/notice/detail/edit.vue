@@ -40,7 +40,7 @@
                 </view>
                 <view class="ed-row">
                     <view class="ed-lab">開始</view>
-                    <view class="ed-chip" hover-class="ed-hover" @click="startShow = true">{{ info.start }}</view>
+                    <view class="ed-chip" hover-class="ed-hover" @click="tdOpen('start')">{{ info.start }}</view>
                 </view>
                 <view class="ed-row">
                     <view class="ed-lab">終了</view>
@@ -82,11 +82,12 @@
             <view class="ed-del" hover-class="ed-hover" @click="showAle = true">この予約を取り消す</view>
         </view>
         <!-- 开始时间弹出层 -->
-        <u-picker :show="startShow" ref="uPicker" :columns="times" @cancel="startShow = false"
-            :closeOnClickOverlay="true" @confirm="selectStart"></u-picker>
+        <!-- [カスタムエイド 2026-10-22] 新しいドラムロール(見出し・選んでいる時刻を大きく・2けた・その日の営業時間の中だけ) -->
+        <cs-picker :show="startShow" ref="startPicker" title="開始時間" sep=":" :columns="tdCols" :defaultIndex="tdDefault" :note="tdNote" @cancel="startShow = false" @close="startShow = false" @change="tdHourChange($event, 'startPicker')"
+            @confirm="selectStart"></cs-picker>
         <!-- 结束时间弹出层 -->
-        <u-picker :show="endShow" ref="uPicker" :columns="times" @cancel="endShow = false" :closeOnClickOverlay="true"
-            @confirm="selectEnd"></u-picker>
+        <cs-picker :show="endShow" ref="endPicker" title="終了時間" sep=":" :columns="tdCols" :defaultIndex="tdDefault" :note="tdNote" @cancel="endShow = false" @close="endShow = false" @change="tdHourChange($event, 'endPicker')"
+            @confirm="selectEnd"></cs-picker>
         <!-- 日历弹出层 -->
         <u-calendar :show="calendarShow" @confirm="confirmDate" :showTitle = "false" @close="calendarShow = false"></u-calendar>
         <!-- 选人弹出层(担当者) -->
@@ -222,8 +223,11 @@
         getTodayAdmin
     } from '@/api/index.js'
     import mod from "@/components/mod.vue"
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22]
+    import csTimeDrum from "@/utils/csTimeDrum.js"
     export default {
-        components:{mod},
+        components:{mod, csPicker},
+        mixins: [csTimeDrum],
         data() {
             return {
                 showm:false,
@@ -281,10 +285,6 @@
                     id: 0
                 }],
                 tplist: [],
-                times: [
-                    [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
-                    ["00", "30"]
-                ],
                 selectAll: false,
                 array: [],
                 totalTime:0,
@@ -516,6 +516,7 @@
                     let hour = Math.floor(t / 60)
                     let minute = t % 60
                     that.info.end = (hour < 10 ? '0' + hour : hour) + ":" + (minute < 10 ? '0' + minute : minute)
+                    if (that.info.end == '00:00') that.info.end = '24:00' // [カスタムエイド 2026-10-22] 夜0時ちょうどに終わるときは 24:00(次の日の 0:00)
                 }
                 if(that.menu){
                     that.getStaff(that.menu.id?that.menu.id:0, 1)
@@ -536,7 +537,7 @@
                         d.id = 0
                         let tem = res.data.order.time.split("-")
                         res.data.order.start = tem[0]
-                        res.data.order.end = tem[1]
+                        res.data.order.end = tem[1] == "00:00" ? "24:00" : tem[1] // [カスタムエイド 2026-10-22] 夜0時ちょうどに終わる予約は 24:00
                         that.info = res.data.order
                         that.day_admin = res.data.order.day_admin
                         that.appoint_admin = res.data.order.appoint_admin  || d
@@ -650,12 +651,18 @@
                 let that = this
                 // 通常メニュー・お休み/勤務時間外のいずれでも終了時間を編集できるようにする
                 // （開始編集時の所要時間による自動計算は維持したまま、終了の手動調整を可能にする）
-                that.endShow = true
+                that.tdOpen('end') // [カスタムエイド 2026-10-22]
             },
+            // [カスタムエイド 2026-10-22] 時間えらび(csTimeDrum)で使う:その日('YYYY-MM-DD')と今の時刻
+            tdDate() {
+                const m = String(this.info.day || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/)
+                return m ? m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2) : ''
+            },
+            tdValue(k) { return k == 'start' ? this.info.start : this.info.end },
             // 选择开始时间
             selectStart(e) {
                 let that = this
-                that.info.start = e.value[0] + ":" + e.value[1]
+                that.info.start = that.tdText(e)
                 that.startShow = false
                 // if (that.info.menu.order_time) {
                 //     that.calculateDuration()
@@ -665,7 +672,7 @@
             // 选择结束时间
             selectEnd(e) {
                 let that = this
-                let end = e.value[0] + ":" + e.value[1]
+                let end = that.tdText(e)
                 // 終了時間が開始時間より前（または同じ）にならないよう検証
                 if (that.info.start && end <= that.info.start) {
                     uni.showToast({

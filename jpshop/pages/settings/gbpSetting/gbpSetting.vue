@@ -48,11 +48,13 @@
                 </view>
                 <view class="autosyncGrid">
                     <view class="autosyncItem" v-for="f in fieldList" :key="f.key"
-                        :class="isFieldOn(f.key) ? 'selected' : ''" @click="toggleField(f.key)">
+                        :class="isFieldOn(f.key) ? 'gs-on' : ''" @click="toggleField(f.key)">
                         <view class="dot"><view class="dotInner"></view></view>
                         <text>{{ f.label }}</text>
                     </view>
                 </view>
+                <!-- [カスタムエイド 2026-10-22] 営業時間は Card-San が正(Google で直接変えた内容は上書き) -->
+                <view class="autosyncNote">営業時間は、営業カレンダーで1日だけ変えた日(臨時休業・年末年始など)も含めて Card-San の内容が Google に反映されます(Google で直接変えた内容は上書きされます)。</view>
                 <view class="autosyncFooter">
                     <text class="lastsync">最終同期:{{ fmtSync(info.last_sync_at) }}</text>
                     <view class="btnSync" :class="(info.auto_sync == 1 || syncing) ? 'isDisabled' : ''" @click="syncNow">
@@ -675,7 +677,8 @@
             background: transparent;
         }
 
-        &.selected {
+        /* [カスタムエイド 2026-10-24] クラス名を selected → gs-on に(App.vue の共通の .selected の青い丸枠が付いて、選んだ行に青い線が出ていたため) */
+        &.gs-on {
             color: $text;
 
             .dot {
@@ -689,6 +692,7 @@
         }
     }
 
+    .autosyncNote { font-size: 22rpx; color: #6E6E73; line-height: 1.6; margin: 20rpx 0 4rpx; }
     .autosyncFooter {
         display: flex;
         align-items: center;

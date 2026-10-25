@@ -77,6 +77,19 @@
             </view>
         </view>
         
+        <!-- [カスタムエイド 2026-10-23] カルテの設定(白紙カルテ・副管理者の権限・使っている容量) -->
+        <view class="settingItem" @click="toNext(10)">
+            <view class="itemLeft">
+                <view class="itemIcon">
+                    <image src="../../static/svg/setting_karte.svg" mode="widthFix"></image>
+                </view>
+                <view class="itemName">
+                    カルテ
+                </view>
+            </view>
+            <view class="itemRight"></view>
+        </view>
+
         <view class="settingItem" @click="toNext(7)">
             <view class="itemLeft">
                 <view class="itemIcon">
@@ -247,6 +260,15 @@
                                 }else{
                                     that.showpermission = true
                                 }
+                            }else if(e == 10){
+                                // [カスタムエイド 2026-10-23] カルテ(権限の番号 20)
+                                if(res.data.admin.privileges.includes(20)){
+                                    uni.navigateTo({
+                                        url:"/pages/karte/setting"
+                                    })
+                                }else{
+                                    that.showpermission = true
+                                }
                             }
                         }
                     })
@@ -290,6 +312,10 @@
                     }else if(e == 9){
                         uni.navigateTo({
                             url:"/pages/settings/gbpSetting/gbpSetting"
+                        })
+                    }else if(e == 10){
+                        uni.navigateTo({
+                            url:"/pages/karte/setting"
                         })
                     }
                 }

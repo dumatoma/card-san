@@ -75,12 +75,13 @@
                 <preview :infos="info"></preview>
             </view>
         </u-popup>
-        <u-picker :closeOnClickOverlay="true" @close="show = false" cancelText="キャンセル" confirmText="保存"
-            @confirm="confirm" @cancel="show = false" :show="show" :columns="city"></u-picker>
+        <cs-picker title="都道府県を選ぶ" :closeOnClickOverlay="true" @close="show = false" cancelText="キャンセル" confirmText="保存"
+            @confirm="confirm" @cancel="show = false" :show="show" :columns="city"></cs-picker>
     </view>
 </template>
 
 <script>
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22] 新しいドラムロール
     import preview from "@/components/preview/preview.vue"
     import {
         getOwnerInformation,
@@ -88,7 +89,7 @@
         setOwnerInformation
     } from '@/api/index.js'
     export default {
-        components: {
+        components: { csPicker,
             preview
         },
         data() {

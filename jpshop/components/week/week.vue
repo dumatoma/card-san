@@ -7,16 +7,17 @@
                 <view class="point"></view>
             </view>
             <view class="timeItem">
-                <view class="timeName">22:00</view>
+                <view class="timeName">{{ endLabel }}</view>
                 <view class="point"></view>
             </view>
         </view>
         <view class="manager">
+            <!-- [カスタムエイド 2026-10-24d] 予約できる枠の丸(ring)と予約済みの×を SVG に(拡大してもぼやけない)。丸の色は #7FBDBA(少し濃く) -->
             <view v-for="(item,index) in weel">
                 <view class="mItem" v-if="item.business == 1">
                     <view v-if="d <= item.stamp" class="dateItem" v-for="(ite,idx) in item.times"
                         :style="ite.status == 'selected'? 'background:#fff !important' : '' ">
-                        <image src="../../static/icons/ring.png" mode="" v-if="ite.status == 'selected'"
+                        <image src="../../static/icons/ring.svg" mode="" v-if="ite.status == 'selected'"
                             @click="addNew(ite)"></image>
                         <image style="width: 60upx;height: 60upx;" src="../../static/svg/noTime.svg" mode=""
                             v-if="ite.status == 'unselected'"></image>
@@ -63,6 +64,14 @@
         onShow() {
 
         },
+        // [カスタムエイド 2026-10-22] 表の最後の時刻(今までは 22:00 の決め打ち)。時間の枠はお店の営業時間から作るため
+        computed: {
+            endLabel() {
+                const a = this.times || []
+                if (!a.length) return ''
+                return this.addHalf(a[a.length - 1].time)
+            }
+        },
         watch: {
             times: function(newVal, oldVal) {
                 this.times = newVal; //newVal即是chartData
@@ -76,6 +85,19 @@
             }
         },
         methods: {
+            // [カスタムエイド 2026-10-22] 次の枠の時刻(最後の枠のあとは「30分後」。以前は最後の枠に予約があると止まっていた)
+            addHalf(t) {
+                const h = Number(t.split(':')[0]), m = Number(t.split(':')[1])
+                const v = h * 60 + m + 30
+                return (v / 60 < 10 ? '0' : '') + Math.floor(v / 60) + ':' + (v % 60 ? '30' : '00')
+            },
+            nextTime(times, k) {
+                return times[k + 1] ? times[k + 1].time : this.addHalf(times[k].time)
+            },
+            // 予約の終わり「00:00」は次の日の 0:00 = 24:00
+            endOfT(t) {
+                return t == '00:00' ? '24:00' : t
+            },
             buildWeek(newVal) {
                 let that = this
                 if (!newVal || !newVal.length || !that.info || !that.info.week_business) return
@@ -107,8 +129,7 @@
                         if (array[i].orders.length > 0) {
                             for (let k = 0; k < array[i].times.length; k++) {
                                 for (let j = 0; j < array[i].orders.length; j++) {
-                                    if (array[i].times[k].time == array[i].orders[j].start_time && array[i]
-                                        .times[k + 1].time == array[i].orders[j].end_time) {
+                                    if (array[i].times[k].time == array[i].orders[j].start_time && that.nextTime(array[i].times, k) == that.endOfT(array[i].orders[j].end_time)) {
                                         array[i].times[k].status = "unselected"
                                         array[i].times[k].date = array[i].date
                                         break;

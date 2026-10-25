@@ -19,16 +19,18 @@
         <view class="" style="height: 40upx;">
             
         </view>
-        <u-picker @close="show = false" @cancel="show = false" @confirm="confirm" :show="show" :columns="columns">
-        </u-picker>
+        <cs-picker title="数量を選ぶ" @close="show = false" @cancel="show = false" @confirm="confirm" :show="show" :columns="columns">
+        </cs-picker>
     </view>
 </template>
 
 <script>
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22] 新しいドラムロール
     import {
         getGoodsDetail
     } from "@/api/index.js"
     export default {
+        components: { csPicker },
         data() {
             return {
                 goods: {},

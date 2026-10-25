@@ -1,0 +1,32 @@
+import Intent from 'android.content.Intent'
+import Activity from 'android.app.Activity'
+import { PickPdf, PickPdfOptions, PickPdfResult, PickPdfError } from '../interface.uts'
+
+const REQ_PICK_PDF = 31001
+
+// Android:標準のファイル選択画面(PDF だけ)を開く
+export const pickPdf : PickPdf = function (options : PickPdfOptions) {
+	const act = UTSAndroid.getUniActivity()!
+	UTSAndroid.onAppActivityResult((requestCode : Int, resultCode : Int, data ?: Intent) => {
+		if (requestCode != REQ_PICK_PDF) return
+		UTSAndroid.offAppActivityResult()
+		const uri = data?.getData()
+		if (resultCode != Activity.RESULT_OK || uri == null) {
+			const e : PickPdfError = { errMsg: 'cancel', cancel: true }
+			options.fail?.(e)
+			return
+		}
+		const a = CardsanPdfCopy.copy(act, uri!).split('\t')
+		if (a[0] == 'ok') {
+			const r : PickPdfResult = { path: a[1], name: a[2], size: parseInt(a[3]) }
+			options.success?.(r)
+		} else {
+			const e : PickPdfError = { errMsg: a.length > 3 ? a[3] : '読み込めませんでした', cancel: false }
+			options.fail?.(e)
+		}
+	})
+	const intent = new Intent(Intent.ACTION_OPEN_DOCUMENT)
+	intent.addCategory(Intent.CATEGORY_OPENABLE)
+	intent.setType('application/pdf')
+	act.startActivityForResult(intent, REQ_PICK_PDF)
+}

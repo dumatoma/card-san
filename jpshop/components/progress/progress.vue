@@ -9,7 +9,7 @@
                 <view class="point"></view>
             </view>
             <view class="timeItem">
-                <view class="timeName">22:00</view>
+                <view class="timeName">{{ endLabel }}</view>
                 <view class="point"></view>
             </view>
         </view>
@@ -68,6 +68,14 @@
         // 渡されたときはサーバーに聞きに行かず、その場で表示する(読み込み中・グレーの途中の状態を見せない)
         props: ['times', 'manager', "tdate", "hideTime", "hideNames", "offsetX", "quiet", "nowTime", "calendar"],
         computed: {
+            // [カスタムエイド 2026-10-22] 表の最後の時刻(今までは 22:00 の決め打ち)
+            endLabel() {
+                const a = this.times || []
+                if (!a.length) return ''
+                const t = a[a.length - 1].time
+                const v = Number(t.split(':')[0]) * 60 + Number(t.split(':')[1]) + 30
+                return (v / 60 < 10 ? '0' : '') + Math.floor(v / 60) + ':' + (v % 60 ? '30' : '00')
+            },
             // [カスタムエイド 2026-10-19] 担当者が4人以下なら幅いっぱいに広げる(横スクロールを出さない)。5人以上は今までどおり140upx
             colWidth() {
                 let n = (this.manager && this.manager.length) || this.managers.length || 1

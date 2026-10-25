@@ -91,7 +91,7 @@
                             <view class="point"></view>
                         </view>
                         <view class="timeItem">
-                            <view class="timeName">22:00</view>
+                            <view class="timeName">{{ range.e }}</view>
                             <view class="point"></view>
                         </view>
                     </view>
@@ -119,7 +119,7 @@
                             <view class="point"></view>
                         </view>
                         <view class="timeItem">
-                            <view class="timeName">22:00</view>
+                            <view class="timeName">{{ range.e }}</view>
                             <view class="point"></view>
                         </view>
                     </view>
@@ -148,6 +148,7 @@
 </template>
 
 <script>
+    import { buildTimes, rangeFromCal, widen, endOf } from "@/utils/csBusiness.js" // [カスタムエイド 2026-10-22]
     import { holidayName } from "@/utils/jpHoliday.js" // [カスタムエイド 2026-10-19] 日本の祝日(計算で出す)
     import progres from "@/components/progress/progress.vue"
     import week from "@/components/week/week.vue"
@@ -185,112 +186,11 @@
                 info: {},
                 cinfo:{},
                 ctime:"",
-                times: [
-                    {
-                        time: "09:00",
-                        val:9
-                    },
-                    {
-                        time: "09:30",
-                        val:9.5
-                    },
-                    {
-                        time: "10:00",
-                        val:10
-                    },
-                    {
-                        time: "10:30",
-                        val:10.5
-                    },
-                    {
-                        time: "11:00",
-                        val:11
-                    },
-                    {
-                        time: "11:30",
-                        val:11.5
-                    },
-                    {
-                        time: "12:00",
-                        val:12
-                    },
-                    {
-                        time: "12:30",
-                        val:12.5
-                    },
-                    {
-                        time: "13:00",
-                        val:13
-                    },
-                    {
-                        time: "13:30",
-                        val:13.5
-                    },
-                    {
-                        time: "14:00",
-                        val:14
-                    },
-                    {
-                        time: "14:30",
-                        val:14.5
-                    },
-                    {
-                        time: "15:00",
-                        val:15
-                    },
-                    {
-                        time: "15:30",
-                        val:15.5
-                    },
-                    {
-                        time: "16:00",
-                        val:16
-                    },
-                    {
-                        time: "16:30",
-                        val:16.5
-                    },
-                    {
-                        time: "17:00",
-                        val:17
-                    },
-                    {
-                        time: "17:30",
-                        val:17.5
-                    },
-                    {
-                        time: "18:00",
-                        val:18
-                    },
-                    {
-                        time: "18:30",
-                        val:18.5
-                    },
-                    {
-                        time: "19:00",
-                        val:19
-                    },
-                    {
-                        time: "19:30",
-                        val:19.5
-                    },
-                    {
-                        time: "20:00",
-                        val:20
-                    },
-                    {
-                        time: "20:30",
-                        val:20.5
-                    },
-                    {
-                        time: "21:00",
-                        val:21
-                    },
-                    {
-                        time: "21:30",
-                        val:21.5
-                    }
-                ],
+                // [カスタムエイド 2026-10-22] 予約表の時間は お店の営業時間(いちばん早い開始〜いちばん遅い終了)から作る。
+                // 範囲の外に予約があるときは、その予約が見えるところまで広げる(7:00〜24:00 の中)
+                times: buildTimes('09:00', '22:00'),
+                range: { s: '09:00', e: '22:00' },
+                rangeSet: false,
                 array: [],
                 manager: [],
                 managers: [],
@@ -416,6 +316,7 @@
                             },3000)
                         }else{
                           that.cinfo = res.data
+                          that.applyCalRange(res.data) // [カスタムエイド 2026-10-22] 予約表の時間をお店の営業時間に
                           if (!that.calCache[data.date.slice(0, 7)]) that.calCache[data.date.slice(0, 7)] = res.data // [カスタムエイド 2026-10-19] 同じ月を2回読まない
                           that.loadAroundDays() // [カスタムエイド 2026-10-19] 前後の日も読み込む
                           that.getStaffData()
@@ -789,6 +690,7 @@
                                 tem.push(obj)
                             }
                         })
+                        that.growForEvents(tem.reduce((a, o) => a.concat(o.events), [])) // [カスタムエイド 2026-10-22] 範囲の外の予約も見えるように
                         that.$set(that.dayCal, date, cal)
                         that.$set(that.dayCache, date, tem)
                     } else {
@@ -796,6 +698,39 @@
                         uni.showToast({ title: res.message, icon: "none" })
                     }
                 }).catch(() => { that.$delete(that.dayCache, date) })
+            },
+            // ===== [カスタムエイド 2026-10-22] 予約表の時間の範囲 =====
+            // お店の営業時間(曜日の設定と「この日だけ変更」)の いちばん早い開始〜いちばん遅い終了。最初の1回で決め、あとは広げるだけ
+            applyCalRange(cal) {
+                const r = rangeFromCal(cal)
+                if (!r) return
+                if (!this.rangeSet) {
+                    this.rangeSet = true
+                    this.range = r
+                    this.times = buildTimes(r.s, r.e)
+                    return
+                }
+                this.growRange(r.s, r.e)
+            },
+            // 予約が範囲の外にあれば広げる
+            growForEvents(list) {
+                let s = '', e = ''
+                ;(list || []).forEach((v) => {
+                    if (!v || !v.start) return
+                    if (!s || v.start < s) s = v.start
+                    const end = v.end ? endOf(v.end) : ''
+                    if (end && (!e || end > e)) e = end
+                })
+                if (s || e) this.growRange(s, e)
+            },
+            growRange(s, e) {
+                const r = widen(this.range, s, e)
+                if (r.s == this.range.s && r.e == this.range.e) return
+                this.range = r
+                this.times = buildTimes(r.s, r.e)
+                // 表を作り直す(読み込み済みの表は前の時間の枠で作られているため)
+                clearTimeout(this.rangeTimer)
+                this.rangeTimer = setTimeout(() => { this.refreshAll() }, 50)
             },
             // [カスタムエイド 2026-10-19] 月ごとの営業時間(1回だけ読み込む。同時に頼まれたら同じ読み込みを待つ)
             loadMonth(date) {
@@ -807,6 +742,7 @@
                 let p = getCalendar({ date: m + '-01', type: "day" }).then((res) => {
                     if (res.code == 200) {
                         that.calCache[m] = res.data
+                        that.applyCalRange(res.data) // [カスタムエイド 2026-10-22] ほかの月の「この日だけ変更」で営業時間が広い日があれば広げる
                         return res.data
                     }
                     delete that.calCache[m]
@@ -845,6 +781,7 @@
                     if (res.code == 200 && cal.code == 200) {
                         let array = res.data.data
                         array.forEach((val) => { val.times = that.times })
+                        that.growForEvents(array.reduce((a, d) => a.concat((d.orders || []).map((o) => ({ start: o.start_time, end: o.end_time }))), [])) // [カスタムエイド 2026-10-22]
                         that.$set(that.weekInfo, key, cal.data)
                         that.$set(that.weekCache, key, array)
                     } else {

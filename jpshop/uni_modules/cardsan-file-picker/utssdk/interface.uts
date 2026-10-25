@@ -1,0 +1,16 @@
+// [カスタムエイド 2026-10-24] スマホに保存してある PDF を1つ選ぶ
+// 選んだファイルはアプリの一時フォルダにコピーして、その場所(path)を返す。uni.uploadFile でそのまま送れる
+export type PickPdfResult = {
+	path : string // アプリの一時フォルダにコピーした PDF の場所
+	name : string // 元のファイル名
+	size : number // 大きさ(バイト)
+}
+export type PickPdfError = {
+	errMsg : string
+	cancel : boolean // 選ばずに閉じたとき true
+}
+export type PickPdfOptions = {
+	success ?: (res : PickPdfResult) => void
+	fail ?: (err : PickPdfError) => void
+}
+export type PickPdf = (options : PickPdfOptions) => void

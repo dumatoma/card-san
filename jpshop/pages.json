@@ -161,6 +161,51 @@
             }
         },
         {
+            "path": "pages/karte/karte",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/karte/capture",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false,
+                "disableScroll": true
+            }
+        },
+        {
+            "path": "pages/karte/view",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false,
+                "disableScroll": true
+            }
+        },
+        {
+            "path": "pages/karte/trash",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
+            "path": "pages/karte/tplEdit",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false,
+                "disableScroll": true
+            }
+        },
+        {
+            "path": "pages/karte/setting",
+            "style": {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
+        },
+        {
             "path": "pages/customer/edit/edit",
             "style": {
                 "navigationStyle": "custom",

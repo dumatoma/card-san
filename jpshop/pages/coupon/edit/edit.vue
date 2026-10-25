@@ -119,8 +119,8 @@
         <view style="height: 246upx;"></view>
         <u-calendar confirmText="完了" :show="show" :closeOnClickOverlay='true' monthNum="36" :showTitle="false"
             @close="closeDate" @confirm="chooseData" color="#1A73E8"></u-calendar>
-        <u-picker :show="show1" keyName="valu" :columns="columns" @confirm="selectCount" @cancel="closePicker" @close="closePicker" :closeOnClickOverlay="true">
-        </u-picker>
+        <cs-picker title="枚数を選ぶ" :show="show1" keyName="valu" :columns="columns" @confirm="selectCount" @cancel="closePicker" @close="closePicker" :closeOnClickOverlay="true">
+        </cs-picker>
         <!-- <u-action-sheet :actions="list" :show="show2" @close="closeSheet" closeOnClickAction safeAreaInsetBottom
             closeOnClickOverlay></u-action-sheet> -->
         <!-- 预览弹窗 -->
@@ -180,9 +180,11 @@
 </template>
 
 <script>
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22] 新しいドラムロール
     import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import {getCouponDetail} from "@/api/index.js"
     export default {
+        components: { csPicker },
         data() {
             return {
                 show: false,

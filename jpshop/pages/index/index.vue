@@ -292,6 +292,7 @@
         getStaffRoomUnread
     } from "../../api/index.js";
     import { gbpReviewUnread } from "@/api/gbpContent.js"
+    import { fillRuleDaysDaily } from "@/utils/csBusiness.js" // [カスタムエイド 2026-10-22] 一部の週だけ休み(第2・第4など)の休みを先の日付まで入れる
     import mod from "@/components/mod.vue"
     import permission from "@/components/permission/permission.vue"
     export default {
@@ -407,6 +408,8 @@
             let that = this
             let admin = uni.getStorageSync("admin")
             that.admin_type = admin.admin_type
+            // [カスタムエイド 2026-10-22] 1日1回、12か月先まで足りない休みを足す(画面には何も出さない)
+            setTimeout(() => { fillRuleDaysDaily() }, 3000)
             uni.showLoading({
                 title: "読み込み中",
                 mask: true

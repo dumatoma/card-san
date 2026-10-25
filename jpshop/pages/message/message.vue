@@ -605,18 +605,19 @@
     }
 
     /* 未読の数(今までと同じ赤) */
+    /* [カスタムエイド 2026-10-25] ひと回り大きく(40 → 48、文字 22 → 26) */
     .ms-badge {
         flex-shrink: 0;
-        min-width: 40rpx;
-        height: 40rpx;
-        line-height: 40rpx;
-        padding: 0 12rpx;
+        min-width: 48rpx;
+        height: 48rpx;
+        line-height: 48rpx;
+        padding: 0 14rpx;
         margin-left: 16rpx;
-        border-radius: 20rpx;
+        border-radius: 24rpx;
         background: #D93025;
         color: #FFFFFF;
         text-align: center;
-        font-size: 22rpx;
+        font-size: 26rpx;
         box-sizing: border-box;
     }
 

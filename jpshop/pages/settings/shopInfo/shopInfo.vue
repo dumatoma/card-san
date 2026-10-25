@@ -245,14 +245,15 @@
             <preview :infos="info" @close="showPopup = false"></preview>
             </view>
         </u-popup>
-        <u-picker :closeOnClickOverlay="true" @close="show = false" cancelText="キャンセル" confirmText="保存"
-            @confirm="confirm" @cancel="show = false" :show="show" :columns="cates" keyName="value"></u-picker>
-        <u-picker :closeOnClickOverlay="true" @close="show1 = false" cancelText="キャンセル" confirmText="保存"
-            @confirm="confirm1" @cancel="show1 = false" :show="show1" :columns="city"></u-picker>
+        <cs-picker title="業種を選ぶ" :closeOnClickOverlay="true" @close="show = false" cancelText="キャンセル" confirmText="保存"
+            @confirm="confirm" @cancel="show = false" :show="show" :columns="cates" keyName="value"></cs-picker>
+        <cs-picker title="都道府県を選ぶ" :closeOnClickOverlay="true" @close="show1 = false" cancelText="キャンセル" confirmText="保存"
+            @confirm="confirm1" @cancel="show1 = false" :show="show1" :columns="city"></cs-picker>
     </view>
 </template>
 
 <script>
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22] 新しいドラムロール
     import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import preview from "@/components/preview/preview.vue"
     import {
@@ -262,7 +263,7 @@
         getConfig
     } from '@/api/index.js'
     export default {
-        components: {
+        components: { csPicker,
             preview
         },
         data() {

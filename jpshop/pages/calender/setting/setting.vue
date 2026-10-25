@@ -1,576 +1,361 @@
 <template>
-    <view style="width: 100vw;overflow-x: hidden;">
-        <!-- 自定义顶部导航 -->
-        <u-navbar title="定休日と営業時間"  :placeholder="true" :safeAreaInsetTop="true" :border="true">
+    <view class="bh-page">
+        <!-- [カスタムエイド 2026-10-22] 定休日と営業時間を作り直し:
+             「いつもの営業時間」を1つ決めると全部の曜日に入り、曜日ごとに違うところだけ直す(例:金曜だけ19時まで)。
+             曜日を押すと下から出る画面で、毎週営業/毎週休み/一部の週だけ休み(第1〜第5)・営業時間・中休みを決める。
+             保存の形は今までどおり(曜日ごと 0〜6 の key 付き)。一部の週だけ休みは rest_weeks として一緒に保存し、
+             当たる日を 12か月先まで「この日だけ休み」として入れる(予約の受付・Google にもそのまま反映される) -->
+        <u-navbar title="定休日と営業時間" :placeholder="true" :safeAreaInsetTop="true" :border="true" bgColor="#FBFBFD">
             <view class="u-nav-slot" slot="left">
-                <image src="../../../static/icons/tclose.png" style="width: 60upx;height: 60upx;" @click="goBack"
-                    mode=""></image>
+                <image src="../../../static/icons/tclose.png" style="width: 60upx;height: 60upx;" @click="goBack" mode=""></image>
             </view>
         </u-navbar>
-        <view class="content">
-            <view class="tips">
-                <view class="tipContent">
-                    <text>祝日、不定期な休業日や営業時間は、営業日カレンダーの日付から直接設定してください。</text>
-                </view>
-            </view>
-            <view class="timePicker">
-                <view class="pickerTitle">
-                    <view class="titleitem">
-                        定休日
-                    </view>
-                    <view class="titleitem">
-                        開始
-                    </view>
-                    <view class="titleitem">
-                        終了
-                    </view>
-                    <view class="titleitem">
 
-                    </view>
+        <view class="bh-body" v-if="loaded">
+            <view class="bh-sec">いつもの営業時間</view>
+            <view class="bh-cap">ここを変えると「いつも通り」の曜日がすべて同じ時間になります。</view>
+            <view class="bh-card">
+                <view class="bh-row"><text>開始</text><view class="bh-tm" @click="pickTime('base', 'open')">{{ base.open }}</view></view>
+                <view class="bh-row"><text>終了</text><view class="bh-tm" @click="pickTime('base', 'close')">{{ base.close }}</view></view>
+                <view class="bh-row">
+                    <text>中休み</text>
+                    <u-switch :value="!!base.brk" @change="toggleBaseBreak" activeColor="#34C759"></u-switch>
                 </view>
-                <view class="pickerContent">
-                    <view class="pickerItem" v-for="(item,index) in pickerArr">
-                        <view class="ptItem"
-                            style="display: flex;align-items: center;justify-content: center;width: 25%;">
-                            <view class="selectContent" @click="chooseItem(index,item)">
-                                <view class="unselect" v-if="!item.rest"></view>
-                                <view class="selected" v-if="item.rest">
-                                    <view class="fill"></view>
-                                </view>
-                            </view>
-                            <text v-text="item.week"></text>
-                        </view>
-                        <view class="timeContent" v-if="!item.rest">
-                            <view class="timItems" v-for="(ite,idx) in item.time">
-                                <view class="pItem" v-text="ite.start" @click="showModule(index)"></view>
-                                <view class="pItem" v-text="ite.end" @click="showModule(index)"></view>
-                                <view class="pItem">
-                                    <u-icon v-if="item.time.length == 1" @click="showModule(index)" name="plus-circle"
-                                        color="#1A73E8" size="25"></u-icon>
-                                    <u-icon v-if="idx == 1" @click="showModule(index)" name="close-circle-fill"
-                                        size="25">
-                                    </u-icon>
-                                </view>
-                            </view>
-                        </view>
-                        <view class="timeContent" v-if="item.rest">
-                            <view class="timItems">
-                                <view class="pItem" style="color: #D93025;">休業日</view>
-                                <view class="pItem"></view>
-                                <view class="pItem"></view>
-                            </view>
-                        </view>
+                <view class="bh-row" v-if="base.brk">
+                    <text>中休みの時間</text>
+                    <view class="bh-rng">
+                        <view class="bh-tm" @click="pickTime('base', 'bs')">{{ base.brk.start }}</view><text>〜</text>
+                        <view class="bh-tm" @click="pickTime('base', 'be')">{{ base.brk.end }}</view>
                     </view>
                 </view>
             </view>
-            <view class="warnning" v-if="showwarning">
-                <u-icon name="info-circle-fill" color="#D93025"></u-icon>
-                <text>営業時間の設定が不足しています</text>
-            </view>
-            <u-button type="primary" text="設定を保存" :disabled="showwarning == true" class="btn" @click="save"></u-button>
-            <view style="height: 100upx;"></view>
-            <!-- 单出设置营业时间的弹窗 -->
-            <u-popup :show="show" mode="bottom" @close="show = false" :safeAreaInsetTop="false" round="16">
-                <view class="pContent">
-                    <view class="title">
-                        <view @click="show = false">
-                            <image src="../../../static/icons/tclose.png" style="width: 60upx;height: 60upx;" mode="">
-                            </image>
-                        </view>
-                        <view class="titleName">
-                            詳細
-                        </view>
-                        <view style="color: #1A73E8;" @click="saveSetting">
-                            保存
-                        </view>
-                    </view>
-                    <view class="dateInfo">
-                        <view class="toweek">
-                            {{current == 0? '日' : current == 1? '月' : current == 2? '火' : current == 3? '水' : current == 4? '木' : current == 5? '金' : '土'}}曜日
-                        </view>
-                    </view>
-                    <view class="Cdate">
-                        <view class="CdateItem" @click="changeStatus(false)">
-                            <view class="selectContent">
-                                <view class="unselect" v-if="takeRest"></view>
-                                <view class="selected" v-if="!takeRest">
-                                    <view class="fill"></view>
-                                </view>
-                            </view>
-                            <view :style="takeRest? '' : 'color:#1D1D1F' ">
-                                営業日
-                            </view>
-                        </view>
-                        <view class="CdateItem" @click="changeStatus(true)">
-                            <view class="selectContent">
-                                <view class="unselect" v-if="!takeRest"></view>
-                                <view class="selected" v-if="takeRest">
-                                    <view class="fill"></view>
-                                </view>
-                            </view>
-                            <view :style="takeRest? 'color:#1D1D1F' : '' ">
-                                休業日
-                            </view>
-                        </view>
-                    </view>
+            <view class="bh-err" v-if="baseErr">{{ baseErr }}</view>
 
-                    <view class="timePicker">
-                        <view class="pickerTitle">
-                            <view class="titleitem">
-                                営業時間
-                            </view>
-                            <view class="titleitem">
-                                開始
-                            </view>
-                            <view class="titleitem">
-                                終了
-                            </view>
-                            <view class="titleitem">
-
-                            </view>
-                        </view>
-                        <view class="pickerContent">
-                            <view class="pickerItem" v-for="(item,index) in pickerArray">
-                                <view class="pItem"></view>
-                                <view class="pItem" v-text="item.start" @click="showPicker(index,'start')"></view>
-                                <view class="pItem" v-text="item.end" @click="showPicker(index,'end')"></view>
-                                <view class="pItem">
-                                    <u-icon v-if="pickerArray.length == 1" @click="additem" name="plus-circle"
-                                        color="#1A73E8" size="30"></u-icon>
-                                    <u-icon v-if="index == 1" @click="delitem" name="close-circle-fill" size="30">
-                                    </u-icon>
-                                </view>
-                            </view>
-                        </view>
+            <view class="bh-sec">曜日ごと</view>
+            <view class="bh-cap">押すと、その曜日だけ調整できます。祝日や臨時のお休みは、営業カレンダーの日付から設定してください。</view>
+            <view class="bh-card">
+                <view class="bh-w" v-for="(r, i) in order" :key="i" hover-class="bh-hit" @click="openDay(r)">
+                    <text class="bh-wd" :class="{ su: r == 0, sa: r == 6 }">{{ WEEK[r] }}</text>
+                    <view class="bh-wt">
+                        <text class="bh-rest" v-if="rows[r].mode == 'off'">定休日</text>
+                        <block v-else>
+                            <text>{{ timeText(rows[r]) }}</text>
+                            <text class="bh-badge" :class="isBase(rows[r]) ? 'same' : 'adj'">{{ isBase(rows[r]) ? 'いつも通り' : '調整あり' }}</text>
+                            <view class="bh-part" v-if="rows[r].mode == 'part'">{{ weeksText(rows[r].weeks) }} 休み</view>
+                        </block>
                     </view>
+                    <view class="bh-chev"></view>
                 </view>
-            </u-popup>
-            <u-picker :show="show1" @confirm="confirmPicker" @close="show1 = false" @cancel="show1 = false"
-                :columns="timeArr"></u-picker>
+            </view>
+
+            <view class="bh-btn" :class="{ off: !dirty || !!baseErr }" hover-class="bh-hover" @click="save">この設定で保存する</view>
         </view>
+
+        <!-- 曜日の調整(下から出る画面) -->
+        <u-popup :show="show" mode="bottom" round="16" @close="show = false" :safeAreaInsetBottom="false">
+            <view class="bs" v-if="edit">
+                <view class="bs-h">{{ WEEK[edit.w] }}曜日<view class="bs-x" @click="show = false">✕</view></view>
+                <view class="bs-in">
+                    <view class="bs-seg">
+                        <view :class="{ on: edit.mode == 'on' }" @click="edit.mode = 'on'">毎週営業</view>
+                        <view :class="{ on: edit.mode == 'off' }" @click="edit.mode = 'off'">毎週休み</view>
+                        <view class="wide" :class="{ on: edit.mode == 'part' }" @click="setPart">一部の週だけ休み</view>
+                    </view>
+                    <block v-if="edit.mode == 'part'">
+                        <view class="bs-lbl">休む週(いくつでも選べます)</view>
+                        <view class="bs-wk">
+                            <view v-for="n in [1, 2, 3, 4, 5]" :key="n" :class="{ on: edit.weeks.indexOf(n) > -1 }" @click="toggleWeek(n)">第{{ n }}</view>
+                        </view>
+                        <view class="bs-note" v-if="nextText">次の休み:{{ nextText }}</view>
+                    </block>
+                    <block v-if="edit.mode != 'off'">
+                        <view class="bs-lbl">{{ edit.mode == 'part' ? '営業する週の営業時間' : '営業時間' }}</view>
+                        <view class="bs-rng">
+                            <view class="bs-tm" @click="pickTime('edit', 'open')">{{ edit.open }}</view><text>〜</text>
+                            <view class="bs-tm" @click="pickTime('edit', 'close')">{{ edit.close }}</view>
+                        </view>
+                        <view class="bs-lbl">中休み</view>
+                        <view class="bs-rng" v-if="edit.brk">
+                            <view class="bs-tm" @click="pickTime('edit', 'bs')">{{ edit.brk.start }}</view><text>〜</text>
+                            <view class="bs-tm" @click="pickTime('edit', 'be')">{{ edit.brk.end }}</view>
+                            <view class="bs-del" @click="edit.brk = null">✕</view>
+                        </view>
+                        <view class="bs-add" v-else @click="edit.brk = { start: '13:00', end: '14:00' }">＋ 中休みを入れる</view>
+                        <view class="bs-link" @click="useBase">いつもの営業時間({{ baseText }})に戻す</view>
+                    </block>
+                    <view class="bs-err" v-if="editErr">{{ editErr }}</view>
+                    <view class="bs-btn" :class="{ off: !!editErr }" hover-class="bh-hover" @click="applyDay">保存する</view>
+                </view>
+            </view>
+        </u-popup>
+        <cs-picker :show="show1" :title="pickTitle" :columns="[times]" :defaultIndex="[pickIndex]" @confirm="confirmPicker" @close="show1 = false" @cancel="show1 = false"></cs-picker>
     </view>
 </template>
 
 <script>
-    import {
-        getCalendar,
-        setBusinessHours
-    } from '@/api/index.js'
+    import { getCalendar, setBusinessHours } from '@/api/index.js'
+    import csPicker from '@/components/csPicker/csPicker.vue'
+    import { WEEK, TIMES, keyOf, toRange, fromRange, rangeError, ruleDates, fillEnd, weekList, syncRuleDays } from '@/utils/csBusiness.js'
+    const same = (a, b) => a.open == b.open && a.close == b.close && JSON.stringify(a.brk || null) == JSON.stringify(b.brk || null)
     export default {
+        components: { csPicker },
         data() {
             return {
-                pickerArr: [],
-                timeArr: [
-                    ["09:00","09:30",
-                        "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-                        "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30",
-                        "20:00", "20:30", "21:00", "21:30", "22:00"
-                    ]
-                ],
+                WEEK,
+                times: TIMES,
+                order: [1, 2, 3, 4, 5, 6, 0], // 月曜から
+                loaded: false,
+                base: { open: '10:00', close: '19:00', brk: null },
+                rows: [], // 0(日)〜6(土):{ mode: on/off/part, weeks: [], open, close, brk }
+                oldWb: null,
+                dirty: false,
                 show: false,
                 show1: false,
-                takeRest: false,
-                settingIndex: 0,
-                settingStatus: "",
-                current: 0,
-                pickerArray: [{
-                    start: "00:00",
-                    end: "00:00"
-                }],
-                showwarning:false
-            };
+                edit: null,
+                pickWhere: '',
+                pickKey: '',
+                pickIndex: 0,
+                saving: false
+            }
         },
-        created() {
-            this.getDetail()
+        computed: {
+            pickTitle() {
+                return { open: '開始', close: '終了', bs: '中休みの始まり', be: '中休みの終わり' }[this.pickKey] || '時間'
+            },
+            baseText() {
+                const b = this.base
+                return b.open + '〜' + b.close + (b.brk ? '・中休み ' + b.brk.start + '〜' + b.brk.end : '')
+            },
+            baseErr() {
+                return rangeError(this.base)
+            },
+            editErr() {
+                if (!this.edit) return ''
+                if (this.edit.mode == 'part' && !this.edit.weeks.length) return '休む週を選んでください'
+                if (this.edit.mode == 'off') return ''
+                return rangeError(this.edit)
+            },
+            nextText() {
+                if (!this.edit || !this.edit.weeks.length) return ''
+                const wb = {}
+                wb[this.edit.w] = { business: 1, rest_weeks: this.edit.weeks }
+                const list = ruleDates(wb, keyOf(new Date()), fillEnd()).slice(0, 3)
+                return list.map((x) => Number(x.key.slice(5, 7)) + '/' + Number(x.key.slice(8, 10)) + '(' + WEEK[x.w] + ')').join('・') + (list.length ? '…' : '')
+            }
+        },
+        onLoad() {
+            this.load()
         },
         methods: {
-            getDetail() {
-                let that = this
-                getCalendar("week").then((res) => {
-                    if (res.code == 200) {
-                        let array = Object.keys(res.data.week_business).map((k) => res.data.week_business[
-                            k]) //将对象转换成数组的方法
-                        if (array.length < 7) {
-                            that.pickerArr = [{
-                                rest: false,
-                                week: "日",
-                                time: [{
-                                    start: "00:00",
-                                    end: "00:00"
-                                }]
-                            }, {
-                                rest: false,
-                                week: "月",
-                                time: [{
-                                    start: "00:00",
-                                    end: "00:00"
-                                }]
-                            }, {
-                                rest: false,
-                                week: "火",
-                                time: [{
-                                    start: "00:00",
-                                    end: "00:00"
-                                }]
-                            }, {
-                                rest: false,
-                                week: "水",
-                                time: [{
-                                    start: "00:00",
-                                    end: "00:00"
-                                }]
-                            }, {
-                                rest: false,
-                                week: "木",
-                                time: [{
-                                    start: "00:00",
-                                    end: "00:00"
-                                }]
-                            }, {
-                                rest: false,
-                                week: "金",
-                                time: [{
-                                    start: "00:00",
-                                    end: "00:00"
-                                }, ]
-                            }, {
-                                rest: false,
-                                week: "土",
-                                time: [{
-                                    start: "00:00",
-                                    end: "00:00"
-                                }, ]
-                            }]
-                        } else {
-                            let temp = []
-                            array.forEach((value, index) => {
-                                let obj = {}
-                                obj.time = value.business_time
-                                obj.rest = value.business == 0 ? true : false
-                                obj.week = index == 0 ? '日' : index == 1 ? '月' : index == 2 ? '火' :
-                                    index == 3 ? '水' : index == 4 ? '木' : index == 5 ? '金' : '土'
-                                temp.push(obj)
-                            })
-                            that.pickerArr = temp
-                        }
-                        for(let i = 0; i < that.pickerArr.length; i++){
-                            for(let j = 0; j < that.pickerArr[i].time.length;j++){
-                                if(that.pickerArr[i].time[j].start == that.pickerArr[i].time[j].end && that.pickerArr[i].rest == false){
-                                    that.showwarning = true
-                                }
-                            }
-                        }
-                        
-                    }else{
-                        uni.showToast({
-                            title:res.message,
-                            icon:"none"
-                        })
+            load() {
+                getCalendar({ type: 'week', date: '' }).then((res) => {
+                    if (res.code != 200) {
+                        uni.showToast({ title: res.message, icon: 'none' })
+                        return
                     }
+                    const wb = res.data.week_business
+                    this.oldWb = JSON.parse(JSON.stringify(wb || {}))
+                    const list = weekList(wb)
+                    const rows = list.map((v) => {
+                        const r = toRange(v && v.business_time)
+                        const weeks = (v && Array.isArray(v.rest_weeks)) ? v.rest_weeks.map(Number) : []
+                        const mode = !v ? 'on' : v.business != 1 ? 'off' : weeks.length ? 'part' : 'on'
+                        return { mode, weeks, open: r.open, close: r.close, brk: r.brk }
+                    })
+                    // いつもの営業時間 = 営業する曜日でいちばん多い時間
+                    const count = {}
+                    rows.forEach((r) => {
+                        if (r.mode == 'off') return
+                        const k = JSON.stringify({ open: r.open, close: r.close, brk: r.brk })
+                        count[k] = (count[k] || 0) + 1
+                    })
+                    const top = Object.keys(count).sort((a, b) => count[b] - count[a])[0]
+                    if (top) this.base = JSON.parse(top)
+                    this.rows = rows
+                    this.loaded = true
+                    this.dirty = false
                 })
             },
-
-            save() {
-                let that = this
-                let obj = {}
-                let temp = []
-                let array = that.pickerArr
-                array.forEach((value, index) => {
-                    let object = {}
-                    object.business = value.rest == true ? 0 : 1
-                    object.business_time = value.time
-                    object.key = index
-                    temp.push(object)
-                })
-                let o = Object.fromEntries(temp.map(item => [item.key, item]))
-                obj.week_business = o
-                obj.type = "week"
-                setBusinessHours(obj).then((res) => {
-                    if (res.code == 200) {
-                        uni.showToast({
-                            title: res.message
-                        })
-                        that.getDetail()
-                    } else {
-                        uni.showToast({
-                            title: res.message,
-                            icon: "none"
-                        })
+            isBase(r) {
+                return same(r, this.base)
+            },
+            timeText(r) {
+                return r.open + '〜' + r.close + (r.brk ? '(中休み ' + r.brk.start + '〜' + r.brk.end + ')' : '')
+            },
+            weeksText(w) {
+                return w.slice().sort().map((n) => '第' + n).join('・')
+            },
+            // いつもの営業時間を変えたら、いつも通りの曜日も同じに
+            changeBase(fn) {
+                const old = JSON.parse(JSON.stringify(this.base))
+                fn(this.base)
+                this.rows.forEach((r) => {
+                    if (r.mode != 'off' && same(r, old)) {
+                        r.open = this.base.open
+                        r.close = this.base.close
+                        r.brk = this.base.brk ? { start: this.base.brk.start, end: this.base.brk.end } : null
                     }
                 })
+                this.dirty = true
             },
-
-            showModule(index) {
-                let that = this
-                let array = that.pickerArr
-                that.show = true
-                that.takeRest = array[index].rest
-                that.current = index
-                that.pickerArray = array[index].time
+            toggleBaseBreak(on) {
+                this.changeBase((b) => { b.brk = on ? { start: '13:00', end: '14:00' } : null })
             },
-            changeStatus(e) {
-                let index = this.current
-                this.takeRest = e
-                this.pickerArr[index].rest = e
+            openDay(w) {
+                const r = this.rows[w]
+                this.edit = { w, mode: r.mode, weeks: r.weeks.slice(), open: r.open, close: r.close, brk: r.brk ? { start: r.brk.start, end: r.brk.end } : null }
+                this.show = true
             },
-            chooseItem(index, item) {
-                let that = this
-                that.pickerArr[index].rest = !that.pickerArr[index].rest
-                for(let i = 0; i < that.pickerArr.length; i++){
-                    for(let j = 0; j < that.pickerArr[i].time.length;j++){
-                        if(that.pickerArr[i].time[j].start == that.pickerArr[i].time[j].end && that.pickerArr[i].rest == false){
-                            that.showwarning = true
-                        }
-                    }
-                }
+            setPart() {
+                this.edit.mode = 'part'
             },
-            additem() {
-                let that = this
-                let obj = {}
-                obj.start = "00:00"
-                obj.end = "00:00"
-                that.pickerArray.push(obj)
-                for(let i = 0; i < that.pickerArr.length; i++){
-                    for(let j = 0; j < that.pickerArr[i].time.length;j++){
-                        if(that.pickerArr[i].time[j].start == that.pickerArr[i].time[j].end && that.pickerArr[i].rest == false){
-                            that.showwarning = true
-                        }
-                    }
-                }
+            toggleWeek(n) {
+                const i = this.edit.weeks.indexOf(n)
+                if (i > -1) this.edit.weeks.splice(i, 1)
+                else this.edit.weeks.push(n)
             },
-            delitem() {
-                let that = this
-                that.pickerArray.splice(1, 1)
+            useBase() {
+                this.edit.open = this.base.open
+                this.edit.close = this.base.close
+                this.edit.brk = this.base.brk ? { start: this.base.brk.start, end: this.base.brk.end } : null
             },
-
-            showPicker(index, status) {
-                let that = this
-                that.show1 = true
-                that.settingIndex = index
-                that.settingStatus = status
+            pickTime(where, key) {
+                this.pickWhere = where
+                this.pickKey = key
+                const o = where == 'base' ? this.base : this.edit
+                const v = key == 'open' ? o.open : key == 'close' ? o.close : key == 'bs' ? o.brk.start : o.brk.end
+                this.pickIndex = Math.max(0, this.times.indexOf(v))
+                this.show1 = true
             },
-
             confirmPicker(e) {
-                let that = this
-                let index = that.settingIndex
-                let status = that.settingStatus
-                if (status == "start") {
-                    that.pickerArray[index].start = e.value[0]
-                } else {
-                    that.pickerArray[index].end = e.value[0]
+                const v = e.value[0]
+                const k = this.pickKey
+                const set = (o) => {
+                    if (k == 'open') o.open = v
+                    else if (k == 'close') o.close = v
+                    else if (k == 'bs') o.brk.start = v
+                    else o.brk.end = v
                 }
-                that.show1 = false
-                for(let i = 0; i < that.pickerArr.length; i++){
-                    for(let j = 0; j < that.pickerArr[i].time.length;j++){
-                        if(that.pickerArr[i].time[j].start == that.pickerArr[i].time[j].end && that.pickerArr[i].rest == false){
-                            that.showwarning = true
-                            return false
-                        }
-                    }
-                }
+                if (this.pickWhere == 'base') this.changeBase(set)
+                else set(this.edit)
+                this.show1 = false
             },
-
-            saveSetting() {
-                let that = this
-                let index = that.current
-                that.pickerArr[index].rest = that.takeRest
-                that.pickerArr[index].time = that.pickerArray
-                that.show = false
-                for(let i = 0; i < that.pickerArr.length; i++){
-                    for(let j = 0; j < that.pickerArr[i].time.length;j++){
-                        if(that.pickerArr[i].time[j].start == that.pickerArr[i].time[j].end && that.pickerArr[i].rest == false){
-                            that.showwarning = true
-                            return false
-                        }else{
-                            that.showwarning = false
-                        }
-                    }
+            // 曜日の調整を決めて、そのまま保存する
+            applyDay() {
+                if (this.editErr) return
+                const e = this.edit
+                const r = this.rows[e.w]
+                r.mode = e.mode
+                r.weeks = e.mode == 'part' ? e.weeks.slice().sort() : []
+                if (e.mode != 'off') {
+                    r.open = e.open
+                    r.close = e.close
+                    r.brk = e.brk
                 }
+                this.show = false
+                this.dirty = true
+                this.save()
+            },
+            save() {
+                if (!this.dirty || this.baseErr || this.saving) return
+                const bad = this.rows.find((r) => r.mode != 'off' && rangeError(r))
+                if (bad) {
+                    uni.showToast({ title: WEEK[this.rows.indexOf(bad)] + '曜日の営業時間を確かめてください', icon: 'none' })
+                    return
+                }
+                const wb = {}
+                this.rows.forEach((r, i) => {
+                    const v = { business: r.mode == 'off' ? 0 : 1, business_time: fromRange(r), key: i }
+                    if (r.mode == 'part') v.rest_weeks = r.weeks
+                    wb[i] = v
+                })
+                this.saving = true
+                uni.showLoading({ title: '保存しています', mask: true })
+                setBusinessHours({ type: 'week', week_business: wb }).then(async (res) => {
+                    if (res.code != 200) {
+                        this.saving = false
+                        uni.hideLoading()
+                        uni.showToast({ title: res.message, icon: 'none' })
+                        return
+                    }
+                    // 一部の週だけ休み:当たる日を「この日だけ休み」に(外した週は営業に戻す)
+                    let failed = false
+                    try {
+                        await syncRuleDays(wb, this.oldWb)
+                    } catch (err) {
+                        failed = true
+                    }
+                    this.saving = false
+                    this.dirty = false
+                    this.oldWb = JSON.parse(JSON.stringify(wb))
+                    uni.hideLoading()
+                    if (failed) uni.showToast({ title: '保存しました。休みの日の一部が入らなかったため、少し後に営業カレンダーを開き直してください', icon: 'none', duration: 3000 })
+                    else uni.showToast({ title: '保存しました' })
+                }).catch(() => {
+                    this.saving = false
+                    uni.hideLoading()
+                })
             },
             goBack() {
-                // var pages = getCurrentPages();
-                // var currPage = pages[pages.length - 1]
-                // var prePage = pages[pages.length - 2]
-                // let data = {}
-                // data.type = "day"
-                // data.date = this.getMonth()
-                // prePage.$vm.getCalendar(data)
-                // uni.navigateBack({})
-                uni.redirectTo({
-                    url:"../calender"
-                })
-            },
-            getMonth(){
-              let that = this
-              let date = new Date()
-              let year = date.getFullYear()
-              let month = (date.getMonth() + 1) < 10? '0'+ (date.getMonth() + 1) : date.getMonth() + 1
-              return year + "-" + month
-            },
+                const pages = getCurrentPages()
+                if (pages.length > 1) uni.navigateBack()
+                else uni.redirectTo({ url: '../calender' })
+            }
         }
     }
 </script>
 
 <style lang="scss">
-    .pContent {
-        width: 100vw;
-        height: 90vh;
-        background: #fff;
-        overflow-y: scroll;
-        border-top-left-radius: 32upx;
-        border-top-right-radius: 32upx;
+    page { background: #F5F5F7; }
+    .bh-page { min-height: 100vh; background: #F5F5F7; }
+    .bh-body { padding: 40rpx 24rpx calc(80rpx + env(safe-area-inset-bottom)); }
+    .bh-sec { font-size: 28rpx; font-weight: bold; color: #1D1D1F; padding: 0 8rpx; }
+    .bh-cap { font-size: 24rpx; color: #6E6E73; line-height: 1.6; padding: 8rpx 8rpx 20rpx; }
+    .bh-card { background: #FFFFFF; border-radius: 32rpx; padding: 0 32rpx; margin-bottom: 48rpx; }
+    .bh-row { display: flex; align-items: center; justify-content: space-between; min-height: 112rpx; border-bottom: 1px solid #E5E5EA; font-size: 30rpx; color: #1D1D1F; }
+    .bh-row:last-child { border-bottom: 0; }
+    .bh-rng { display: flex; align-items: center; }
+    .bh-rng > text { margin: 0 16rpx; }
+    .bh-tm { background: #F2F2F7; border-radius: 16rpx; padding: 14rpx 24rpx; font-size: 30rpx; color: #1D1D1F; }
+    .bh-err { color: #D93025; font-size: 24rpx; margin: -32rpx 8rpx 40rpx; }
+    .bh-w { display: flex; align-items: center; min-height: 116rpx; border-bottom: 1px solid #E5E5EA; }
+    .bh-w:last-child { border-bottom: 0; }
+    .bh-hit { background: #F5F5F7; }
+    .bh-wd { width: 64rpx; font-size: 32rpx; font-weight: bold; color: #1D1D1F; flex-shrink: 0; }
+    .bh-wd.su { color: #D93025; }
+    .bh-wd.sa { color: #1A73E8; }
+    .bh-wt { flex: 1; font-size: 28rpx; color: #1D1D1F; padding: 20rpx 0; line-height: 1.5; }
+    .bh-rest { color: #D93025; font-weight: bold; font-size: 30rpx; }
+    .bh-badge { display: inline-block; font-size: 20rpx; font-weight: bold; border-radius: 16rpx; padding: 2rpx 14rpx; margin-left: 12rpx; vertical-align: 2rpx; }
+    .bh-badge.same { background: #F2F2F7; color: #6E6E73; }
+    .bh-badge.adj { background: #E8F0FE; color: #1A73E8; }
+    .bh-part { font-size: 22rpx; color: #D93025; font-weight: bold; }
+    .bh-chev { width: 16rpx; height: 16rpx; border-top: 3rpx solid #C7C7CC; border-right: 3rpx solid #C7C7CC; transform: rotate(45deg); margin: 0 8rpx 0 16rpx; flex-shrink: 0; }
+    .bh-btn { height: 104rpx; line-height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; text-align: center; font-size: 32rpx; font-weight: bold; }
+    .bh-btn.off { background: #A8C7FA; }
+    .bh-hover { opacity: 0.7; }
 
-        .Cdate {
-            display: flex;
-            align-items: center;
-            box-sizing: border-box;
-            padding: 10upx 50upx;
-
-            .CdateItem:last-child {
-                margin-left: 156upx;
-            }
-
-            .CdateItem {
-                display: flex;
-                align-items: center;
-                font-size: 40upx;
-                font-family: Hiragino Sans-W3, Hiragino Sans;
-                font-weight: normal;
-                color: #AAAAAA;
-
-                .selectContent {
-                    margin-right: 28upx;
-                }
-            }
-        }
-
-        .dateInfo {
-            font-size: 48upx;
-            font-family: Hiragino Sans-W6, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-            display: flex;
-            box-sizing: border-box;
-            padding: 92upx 40upx;
-
-            .todate {
-                margin-right: 60upx;
-            }
-        }
-
-        .title {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-sizing: border-box;
-            padding: 32upx 26upx;
-            background: #FBFBFD;
-            border-bottom: 2upx solid #d2d2d7;
-
-            .titleName {
-                font-size: 40upx;
-                font-family: Hiragino Sans-W5, Hiragino Sans;
-                font-weight: normal;
-                color: #1D1D1F;
-            }
-        }
-    }
-
-    .warnning {
-        display: flex;
-        align-items: center;
-        margin: 42upx auto 158upx;
-        text-align: center;
-        font-size: 28upx;
-        font-family: Hiragino Sans-W3, Hiragino Sans;
-        font-weight: normal;
-        color: #D93025;
-        text-align: center;
-        justify-content: center;
-    }
-
-    .btn {
-        width: 480upx !important;
-        height: 96upx !important;
-        border-radius: 20upx;
-        margin-top: 60upx;
-    }
-
-    .selectContent {
-        margin-right: 20upx;
-    }
-
-    .tips {
-        box-sizing: border-box;
-        padding-top: 60upx;
-
-        .tipContent {
-            width: 656upx;
-            background: rgba(29, 29, 31, 0.1);
-            border-radius: 20upx;
-            opacity: 1;
-            font-size: 28upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #707070;
-            box-sizing: border-box;
-            padding: 20upx;
-            margin: 0 auto 92upx;
-        }
-    }
-
-    .timeContent {
-        flex: 1;
-
-        .timItems {
-            display: flex;
-            // margin-bottom: 40upx;
-            align-items: center;
-        }
-
-        .timItems:nth-child(2) {
-            margin-top: 40upx;
-        }
-    }
-
-    .timePicker {
-        .pickerTitle {
-            display: flex;
-            font-size: 32upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #707070;
-            margin-top: 96upx;
-            border-bottom: 2upx solid #d2d2d7;
-            padding-bottom: 12upx;
-
-            .titleitem {
-                flex: 1;
-                text-align: center;
-            }
-        }
-
-        .pickerContent {
-            .pickerItem {
-                display: flex;
-                align-items: center;
-                flex: 1;
-                text-align: center;
-                box-sizing: border-box;
-                padding: 40upx 0;
-                border-bottom: 2upx solid #d2d2d7;
-
-                .pItem {
-                    flex: 1;
-                }
-
-                .pItem:last-child {
-                    // box-sizing: border-box;
-                    // padding-left: 80upx;
-                    position: relative;
-                    left: 60upx;
-                }
-            }
-        }
-    }
+    /* 下から出る画面 */
+    .bs { background: #FFFFFF; border-radius: 32rpx 32rpx 0 0; }
+    .bs-h { position: relative; height: 112rpx; line-height: 112rpx; text-align: center; font-size: 34rpx; font-weight: bold; color: #1D1D1F; border-bottom: 1px solid #E5E5EA; }
+    .bs-x { position: absolute; right: 24rpx; top: 24rpx; width: 64rpx; height: 64rpx; line-height: 64rpx; border-radius: 50%; background: #E5E5EA; color: #6E6E73; font-size: 28rpx; font-weight: normal; }
+    .bs-in { padding: 40rpx 40rpx calc(48rpx + env(safe-area-inset-bottom)); }
+    .bs-seg { display: flex; background: #EEEEF0; border-radius: 20rpx; padding: 6rpx; }
+    .bs-seg view { flex: 1; height: 76rpx; line-height: 74rpx; text-align: center; font-size: 26rpx; color: #515154; border-radius: 16rpx; border: 1px solid transparent; box-sizing: border-box; }
+    .bs-seg view.wide { flex: 1.45; }
+    .bs-seg view.on { background: rgba(26, 115, 232, 0.10); border-color: #1A73E8; color: #1A73E8; font-weight: bold; }
+    .bs-lbl { font-size: 26rpx; font-weight: bold; color: #1D1D1F; margin: 40rpx 0 16rpx; }
+    .bs-wk { display: flex; gap: 16rpx; }
+    .bs-wk view { flex: 1; height: 84rpx; line-height: 82rpx; text-align: center; border: 1px solid #D2D2D7; border-radius: 20rpx; font-size: 28rpx; color: #515154; box-sizing: border-box; }
+    .bs-wk view.on { background: rgba(26, 115, 232, 0.10); border-color: #1A73E8; color: #1A73E8; font-weight: bold; }
+    .bs-note { font-size: 24rpx; color: #6E6E73; margin-top: 20rpx; }
+    .bs-rng { display: flex; align-items: center; font-size: 30rpx; color: #1D1D1F; }
+    .bs-rng > text { margin: 0 20rpx; }
+    .bs-tm { background: #F2F2F7; border-radius: 16rpx; padding: 16rpx 28rpx; font-size: 30rpx; }
+    .bs-del { margin-left: auto; color: #8E8E93; font-size: 30rpx; padding: 12rpx; }
+    .bs-add { color: #1A73E8; font-size: 28rpx; padding: 8rpx 0; }
+    .bs-link { color: #1A73E8; font-size: 26rpx; text-align: center; margin-top: 40rpx; }
+    .bs-err { color: #D93025; font-size: 24rpx; margin-top: 24rpx; }
+    .bs-btn { margin-top: 56rpx; height: 104rpx; line-height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; text-align: center; font-size: 32rpx; font-weight: bold; }
+    .bs-btn.off { background: #A8C7FA; }
 </style>

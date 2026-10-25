@@ -86,10 +86,10 @@
 
             <view class="mf-save" hover-class="mf-save-hover" @click="save">保存する</view>
         </view>
-        <u-picker :show="show" :columns="columns" @confirm="show = false" @change="cateChange" keyName="name" cancelText=" " confirmText=" "
-            :closeOnClickOverlay="true" @close="close1" @cancel="close1" title="カテゴリーを選択"></u-picker>
-        <u-picker :show="show1" :columns="columns1" @change="timeChange" keyName="time" cancelText=" " confirmText=" "
-            :closeOnClickOverlay="true" @close="close2" @confirm="show1 = false"  @cancel="close2" title="時間を選択"></u-picker>
+        <cs-picker :show="show" :columns="columns" @confirm="cateChange($event); show = false" @change="cateChange" keyName="name" cancelText=" " confirmText=" "
+            :closeOnClickOverlay="true" @close="close1" @cancel="close1" title="カテゴリーを選択"></cs-picker>
+        <cs-picker :show="show1" :columns="columns1" @change="timeChange" keyName="time" cancelText=" " confirmText=" "
+            :closeOnClickOverlay="true" @close="close2" @confirm="timeChange($event); show1 = false"  @cancel="close2" title="時間を選択"></cs-picker>
         <u-popup :show="showPop" mode="bottom" :round="10" @close="closePop" @cancel="closePop">
             <view class="pTitle">
                 <view class="pClose">
@@ -133,11 +133,13 @@
 </template>
 
 <script>
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22] 新しいドラムロール
     import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
     import {
         menuCateList,addMenu,menuList,editMenu
     } from "@/api/index.js"
     export default {
+        components: { csPicker },
         data() {
             return {
                 show: false,

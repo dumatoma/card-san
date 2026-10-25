@@ -1,0 +1,27 @@
+{
+  "id": "cardsan-file-picker",
+  "displayName": "cardsan-file-picker",
+  "version": "1.0.0",
+  "description": "[カスタムエイド 2026-10-24] スマホに保存してある PDF を1つ選ぶ(カルテの読み込み用)。iPhone はファイルアプリの選択画面、Android は標準のファイル選択画面",
+  "keywords": ["cardsan-file-picker"],
+  "repository": "",
+  "engines": { "HBuilderX": "^4.25" },
+  "dcloudext": {
+    "type": "uts",
+    "sale": { "regular": { "price": "0.00" }, "sourcecode": { "price": "0.00" } },
+    "contact": { "qq": "" },
+    "declaration": { "ads": "无", "data": "无", "permissions": "无" },
+    "npmurl": ""
+  },
+  "uni_modules": {
+    "dependencies": [],
+    "encrypt": [],
+    "platforms": {
+      "cloud": { "tcb": "y", "aliyun": "y", "alipay": "y" },
+      "client": {
+        "Vue": { "vue2": "y", "vue3": "y" },
+        "App": { "app-android": "y", "app-ios": "y" }
+      }
+    }
+  }
+}

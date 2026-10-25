@@ -3,8 +3,11 @@
          ・年月は大きく、‹ › は直径 40px の丸いボタン
          ・左右にフリックしても前の月・次の月に切り替わる(少しスライドして見せる)
          ・選べない日(min より前・max より後)は薄く表示して押せない
-         値はすべて 'YYYY-MM-DD' の文字列 -->
-    <view class="cc">
+         値はすべて 'YYYY-MM-DD' の文字列
+         [カスタムエイド 2026-10-22] 営業カレンダー用に追加(指定しなければ今までどおり):
+           rest … 休みの日(数字の下に赤い「休」)、dots … 印を付ける日(青い点)、
+           weekColor … 土曜の数字を青・日曜を赤に、月が変わったら month イベント({ y, m }) -->
+    <view class="cc" :class="{ 'cc-mark': rest.length || dots.length || weekColor }">
         <view class="cc-h">
             <view class="cc-arrow" :class="{ off: !canPrev }" hover-class="cc-hover" @click="move(-1)">‹</view>
             <view class="cc-ym">{{ y }}年{{ m }}月</view>
@@ -17,6 +20,8 @@
             <view class="cc-grid">
                 <view v-for="(d, i) in cells" :key="i" class="cc-cell" :class="cellClass(d)" @click="pick(d)">
                     <view class="cc-d" v-if="d">{{ d.day }}</view>
+                    <text class="cc-rest" v-if="d && rest.indexOf(d.key) > -1">休</text>
+                    <view class="cc-dot" v-else-if="d && dots.indexOf(d.key) > -1"></view>
                 </view>
             </view>
         </view>
@@ -34,7 +39,10 @@
             from: { type: String, default: '' }, // range のとき
             to: { type: String, default: '' },
             min: { type: String, default: '' },
-            max: { type: String, default: '' }
+            max: { type: String, default: '' },
+            rest: { type: Array, default: () => [] },
+            dots: { type: Array, default: () => [] },
+            weekColor: { type: Boolean, default: false }
         },
         data() {
             const base = this.value || this.from || this.min || fmt(new Date())
@@ -56,7 +64,7 @@
                 const days = new Date(this.y, this.m, 0).getDate()
                 const arr = []
                 for (let i = 0; i < lead; i++) arr.push(null)
-                for (let d = 1; d <= days; d++) arr.push({ day: d, key: this.y + '-' + pad(this.m) + '-' + pad(d) })
+                for (let d = 1; d <= days; d++) arr.push({ day: d, key: this.y + '-' + pad(this.m) + '-' + pad(d), w: (lead + d - 1) % 7 })
                 return arr
             },
             canPrev() {
@@ -88,6 +96,8 @@
                 const c = []
                 if (this.disabled(k)) c.push('off')
                 if (k == this.today) c.push('today')
+                if (this.weekColor && d.w == 5) c.push('sat')
+                if (this.weekColor && d.w == 6) c.push('sun')
                 if (this.mode == 'single') {
                     if (k == this.value) c.push('sel')
                 } else {
@@ -123,6 +133,7 @@
                 this.anim = n > 0 ? 'from-r' : 'from-l'
                 this.y = y
                 this.m = m
+                this.$emit('month', { y, m })
                 setTimeout(() => { this.anim = '' }, 260)
             },
             ts(e) {
@@ -170,4 +181,13 @@
     .cc-cell.end { border-radius: 0 40rpx 40rpx 0; }
     .cc-cell.start.end { border-radius: 40rpx; }
     .cc-cell.start .cc-d, .cc-cell.end .cc-d { background: #1A73E8; color: #FFFFFF; font-family: 'Hiragino Sans-W5', sans-serif; }
+    /* [カスタムエイド 2026-10-22] 営業カレンダー(休み・印・土日の色) */
+    .cc-mark .cc-cell { height: 96rpx; flex-direction: column; justify-content: flex-start; padding-top: 4rpx; }
+    .cc-mark .cc-d { width: 64rpx; height: 64rpx; line-height: 64rpx; }
+    .cc-cell.sat .cc-d { color: #1A73E8; }
+    .cc-cell.sun .cc-d { color: #D93025; }
+    .cc-mark .cc-cell.today .cc-d { box-shadow: inset 0 0 0 2rpx #1A73E8; }
+    .cc-mark .cc-cell.sel .cc-d { color: #FFFFFF; box-shadow: none; }
+    .cc-rest { font-size: 18rpx; line-height: 22rpx; color: #D93025; font-weight: bold; }
+    .cc-dot { width: 10rpx; height: 10rpx; border-radius: 50%; background: #1A73E8; margin-top: 6rpx; }
 </style>

@@ -112,6 +112,9 @@
             }
         },
         created() {
+            // [カスタムエイド 2026-10-25] リアルタイム接続がつながり直したら、その間に届いたメッセージを読み直す
+            this._csReady = () => { this.getHistory() }
+            uni.$on('csSocketReady', this._csReady)
             // [カスタムエイド 2026-10-19] キーボードが出きったら、一番新しいメッセージが見えるように下までスクロール(LINE と同じ)
             // 今までは入力欄を押した直後(キーボードが出る前)にスクロールしていたので、キーボードに隠れていた
             this._kbCb = (res) => {
@@ -126,17 +129,14 @@
                     // キーボードの候補欄の出し入れなどで同じ高さの通知が続いたときはスクロールしない
                     if (this.kbH != res.height) {
                         this.kbH = res.height
-                        this.$nextTick(() => {
-                            uni.createSelectorQuery().select('.contain').boundingClientRect((r) => {
-                                uni.pageScrollTo({ scrollTop: r && r.height ? r.height : 99999999, duration: 0 })
-                            }).exec()
-                        })
+                        this.csToBottom() // [カスタムエイド 2026-10-25] 最新のメッセージを入力欄のすぐ上に
                     }
                 }
             }
             uni.onKeyboardHeightChange(this._kbCb)
         },
         onUnload() {
+            if (this._csReady) uni.$off('csSocketReady', this._csReady) // [カスタムエイド 2026-10-25]
             // [カスタムエイド 2026-10-19] 画面を閉じたらキーボードの見張りをやめる
             if (this._kbCb && uni.offKeyboardHeightChange) uni.offKeyboardHeightChange(this._kbCb)
             let that = this
@@ -180,19 +180,10 @@
             let that = this
             let admin = uni.getStorageSync("admin")
             that.myid = admin.id
-            let status = uni.getStorageSync("socketStatus")
-            if (status == "unconnect") {
-                uni.showModal({
-                    title: "エラー",
-                    content: "サーバー接続エラーが発生しました。後ほどもう一度実行してください。",
-                    showCancel: false,
-                    success: async (res) => {
-                        if (res.confirm) {
-                            uni.navigateBack()
-                        }
-                    }
-                })
-            }
+            // [カスタムエイド 2026-10-25] 以前は「つながっていない」印があると「サーバー接続エラー」を出して前の画面に戻していた。
+            //   メッセージの送信・読み込みはリアルタイム接続を使わない(ふつうの通信)ので、戻さない。
+            //   切れていればアプリにつなぎ直してもらい、つながったらその間に届いたメッセージを読み直す(csSocketReady)
+            try { getApp().$vm.csSocketWake() } catch (e) {}
         },
         // [カスタムエイド 2026-10-19] スクロールのたびに入力欄の位置(h)を書き換えて画面全体を描き直していたのをやめる(カクカクの原因)。
         // h は計算上いつも 0 以下で、入力欄の位置は今までと変わらない。
@@ -595,16 +586,31 @@
                 if (this._autoUntil && Date.now() < this._autoUntil) this.scollBottom()
             },
             // [カスタムエイド 2026-10-19] 一番下へ(アニメーションなしで一気に。カクつかないように)
+            // [カスタムエイド 2026-10-25] 一番下へ。以前はページの高さいっぱいまでスクロールしていたため、キーボードが出ているときは
+            //   下の余白(キーボードの分)まで見えてしまい、送信したあと画面が真っ白に見えたり(メッセージが上に飛ぶ)、
+            //   最新のメッセージと入力欄が大きく離れたりしていた。最新のメッセージの下が入力欄のすぐ上(12px)に来るように合わせる
             scollBottom() {
+                this.csToBottom()
+            },
+            csToBottom() {
                 this.$nextTick(() => {
                     setTimeout(() => {
-                        // [カスタムエイド 2026-10-20] ページの実際の高さ(下の余白を含む)を測って、そこまでスクロール
-                        uni.createSelectorQuery().select('.contain').boundingClientRect((res) => {
-                            uni.pageScrollTo({
-                                scrollTop: res && res.height ? res.height : 99999999,
-                                duration: 0
-                            })
-                        }).exec()
+                        const q = uni.createSelectorQuery()
+                        q.selectAll('.msgItem').boundingClientRect()
+                        q.select('.sendBox').boundingClientRect()
+                        q.selectViewport().scrollOffset()
+                        q.exec((r) => {
+                            const items = (r && r[0]) || []
+                            const box = r && r[1]
+                            const vp = (r && r[2]) || {}
+                            if (!items.length || !box) {
+                                uni.pageScrollTo({ scrollTop: 0, duration: 0 })
+                                return
+                            }
+                            const last = items[items.length - 1]
+                            const top = (vp.scrollTop || 0) + last.bottom - (box.top - uni.upx2px(24))
+                            uni.pageScrollTo({ scrollTop: Math.max(0, top), duration: 0 })
+                        })
                     }, 50)
                 })
             },
@@ -632,6 +638,15 @@
                             } else {
                                 that.msid = res.data.message_id
                             }
+                            // [カスタムエイド 2026-10-25] リアルタイム接続が切れていると、送ったメッセージが画面に出ず、
+                            //   送信ボタンも「送信中」のまま戻らなかった。3秒たっても届かなければ、ふつうの通信で読み直して送信中を解除する
+                            const sentId = res.data.message_id
+                            setTimeout(() => {
+                                if (that.msid == sentId) {
+                                    that.msid = 0
+                                    that.getHistory()
+                                }
+                            }, 3000)
                             let hasReads = {}
                             hasReads.uid = that.query.uid
                             hasRead(hasReads).then((res) => {}).catch(() => {})
@@ -876,5 +891,25 @@
         color: #6E6E73;
         font-size: 24rpx;
         line-height: 1.4;
+    }
+
+    /* [カスタムエイド 2026-10-25 send-align-20261025] 送信ボタン(紙飛行機)と入力欄の横の中心をそろえる。
+       画像・入力欄が文字と同じ並び方(下に文字のすき間ができる)になっていて、少し上下にずれていた */
+    .sendBox .boxLeft,
+    .sendBox .boxRights {
+        display: flex;
+        align-items: center;
+        align-self: center;
+    }
+    .sendBox .boxLeft image,
+    .sendBox .boxRights image {
+        display: block;
+    }
+    .sendBox .boxRight {
+        display: flex;
+        align-items: center;
+    }
+    .sendBox .boxRight textarea {
+        display: block;
     }
 </style>

@@ -1,520 +1,292 @@
 <template>
-    <view>
-        <!-- 自定义顶部导航 -->
-        <u-navbar title="営業カレンダー" :placeholder="true" :safeAreaInsetTop="true" :border="true">
+    <view class="bc-page">
+        <!-- [カスタムエイド 2026-10-22] 営業カレンダーを作り直し:
+             カレンダーはクーポン・お知らせ設定と同じ形(月曜はじまり・休みは赤い「休」・この日だけ変えた日は青い点)、
+             右上は歯車ではなく「設定」、下のカードは中央そろえで Google と同じ言葉(営業中/営業時間外/休業日)、
+             「この日だけ変更する」から下の画面で その日の営業・休み・時間・中休みを変える -->
+        <u-navbar title="営業カレンダー" :placeholder="true" :safeAreaInsetTop="true" :border="true" bgColor="#FBFBFD">
             <view class="u-nav-slot" slot="left">
-                <image src="../../static/icons/tclose.png" style="width: 60upx;height: 60upx;" mode="" @click="toIndex">
-                </image>
+                <image src="../../static/icons/tclose.png" style="width: 60upx;height: 60upx;" mode="" @click="toIndex"></image>
             </view>
             <view class="u-nav-slot" slot="right">
-                <image src="../../static/svg/gd2.svg" style="width: 60upx;height: 60upx;" @click="toSetting" mode="">
-                </image>
+                <view class="bc-set" hover-class="bc-hover" @click="toSetting">設定</view>
             </view>
         </u-navbar>
-        <!-- 日历插件 -->
-        <calendar @onDayClick="selectDay" :restArr='rest' @monthChange="monthChange"></calendar>
-        <!-- 当日营业情况 -->
-        <view class="today">
-            <view class="todayInfo">
-                <view>
-                    {{month}}月{{date}}日
-                </view>
-                <view>
-                    {{day}}曜日
+
+        <view class="bc-body">
+            <view class="bc-card bc-cal">
+                <cs-calendar :value="sel" :rest="restKeys" :dots="dotKeys" weekColor @change="pick" @month="onMonth"></cs-calendar>
+                <view class="bc-legend">
+                    <text><text class="bc-l-rest">休</text> 休業日</text>
+                    <text><text class="bc-l-dot"></text>この日だけ営業時間を変更</text>
                 </view>
             </view>
-            <view class="opTitle" v-if="open == 1" @click="showSetting">
-                営業時間
-            </view>
-            <view class="opTitle" style="color: rgb(217, 48, 37)" v-if="open == 0" @click="showSetting">
-                休業日
-            </view>
-            <view v-if="open == 1">
-                <view class="openTime" v-for="(item,index) in openArr" v-text="`${item.start} ~ ${item.end}`"></view>
+
+            <view class="bc-card bc-day">
+                <view class="bc-date">{{ selText }}</view>
+                <view class="bc-st" :class="'c-' + status.color">{{ status.text }}<text class="bc-sub" v-if="status.sub"> ・ {{ status.sub }}</text></view>
+                <view v-if="selDay && selDay.business == 1">
+                    <view class="bc-hm" v-for="(t, i) in selTimes" :key="i">{{ t.start }} 〜 {{ t.end }}</view>
+                </view>
+                <view class="bc-off" v-else>終日お休み</view>
+                <view class="bc-btn2" hover-class="bc-hover" @click="openSheet">この日だけ変更する</view>
             </view>
         </view>
-        <!-- 单出设置营业时间的弹窗 -->
-        <u-popup :show="show" mode="bottom" @close="show = false" :safeAreaInsetTop="false" round="16">
-            <view class="pContent">
-                <view class="title">
-                    <view>
-                        <image @click="show = false" src="../../static/icons/tclose.png"
-                            style="width: 60upx;height: 60upx;" mode=""></image>
-                    </view>
-                    <view class="titleName">
-                        詳細
-                    </view>
-                    <view style="color: #1A73E8;" @click="save">
-                        保存
-                    </view>
-                </view>
-                <view class="dateInfo">
-                    <view class="todate">
-                        {{month}}月{{date}}日
-                    </view>
-                    <view class="toweek">
-                        {{day}}曜日
-                    </view>
-                </view>
-                <view class="Cdate">
-                    <view class="CdateItem" @click="changeStatus(1)">
-                        <view class="selectContent">
-                            <view class="unselect" v-if="open == 0"></view>
-                            <view class="selected" v-if="open == 1">
-                                <view class="fill"></view>
-                            </view>
-                        </view>
-                        <view :style="open == 0? '' : 'color:#1D1D1F' ">
-                            営業日
-                        </view>
-                    </view>
-                    <view class="CdateItem" @click="changeStatus(0)">
-                        <view class="selectContent">
-                            <view class="unselect" v-if="open == 1"></view>
-                            <view class="selected" v-if="open == 0">
-                                <view class="fill"></view>
-                            </view>
-                        </view>
-                        <view :style="open == 0? 'color:#1D1D1F' : '' ">
-                            休業日
-                        </view>
-                    </view>
-                </view>
 
-                <view class="timePicker" v-if="open == 1">
-                    <view class="pickerTitle">
-                        <view class="titleitem">
-                            営業時間
-                        </view>
-                        <view class="titleitem">
-                            開始
-                        </view>
-                        <view class="titleitem">
-                            終了
-                        </view>
-                        <view class="titleitem">
-
-                        </view>
+        <!-- この日だけ変更(下から出る画面) -->
+        <u-popup :show="show" mode="bottom" round="16" @close="show = false" :safeAreaInsetBottom="false">
+            <view class="bs">
+                <view class="bs-h">{{ selText }}<view class="bs-x" @click="show = false">✕</view></view>
+                <view class="bs-in">
+                    <view class="bs-seg">
+                        <view :class="{ on: edit.business == 1 }" @click="edit.business = 1">営業日</view>
+                        <view :class="{ on: edit.business == 0 }" @click="edit.business = 0">休業日</view>
                     </view>
-                    <view class="pickerContent">
-                        <view class="pickerItem" v-for="(item,index) in openArr">
-                            <view class="pItem"></view>
-                            <view class="pItem" v-text="item.start" @click="showPicker(index,'start')"></view>
-                            <view class="pItem" v-text="item.end" @click="showPicker(index,'end')"></view>
-                            <view class="pItem">
-                                <u-icon v-if="openArr.length == 1" @click="additem" name="plus-circle" color="#1A73E8"
-                                    size="30"></u-icon>
-                                <u-icon v-if="index == 1" @click="delitem" name="close-circle-fill" size="30"></u-icon>
-                            </view>
+                    <block v-if="edit.business == 1">
+                        <view class="bs-lbl">営業時間</view>
+                        <view class="bs-rng">
+                            <view class="bs-tm" @click="pickTime('open')">{{ edit.open }}</view><text>〜</text>
+                            <view class="bs-tm" @click="pickTime('close')">{{ edit.close }}</view>
                         </view>
-                    </view>
+                        <view class="bs-lbl">中休み</view>
+                        <view class="bs-rng" v-if="edit.brk">
+                            <view class="bs-tm" @click="pickTime('bs')">{{ edit.brk.start }}</view><text>〜</text>
+                            <view class="bs-tm" @click="pickTime('be')">{{ edit.brk.end }}</view>
+                            <view class="bs-del" @click="edit.brk = null">✕</view>
+                        </view>
+                        <view class="bs-add" v-else @click="addBreak">＋ 中休みを入れる</view>
+                    </block>
+                    <view class="bs-err" v-if="editErr">{{ editErr }}</view>
+                    <view class="bs-link" v-if="weekDay" @click="useWeek">{{ weekLinkText }}</view>
+                    <view class="bs-btn" :class="{ off: !!editErr }" hover-class="bc-hover" @click="save">保存する</view>
                 </view>
             </view>
         </u-popup>
-        <u-picker @confirm="confirmPicker" :show="show1" @close="show1 = false" @cancel="show1 = false"
-            :columns="timeArr"></u-picker>
-            <permission :show="showpermission" @close='showpermission = false'></permission>
+        <cs-picker :show="show1" :title="pickTitle" :columns="[times]" :defaultIndex="[pickIndex]" @confirm="confirmPicker" @close="show1 = false" @cancel="show1 = false"></cs-picker>
+        <permission :show="showpermission" @close="showpermission = false"></permission>
     </view>
 </template>
 <script>
-    import calendar from "../../components/calendar.vue"
-    import {
-        getCalendar,
-        setBusinessHours,
-        getAdminDetail
-    } from "@/api/index.js"
-    import permission from "@/components/permission/permission.vue"
+    import csCalendar from '@/components/csCalendar/csCalendar.vue'
+    import csPicker from '@/components/csPicker/csPicker.vue'
+    import { getCalendar, setBusinessHours, getAdminDetail } from '@/api/index.js'
+    import permission from '@/components/permission/permission.vue'
+    import { WEEK, TIMES, keyOf, toRange, fromRange, rangeError, rangeText, dayStatus, weekList } from '@/utils/csBusiness.js'
     export default {
-        components: {
-            calendar,
-            permission
-        },
+        components: { csCalendar, permission, csPicker },
         data() {
+            const today = keyOf(new Date())
             return {
-                showpermission:false,
-                rest: [],
-                openArr: [],
-                days: {},
-                month: "",
-                date: "",
-                day: "",
-                fulldate: "",
-                year: "",
-                settingIndex: 0,
-                settingStatus: "",
-                open: 1,
+                showpermission: false,
+                today,
+                sel: today,
+                ym: today.slice(0, 7),
+                days: {}, // 表示中の月:日にち → { business, business_time }
+                overrides: {}, // 表示中の月の「この日だけ変更」
+                rests: [],
+                week: [], // 曜日の設定(7件)
                 show: false,
                 show1: false,
-                takeRest: false,
-                pickerArr: [{
-                    start: "00:00",
-                    end: "00:00"
-                }],
-                timeArr: [
-                    ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00",
-                        "14:30",
-                        "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30",
-                        "20:00", "20:30", "21:00", "21:30", "22:00"
-                    ]
-                ]
-            };
+                edit: { business: 1, open: '10:00', close: '19:00', brk: null },
+                pickKey: '',
+                pickIndex: 0,
+                times: TIMES,
+                now: new Date(),
+                saving: false
+            }
         },
-
-        created() {
-            let that = this
-            let date = that.getMonth()
-            let today = that.getToday()
-            let data = {}
-            data.type = "day"
-            data.date = date
-            that.month = today.month
-            that.date = today.date
-            that.day = today.week
-            that.year = today.year
-            that.fulldate = today.year + '-' + today.month + '-' + today.date
-            that.getCalendar(data, "today", today.date * 1)
+        computed: {
+            pickTitle() {
+                return { open: '開始', close: '終了', bs: '中休みの始まり', be: '中休みの終わり' }[this.pickKey] || '時間'
+            },
+            selDay() {
+                if (this.sel.slice(0, 7) != this.ym) return null
+                return this.days[Number(this.sel.slice(8, 10))] || null
+            },
+            selTimes() {
+                return ((this.selDay && this.selDay.business_time) || []).filter((t) => t && t.start && t.end)
+            },
+            selText() {
+                const p = this.sel.split('-')
+                const w = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).getDay()
+                return Number(p[1]) + '月' + Number(p[2]) + '日(' + WEEK[w] + ')'
+            },
+            status() {
+                return dayStatus(this.selDay, this.sel == this.today, this.now)
+            },
+            restKeys() {
+                return this.rests.map((d) => this.ym + '-' + (d < 10 ? '0' : '') + d)
+            },
+            // この日だけ営業時間を変えた日(営業日で、曜日の設定と時間がちがう日)
+            dotKeys() {
+                const out = []
+                Object.keys(this.overrides || {}).forEach((d) => {
+                    const o = this.overrides[d]
+                    if (!o || o.business != 1) return
+                    const k = this.ym + '-' + (Number(d) < 10 ? '0' : '') + Number(d)
+                    const p = k.split('-')
+                    const w = this.week[new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).getDay()]
+                    if (!w || w.business != 1 || rangeText(w.business_time) != rangeText(o.business_time)) out.push(k)
+                })
+                return out
+            },
+            weekDay() {
+                const p = this.sel.split('-')
+                return this.week[new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).getDay()] || null
+            },
+            weekLinkText() {
+                const w = this.weekDay
+                if (!w || w.business != 1) return 'いつもの設定(定休日)に戻す'
+                return 'いつもの営業時間(' + rangeText(w.business_time).replace('  ', '・') + ')に戻す'
+            },
+            editErr() {
+                if (this.edit.business != 1) return ''
+                return rangeError(this.edit)
+            }
+        },
+        onShow() {
+            this.now = new Date()
+            this.loadWeek()
+            this.loadMonth(this.ym)
         },
         methods: {
-            getMonth() {
-                let that = this
-                let date = new Date()
-                let year = date.getFullYear()
-                let month = (date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1
-                return year + "-" + month
-            },
             toIndex() {
-                let that = this
-                uni.switchTab({
-                    url: "../index/index"
+                uni.switchTab({ url: '../index/index' })
+            },
+            loadWeek() {
+                getCalendar({ type: 'week', date: '' }).then((res) => {
+                    if (res.code == 200) this.week = weekList(res.data.week_business)
                 })
             },
-            save() {
-                let that = this
-                let obj = {}
-                obj.type = 'day'
-                obj.date = that.fulldate
-                obj.business = that.open
-                obj.business_time = that.openArr
-                setBusinessHours(obj).then((res) => {
-                    if (res.code == 200) {
-                        uni.showToast({
-                            title: res.message
-                        })
-                        let data = {}
-                        data.type = "day"
-                        data.date = that.year + '-' + that.month
-                        that.getCalendar(data, "a", 1)
-                        that.show = false
-                    }else{
-                        uni.showToast({
-                            title: res.message,
-                            icon:'none'
-                        })
-                    }
+            loadMonth(ym) {
+                getCalendar({ type: 'day', date: ym }).then((res) => {
+                    if (res.code != 200 || ym != this.ym) return
+                    this.days = res.data.day_business || {}
+                    this.overrides = res.data.config_day_business || {}
+                    this.rests = (res.data.rest_days || []).map((v) => v * 1)
                 })
+            },
+            onMonth(e) {
+                this.ym = e.y + '-' + (e.m < 10 ? '0' : '') + e.m
+                this.days = {}
+                this.overrides = {}
+                this.rests = []
+                // 今日の月なら今日、ほかの月は1日を選ぶ
+                this.sel = this.today.slice(0, 7) == this.ym ? this.today : this.ym + '-01'
+                this.loadMonth(this.ym)
+            },
+            pick(k) {
+                this.sel = k
+            },
+            openSheet() {
+                const d = this.selDay
+                const r = toRange(d && d.business == 1 ? d.business_time : (this.weekDay && this.weekDay.business_time))
+                this.edit = { business: d ? Number(d.business) : 1, open: r.open, close: r.close, brk: r.brk }
+                this.show = true
+            },
+            useWeek() {
+                const w = this.weekDay
+                if (!w) return
+                const r = toRange(w.business_time)
+                this.edit = { business: Number(w.business), open: r.open, close: r.close, brk: r.brk }
+            },
+            addBreak() {
+                this.edit.brk = { start: '13:00', end: '14:00' }
+            },
+            pickTime(k) {
+                this.pickKey = k
+                const v = k == 'open' ? this.edit.open : k == 'close' ? this.edit.close : k == 'bs' ? this.edit.brk.start : this.edit.brk.end
+                this.pickIndex = Math.max(0, this.times.indexOf(v))
+                this.show1 = true
             },
             confirmPicker(e) {
-                let that = this
-                let index = that.settingIndex
-                let status = that.settingStatus
-                if (status == "start") {
-                    that.openArr[index].start = e.value[0]
-                } else {
-                    that.openArr[index].end = e.value[0]
+                const v = e.value[0]
+                const k = this.pickKey
+                if (k == 'open') this.edit.open = v
+                else if (k == 'close') this.edit.close = v
+                else if (k == 'bs') this.edit.brk.start = v
+                else this.edit.brk.end = v
+                this.show1 = false
+            },
+            save() {
+                if (this.editErr || this.saving) return
+                this.saving = true
+                const obj = {
+                    type: 'day',
+                    date: this.sel,
+                    business: this.edit.business,
+                    business_time: this.edit.business == 1 ? fromRange(this.edit) : []
                 }
-                that.show1 = false
-            },
-            showSetting() {
-                let that = this
-                that.show = true
-            },
-            getToday() {
-                let date = new Date()
-                let year = date.getFullYear()
-                let month = (date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1
-                let week = date.getDay()
-                let sdate = date.getDate() < 10 ? '0' + date.getDate() : date.getDate()
-                let wek
-                wek = week == 0 ? '日' : week == 1 ? '月' : week == 2 ? '火' :
-                    week == 3 ? '水' : week == 4 ? '木' : week == 5 ? '金' : '土'
-                let obj = {}
-                obj.week = wek
-                obj.year = year
-                obj.month = month
-                obj.date = sdate
-                return obj
-            },
-            getCalendar(data, status, index) {
-                getCalendar(data).then((res) => {
-                    let that = this
+                setBusinessHours(obj).then((res) => {
+                    this.saving = false
                     if (res.code == 200) {
-                        let temp = []
-                        that.days = res.data.day_business
-                        res.data.rest_days.forEach((value, index) => {
-                            temp.push(value * 1)
-                        })
-                        that.rest = temp
-                        if (status == "today") {
-                            if (res.data.day_business[index].business_time.length > 0) {
-                                that.openArr = res.data.day_business[index].business_time
-                            } else {
-                                that.openArr = that.pickerArr
-                            }
-                            that.open = res.data.day_business[index].business
-                        }
+                        this.show = false
+                        uni.showToast({ title: '保存しました' })
+                        this.loadMonth(this.ym)
+                    } else {
+                        uni.showToast({ title: res.message, icon: 'none' })
                     }
-                })
-            },
-            showPicker(index, status) {
-                let that = this
-                that.show1 = true
-                that.settingIndex = index
-                that.settingStatus = status
-            },
-            selectDay(e) {
-                let that = this
-                that.fulldate = e.date
-                let indexArr = e.date.split("-")
-                let index = indexArr[2] * 1
-                that.month = indexArr[1]
-                that.date = indexArr[2]
-                that.year = indexArr[0]
-                that.day = e.week
-                if (that.days[index].business_time.length > 0) {
-                    that.openArr = that.days[index].business_time
-                } else {
-                    that.openArr = that.pickerArr
-                }
-
-                that.open = that.days[index].business
-            },
-            monthChange(e) {
-                let that = this
-                let date = e.year + '-' + e.month
-                let data = {}
-                data.type = "day"
-                data.date = date
-                that.rest = []
-                that.getCalendar(data)
+                }).catch(() => { this.saving = false })
             },
             toSetting() {
                 let that = this
-                let admin = uni.getStorageSync("admin")
-                if(admin.admin_type == 2){
-                    uni.showLoading({
-                        title: "読み込み中",
-                        mask:true
-                    })
+                let admin = uni.getStorageSync('admin')
+                if (admin.admin_type == 2) {
+                    uni.showLoading({ title: '読み込み中', mask: true })
                     getAdminDetail(admin.id).then((res) => {
                         uni.hideLoading()
-                        if(res.data.admin.privileges.includes(3)){
-                            uni.redirectTo({
-                                url: "../calender/setting/setting"
-                            })
-                        }else{
+                        if (res.data.admin.privileges.includes(3)) {
+                            uni.navigateTo({ url: '../calender/setting/setting' })
+                        } else {
                             that.showpermission = true
                         }
-                    })
-                }else{
-                    uni.redirectTo({
-                        url: "../calender/setting/setting"
-                    })
-                }    
-            },
-            changeStatus(e) {
-                this.open = e
-            },
-            additem() {
-                let that = this
-                let obj = {}
-                obj.start = "00:00"
-                obj.end = "00:00"
-                that.openArr.push(obj)
-            },
-            delitem() {
-                let that = this
-                that.openArr.splice(1, 1)
+                    }).catch(() => uni.hideLoading())
+                } else {
+                    uni.navigateTo({ url: '../calender/setting/setting' })
+                }
             }
         }
     }
 </script>
 <style lang="scss">
-    .timePicker {
-        .pickerTitle {
-            display: flex;
-            font-size: 32upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #707070;
-            margin-top: 96upx;
-            border-bottom: 2upx solid #d2d2d7;
-            padding-bottom: 12upx;
+    page { background: #F5F5F7; }
+    .bc-page { min-height: 100vh; background: #F5F5F7; }
+    .bc-set { height: 60rpx; line-height: 56rpx; padding: 0 28rpx; border: 1px solid #1A73E8; border-radius: 30rpx; color: #1A73E8; font-size: 26rpx; font-weight: bold; box-sizing: border-box; }
+    .bc-hover { opacity: 0.6; }
+    .bc-body { padding: 40rpx 24rpx calc(80rpx + env(safe-area-inset-bottom)); }
+    .bc-card { background: #FFFFFF; border-radius: 32rpx; margin-bottom: 48rpx; }
+    .bc-cal { padding: 24rpx 24rpx 8rpx; }
+    .bc-legend { display: flex; gap: 32rpx; padding: 16rpx 8rpx 20rpx; font-size: 22rpx; color: #6E6E73; align-items: center; }
+    .bc-legend > text { display: flex; align-items: center; }
+    .bc-l-rest { color: #D93025; font-weight: bold; margin-right: 6rpx; }
+    .bc-l-dot { display: inline-block; width: 12rpx; height: 12rpx; border-radius: 50%; background: #1A73E8; margin-right: 8rpx; }
+    .bc-day { padding: 40rpx 32rpx; text-align: center; }
+    .bc-date { font-size: 30rpx; color: #3C4043; font-weight: bold; }
+    .bc-st { font-size: 34rpx; font-weight: bold; margin-top: 16rpx; }
+    .bc-st.c-green { color: #188038; }
+    .bc-st.c-red { color: #D93025; }
+    .bc-st.c-plain { color: #3C4043; }
+    .bc-sub { font-size: 28rpx; font-weight: normal; color: #3C4043; }
+    .bc-hm { font-size: 48rpx; font-weight: bold; color: #1D1D1F; margin-top: 12rpx; }
+    .bc-off { font-size: 30rpx; color: #6E6E73; margin-top: 16rpx; }
+    .bc-btn2 { margin-top: 40rpx; height: 88rpx; line-height: 86rpx; border: 1px solid #1A73E8; border-radius: 24rpx; color: #1A73E8; font-size: 28rpx; box-sizing: border-box; }
 
-            .titleitem {
-                flex: 1;
-                text-align: center;
-            }
-        }
-
-        .pickerContent {
-            .pickerItem {
-                display: flex;
-                align-items: center;
-                flex: 1;
-                text-align: center;
-                box-sizing: border-box;
-                padding: 40upx 0;
-                border-bottom: 2upx solid #d2d2d7;
-
-                .pItem {
-                    flex: 1;
-                }
-
-                .pItem:last-child {
-                    // box-sizing: border-box;
-                    // padding-left: 80upx;
-                    position: relative;
-                    left: 60upx;
-                }
-            }
-        }
-    }
-
-    .pContent {
-        width: 100vw;
-        height: 90vh;
-        background: #fff;
-        overflow-y: scroll;
-        border-top-left-radius: 32upx;
-        border-top-right-radius: 32upx;
-
-        .Cdate {
-            display: flex;
-            align-items: center;
-            box-sizing: border-box;
-            padding: 10upx 50upx;
-
-            .CdateItem:last-child {
-                margin-left: 156upx;
-            }
-
-            .CdateItem {
-                display: flex;
-                align-items: center;
-                font-size: 40upx;
-                font-family: Hiragino Sans-W3, Hiragino Sans;
-                font-weight: normal;
-                color: #AAAAAA;
-
-                .selectContent {
-                    margin-right: 28upx;
-                }
-            }
-        }
-
-        .dateInfo {
-            font-size: 48upx;
-            font-family: Hiragino Sans-W6, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-            display: flex;
-            box-sizing: border-box;
-            padding: 92upx 40upx;
-
-            .todate {
-                margin-right: 60upx;
-            }
-        }
-
-        .title {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-sizing: border-box;
-            padding: 32upx 26upx;
-            background: #FBFBFD;
-            border-bottom: 2upx solid #d2d2d7;
-
-            .titleName {
-                font-size: 40upx;
-                font-family: Hiragino Sans-W5, Hiragino Sans;
-                font-weight: normal;
-                color: #1D1D1F;
-            }
-        }
-    }
-
-
-
-    .today {
-        width: 600upx;
-        background: #F5F5F7;
-        box-shadow: 0px 0px 12upx 2upx rgba(0, 0, 0, 0.16);
-        border-radius: 20upx;
-        margin: 80upx auto 0;
-        box-sizing: border-box;
-        padding: 24upx 0;
-        text-align: center;
-
-        .todayInfo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 24upx;
-
-            view {
-                margin: 0 20upx;
-            }
-        }
-
-        .opTitle {
-            font-size: 40upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #007AFF;
-        }
-
-        .openTime {
-            font-size: 34upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-            margin-top: 20upx;
-        }
-    }
-
-    .calendarChoose {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #F5F5F7;
-        box-sizing: border-box;
-        padding: 44upx 60upx;
-
-        .chooseRight {
-            display: flex;
-            align-items: center;
-        }
-    }
-
-    .page {
-        height: 80vh;
-    }
-
-    .dateTitle {
-        display: flex;
-        box-sizing: border-box;
-        padding: 20upx 40upx;
-        background: #F5F5F7;
-        border-bottom: 2upx solid #d2d2d7;
-
-        .dateItem {
-            flex: 1;
-            text-align: center;
-            font-size: 28upx;
-            font-family: Hiragino Sans-W6, Hiragino Sans;
-            font-weight: normal;
-            color: #86868B;
-        }
-    }
+    /* 下から出る画面 */
+    .bs { background: #FFFFFF; border-radius: 32rpx 32rpx 0 0; }
+    .bs-h { position: relative; height: 112rpx; line-height: 112rpx; text-align: center; font-size: 34rpx; font-weight: bold; color: #1D1D1F; border-bottom: 1px solid #E5E5EA; }
+    .bs-x { position: absolute; right: 24rpx; top: 24rpx; width: 64rpx; height: 64rpx; line-height: 64rpx; border-radius: 50%; background: #E5E5EA; color: #6E6E73; font-size: 28rpx; font-weight: normal; }
+    .bs-in { padding: 40rpx 40rpx calc(48rpx + env(safe-area-inset-bottom)); }
+    .bs-seg { display: flex; background: #EEEEF0; border-radius: 20rpx; padding: 6rpx; }
+    .bs-seg view { flex: 1; height: 76rpx; line-height: 74rpx; text-align: center; font-size: 28rpx; color: #515154; border-radius: 16rpx; border: 1px solid transparent; box-sizing: border-box; }
+    .bs-seg view.on { background: rgba(26, 115, 232, 0.10); border-color: #1A73E8; color: #1A73E8; font-weight: bold; }
+    .bs-lbl { font-size: 26rpx; font-weight: bold; color: #1D1D1F; margin: 40rpx 0 16rpx; }
+    .bs-rng { display: flex; align-items: center; font-size: 30rpx; color: #1D1D1F; }
+    .bs-rng > text { margin: 0 20rpx; }
+    .bs-tm { background: #F2F2F7; border-radius: 16rpx; padding: 16rpx 28rpx; font-size: 30rpx; }
+    .bs-del { margin-left: auto; color: #8E8E93; font-size: 30rpx; padding: 12rpx; }
+    .bs-add { color: #1A73E8; font-size: 28rpx; padding: 8rpx 0; }
+    .bs-err { color: #D93025; font-size: 24rpx; margin-top: 24rpx; }
+    .bs-link { color: #1A73E8; font-size: 26rpx; text-align: center; margin-top: 40rpx; }
+    .bs-btn { margin-top: 64rpx; height: 104rpx; line-height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; text-align: center; font-size: 32rpx; font-weight: bold; }
+    .bs-btn.off { background: #A8C7FA; }
 </style>

@@ -1,0 +1,14 @@
+import { PickPdf, PickPdfOptions, PickPdfResult, PickPdfError } from '../interface.uts'
+
+// iPhone:ファイルアプリの選択画面(CardsanFilePicker.swift)を開く
+export const pickPdf : PickPdf = function (options : PickPdfOptions) {
+	CardsanFilePicker.pick((status : string, path : string, name : string, extra : string) => {
+		if (status == 'ok') {
+			const r : PickPdfResult = { path: path, name: name, size: parseInt(extra) }
+			options.success?.(r)
+		} else {
+			const e : PickPdfError = { errMsg: status == 'cancel' ? 'cancel' : extra, cancel: status == 'cancel' }
+			options.fail?.(e)
+		}
+	})
+}

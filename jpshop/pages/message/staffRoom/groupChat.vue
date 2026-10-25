@@ -15,7 +15,7 @@
                             <text style="white-space: pre-wrap;">{{ item.message }}</text>
                         </view>
                         <view v-if="item.type == 2" class="msgDetailImage">
-                            <image @click="previewImage(item.message)" :src="item.message" mode="widthFix"></image>
+                            <image @click="previewImage(item.message)" :src="item.message" mode="widthFix" @load="onImgLoad"></image>
                         </view>
                         <view style="display: flex;align-items: center;">
                             <view class="sendTime">{{ item.time }}</view>
@@ -26,7 +26,8 @@
                     </view>
                 </view>
             </view>
-            <view class="blank"></view>
+            <!-- [カスタムエイド 2026-10-25] キーボードが出ている間は、その高さの分だけ下に余白を足す -->
+            <view class="blank" :style="kbH ? 'height:' + (blankBase + kbH) + 'px' : ''"></view>
         </scroll-view>
         <view class="sendBox" :style="{bottom: h > 0 ? h + 'px' : '0'}">
             <view class="boxLeft">
@@ -71,12 +72,29 @@
                 fs: false,
                 h: 0,
                 taH: 0,
+                kbH: 0, // [カスタムエイド 2026-10-25] キーボードの高さ(px)
+                blankBase: uni.upx2px(140), // 下の余白(入力欄の分)
             }
         },
         created() {
-            uni.onKeyboardHeightChange(res => {
+            // [カスタムエイド 2026-10-25] お客様とのチャットと同じしくみに。キーボードが出たら、その高さの分だけ下に余白を足し、
+            //   最新のメッセージが入力欄のすぐ上に来るようにスクロールする(キーボードに隠れない)
+            this._kbCb = (res) => {
                 this.fs = res.height > 0
-            })
+                const kb = res.height > 0 ? res.height : 0
+                if (this.kbH != kb) {
+                    this.kbH = kb
+                    this.scrollBottom()
+                }
+            }
+            uni.onKeyboardHeightChange(this._kbCb)
+            // [カスタムエイド 2026-10-25] リアルタイム接続がつながり直したら、その間に届いたメッセージを読み直す
+            this._csReady = () => { this.loadHistory() }
+            uni.$on('csSocketReady', this._csReady)
+        },
+        destroyed() {
+            if (this._kbCb && uni.offKeyboardHeightChange) uni.offKeyboardHeightChange(this._kbCb) // [カスタムエイド 2026-10-25]
+            if (this._csReady) uni.$off('csSocketReady', this._csReady)
         },
         onLoad() {
             let admin = uni.getStorageSync('admin')
@@ -268,18 +286,39 @@
                 uni.previewImage({ current: 0, urls: [url] })
             },
             onFocus() {
-                setTimeout(() => { this.scrollBottom() }, 800)
+                // [カスタムエイド 2026-10-25] スクロールはキーボードが出きったとき(created の _kbCb)に行う
             },
             onBlur() {
                 let that = this
                 uni.getSystemInfo({ success(res) { that.h = res.safeAreaInsets.bottom } })
             },
+            // [カスタムエイド 2026-10-25] 一番下へ。以前はページの高さいっぱいまでスクロールしていたため、メッセージと入力欄が
+            //   大きく離れたり、送信後に画面が真っ白に見えたりすることがあった(お客様とのチャットと同じ原因)。
+            //   最新のメッセージの下が入力欄のすぐ上(12px)に来るように合わせる(お客様とのチャットと同じ処理)
+            // [カスタムエイド 2026-10-25] 写真が読み込まれて高さが変わったとき、開いた直後・新しいメッセージの直後(3秒以内)なら一番下に合わせ直す
+            onImgLoad() {
+                if (this._autoUntil && Date.now() < this._autoUntil) this.scrollBottom()
+            },
             scrollBottom() {
+                this._autoUntil = this._autoUntil && Date.now() < this._autoUntil ? this._autoUntil : Date.now() + 3000
                 this.$nextTick(() => {
                     setTimeout(() => {
-                        uni.createSelectorQuery().select('.chatContent').boundingClientRect(res => {
-                            if (res) uni.pageScrollTo({ scrollTop: res.height, duration: 10 })
-                        }).exec()
+                        const q = uni.createSelectorQuery()
+                        q.selectAll('.msgItem').boundingClientRect()
+                        q.select('.sendBox').boundingClientRect()
+                        q.selectViewport().scrollOffset()
+                        q.exec((r) => {
+                            const items = (r && r[0]) || []
+                            const box = r && r[1]
+                            const vp = (r && r[2]) || {}
+                            if (!items.length || !box) {
+                                uni.pageScrollTo({ scrollTop: 0, duration: 0 })
+                                return
+                            }
+                            const last = items[items.length - 1]
+                            const top = (vp.scrollTop || 0) + last.bottom - (box.top - uni.upx2px(24))
+                            uni.pageScrollTo({ scrollTop: Math.max(0, top), duration: 0 })
+                        })
                     }, 50)
                 })
             },
@@ -401,5 +440,25 @@
         color: #6E6E73;
         font-size: 24rpx;
         line-height: 1.4;
+    }
+
+    /* [カスタムエイド 2026-10-25 send-align-20261025] 送信ボタン(紙飛行機)と入力欄の横の中心をそろえる。
+       画像・入力欄が文字と同じ並び方(下に文字のすき間ができる)になっていて、少し上下にずれていた */
+    .sendBox .boxLeft,
+    .sendBox .boxRights {
+        display: flex;
+        align-items: center;
+        align-self: center;
+    }
+    .sendBox .boxLeft image,
+    .sendBox .boxRights image {
+        display: block;
+    }
+    .sendBox .boxRight {
+        display: flex;
+        align-items: center;
+    }
+    .sendBox .boxRight textarea {
+        display: block;
     }
 </style>

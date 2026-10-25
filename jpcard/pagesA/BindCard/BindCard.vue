@@ -74,13 +74,13 @@
             </u--form>
             <u-action-sheet :show="showSex" :actions="actions" title="" @close="showSex = false" @select="sexSelect">
             </u-action-sheet>
-            <u-datetime-picker :show="show" v-model="value1" mode="date" :minDate="-631180800000"
-                @confirm="timeConfirm($event)" @cancel="cancel()">
-            </u-datetime-picker>
+            <!-- [カスタムエイド 2026-10-22] 新しいドラムロール(見出し・選んだ日付を大きく) -->
+            <cs-date-picker :show="show" v-model="value1" :minDate="-631180800000"
+                @confirm="timeConfirm($event)" @cancel="cancel()" @close="cancel()"></cs-date-picker>
             <u-modal :show="keepShow" :title="title" :content='content' confirmText="ok" @confirm="keepShow = false">
             </u-modal>
-            <u-picker :closeOnClickOverlay="true" @close="showAdd = false" cancelText="キャンセル" confirmText="保存"
-                @confirm="confirm" @cancel="showAdd = false" :show="showAdd" :columns="city"></u-picker>
+            <cs-picker title="都道府県を選ぶ" @close="showAdd = false"
+                @confirm="confirm" @cancel="showAdd = false" :show="showAdd" :columns="city"></cs-picker>
         </view>
         <view class="logins" @click="sub" :style="insertAll == true?'' : 'opacity:0.6 !important'" hover-class="op">
             メンバー登録
@@ -91,6 +91,8 @@
 </template>
 
 <script>
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22] 新しいドラムロール
+    import csDatePicker from "@/components/csPicker/csDatePicker.vue"
     import {
         getAddress,
         getMyCard,
@@ -98,6 +100,7 @@
         getShopInfo
     } from "@/api/index.js"
     export default {
+        components: { csPicker, csDatePicker },
         data() {
             return {
                 showm:false,

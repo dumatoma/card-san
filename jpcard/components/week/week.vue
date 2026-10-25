@@ -7,17 +7,18 @@
                 <view class="point"></view>
             </view>
             <view class="timeItem">
-                <view class="timeName">22:00</view>
+                <view class="timeName">{{ endLabel }}</view>
                 <view class="point"></view>
             </view>
         </view>
         <view class="manager">
+            <!-- [カスタムエイド 2026-10-24d] 予約できる枠の丸(ring)と予約済みの×を SVG に(拡大してもぼやけない)。丸の色は #7FBDBA(少し濃く) -->
             <view v-for="(item,index) in weel">
                 <view class="mItem" v-if="item.business == 1">
                     <view v-if="d <= item.stamp" class="dateItem" v-for="(ite,idx) in item.times"
                         :style="ite.status == 'selected'? 'background:#fff !important' : '' ">
                         <!-- [カスタムエイド 2026-10-19] cs-slot: 押したときの見た目(予約WEBページと同じ。枠全体を押せる) -->
-                        <image class="cs-slot" src="../../static/icons/ring.png" mode="" v-if="ite.status == 'selected'"
+                        <image class="cs-slot" src="../../static/icons/ring.svg" mode="" v-if="ite.status == 'selected'"
                             @click="addNew(ite)"></image>
                         <image style="width: 60upx;height: 60upx;" src="../../static/svg/noTime.svg" mode=""
                             v-if="ite.status == 'unselected'"></image>
@@ -61,6 +62,14 @@
         onShow() {
 
         },
+        // [カスタムエイド 2026-10-22] 表の最後の時刻(今までは 22:00 の決め打ち)。時間の枠はお店の営業時間から作るため
+        computed: {
+            endLabel() {
+                const a = this.times || []
+                if (!a.length) return ''
+                return this.addHalf(a[a.length - 1].time)
+            }
+        },
         watch: {
             times: function(newVal, oldVal) {
                 this.times = newVal; //newVal即是chartData
@@ -72,12 +81,13 @@
                 let that = this
                 if (!newVal || !newVal.length || !that.info || !that.info.week_business) return
                 let array = JSON.parse(JSON.stringify(newVal))
-                console.log("array",array)
                 let tem = []
                 if(that.info.week_business.length == 0){
                     that.info.week_business = that.wkbus
                 }
-                setTimeout(() => {
+                // [カスタムエイド 2026-10-24c] 以前は計算の前に 0.5秒、表示の前に 0.2秒 わざと待っていた(週をスライドしたとき表示が遅れる)。
+                //   計算は一瞬で終わるので、待たずにすぐ出す。計算の中身は変えていない
+                {
                     for (let i = 0; i < array.length; i++) {
                         let iosDate = array[i].date.replace(/-/g, "/")
                         let isd = new Date(iosDate)
@@ -92,91 +102,28 @@
                             if (so[sv]) {
                                 if (so[sv].business == 1) {
                                     sb = so[sv].business_time
-                                    console.log(sb, 11)
                                 }
                             } else {
                                 sb = that.info.week_business[i].business_time
                             }
                         } else {
-                            console.log(i)
                             sb = that.info.week_business[i].business_time
                         }
                         array[i].sb = sb
                         // console.log("sb",array[i])
-                        if (array[i].orders.length > 0) {
-                            for (let k = 0; k < array[i].times.length; k++) {
-                                for (let j = 0; j < array[i].orders.length; j++) {
-                                   if (array[i].times[k].time == array[i].orders[j].start_time && array[i].times[k+1].time == array[i].orders[j].end_time) {
-                                       console.log(array[i].orders[j].start_time)
-                                       array[i].times[k].status = "unselected"
-                                       array[i].times[k].date = array[i].date   
-                                       break;
-                                       // start = k
-                                   } else {
-                                       if (array[i].sb.length == 1) {
-                                           if (that.formatTime(array[i].sb[0].start) <= that.formatTime(array[i].times[k]
-                                                   .time) && that.formatTime(array[i].times[k].time) < that.formatTime(array[i]
-                                                   .sb[
-                                                       0].end)) {
-                                               array[i].times[k].status = "selected"
-                                           } else {
-                                               array[i].times[k].status = "uselected"
-                                           }
-                                       } else {
-                                           if ((that.formatTime(array[i].sb[0].start) <= that.formatTime(array[i].times[k]
-                                                   .time) && that
-                                                   .formatTime(array[i].times[k].time) < that.formatTime(array[i].sb[0].end)
-                                                   ) || (
-                                                   that.formatTime(array[i].sb[1].start) <= that.formatTime(array[i].times[k]
-                                                       .time) && that.formatTime(array[i].times[k].time) < that.formatTime(
-                                                       array[i].sb[
-                                                           1].end))) {
-                                               console.log(true)
-                                               array[i].times[k].status = "selected"
-                                           } else {
-                                               console.log(false)
-                                               array[i].times[k].status = "uselected"
-                                           }
-                                       }
-                                       array[i].times[k].date = array[i].date   
-                                   }
-                                   
-                                }
-                               
+                        // [カスタムエイド 2026-10-24] 営業時間の枠(sb)が0個・1個・2個以上のどれでも判定できるように作り直した。
+                        //   以前は「1個でなければ2個ある」前提で sb[0]・sb[1] を読んでいたため、営業カレンダーで休みにした日など
+                        //   枠が0個の日があるとエラーで止まり、その週の予約枠が真っ白になっていた(隔週で休みがあると隔週で白くなる)
+                        for (let k = 0; k < array[i].times.length; k++) {
+                            const tm = array[i].times[k]
+                            tm.date = array[i].date
+                            let booked = false
+                            for (let j = 0; j < array[i].orders.length; j++) {
+                                const o = array[i].orders[j]
+                                if (tm.time == o.start_time && that.nextTime(array[i].times, k) == that.endOfT(o.end_time)) { booked = true; break }
                             }
-                            
-                        } else {
-                            for (let k = 0; k < array[i].times.length; k++) {
-                                // array[i].times[k].status = "unselected"
-                                array[i].times[k].date = array[i].date
-                                console.log("sblength",array[i].sb.length)
-                                if (array[i].sb.length == 1) {
-                                    if (that.formatTime(array[i].sb[0].start) <= that.formatTime(array[i].times[k]
-                                            .time) && that.formatTime(array[i].times[k].time) < that.formatTime(array[i]
-                                            .sb[
-                                                0].end)) {
-                                        array[i].times[k].status = "selected"
-                                    } else {
-                                        array[i].times[k].status = "uselected"
-                                    }
-                                } else {
-                                    if ((that.formatTime(array[i].sb[0].start) <= that.formatTime(array[i].times[k]
-                                            .time) && that
-                                            .formatTime(array[i].times[k].time) < that.formatTime(array[i].sb[0].end)
-                                            ) || (
-                                            that.formatTime(array[i].sb[1].start) <= that.formatTime(array[i].times[k]
-                                                .time) && that.formatTime(array[i].times[k].time) < that.formatTime(
-                                                array[i].sb[
-                                                    1].end))) {
-                                        console.log(true)
-                                        array[i].times[k].status = "selected"
-                                    } else {
-                                        console.log(false)
-                                        array[i].times[k].status = "uselected"
-                                    }
-                                }
-                    
-                            }
+                            if (booked) { tm.status = "unselected"; continue }
+                            tm.status = that.inBusiness(array[i].sb, tm.time) ? "selected" : "uselected"
                         }
                         tem.push(array[i])
                         // console.log("temp",array[i])
@@ -209,16 +156,32 @@
                         }
                     })
                     
-                    setTimeout(function() {
-                        that.weel = tem
-                        that.totalheight = 80 * tem[0].times.length
-                    }, 200)
-                },500)
+                    that.weel = tem
+                    that.totalheight = 80 * tem[0].times.length
+                }
                 
                 }
             }
         },
         methods: {
+            // [カスタムエイド 2026-10-24] その時刻が営業時間の枠(いくつあっても、0個でも)の中か
+            inBusiness(sb, t) {
+                const list = Array.isArray(sb) ? sb : []
+                return list.some((r) => r && r.start && r.end && this.formatTime(r.start) <= this.formatTime(t) && this.formatTime(t) < this.formatTime(r.end))
+            },
+            // [カスタムエイド 2026-10-22] 次の枠の時刻(最後の枠のあとは「30分後」。以前は最後の枠に予約があると止まっていた)
+            addHalf(t) {
+                const h = Number(t.split(':')[0]), m = Number(t.split(':')[1])
+                const v = h * 60 + m + 30
+                return (v / 60 < 10 ? '0' : '') + Math.floor(v / 60) + ':' + (v % 60 ? '30' : '00')
+            },
+            nextTime(times, k) {
+                return times[k + 1] ? times[k + 1].time : this.addHalf(times[k].time)
+            },
+            // 予約の終わり「00:00」は次の日の 0:00 = 24:00
+            endOfT(t) {
+                return t == '00:00' ? '24:00' : t
+            },
             getCurrent() {
                 let date = new Date()
                 let stamp = date.getTime()

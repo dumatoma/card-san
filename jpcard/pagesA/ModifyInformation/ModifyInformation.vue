@@ -114,15 +114,15 @@
       <u-action-sheet :show="showSex" :actions="actions" title="性別を選択してください" @close="showSex = false"
         @select="sexSelect">
       </u-action-sheet>
-      <u-datetime-picker :show="show" v-model="value1" mode="date" :minDate="-631180800000" @confirm="timeConfirm($event)" @cancel="cancel()">
-      </u-datetime-picker>
+      <!-- [カスタムエイド 2026-10-22] 新しいドラムロール(見出し・選んだ日付を大きく) -->
+      <cs-date-picker :show="show" v-model="value1" :minDate="-631180800000" @confirm="timeConfirm($event)" @cancel="cancel()" @close="cancel()"></cs-date-picker>
       <u-modal :show="keepShow" :title="title" :content='content' confirmText="OK" @confirm="confrims">
       </u-modal>
       <view class="btn" @click="showAlert1 = true" hover-class="hoverbtn">
           アカウントを削除
       </view>
     </view>
-    <u-picker @confirm="chooseAddress" :show="showa" @cancel="showa = false" :columns="city"></u-picker>
+    <cs-picker title="都道府県を選ぶ" @confirm="chooseAddress" :show="showa" @cancel="showa = false" @close="showa = false" :columns="city"></cs-picker>
     <mod v-if="showAlert" :config = 'configs' @getStatus='changeStatus'></mod>
     <mod v-if="showAlert1" :config = 'configg' @getStatus='changeStatus1'></mod>
   </view>
@@ -130,12 +130,14 @@
 
 <script>
   // const JYGoogleSignin = uni.requireNativePlugin('JY-GoogleSignin');
+  import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22] 新しいドラムロール
+  import csDatePicker from "@/components/csPicker/csDatePicker.vue"
   import {getUserInfos,getAddress,editUser,takeoff} from "@/api/index.js"
   import mod from '../../components/mod.vue'
   import { clearLoginState, forceLogout } from "@/utils/request.js" // ログアウト時に WebSocket も閉じる
   export default {
     components:{
-        mod
+        mod, csPicker, csDatePicker
     },
     data() {
       return {

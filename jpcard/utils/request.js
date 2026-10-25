@@ -8,7 +8,7 @@ import { clearLoginStorage, goLogin } from './clearLoginStorage.js' // [カス�
 const service = axios.create({
   // baseURL: 'https://hyk.ljcyh.com',//测试地址
   baseURL: 'https://api.card-san.jp',//测试地
-  timeout: 5 * 1000
+  timeout: 20 * 1000 // [カスタムエイド 2026-10-25] 5秒 → 20秒(サーバーの返事が5秒を少し過ぎただけで諦め、画面が空になっていた)
 })
 // 2.请求拦截器
 service.interceptors.request.use(config => {

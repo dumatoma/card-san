@@ -230,7 +230,8 @@
                 "path": "shop/shop",
                 "style": {
                     "navigationStyle": "custom",
-                    "enablePullDownRefresh": true
+                    "enablePullDownRefresh": true,
+                    "onReachBottomDistance": 800
                 }
 
 
@@ -288,6 +289,16 @@
                 "path": "webins/webins",
                 "style": {
                     "navigationBarTitleText": "",
+                    "enablePullDownRefresh": false
+                }
+
+            }, {
+                "path": "insVideo/insVideo",
+                "style": {
+                    "navigationBarTitleText": "",
+                    "navigationBarBackgroundColor": "#000000",
+                    "navigationBarTextStyle": "white",
+                    "backgroundColor": "#000000",
                     "enablePullDownRefresh": false
                 }
 

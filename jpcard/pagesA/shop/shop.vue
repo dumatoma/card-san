@@ -175,6 +175,7 @@
     import notice from "../notification/notification.vue"
     import couponList from "../couponList/couponList.vue"
     import menus from "../menu/menu.vue"
+    import { shopCacheGet, fetchShopInfo } from '@/utils/shopCache.js' // [カスタムエイド 2026-10-25]
     import svg1 from '../../static/svgjs/s1.js'
     import svg2 from '../../static/svgjs/s2.js'
     import svg3 from '../../static/svgjs/s3.js'
@@ -213,6 +214,7 @@
                 current: "My Card",
                 query: {},
                 shopInfo: {},
+                csTabSet: false, // [カスタムエイド 2026-10-25] 最初のタブを決めたか
                 tabs: [{
                         icon: "../../static/svg/s1.svg",
                         name: "My Card"
@@ -273,9 +275,9 @@
             let query = options
 
             that.query = query
-            setTimeout(() => {
-                 that.getInfo()
-            },500)
+            // [カスタムエイド 2026-10-25] 以前は 0.5秒待ってからお店の情報を読みに行っていたため、下のメニューのアイコンが遅れて出ていた。
+            //   すぐに読みに行く(前回の情報が端末にあれば、それで開いた瞬間に出す=utils/shopCache.js)
+            that.getInfo()
             getUnreadNum(query.id).then((res) => {
                 if(res.code == 200){
                     if(res.data.unread_num < 100){
@@ -307,12 +309,34 @@
             getInsNew(e){
                 that.number2 = 0
             },
+            // [カスタムエイド 2026-10-25] お店の情報:前回の情報を先に出し、最新を読み込む(読み込めなければ2回までやり直す)。
+            //   以前は読み込みに失敗すると何も出さず、店名・下のメニューが空のままになっていた
             getInfo() {
                 let that = this
                 this.bottom = 25
-                // 获取店铺信息
-                getShopInfo(that.query.id).then((res) => {
-                    if (res.code == 200) {
+                const cached = shopCacheGet(that.query.id)
+                if (cached) that.applyShopInfo(cached, true)
+                fetchShopInfo(that.query.id).then((res) => {
+                    if (res && res.code == 200) that.applyShopInfo(res, false)
+                    else if (!cached) that.shopLoadFailed()
+                }).catch(() => {
+                    if (!cached) that.shopLoadFailed()
+                })
+            },
+            shopLoadFailed() {
+                uni.showModal({
+                    title: '読み込めませんでした',
+                    content: '通信がうまくいきませんでした。もう一度読み込みますか?',
+                    confirmText: '読み込む',
+                    cancelText: '閉じる',
+                    success: (r) => {
+                        if (r.confirm) this.getInfo()
+                    }
+                })
+            },
+            applyShopInfo(res, fromCache) {
+                let that = this
+                if (res.code == 200) {
                         let temp = []
                         let notice = {
                             icon: "../../static/svg/s5.svg",
@@ -353,10 +377,14 @@
                         for (let i = 0; i < end; i++) {
                             that.changable.push(ti)
                         }
-                        if(that.query.source == 'push'){
-                            that.current = "クーポン"
-                        }else{
-                             that.current = 'My Card'
+                        // [カスタムエイド 2026-10-25] 端末に残した情報と最新の情報で2回呼ばれるので、最初の1回だけタブを決める
+                        if (!that.csTabSet) {
+                            that.csTabSet = true
+                            if(that.query.source == 'push'){
+                                that.current = "クーポン"
+                            }else{
+                                 that.current = 'My Card'
+                            }
                         }
                        
                         let page_footer_icon_color = res.data.shop.page_footer_icon_color || "#000"
@@ -373,6 +401,7 @@
                         this.svgData15 = this.changeColor(this.svgData15, "#1A73E8");
                         this.svgData16 = this.changeColor(this.svgData16, "#1A73E8");
                         that.bottomTabs = [...that.tabs,...that.changable]
+                        if (fromCache) return // 新着の数は最新の情報が届いてから
                         if(res.data.shop.notice_type == 2){
                             getInsList(that.query.id).then((result) => {
                                 if(result.code == 200){
@@ -391,8 +420,7 @@
                                 }
                             }).catch(() => {})
                         }
-                    }
-                }).catch(() => {})
+                }
             },
             changeTas(e) {
                 let that = this

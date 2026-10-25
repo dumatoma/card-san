@@ -18,15 +18,16 @@
         <view class="ps" v-if="isPos">
             <view class="ps-live" v-if="pos.using">
                 <view class="ps-band">ご利用中 ・ スタッフに見せてください</view>
-                <view class="ps-clock">{{ clock }}</view>
-                <view class="ps-date">{{ today }}</view>
+                <!-- [カスタムエイド 2026-10-23] 大きく出すのは残り時間。今の時刻は下に小さく(スタッフがお店の時計と見比べられるように) -->
+                <view class="ps-left" :class="{ soon: leftSec < 60 }"><text class="ps-left-l">残り</text>{{ leftText }}</view>
+                <view class="ps-date">{{ clock }} ・ {{ today }}</view>
                 <view class="ps-bc">
                     <image class="ps-bc-img" :src="pos.image" mode="aspectFit"></image>
                     <view class="ps-bc-n">{{ pos.value }}</view>
                 </view>
             </view>
-            <view class="ps-timer" v-if="pos.using">あと {{ leftText }} 表示します(そのあと「使用済み」になります)</view>
-            <view class="ps-hint" v-if="pos.using">時刻が動いていて、帯の色が流れていれば本物の画面です。</view>
+            <view class="ps-timer" v-if="pos.using">0:00 になると「使用済み」になります</view>
+            <view class="ps-hint" v-if="pos.using">残り時間と時刻が動いていて、帯の色が流れていれば本物の画面です。</view>
 
             <view class="ps-used" v-if="!pos.using && pos.used_time">
                 <view class="ps-stamp">使用済み</view>
@@ -44,7 +45,8 @@
             <view class="ps-hint" v-if="!pos.using && !pos.can_use && !pos.used_time">{{ pos.in_date ? '利用回数の上限に達しています。' : '有効期限の外のため、使えません。' }}</view>
         </view>
         <view @click="openmask" class="ma" v-if="info.bar_code && !isPos">
-            <image :src="info.bar_code" style="width: 700rpx;height: 160rpx;" mode=""></image>
+            <!-- [カスタムエイド 2026-10-24] 横に長すぎて読み取りにくかったため、幅 700rpx → 500rpx に(高さはそのまま) -->
+            <image :src="info.bar_code" style="width: 500rpx;height: 160rpx;" mode=""></image>
             <view class="ma-sn" v-text="info.bar_code_number"></view>
         </view>
         <view class="cou-box">
@@ -78,9 +80,9 @@
         <view class="ps-ov" v-if="showConfirm" @touchmove.stop.prevent>
             <view class="ps-dlg">
                 <view class="ps-dlg-i">!</view>
-                <view class="ps-dlg-t">このクーポンを使いますか?</view>
-                <view class="ps-dlg-m">「今すぐ使う」を押すと、使ったことになります(元に戻せません)。{{ '\n' }}お店のスタッフの前で押してください。</view>
-                <view class="ps-dlg-ok" :class="{ off: using }" hover-class="ps-hover" @click="useNow">{{ using ? '処理しています…' : '今すぐ使う' }}</view>
+                <view class="ps-dlg-t">今からこのクーポンを使いますか?</view>
+                <view class="ps-dlg-m">「今から使う」を押すと、使ったことになります(元に戻せません)。</view>
+                <view class="ps-dlg-ok" :class="{ off: using }" hover-class="ps-hover" @click="useNow">{{ using ? '処理しています…' : '今から使う' }}</view>
                 <view class="ps-dlg-no" hover-class="ps-hover" @click="showConfirm = false">後で</view>
             </view>
         </view>
@@ -135,10 +137,13 @@
             },
             today() {
                 const d = new Date(this.nowSec * 1000)
-                return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日(' + '日月火水木金土'[d.getDay()] + ')'
+                return (d.getMonth() + 1) + '月' + d.getDate() + '日(' + '日月火水木金土'[d.getDay()] + ')'
+            },
+            leftSec() {
+                return Math.max(0, (this.pos.expire_at || 0) - this.nowSec)
             },
             leftText() {
-                const s = Math.max(0, (this.pos.expire_at || 0) - this.nowSec)
+                const s = this.leftSec
                 return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2)
             },
             usedLabel() {
@@ -257,12 +262,14 @@
     .ps-band { height: 68rpx; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 26rpx; font-weight: 700; letter-spacing: 2rpx;
         background: linear-gradient(90deg, #D93025, #F29900, #D93025, #F29900); background-size: 300% 100%; animation: psFlow 3s linear infinite; }
     @keyframes psFlow { from { background-position: 0% 0; } to { background-position: 100% 0; } }
-    .ps-clock { font-size: 64rpx; font-weight: 700; text-align: center; margin-top: 24rpx; color: #1D1D1F; font-variant-numeric: tabular-nums; }
-    .ps-date { font-size: 26rpx; color: #6E6E73; text-align: center; }
+    .ps-left { font-size: 88rpx; font-weight: 700; text-align: center; margin-top: 20rpx; color: #1D1D1F; font-variant-numeric: tabular-nums; line-height: 1.2; }
+    .ps-left.soon { color: #D93025; }
+    .ps-left-l { font-size: 30rpx; color: #6E6E73; font-weight: 700; margin-right: 12rpx; }
+    .ps-date { font-size: 26rpx; color: #6E6E73; text-align: center; font-variant-numeric: tabular-nums; }
     .ps-bc { padding: 20rpx 32rpx 32rpx; text-align: center; }
-    .ps-bc-img { width: 100%; height: 200rpx; }
+    .ps-bc-img { width: 500rpx; max-width: 100%; height: 180rpx; } /* [カスタムエイド 2026-10-24] 横に長すぎないように(読み取りやすい長さ) */
     .ps-bc-n { font-size: 30rpx; letter-spacing: 4rpx; color: #1D1D1F; margin-top: 8rpx; }
-    .ps-timer { font-size: 26rpx; color: #D93025; text-align: center; margin-top: 20rpx; }
+    .ps-timer { font-size: 26rpx; color: #6E6E73; text-align: center; margin-top: 20rpx; }
     .ps-hint { font-size: 24rpx; color: #8A8A8E; text-align: center; line-height: 1.6; margin-top: 16rpx; }
     .ps-used { background: #FFFFFF; border-radius: 32rpx; padding: 48rpx 32rpx; text-align: center; margin-bottom: 24rpx; }
     .ps-stamp { display: inline-block; border: 6rpx solid #8A8A8E; color: #8A8A8E; font-size: 44rpx; font-weight: 700; padding: 8rpx 36rpx; border-radius: 20rpx; transform: rotate(-6deg); }

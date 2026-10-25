@@ -1,472 +1,114 @@
 <template>
-    <view style="height: 100vh;overflow-y: scroll;">
-        <!-- 自定义顶部导航 -->
-        <u-navbar title="営業カレンダー" :placeholder="true" :safeAreaInsetTop="true" :border="true">
+    <view class="bc-page">
+        <!-- [カスタムエイド 2026-10-22] お店の営業カレンダーを管理App と同じ形に(見るだけ):
+             月曜はじまり・休みは赤い「休」、下のカードは中央そろえで Google と同じ言葉(営業中/営業時間外/休業日)。
+             以前は月を変えるとお店の番号を送っておらず、ほかの月が表示できなかったのも直した -->
+        <u-navbar title="営業カレンダー" :placeholder="true" :safeAreaInsetTop="true" :border="true" bgColor="#FBFBFD">
             <view class="u-nav-slot" slot="left">
-                <image src="../../static/svg/button.svg" style="width: 60upx;height: 60upx;" mode="" @click="toIndex">
-                </image>
+                <image src="../../static/svg/button.svg" style="width: 60upx;height: 60upx;" mode="" @click="toIndex"></image>
             </view>
         </u-navbar>
-        <!-- 日历插件 -->
-        <calendar @onDayClick="selectDay" :restArr='rest' @monthChange="monthChange"></calendar>
-        <!-- 当日营业情况 -->
-        <view class="today">
-            <view class="todayInfo">
-                <view>
-                    {{month}}月{{date}}日
+        <view class="bc-body">
+            <view class="bc-card bc-cal">
+                <cs-calendar :value="sel" :rest="restKeys" weekColor @change="pick" @month="onMonth"></cs-calendar>
+                <view class="bc-legend"><text><text class="bc-l-rest">休</text> 休業日</text></view>
+            </view>
+            <view class="bc-card bc-day">
+                <view class="bc-date">{{ selText }}</view>
+                <view class="bc-st" :class="'c-' + status.color">{{ status.text }}<text class="bc-sub" v-if="status.sub"> ・ {{ status.sub }}</text></view>
+                <view v-if="selDay && selDay.business == 1">
+                    <view class="bc-hm" v-for="(t, i) in selTimes" :key="i">{{ t.start }} 〜 {{ t.end }}</view>
                 </view>
-                <view>
-                    {{day}}曜日
-                </view>
+                <view class="bc-off" v-else-if="selDay">終日お休み</view>
             </view>
-            <view class="opTitle" v-if="open == 1 && isToday != 1">
-                営業時間
-            </view>
-            <view class="opTitle" style="color: #707070;" v-if="open == 1 && isToday != 0 && ss == 0">
-                営業時間外
-            </view>
-            <view class="opTitle" v-if="open == 1 && isToday != 0  && ss == 1">
-                営業中
-            </view>
-            <view class="opTitle" style="color: rgb(217, 48, 37)" v-if="open == 0">
-                休業日
-            </view>
-            <view v-if="open == 1">
-                <view class="openTime" v-for="(item,index) in openArr" v-text="`${item.start} ~ ${item.end}`"></view>
-            </view>
-        </view>
-        <view class="height:50upx">
-            
         </view>
     </view>
 </template>
 <script>
-    import calendar from "../../components/calendar.vue"
-    import {
-        getCalendar,
-        setBusinessHours
-    } from "@/api/index.js"
+    import csCalendar from '@/components/csCalendar/csCalendar.vue'
+    import { getCalendar } from '@/api/index.js'
+    const WEEK = ['日', '月', '火', '水', '木', '金', '土']
+    const pad = (n) => (n < 10 ? '0' : '') + n
+    const keyOf = (dt) => dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate())
     export default {
-        components: {
-            calendar
-        },
-		// props:["sid"],
+        components: { csCalendar },
         data() {
-            return {
-                isToday:1,
-                rest: [],
-                today:{},
-                openArr: [],
-                days: {},
-                month: "",
-                ss:0,
-                date: "",
-                day: "",
-                fulldate: "",
-                year: "",
-                settingIndex: 0,
-                settingStatus: "",
-                open: 1,
-                show: false,
-                show1: false,
-                takeRest: false,
-                pickerArr: [{
-                    start: "00:00",
-                    end: "00:00"
-                }],
-                timeArr: [
-                    ["00:00", "00:30", "01:00", "01:30", "02:00", "02:30", "03:00", "03:30", "04:00", "04:30",
-                        "05:00", "05:30", "06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30",
-                        "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-                        "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30",
-                        "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00", "23:30"
-                    ]
-                ]
-            };
+            const today = keyOf(new Date())
+            return { sid: '', today, sel: today, ym: today.slice(0, 7), days: {}, rests: [], now: new Date() }
         },
-
-        created() {
-            
+        computed: {
+            selDay() {
+                if (this.sel.slice(0, 7) != this.ym) return null
+                return this.days[Number(this.sel.slice(8, 10))] || null
+            },
+            selTimes() {
+                return ((this.selDay && this.selDay.business_time) || []).filter((t) => t && t.start && t.end)
+            },
+            selText() {
+                const p = this.sel.split('-')
+                const w = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).getDay()
+                return Number(p[1]) + '月' + Number(p[2]) + '日(' + WEEK[w] + ')'
+            },
+            restKeys() {
+                return this.rests.map((d) => this.ym + '-' + pad(d))
+            },
+            status() {
+                const day = this.selDay
+                if (!day) return { text: '', color: 'plain', sub: '' }
+                if (day.business != 1) return { text: '休業日', color: 'red', sub: '' }
+                if (this.sel != this.today) return { text: '営業時間', color: 'plain', sub: '' }
+                const hm = pad(this.now.getHours()) + ':' + pad(this.now.getMinutes())
+                const a = this.selTimes
+                if (a.some((t) => t.start <= hm && hm < t.end)) return { text: '営業中', color: 'green', sub: '' }
+                const next = a.find((t) => t.start > hm)
+                return { text: '営業時間外', color: 'red', sub: next ? '営業開始 ' + next.start : '' }
+            }
         },
         onLoad(options) {
-            let that = this
-            let date = that.getMonth()
-            let today = that.getToday()
-            that.today = today
-            let data = {}
-            data.type = "day"
-            data.date = date
-            that.month = today.month
-            that.date = today.date
-            that.day = today.week
-            that.year = today.year
-            that.fulldate = today.year + '-' + today.month + '-' + today.date
-            data.id = options.sid
-            that.getCalendar(data, "today", today.date * 1)
+            this.sid = options.sid
+            this.loadMonth(this.ym)
+        },
+        onShow() {
+            this.now = new Date()
         },
         methods: {
-            getMonth() {
-                let that = this
-                let date = new Date()
-                let year = date.getFullYear()
-                let month = (date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1
-                return year + "-" + month
-            },
             toIndex() {
                 uni.navigateBack()
             },
-            save() {
-                let that = this
-                let obj = {}
-                obj.type = 'day'
-                obj.date = that.fulldate
-                obj.business = that.open
-                obj.business_time = that.openArr
-                setBusinessHours(obj).then((res) => {
-                    if (res.code == 200) {
-                        uni.showToast({
-                            title: res.message
-                        })
-                        let data = {}
-                        data.type = "day"
-                        data.date = that.year + '-' + that.month
-                        that.getCalendar(data, "a", 1)
-                        that.show = false
-                    }
+            loadMonth(ym) {
+                getCalendar({ id: this.sid, type: 'day', date: ym }).then((res) => {
+                    if (res.code != 200 || ym != this.ym) return
+                    this.days = res.data.day_business || {}
+                    this.rests = (res.data.rest_days || []).map((v) => v * 1)
                 })
             },
-            confirmPicker(e) {
-                let that = this
-                let index = that.settingIndex
-                let status = that.settingStatus
-                if (status == "start") {
-                    that.openArr[index].start = e.value[0]
-                } else {
-                    that.openArr[index].end = e.value[0]
-                }
-                that.show1 = false
+            onMonth(e) {
+                this.ym = e.y + '-' + pad(e.m)
+                this.days = {}
+                this.rests = []
+                this.sel = this.today.slice(0, 7) == this.ym ? this.today : this.ym + '-01'
+                this.loadMonth(this.ym)
             },
-            showSetting() {
-                let that = this
-                that.show = true
-            },
-            getToday() {
-                let date = new Date()
-                let year = date.getFullYear()
-                let month = (date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1
-                let week = date.getDay()
-                let sdate = date.getDate() < 10 ? '0' + date.getDate() : date.getDate()
-                let wek
-                wek = week == 0 ? '日' : week == 1 ? '月' : week == 2 ? '火' :
-                    week == 3 ? '水' : week == 4 ? '木' : week == 5 ? '金' : '土'
-                let obj = {}
-                obj.week = wek
-                obj.year = year
-                obj.month = month
-                obj.date = sdate
-                return obj
-            },
-            getCalendar(data, status, index) {
-                getCalendar(data).then((res) => {
-                    let that = this
-                    if (res.code == 200) {
-                        let temp = []
-                        that.days = res.data.day_business
-                        res.data.rest_days.forEach((value, index) => {
-                            temp.push(value * 1)
-                        })
-                        that.rest = temp
-                        if (status == "today") {
-                            if (res.data.day_business[index].business_time.length > 0) {
-                                that.openArr = res.data.day_business[index].business_time
-                                
-                            } else {
-                                that.openArr = that.pickerArr
-                            }
-                            if(that.openArr.length > 1){
-                                if(that.checkAuditTime(that.openArr[0].start,that.openArr[0].end) || that.checkAuditTime(that.openArr[1].start,that.openArr[1].end)){
-                                    that.ss = 1
-                                }else{
-                                    that.ss = 0
-                                }
-                            }else if(that.openArr.length = 1){
-                                if(that.checkAuditTime(that.openArr[0].start,that.openArr[0].end)){
-                                    that.ss = 1
-                                }else{
-                                    that.ss = 0
-                                }
-                            }
-                            that.open = res.data.day_business[index].business
-                        }
-                    }
-                })
-            },
-            checkAuditTime(beginTime, endTime) {
-            		var nowDate = new Date();
-            		var beginDate = new Date(nowDate);
-            		var endDate = new Date(nowDate);
-            		
-            		var beginIndex = beginTime.lastIndexOf("\:");
-            		var beginHour = beginTime.substring(0, beginIndex);
-            		var beginMinue = beginTime.substring(beginIndex + 1, beginTime.length);
-            		beginDate.setHours(beginHour, beginMinue, 0, 0);
-            		
-            		var endIndex = endTime.lastIndexOf("\:");
-            		var endHour = endTime.substring(0, endIndex);
-            		var endMinue = endTime.substring(endIndex + 1, endTime.length);
-            		endDate.setHours(endHour, endMinue, 0, 0);
-            		return nowDate.getTime() - beginDate.getTime() >= 0 && nowDate.getTime() <= endDate.getTime();
-            },
-            showPicker(index, status) {
-                let that = this
-                that.show1 = true
-                that.settingIndex = index
-                that.settingStatus = status
-            },
-            selectDay(e) {
-                let that = this
-                that.fulldate = e.date
-                let indexArr = e.date.split("-")
-                let index = indexArr[2] * 1
-                let today = that.today
-                if((today.year + '-' + today.month + "-"+today.date) == e.date){
-                    that.isToday = 1
-                }else{
-                    that.isToday = 0
-                }
-                that.month = indexArr[1]
-                that.date = indexArr[2]
-                that.year = indexArr[0]
-                that.day = e.week
-                if (that.days[index].business_time.length > 0) {
-                    that.openArr = that.days[index].business_time
-                } else {
-                    that.openArr = that.pickerArr
-                }
-
-                that.open = that.days[index].business
-                if(that.openArr.length > 1){
-                    if(that.checkAuditTime(that.openArr[0].start,that.openArr[0].end) || that.checkAuditTime(that.openArr[1].start,that.openArr[1].end)){
-                        that.ss = 1
-                    }else{
-                        that.ss = 0
-                    }
-                }else if(that.openArr.length = 1){
-                    if(that.checkAuditTime(that.openArr[0].start,that.openArr[0].end)){
-                        that.ss = 1
-                    }else{
-                        that.ss = 0
-                    }
-                }
-            },
-            monthChange(e) {
-                let that = this
-                let date = e.year + '-' + e.month
-                let data = {}
-                data.type = "day"
-                data.date = date
-                that.rest = []
-                that.getCalendar(data)
-            },
-            toSetting() {
-                uni.navigateTo({
-                    url: "../calender/setting/setting"
-                })
-            },
-            changeStatus(e) {
-                this.open = e
-            },
-            additem() {
-                let that = this
-                let obj = {}
-                obj.start = "00:00"
-                obj.end = "00:00"
-                that.openArr.push(obj)
-            },
-            delitem() {
-                let that = this
-                that.openArr.splice(1, 1)
+            pick(k) {
+                this.sel = k
             }
         }
     }
 </script>
 <style lang="scss">
-    .timePicker {
-        .pickerTitle {
-            display: flex;
-            font-size: 32upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #707070;
-            margin-top: 96upx;
-            border-bottom: 2upx solid #d2d2d7;
-            padding-bottom: 12upx;
-
-            .titleitem {
-                flex: 1;
-                text-align: center;
-            }
-        }
-
-        .pickerContent {
-            .pickerItem {
-                display: flex;
-                align-items: center;
-                flex: 1;
-                text-align: center;
-                box-sizing: border-box;
-                padding: 40upx 0;
-                border-bottom: 2upx solid #d2d2d7;
-
-                .pItem {
-                    flex: 1;
-                }
-
-                .pItem:last-child {
-                    // box-sizing: border-box;
-                    // padding-left: 80upx;
-                    position: relative;
-                    left: 60upx;
-                }
-            }
-        }
-    }
-
-    .pContent {
-        width: 100vw;
-        height: 90vh;
-        background: #fff;
-        overflow-y: scroll;
-        border-top-left-radius: 32upx;
-        border-top-right-radius: 32upx;
-
-        .Cdate {
-            display: flex;
-            align-items: center;
-            box-sizing: border-box;
-            padding: 10upx 50upx;
-
-            .CdateItem:last-child {
-                margin-left: 156upx;
-            }
-
-            .CdateItem {
-                display: flex;
-                align-items: center;
-                font-size: 40upx;
-                font-family: Hiragino Sans-W3, Hiragino Sans;
-                font-weight: normal;
-                color: #AAAAAA;
-
-                .selectContent {
-                    margin-right: 28upx;
-                }
-            }
-        }
-
-        .dateInfo {
-            font-size: 48upx;
-            font-family: Hiragino Sans-W6, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-            display: flex;
-            box-sizing: border-box;
-            padding: 92upx 40upx;
-
-            .todate {
-                margin-right: 60upx;
-            }
-        }
-
-        .title {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-sizing: border-box;
-            padding: 32upx 26upx;
-            background: #FBFBFD;
-            border-bottom: 2upx solid #d2d2d7;
-
-            .titleName {
-                font-size: 40upx;
-                font-family: Hiragino Sans-W5, Hiragino Sans;
-                font-weight: normal;
-                color: #1D1D1F;
-            }
-        }
-    }
-
-
-
-    .today {
-        width: 600upx;
-        background: #F5F5F7;
-        box-shadow: 0px 0px 12upx 2upx rgba(0, 0, 0, 0.16);
-        border-radius: 20upx;
-        margin: 80upx auto 0;
-        box-sizing: border-box;
-        padding: 24upx 0;
-        text-align: center;
-
-        .todayInfo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 40upx;
-
-            view {
-                margin: 0 20upx;
-            }
-        }
-
-        .opTitle {
-            font-size: 40upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #007AFF;
-        }
-
-        .openTime {
-            font-size: 34upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #1D1D1F;
-            margin-top: 20upx;
-        }
-    }
-
-    .calendarChoose {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #F5F5F7;
-        box-sizing: border-box;
-        padding: 44upx 60upx;
-
-        .chooseRight {
-            display: flex;
-            align-items: center;
-        }
-    }
-
-    .page {
-        height: 80vh;
-    }
-
-    .dateTitle {
-        display: flex;
-        box-sizing: border-box;
-        padding: 20upx 40upx;
-        background: #F5F5F7;
-        border-bottom: 2upx solid #d2d2d7;
-
-        .dateItem {
-            flex: 1;
-            text-align: center;
-            font-size: 28upx;
-            font-family: Hiragino Sans-W6, Hiragino Sans;
-            font-weight: normal;
-            color: #86868B;
-        }
-    }
+    .bc-page { min-height: 100vh; background: #F5F5F7; }
+    .bc-body { padding: 40rpx 24rpx calc(80rpx + env(safe-area-inset-bottom)); }
+    .bc-card { background: #FFFFFF; border-radius: 32rpx; margin-bottom: 48rpx; }
+    .bc-cal { padding: 24rpx 24rpx 8rpx; }
+    .bc-legend { display: flex; padding: 16rpx 8rpx 20rpx; font-size: 22rpx; color: #6E6E73; }
+    .bc-l-rest { color: #D93025; font-weight: bold; margin-right: 6rpx; }
+    .bc-day { padding: 40rpx 32rpx; text-align: center; }
+    .bc-date { font-size: 30rpx; color: #3C4043; font-weight: bold; }
+    .bc-st { font-size: 34rpx; font-weight: bold; margin-top: 16rpx; }
+    .bc-st.c-green { color: #188038; }
+    .bc-st.c-red { color: #D93025; }
+    .bc-st.c-plain { color: #3C4043; }
+    .bc-sub { font-size: 28rpx; font-weight: normal; color: #3C4043; }
+    .bc-hm { font-size: 48rpx; font-weight: bold; color: #1D1D1F; margin-top: 12rpx; }
+    .bc-off { font-size: 30rpx; color: #6E6E73; margin-top: 16rpx; }
 </style>

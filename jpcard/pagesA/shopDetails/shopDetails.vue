@@ -1,5 +1,6 @@
 <template>
-    <view class="">
+    <!-- [カスタムエイド 2026-10-25] 会員証:背景を薄いグレーにし、会員証・メンバーズカード・有効期限と備考・予約・特典をそれぞれ白いカードに -->
+    <view class="cs-sd">
         <!-- [カスタムエイド 2026-10-20] 店名が長いと右のアイコンにくっつくため、店名の幅を 400rpx→340rpx に(入りきらない分は「…」) -->
         <u-navbar :title="info.shop_name" titleWidth="340rpx" :leftIconColor="color" :titleStyle="{'color':color}" :bgColor="bgColor"
             :placeholder="true" :safeAreaInsetTop="true" :border="true" @rightClick="rightClick" @leftClick="leftClick">
@@ -18,6 +19,7 @@
                 <view class="con">
                     <!-- [カスタムエイド 2026-10-19] 会員番号(NO)はある時だけ表示(今までは無いと「NO:-」と出ていた) -->
                     <view class="left" v-if="info.member_no">NO: {{info.member_no}}</view>
+                    <view class="cs-mlbl">会員証</view>
                     <view class="title" v-text="`${info.name} さん`"></view>
                     <view class="img" v-if="info.card_type != 3">
                         <image :src="info.qrcode" mode=""></image>
@@ -29,7 +31,11 @@
                 </view>
             </view>
             <view class="cardInfo">
-                <view class="cardTitle" v-text="`${info.card_name}`"></view>
+                <!-- [カスタムエイド 2026-10-25] カード名の右にスタンプの数(3 / 10) -->
+                <view class="cs-ct">
+                    <view class="cardTitle" v-text="`${info.card_name}`"></view>
+                    <view class="cs-chip" v-if="csTotal > 0 && info.card_type != 3">{{csSealed}} / {{csTotal}}</view>
+                </view>
                 <view class="cardY" v-if="info.card_type == 1" :style="frameCss">
                     <!-- [カスタムエイド 2026-10-20] スタンプが3段以上(11個以上)のときは、カードの高さを2段半に止めて、中をスクロール。開いたときは空いているマスの段が見える所まで自動で動かす -->
                     <scroll-view class="cs-seal-scroll" scroll-y :style="sealBoxStyle" :scroll-top="sealTop">
@@ -121,6 +127,14 @@
                     </view>
                     <text class="fl-banner-lk">表示 ›</text>
                 </view>
+                <!-- [カスタムエイド 2026-10-25] あと何個(満了したら上の帯を出すので、ここは出さない) -->
+                <view class="cs-prog" v-if="csTotal > 0 && info.card_type != 3 && !fullDone && csSealed < csTotal">
+                    <view class="cs-bar"><view class="cs-bar-i" :style="{ width: (csSealed / csTotal * 100) + '%' }"></view></view>
+                    <text>あと{{csTotal - csSealed}}個{{hasGift ? 'で特典' : ''}}</text>
+                </view>
+            </view>
+            <!-- [カスタムエイド 2026-10-25] 保有ポイント・有効期限・備考は別の白いカードに -->
+            <view class="cardInfo cs-kvcard" v-if="(info.card_type == 3 && info.is_point == 1) || info.expire_time || info.remark">
                 <view class="cardInfos">
                     <view class="pri-box" v-if="info.card_type == 3 && info.is_point == 1">
                         <view class="pri">
@@ -128,7 +142,8 @@
                         </view>
                         <view class="pri-sum" v-text="`${member.point}pt`"></view>
                     </view>
-                    <view class="ciItem" v-if="info.expire_time != 'なし'">
+                    <!-- [カスタムエイド 2026-10-25] 有効期限は「なし」のときも出す(以前から「なし」のときは隠していた。管理Appと同じ表示に) -->
+                    <view class="ciItem" v-if="info.expire_time">
                         <view class="ciLeft">
                             有効期限
                         </view>
@@ -170,14 +185,15 @@
                 </view>
             </view>
             <view class="special" v-if="discount_images.length> 0">
-                <view class="specialTitle">
-                    特 典
-                </view>
                 <!-- [カスタムエイド 2026-10-19] 点(●●●)をやめ、2枚以上のときだけ右下に「1 / 3」。押したら全画面・左右にスワイプ -->
                 <view class="cs-swipe">
                     <u-swiper :list="discount_images" height="250" :indicator="false" :radius="0" :autoplay="false"
                         @change="benefitChange" @click="openBenefit"></u-swiper>
                     <view class="cs-top-count" v-if="discount_images.length > 1">{{benefitIndex + 1}} / {{discount_images.length}}</view>
+                </view>
+                <!-- [カスタムエイド 2026-10-25] 「特典」の印は画像の下・文の上に -->
+                <view class="specialTitle">
+                    特 典
                 </view>
                 <view class="remark" style="white-space: pre-wrap;" v-text="info.discount_content"></view>
             </view>
@@ -286,6 +302,13 @@
             };
         },
         computed: {
+            // [カスタムエイド 2026-10-25] スタンプの数(押した数 / 全部)
+            csTotal() {
+                return (this.info.seals || []).length
+            },
+            csSealed() {
+                return (this.info.seals || []).filter((v) => v && v.sealed).length
+            },
             // [カスタムエイド 2026-10-20] カードの枠:お店が画像を選んでいれば画像(柄としてならべる/全体に広げる)、なければ今までどおり色
             frameCss() {
                 const c = this.info.background_color || ''
@@ -1338,5 +1361,172 @@
         margin-left: 16rpx;
         color: #1A73E8;
         font-weight: 700;
+    }
+
+    /* ===== [カスタムエイド 2026-10-25] 会員証:白いカードに分ける(モック「Card-San App 画面改善モック」2回目) ===== */
+    .cs-sd {
+        background: #F5F5F7;
+        min-height: 100vh;
+    }
+    .top-box,
+    .cardInfo,
+    .appoint,
+    .special {
+        background: #FFFFFF !important;
+        border-radius: 28rpx;
+        margin: 24rpx 24rpx 0 !important;
+        box-shadow: none !important;
+        border-bottom: none !important;
+        width: auto !important;
+        overflow: hidden;
+    }
+    .top-box {
+        padding: 8rpx 0 32rpx !important;
+    }
+    .top-box .con .title {
+        margin-top: 4rpx !important;
+    }
+    .cs-mlbl {
+        margin-top: 24rpx;
+        text-align: center;
+        font-size: 22rpx;
+        letter-spacing: 4rpx;
+        color: #86868B;
+    }
+    .top-box .con .img image {
+        padding: 12rpx;
+        border: 1px solid #E5E5EA;
+        border-radius: 20rpx;
+    }
+    .top-box .con .img .tiaoxing {
+        border: none;
+        padding: 0;
+    }
+    .cs-mhint {
+        margin-top: 16rpx;
+        text-align: center;
+        font-size: 22rpx;
+        color: #6E6E73;
+    }
+    /* メンバーズカード:白いカードの上に置く(お店の枠の色がグレーでも背景と重ならない) */
+    .cardInfo {
+        padding: 32rpx 28rpx 28rpx !important;
+    }
+    .cs-ct {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .cardInfo .cs-ct .cardTitle {
+        flex: 1;
+        min-width: 0;
+        width: auto !important;
+        text-align: left !important;
+        font-weight: 700 !important;
+        font-size: 30rpx !important;
+    }
+    .cs-chip {
+        flex-shrink: 0;
+        margin-left: 16rpx;
+        padding: 6rpx 20rpx;
+        border-radius: 999rpx;
+        background: #EEF4FF;
+        color: #1A73E8;
+        font-size: 24rpx;
+        font-weight: 700;
+    }
+    .cardY,
+    .app-border {
+        margin-top: 24rpx !important;
+        border-radius: 20rpx !important;
+    }
+    .cs-prog {
+        display: flex;
+        align-items: center;
+        margin-top: 24rpx;
+        font-size: 24rpx;
+        color: #6E6E73;
+    }
+    .cs-bar {
+        flex: 1;
+        height: 10rpx;
+        border-radius: 10rpx;
+        background: #E5E5EA;
+        overflow: hidden;
+        margin-right: 16rpx;
+    }
+    .cs-bar-i {
+        height: 100%;
+        background: #1A73E8;
+        border-radius: 10rpx;
+    }
+    /* 有効期限・備考:左に項目・右に内容(ほかの画面と同じ表) */
+    .cs-kvcard {
+        padding: 8rpx 32rpx !important;
+    }
+    .cardInfo .cardInfos {
+        margin-top: 0 !important;
+        padding: 0 !important;
+    }
+    .cardInfo .cardInfos .ciItem {
+        margin-bottom: 0 !important;
+        padding: 24rpx 0;
+        border-bottom: 1px solid #E5E5EA;
+        align-items: flex-start !important;
+    }
+    .cardInfo .cardInfos .ciItem:last-child {
+        border-bottom: none;
+    }
+    .cardInfo .cardInfos .ciItem .ciLeft {
+        width: 140rpx !important;
+        height: auto !important;
+        line-height: 1.65 !important;
+        background: transparent !important;
+        text-align: left !important;
+        color: #6E6E73 !important;
+        flex-shrink: 0;
+    }
+    .cardInfo .cardInfos .ciItem .ciRight {
+        flex: 1;
+        min-width: 0;
+        line-height: 1.65;
+    }
+    .cardInfo .cardInfos .pri-box {
+        margin: 24rpx 0 !important;
+    }
+    /* 予約・特典 */
+    .appoint {
+        padding: 32rpx !important;
+    }
+    .special {
+        padding: 0 0 8rpx !important;
+    }
+    .special .specialTitle {
+        width: auto !important;
+        display: inline-block;
+        height: auto !important;
+        line-height: 1.6 !important;
+        padding: 4rpx 22rpx;
+        border-radius: 12rpx !important;
+        font-size: 24rpx !important;
+        font-weight: 700;
+        left: 32rpx !important;
+        margin: 28rpx 0 0 !important;
+    }
+    .special .remark {
+        padding: 16rpx 32rpx 28rpx !important;
+        font-size: 28rpx !important;
+        line-height: 1.7;
+    }
+    .fl-banner {
+        margin-top: 24rpx !important;
+    }
+
+    /* [カスタムエイド 2026-10-25] カードとカードの間を 1.5倍に(24 → 36。店舗情報とそろえる) */
+    .top-box,
+    .cardInfo,
+    .appoint,
+    .special {
+        margin-top: 36rpx !important;
     }
 </style>

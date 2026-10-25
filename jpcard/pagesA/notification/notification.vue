@@ -10,7 +10,7 @@
                     class="iconright" @click=""></view>
             </view>
         </u-navbar>
-        <view class="news-box" v-if="type == 1">
+        <view class="news-box cs-nb" v-if="type == 1">
             <view class="news-items" v-for="(item,index) in list" :key="index">
                 <!-- [カスタムエイド 2026-10-19] 点(●●●)をやめ、2枚以上のときだけ右下に「1 / 4」。押したら全画面・左右にスワイプ -->
                 <view class="cs-swipe" v-if="item.images.length > 0">
@@ -29,7 +29,8 @@
                                 {{item.date}}
                                 <!-- [カスタムエイド 2026-10-22] 編集したお知らせは、投稿した日のあとに編集した日を小さく -->
                                 <text v-if="item.edit_date">({{item.edit_date}} 編集)</text>
-                                <text v-text="item.is_top == 1? '固定されたメッセージ' : '' "></text>
+                                <!-- [カスタムエイド 2026-10-25] 固定は小さな「固定」の印に -->
+                                <text class="cs-pin" v-if="item.is_top == 1">固定</text>
                                 <!-- <text>{{item.zhi}}</text> -->
                             </view>
                         </view>
@@ -38,14 +39,17 @@
                         {{item.title}}
                     </view>
                     <!-- [カスタムエイド 2026-10-19] 空行を少しの間として表示(共通の行間 1.6) -->
+                    <!-- [カスタムエイド 2026-10-25] 長い本文は「…」で切り、後ろに「続きを読む」(押すと全部) -->
                     <view class="des">
-                        <view class="cs-para" v-for="(t, ti) in textParas(item.content)" :key="ti">{{t}}</view>
+                        <view class="cs-para" v-for="(t, ti) in textParas(noticeText(item, index))" :key="ti">{{t}}</view>
+                        <text class="cs-more" v-if="isLongNotice(item) && !openNotice[index]" @click.stop="$set(openNotice, index, true)">続きを読む</text>
                     </view>
                 </view>
             </view>
         </view>
         <view style="height: 90vh;" @scrolltolower="getMore" class="news-box" scroll-y v-if="type == 2">
-            <view class="news-items1" v-for="(item,index) in insList" :key="index" @click="toInsDetai(item.permalink)">
+            <!-- [カスタムエイド 2026-10-24] 動画は押したらアプリの中で再生(以前は Instagram のページを開いて見られなかった) -->
+            <view class="news-items1" v-for="(item,index) in insList" :key="item.id || index" @click="openIns(item)">
                 <view class="insImage" v-if="item.media_type == 'IMAGE'">
                     <image :src="item.media_url" mode="aspectFill"></image>
                 </view>
@@ -75,6 +79,8 @@
                     </view>
                 </view>
             </view>
+            <!-- [カスタムエイド 2026-10-24] 続きの読み込み中は、画面全体の「Loading...」ではなく一番下に小さく -->
+            <view class="ins-more" v-if="insLoading">読み込み中…</view>
         </view>
         <!-- <web-view v-if="links != ''" :src="links"></web-view> -->
         <list :caiDanShow="caiDanShow" :mid="id" :sid="sid" :tabs="tabs" @seed="seed" @selected="chooseItem"></list>
@@ -102,11 +108,14 @@
         data() {
             return {
                 imgIndex: {}, // [カスタムエイド 2026-10-19] お知らせごとの画像の今の位置
+                openNotice: {}, // [カスタムエイド 2026-10-25] 「続きを読む」で開いたお知らせ
                 value: 2,
                 caiDanShow: false,
                 type: "",
                 list: [],
                 insList: [],
+                insLoading: false, // [カスタムエイド 2026-10-24] 続きを読み込み中か(同時に何回も読み込まない)
+                insEnd: false, // 最後まで読み込んだか
                 svgData30: '"' + svg30 + '"',
                 afrt: "",
                 insname: "ins昵称ins昵称ins昵称ins昵称ins昵称",
@@ -137,17 +146,23 @@
                 if (!urls.length) return
                 uni.previewImage({ current: index || 0, urls: urls, indicator: 'number', loop: urls.length > 1 })
             },
+            // [カスタムエイド 2026-10-25] 本文が長いとき(100文字より長い)は、100文字で切って「…」を付ける
+            isLongNotice(item) {
+                return !!item.content && item.content.length > 100
+            },
+            noticeText(item, index) {
+                if (!this.isLongNotice(item) || this.openNotice[index]) return item.content
+                return item.content.slice(0, 100).replace(/\s+$/, '') + '…'
+            },
             textParas(t) {
                 return textParas(t)
             },
+            // [カスタムエイド 2026-10-24] 以前は下までスクロールするたびに、読み込み中でも・最後まで読み込んだあとでも
+            //   画面全体に「Loading...」を出して読み込み直していた(スクロール中に何度も出て止まる原因)。
+            //   読み込み中・最後まで読んだあとは何もしない。表示は一番下に小さく「読み込み中…」だけ
             getMore() {
-                if (this.type !== 2) return
-                uni.showLoading({
-                    title: "Loading...",
-                    mask: true
-                })
-                let that = this
-                that.getInsLists()
+                if (this.type != 2 || this.insLoading || this.insEnd || !this.afrt) return
+                this.getInsLists()
             },
             changeColor(url, color) {
                 let res = url.replace(/%23[a-zA-Z0-9]{6}/g, color.replace("#",
@@ -169,13 +184,15 @@
                     let data = {}
                     data.sid = that.sid
                     data.after = that.afrt
+                    that.insLoading = true
                     getInsList(data).then((result) => {
-                        uni.hideLoading()
+                        that.insLoading = false
                         if (result.code == 200) {
                             that.afrt = result.data.after
-                            that.insList = [...that.insList, ...result.data.medias]
+                            if (!that.afrt) that.insEnd = true
+                            that.insList = [...that.insList, ...(result.data.medias || [])]
                         }
-                    }).catch(() => { uni.hideLoading() })
+                    }).catch(() => { that.insLoading = false })
                 }
 
             },
@@ -190,15 +207,23 @@
                             that.getList()
                         }
                         if (noticeType == 2) {
-                            let data = {}
-                            data.sid = that.sid
-                            data.after = that.afrt
-                            getInsList(data).then((result) => {
+                            // [カスタムエイド 2026-10-24] 前回の1ページ目を端末に残しておき、先に出す(Instagram からの読み込みは時間がかかるため)。
+                            //   最新のものが届いたら入れ替える
+                            const ck = 'cs_ins_' + that.sid
+                            try {
+                                const c = uni.getStorageSync(ck)
+                                if (c && Array.isArray(c.medias) && c.medias.length && !that.insList.length) that.insList = c.medias
+                            } catch (e) {}
+                            that.insLoading = true
+                            getInsList({ sid: that.sid, after: '' }).then((result) => {
+                                that.insLoading = false
                                 if (result.code == 200) {
                                     that.afrt = result.data.after
-                                    that.insList = [...that.insList, ...result.data.medias]
+                                    that.insEnd = !that.afrt
+                                    that.insList = result.data.medias || []
+                                    try { uni.setStorageSync(ck, { medias: that.insList }) } catch (e) {}
                                 }
-                            }).catch(() => {})
+                            }).catch(() => { that.insLoading = false })
                         }
                     }
                 }).catch((err) => {
@@ -206,6 +231,28 @@
                     that.type = 1
                     that.getList()
                 })
+            },
+            // [カスタムエイド 2026-10-24] 動画はアプリの中で再生
+            openIns(item) {
+                if (item.media_type == 'VIDEO' && item.media_url) {
+                    uni.navigateTo({
+                        url: '../insVideo/insVideo?src=' + encodeURIComponent(item.media_url) + '&poster=' + encodeURIComponent(item.thumbnail_url || '') + '&link=' + encodeURIComponent(item.permalink || '')
+                    })
+                    return
+                }
+                // [カスタムエイド 2026-10-25] 写真・複数枚も Instagram のページ(ログインを求められる)を開かず、アプリの中で全画面表示。
+                //   複数枚は左右にスワイプ(動画が混ざっているときは、写真だけ)
+                let urls = []
+                if (item.media_type == 'CAROUSEL_ALBUM') {
+                    urls = (item.carousel || []).map((v) => (typeof v == 'string' ? v : (v && (v.url || v.media_url || v.image)) || '')).filter((v) => v && !/\.mp4(\?|$)/i.test(v))
+                } else if (item.media_url) {
+                    urls = [item.media_url]
+                }
+                if (urls.length) {
+                    uni.previewImage({ current: 0, urls: urls, indicator: 'number', loop: urls.length > 1 })
+                    return
+                }
+                this.toInsDetai(item.permalink)
             },
             toInsDetai(e) {
                 uni.navigateTo({
@@ -310,6 +357,13 @@
             width: 100%;
             height: 100%;
         }
+    }
+
+    .ins-more {
+        text-align: center;
+        font-size: 24rpx;
+        color: #86868B;
+        padding: 24rpx 0 40rpx;
     }
 
     .insVideoThumb {
@@ -484,5 +538,43 @@
     .news-box .news-items .user-box .des {
         white-space: normal !important;
         color: #515154 !important;
+    }
+
+    /* ===== [カスタムエイド 2026-10-25] お知らせ:1投稿ずつ角の丸い白いカードに(モック「Card-San App 画面改善モック」) ===== */
+    .news-box.cs-nb {
+        padding: 24rpx 24rpx 0;
+        box-sizing: border-box;
+    }
+    .news-box .news-items {
+        margin-bottom: 24rpx !important;
+        border-radius: 28rpx;
+        overflow: hidden;
+        padding-bottom: 32rpx !important;
+    }
+    .news-box .news-items .user-box,
+    .news-box .news-items .user-box:first-child {
+        margin-top: 28rpx !important;
+    }
+    .news-box .news-items .user-box .title {
+        font-size: 32rpx !important;
+        margin-bottom: 10rpx !important;
+    }
+    .news-box .news-items .user-box .des {
+        font-size: 28rpx !important;
+        line-height: 1.7;
+        color: #3A3A3C !important;
+    }
+    .news-box .news-items .user-box .user .right .time .cs-pin {
+        margin-left: 16rpx !important;
+        padding: 2rpx 12rpx;
+        border-radius: 8rpx;
+        background: #EEF4FF;
+        color: #1A73E8 !important;
+        font-size: 22rpx;
+        font-weight: 700;
+    }
+    .cs-more {
+        color: #1A73E8;
+        font-weight: normal;
     }
 </style>

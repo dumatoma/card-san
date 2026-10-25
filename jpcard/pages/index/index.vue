@@ -134,7 +134,13 @@
                 longPressTimeout: null // 用于存储延时器的引用
             }
         },
-        onLoad() {},
+        onLoad() {
+            // [カスタムエイド 2026-10-24] 前回のカードを先に出す(同じ人のときだけ)。最新のものは onShow で読み込んで入れ替える
+            try {
+                const c = uni.getStorageSync('cs_cards'), u = uni.getStorageSync('user')
+                if (c && u && c.uuid == u.uuid && Array.isArray(c.list) && !this.cardList.length) this.cardList = c.list
+            } catch (e) {}
+        },
         onShow() {
             this.checkOrder() // [カスタムエイド 2026-10-20]
             this.getList()
@@ -333,11 +339,12 @@
                     success: function(res) {
                         uni.hideLoading()
                         if (res.data.code == 200) {
-                            that.cardList = []
-                            setTimeout(() => {
-                                uni.stopPullDownRefresh()
-                                that.cardList = res.data.data.members
-                            }, 500)
+                            // [カスタムエイド 2026-10-24] 以前はここで一度カードを全部消して 0.5秒待ってから出していたため、
+                            //   画面を開くたびに真っ白 → パッと出る見え方になっていた。消さずにそのまま入れ替える。
+                            //   また、前回のカードを端末に残しておき、次に開いたときはすぐ出す(下の onLoad)
+                            uni.stopPullDownRefresh()
+                            that.cardList = res.data.data.members
+                            try { uni.setStorageSync('cs_cards', { uuid: uuid, list: res.data.data.members }) } catch (e) {}
                         } else if (res.data.code == 401) {
                             // 保存データ消去＋WebSocket切断＋ログイン画面へ（ログイン画面が重ならない goLogin を使用）
                             forceLogout(res.data.message, 2500)

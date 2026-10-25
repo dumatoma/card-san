@@ -79,15 +79,22 @@
             </u-sticky>
             <!-- 周 -->
             <view v-if="status == 'week'" class="cs-wbody">
-                <view class="cs-timecol" :style="`height:${80 * (times.length + 1)}upx`">
+                <view class="cs-timecol" :style="`height:${80 * times.length + 32}upx`">
                     <view class="time">
                         <view class="timeItem" v-for="(item, index) in times" :key="index">
                             <view class="timeName" v-text="item.time"></view>
                             <view class="point"></view>
                         </view>
+                        <!-- [カスタムエイド 2026-10-22] 表の最後の時刻(営業の終わり)も出す -->
+                        <view class="timeItem" v-if="endLabel">
+                            <view class="timeName">{{ endLabel }}</view>
+                            <view class="point"></view>
+                        </view>
                     </view>
                 </view>
-                <view class="cs-pager cs-grid-pager" @touchstart="swStart" @touchmove="swMove" @touchend="swEnd" @touchcancel="swEnd">
+                <!-- [カスタムエイド 2026-10-24] 高さを時間の列と同じにする(読み込み前の週の高さで下が大きく空き、お問い合わせが離れていた)
+                     [2026-10-24c] 最後の行は「営業の終わり」の時刻の文字が入るだけ(80 → 32)にして、お問い合わせとのすき間を半分に -->
+                <view class="cs-pager cs-grid-pager" :style="`height:${80 * times.length + 32}upx`" @touchstart="swStart" @touchmove="swMove" @touchend="swEnd" @touchcancel="swEnd">
                     <view class="cs-track" :style="trackStyle">
                         <view class="cs-pane" v-for="p in panes" :key="p.key">
                             <week v-if="!p.empty" :info="info" :times="times" :hideTime="true" @addNew="addNewAppointment" :weekData="p.data"></week>
@@ -247,6 +254,14 @@
             }
         },
         computed: {
+            // [カスタムエイド 2026-10-22] 表の最後の時刻 = 最後の枠の30分後
+            endLabel() {
+                const a = this.times || []
+                if (!a.length) return ''
+                const t = a[a.length - 1].time
+                const v = Number(t.split(':')[0]) * 60 + Number(t.split(':')[1]) + 30
+                return (v / 60 < 10 ? '0' : '') + Math.floor(v / 60) + ':' + (v % 60 ? '30' : '00')
+            },
             // [カスタムエイド 2026-10-19] 週のスライド
             baseSunday() {
                 let d = new Date()
@@ -317,10 +332,43 @@
                 if (!number && number !== 0) return '';
                 return String(parseInt(number)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
             },
+            // [カスタムエイド 2026-10-22] 予約の時間の枠を お店の営業時間(いちばん早い開始〜いちばん遅い終了)から作る(7:00〜24:00 の中)
+            applyShopRange(shop) {
+                let s = '', e = ''
+                const take = (v) => {
+                    if (!v || v.business != 1) return
+                    ;(v.business_time || []).forEach((t) => {
+                        if (!t || !t.start || !t.end || t.start == t.end) return
+                        if (!s || t.start < s) s = t.start
+                        if (!e || t.end > e) e = t.end
+                    })
+                }
+                const wb = (shop && shop.week_business) || {}
+                Object.keys(wb).forEach((k) => take(wb[k]))
+                const db = (shop && shop.day_business) || {}
+                const now = new Date()
+                const ym = now.getFullYear() * 100 + now.getMonth() + 1
+                Object.keys(db).forEach((m) => { if (Number(m) >= ym) Object.keys(db[m] || {}).forEach((d) => take(db[m][d])) })
+                if (!s || !e) return
+                if (s < '07:00') s = '07:00'
+                if (e > '24:00') e = '24:00'
+                s = s.slice(0, 3) + (s.slice(3, 5) >= '30' ? '30' : '00')
+                const list = []
+                let h = Number(s.slice(0, 2)), mi = Number(s.slice(3, 5))
+                for (let n = 0; n < 40; n++) {
+                    const t = (h < 10 ? '0' : '') + h + ':' + (mi ? '30' : '00')
+                    if (t >= e) break
+                    list.push({ time: t, val: h + (mi ? 0.5 : 0) })
+                    mi += 30
+                    if (mi == 60) { mi = 0; h++ }
+                }
+                if (list.length) this.times = list
+            },
             getInfo(e){
                 getShopInfo(e).then((res) => {
                     if(res.code == 200){
                         this.info = res.data.shop
+                        this.applyShopRange(res.data.shop) // [カスタムエイド 2026-10-22]
                         // console.log(111111,res.data.shop.day_business["202303"])
                         this.loadAroundWeeks(true) // [カスタムエイド 2026-10-19]
                     }
@@ -659,20 +707,18 @@
     .btnhover{
         opacity:0.6 !important
     }
+    /* [カスタムエイド 2026-10-24] お問い合わせ:予約枠のすぐ下(約24px)に。見た目は管理App のボタンにそろえる(高さ104rpx・角丸28rpx・文字32rpx) */
     .btn1{
-        width: 638upx;
-        // height: 96upx !important;
+        margin: 32upx 40upx calc(64upx + env(safe-area-inset-bottom)); /* [2026-10-24c] 48 → 32 */
+        height: 104upx;
         background: #1A73E8;
-        border-radius: 20upx;
-        opacity: 1;
-        margin: 148upx auto;
-        font-size: 40upx;
-        font-family: Noto Sans Kannada-Bold, Noto Sans Kannada;
+        border-radius: 28upx;
+        font-size: 32upx;
         font-weight: bold;
         color: #FFFFFF;
-        text-align: center;
-        padding: 28upx 0;
-        // line-height: 96upx !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .staffItem {
         display: flex;

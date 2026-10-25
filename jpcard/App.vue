@@ -85,6 +85,7 @@
             })
         },
         onShow: function() {
+            this.csSocketWake() // [カスタムエイド 2026-10-25] 切れていればすぐつなぎ直す
             console.log('App Show')
             // this.getWebsocketData()
             switch (uni.getSystemInfoSync().platform) {
@@ -178,77 +179,112 @@
             
             
             
+            // ===== [カスタムエイド 2026-10-25] リアルタイム接続(WebSocket)の作り直し =====
+            // 以前は、つながり直すたびに「切れたとき・エラーのとき・届いたとき」の見張りを毎回追加していたため、
+            // 切れるたびに見張りが増え、1回切れると何本も同時につなぎ直す → サーバーに断られてまた切れる、をくり返していた。
+            // そのあいだは「つながっていない」印が付いたままになり、チャットを開くと「サーバー接続エラー」で前の画面に戻されていた。
+            // ・見張りは最初の1回だけ付ける ・つなぎ直しは同時に1本だけ、間隔を 1→2→4…最大30秒 に広げる
+            // ・アプリに戻ってきたとき(onShow)、切れていればすぐつなぎ直す ・つながってお店/お客様と結び付いたら csSocketReady を知らせる
             connectSocket() {
                 let that = this
-                uni.connectSocket({
-                    // url: 'ws://47.245.1.2:21000',
-                    url: 'wss://wss.card-san.jp/wss',
-                });
-                uni.onSocketOpen(function(res) {
-                    console.log("socket链接正常",res)
-                });
-                uni.onSocketError(function(res) {
-                    uni.setStorageSync("socketStatus", "unconnect")
-                    setTimeout(() => {
-                        that.connectSocket()
-                    }, 1000)
-                });
-                uni.onSocketMessage(function(res) {
-                    let result = JSON.parse(res.data)
-                    console.log("messresult",result)
-                    if (result.type == 'message' || result.type == 'delete_message') {
-                        if (result.data) {
-                            uni.$emit('getPositonsOrder', result);
+                if (!that._csSockInit) {
+                    that._csSockInit = true
+                    uni.onSocketOpen(function() {
+                        that._csOpen = true
+                        that._csConnecting = false
+                        that._csRetry = 0
+                    })
+                    uni.onSocketError(function() {
+                        that.csSocketLost()
+                    })
+                    uni.onSocketClose(function() {
+                        that.csSocketLost()
+                    })
+                    uni.onSocketMessage(function(res) {
+                        let result = null
+                        try { result = JSON.parse(res.data) } catch (e) { return }
+                        if (!result) return
+                        if (result.type == 'message' || result.type == 'delete_message') {
+                            if (result.data) {
+                                uni.$emit('getPositonsOrder', result);
+                            }
                         }
-                    }
-            
-                    if (result.type == 'connect') {
-                        uni.setStorageSync("client_id", result.data.client_id)
-                        setTimeout(() => {
+                        if (result.type == 'connect' && result.data) {
+                            uni.setStorageSync("client_id", result.data.client_id)
                             that.getConnect()
-                        }, 500)
+                        }
+                    })
+                }
+                if (that._csOpen || that._csConnecting) return
+                that._csConnecting = true
+                uni.connectSocket({
+                    url: 'wss://wss.card-san.jp/wss',
+                    fail() {
+                        that.csSocketLost()
                     }
-            
-                });
-                uni.onSocketClose(function(res) {
+                })
+            },
+            csSocketLost() {
+                let that = this
+                that._csOpen = false
+                that._csConnecting = false
+                uni.setStorageSync("socketStatus", "unconnect")
+                if (that._csTimer) return
+                let wait = Math.min(30000, 1000 * Math.pow(2, that._csRetry || 0))
+                that._csRetry = (that._csRetry || 0) + 1
+                that._csTimer = setTimeout(() => {
+                    that._csTimer = null
                     that.connectSocket()
-                });
+                }, wait)
+            },
+            // アプリに戻ってきたとき:切れていれば待たずにつなぎ直す
+            csSocketWake() {
+                if (this._csOpen || this._csConnecting) return
+                if (this._csTimer) {
+                    clearTimeout(this._csTimer)
+                    this._csTimer = null
+                }
+                this._csRetry = 0
+                this.connectSocket()
             },
             getConnect() {
                 let that = this
+                if (that._csBindTimer) {
+                    clearTimeout(that._csBindTimer)
+                    that._csBindTimer = null
+                }
                 let token = uni.getStorageSync("token")
                 let info = uni.getStorageSync("user") || {}
                 let uuid = info.uuid || ''
                 let client_id = uni.getStorageSync("client_id")
                 if (token && uuid && client_id) {
-                    let d2 = {}
-                    d2.client_id = client_id
                     uni.request({
                         url: "https://api.card-san.jp/api/member/auth/bind_socket",
                         dataType: "json",
                         responseType: "json",
                         method: 'post',
-                        data: d2,
+                        data: { client_id: client_id },
                         header: {
                             'token': token,
                             "uuid": uuid
                         },
                         success(res) {
-                            if (res.data.code == 200) {
-                                console.log("绑定成功了")
+                            if (res.data && res.data.code == 200) {
                                 uni.setStorageSync("socketStatus", "connected")
-                            } else {
-                                uni.showToast({
-                                    title: res.data.message,
-                                    icon: "none"
-                                })
+                                uni.$emit('csSocketReady') // 開いているチャットは、この間に届いたメッセージを読み直す
                             }
+                            // 結び付けに失敗しても画面には出さない(以前は意味の分かりにくいメッセージが出ていた)。少し後にやり直す
+                            else {
+                                that._csBindTimer = setTimeout(() => { that.getConnect() }, 5000)
+                            }
+                        },
+                        fail() {
+                            that._csBindTimer = setTimeout(() => { that.getConnect() }, 5000)
                         }
                     })
                 } else {
-                    setTimeout(() => {
-                        that.getConnect()
-                    }, 1500)
+                    // ログインしていないときは、少し間をあけて確かめ直す(1本だけ)
+                    that._csBindTimer = setTimeout(() => { that.getConnect() }, 3000)
                 }
             },
             

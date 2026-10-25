@@ -970,8 +970,83 @@ $model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->
 | 確認 | ブラウザのテストで、App・WEBとも、チェック前は薄い色・チェック後は濃い色、予約完了の表示を確認 |
 | 本番反映(予約WEB) | 2026-10-22、今の `/reserve/` を複製して新しいビルドを重ね、フォルダごと入れ替え(`index.380e5f92.js`)。元のフォルダ `/www/reserve_old_20261022_142332`(サーバーの時計は中国時間。戻すときはこのフォルダを `/www/wwwroot/order.card-san.jp/reserve` に戻す)。運営が確認済み |
 
+## 2026-10-22〜25 Card-San App 1.1.17〜1.1.19・管理App 1.0.46〜1.0.53
+
+この回の GitHub 反映は、10/22 の `88e7bc3` 以降にカスタムエイドが直したものをまとめて入れています(Card-San App 1.1.19(1087)・管理App 1.0.53(1106) のソース)。開発会社の `55e26e3`・`68498f3` の変更は取り込み済みであることを確認しています。
+
+### 84. 管理App:新機能「カルテ」(1.0.46〜1.0.53)
+
+| 項目 | 内容 |
+|---|---|
+| 画面 | `jpshop/pages/karte/`(karte 一覧・view 書き込み・capture 撮影・tplEdit テンプレート・setting 設定・trash ごみ箱)、`api/karte.js`、`static/karte/*.svg` |
+| 書き込み | 文字・図形・メモ(スタッフどうしの連絡)。画像は canvas で描く(拡大で止まる・真っ暗になる不具合の対策。状態は Vue の data に入れない)。拡大は最大300%。ピンチのあと左上に飛ぶ不具合を修正。メモの丸は 1.5倍(10/25) |
+| 画像編集 | 切り抜き・明るさ・回転・元に戻すを、同じ画面のまま(別の画面に移らない)。切り抜きの線が画面の端に寄りすぎないよう余白 |
+| PDF | `uni_modules/cardsan-file-picker`(UTS。iOS は UIDocumentPicker、Android はファイルのコピー)で PDF を読み込む |
+| 権限 | 副管理者の権限に「カルテ」(番号 20、`pages/settings/Administrators/addNew/jurisdiction.vue`)。各種設定に「カルテ」(`pages/setting/setting.vue`、アイコン `static/svg/setting_karte.svg`)。写真・カメラの許可を先に確かめる `utils/csPerm.js`・`utils/pickImage.js` |
+| メンバー情報 | `pages/customer/detail/detail.vue` にカルテ(1ページ目の見本と最新の写真)。いちばん下の「以前の画像」の欄を削除 |
+| サーバー | カルテの API(CsKarteController など)はサーバーに直接追加(サーバーのコードは GitHub にないため含まない)。画像編集の保存 `docs/server/customaid_karte_imgedit_patch.php`(10/24 適用、バックアップ `/www/backup_customaid_karte_imgedit_20261024/`)。以前の画像の片付け `docs/server/customaid_old_member_images_patch.php`(会員 35・38 の画像を空にし、ファイルは `/www/backup_customaid_old_member_images_20261024/` へ移動) |
+| 仕様 | プロジェクト資料「CardSan_カルテ機能_開発仕様書」 |
+
+### 85. 管理App:QR呼び出し画面・各種設定ほか(1.0.52〜1.0.53)
+
+| 項目 | 内容 |
+|---|---|
+| QR呼び出し | `pages/customer/cards/seal/seal.vue`・`intergrate/intergrate.vue`:「準備中」をやめてカルテを開く(アイコン `static/karte/karte_icon.svg`)。「来店履歴」の行を追加し、来店回数(○回)を表示(メンバー情報と同じ取り方)。上の詰まりを解消 |
+| GBP設定 | `pages/settings/gbpSetting/gbpSetting.vue`:選んだ項目に青い楕円が出ていた(App.vue の共通の `.selected` が効いていた)→ クラス名を `gs-on` に |
+| 画像の拡大 | `components/previewImg/previewImg.vue`:2本指で拡大・拡大したまま移動。キャンセルでも削除の確認が出ていた不具合 |
+| 下から出る画面 | `components/csSheet/csSheet.vue`(見出し・右上の ×・下の余白の共通の形) |
+
+### 86. ドラムロール・営業カレンダー・予約表の時間(10/22 夜、両アプリ)
+
+| 項目 | 内容 |
+|---|---|
+| ドラムロール | 日付・時間の選択を新しいドラムロールに(`csPicker`・`csDatePicker`、管理App `utils/csTimeDrum.js` は予約の時間をその日の営業時間で選ぶ)。Card-San App:`BindCard`・`PersonalInformation`・`ModifyInformation`。管理App:`csCardForm`・`changeInfo`・`addAddress`・`sale/detail`・`coupon/edit`・`menu/add/add`・`edit`・`shopInfo` |
+| 営業カレンダー | 管理App `pages/calender/calender.vue`・`setting/setting.vue` を作り直し(共通の処理 `utils/csBusiness.js`、`components/csCalendar`)。一部の週だけ休み(第2・第4など)を先の日付まで入れる(`pages/index/index.vue`、1日1回・12か月先まで)。Card-San App `pagesA/calender/calender.vue` も同じ形(見るだけ) |
+| 予約表 | `pages/appointment/appointment.vue`・`components/progress/progress.vue`:予約表の時間をお店の営業時間に(今までは 22:00 の決め打ち)。選べる時間は 7:00〜24:00 |
+| お休み | `components/appointment/new.vue`・`pages/appointment/notice/detail/edit.vue`:79 の続き |
+
+### 87. 予約タイムテーブル(Card-San App 1.1.18・予約WEB・管理App 1.0.52)
+
+| 項目 | 内容 |
+|---|---|
+| 隔週休みで真っ白 | 営業時間の枠が0個・1個の日に sb[0]・sb[1] を読んでエラーで止まり、その週の予約枠が真っ白になっていた。`components/week/week.vue` を、枠がいくつでも判定できる `inBusiness` に作り直し(Card-San App・予約WEB) |
+| お問い合わせとのすき間 | `pagesA/yuYue/yuYue.vue`(予約WEB は `pages/yuYue/yuYue.vue`):時間の列・予約枠の最後の行 80→32、ボタンの上 48→32(すき間が半分) |
+| スライドの速さ | 予約枠を出す前に 0.5秒+0.2秒 わざと待っていたのをやめた |
+| ○と× | ○を png → `static/icons/ring.svg`(色 #93DDDC → #7FBDBA)、× を文字 → 線の `static/svg/noTime.svg`。両アプリ・予約WEB |
+| 予約WEB の本番反映 | ビルド済みファイルを修正するスクリプトで反映(`docs/server/customaid_reserve_week_patch.php`・`customaid_reserve_gap_speed_patch.php`・`customaid_reserve_icons_svg_patch.php`。今使われている予約画面 `pages-yuYue-yuYue.cd4ce751.js`、バックアップ `/www/backup_customaid_reserve_week_20261024b/`・`_gap_20261024c/`・`_icons_20261024d/`)。同じ内容を `outsiteAppointment/` のソースにも入れた(次に再ビルドしても消えない) |
+
+### 88. Card-San App:会員証・店舗情報・お知らせ・Instagram ほか(1.1.18〜1.1.19)
+
+| 項目 | 内容 |
+|---|---|
+| 会員証 | `pagesA/shopDetails/shopDetails.vue`:会員証・メンバーズカード(白いカードの上。枠がグレーでも見える)・有効期限と備考・予約・特典をそれぞれ白いカードに。「3 / 10」「あと○個(で特典)」。有効期限は「なし」のときも表示(以前から隠していた)。カードのあいだ 36rpx |
+| 店舗情報 | `pagesA/storeInformation/storeInformation.vue`:画像の下のすき間を2倍、まとまりごとに白いカード、ボタンの右端をそろえる・角を丸く・太字なし。「電話する」「カレンダー」「地図アプリで見る」は薄い青+青い文字+青い枠線。地図のアイコンは下のメニューの「店舗情報」(`static/svgjs/s2.js`)を赤で。STAFF はカードのすぐ上。項目名を1行に |
+| お知らせ | `pagesA/notification/notification.vue`:1投稿ずつカード、固定は「固定」の印、長い本文は「…」+「続きを読む」 |
+| Instagram | 下に着くたびに画面全体の「Loading...」を出して何度も読み込んでいた → 同時に1回・最後まで読んだら読まない・一番下に小さく。前回の1ページ目を端末に残して先に出す。動画は 2026-06-30 の #53 で Instagram のページ(ログインが必要)を開くようになっていた → アプリ内の再生画面 `pagesA/insVideo/insVideo.vue`(読み込み中の表示あり)。写真・複数枚はアプリ内で全画面 |
+| TOP画面 | `pages/index/index.vue`:開くたびにカードを全部消して 0.5秒待っていた → 消さずに入れ替え、前回のカードを端末に残して先に出す |
+| クーポン | `pagesA/couponDetail/couponDetail.vue`:バーコードを幅 700rpx に引き伸ばしていた → 500rpx |
+
+### 89. お店の情報が空になる・フッターのアイコンが遅れる(サーバー/Card-San App 1.1.19)
+
+| 項目 | 内容 |
+|---|---|
+| 原因(サーバー) | Google の通行証の期限が切れているとき、`app/Libs/GoogleBusiness.php` の `getValidToken()` がお店のデータ全体を保存し、表示用に付け足した business_name まで保存しようとしてエラー(Unknown column 'business_name')。お店の情報が返らず、店名・写真・下のメニューが空になった |
+| 修正(サーバー) | `docs/server/customaid_gbp_token_save_patch.php`:通行証の欄と更新日時だけを保存。2026-10-25 適用、バックアップ `/www/backup_customaid_gbp_token_20261025/`。反映後エラーなしを確認 |
+| 修正(アプリ) | `utils/request.js` 待ち時間 5秒→20秒、新規 `utils/shopCache.js`(お店の情報を端末に残す・2回までやり直す)。`pagesA/shop/shop.vue`:前回の情報で先にフッター等を出す、0.5秒待ってから読みに行っていたのをやめた。読み込めないときは「もう一度読み込む」 |
+
+### 90. チャット(Card-San App 1.1.19・管理App 1.0.53)
+
+| 項目 | 内容 |
+|---|---|
+| 送信後に真っ白・すき間 | 一番下へのスクロールを「ページの高さいっぱい」で行い、キーボード分の余白まで見えていた → 最新のメッセージが入力欄のすぐ上に来る位置を計算(4画面) |
+| 送信ボタン | 紙飛行機と入力欄の中心のずれ(4画面)。ユーザーApp は入力欄を約8px上に。管理App 一覧のバッジをひと回り大きく |
+| スタッフルーム・個別チャット | お客様とのチャットと同じしくみ(キーボードの高さ・スクロール・写真の読み込み後の合わせ直し) |
+| 「サーバー接続エラー」で戻される | `App.vue`(両アプリ):つなぎ直すたびに見張りを追加し、切れるたびに何本も同時につなぎ直していた → 見張りは1回、つなぎ直しは1本・間隔を広げる、アプリに戻ったらすぐつなぎ直す、つながったら `csSocketReady` でメッセージを読み直す。チャットを開いたときのエラー表示と前の画面に戻す処理をやめた。送信後3秒で届かなければ読み直して「送信中」を解除。管理App はスタッフチャットの削除の知らせも画面に渡す |
+| 記録 | プロジェクト資料「CardSan_チャット画面_送信後に真っ白・すき間・送信ボタン_修正記録_20261025」 |
+
+
 ## 今後の運用ルール
 
 - 修正は「ソースを修正 → ビルドして本番に配置 → 同じ日に GitHub に反映」を1セットで行う
-- サーバー上のビルド済みファイルだけを直接書き換えない(次の再ビルドで消えるため)
+- サーバー上のビルド済みファイルだけを直接書き換えない(次の再ビルドで消えるため)。急ぎでビルド済みファイルを直したときは、同じ内容を必ずソースにも入れる(87 の予約WEB)
 - 修正のたびに、このファイルに追記する

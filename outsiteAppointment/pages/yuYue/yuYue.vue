@@ -79,7 +79,7 @@
             </u-sticky>
             <!-- 周 -->
             <view v-if="status == 'week'" class="cs-wbody">
-                <view class="cs-timecol" :style="`height:${80 * (times.length + 1)}upx`">
+                <view class="cs-timecol" :style="`height:${80 * times.length + 32}upx`">
                     <view class="time">
                         <view class="timeItem" v-for="(item, index) in times" :key="index">
                             <view class="timeName" v-text="item.time"></view>
@@ -87,7 +87,8 @@
                         </view>
                     </view>
                 </view>
-                <view class="cs-pager cs-grid-pager" id="csGridPager">
+                <!-- [カスタムエイド 2026-10-24] 高さを時間の列と同じにする(読み込み前の週の高さで下が大きく空き、お問い合わせが離れていた) -->
+                <view class="cs-pager cs-grid-pager" id="csGridPager" :style="`height:${80 * times.length + 32}upx`">
                     <view class="cs-track">
                         <view class="cs-pane" v-for="p in panes" :key="p.key">
                             <week v-if="!p.empty" :info="info" :times="times" :hideTime="true" @addNew="addNewAppointment" :weekData="p.data"></week>
@@ -727,20 +728,18 @@
     .btnhover{
         opacity:0.6 !important
     }
+    /* [カスタムエイド 2026-10-24] お問い合わせ:予約枠のすぐ下(約24px)に。見た目は管理App のボタンにそろえる(高さ104rpx・角丸28rpx・文字32rpx) */
     .btn1{
-        width: 638upx;
-        // height: 96upx !important;
+        margin: 32upx 40upx calc(64upx + env(safe-area-inset-bottom)); /* [カスタムエイド 2026-10-24c] 48 → 32(予約枠の最後の行も 80 → 32 にして、すき間を半分に) */
+        height: 104upx;
         background: #1A73E8;
-        border-radius: 20upx;
-        opacity: 1;
-        margin: 148upx auto;
-        font-size: 40upx;
-        font-family: Noto Sans Kannada-Bold, Noto Sans Kannada;
+        border-radius: 28upx;
+        font-size: 32upx;
         font-weight: bold;
         color: #FFFFFF;
-        text-align: center;
-        padding: 28upx 0;
-        // line-height: 96upx !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .staffItem {
         display: flex;

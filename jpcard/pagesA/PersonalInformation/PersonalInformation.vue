@@ -133,24 +133,27 @@
                 </u--form>
                 <u-action-sheet :show="showSex" :actions="actions" title="性別を選択してください" @close="showSex = false" @select="sexSelect">
                 </u-action-sheet>
-                <u-datetime-picker :show="show" :minDate="-30000000000" v-model="value1" mode="date" @confirm="timeConfirm($event)"
+                <cs-date-picker :show="show" :minDate="-30000000000" v-model="value1" @confirm="timeConfirm($event)" @close="cancel()"
                   @cancel="cancel()">
-                </u-datetime-picker>
+                </cs-date-picker>
                 <u-modal :show="keepShow" :title="title" :content='content' confirmText="ok" @confirm="keepShow = false">
                 </u-modal>
               </view>
             </view>
         </view>
     </u-popup>
-    <u-picker :closeOnClickOverlay="true" @close="showAdd = false" cancelText="キャンセル" confirmText="保存"
-        @confirm="confirm" @cancel="showAdd = false" :show="showAdd" :columns="city"></u-picker>
+    <cs-picker title="都道府県を選ぶ" @close="showAdd = false"
+        @confirm="confirm" @cancel="showAdd = false" :show="showAdd" :columns="city"></cs-picker>
   </view>
 </template>
 
 <script>
+    import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22] 新しいドラムロール
+    import csDatePicker from "@/components/csPicker/csDatePicker.vue"
     import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
   import {getUserInfo,getAddress,getMyCard,getUserInfos,editUserInfo,getShopInfo} from "@/api/index.js"
   export default {
+        components: { csPicker, csDatePicker },
     data() {
       return {
         keepShow: false,

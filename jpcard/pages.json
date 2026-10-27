@@ -20,6 +20,13 @@
             }
 
         }, {
+            // [カスタムエイド 2026-10-26] 店舗QR統一 段階5:iPhone で初めて開いたとき、お店のページでコピーした情報を「ペースト」で受け取る画面(nvue)
+            "path": "pages/csPaste/csPaste",
+            "style": {
+                "navigationStyle": "custom",
+                "disableScroll": true
+            }
+        }, {
             "path": "pages/sendCode/sendCode",
             "style": {
                 "navigationStyle": "custom" //default是默认uniapp原生的顶部导航栏

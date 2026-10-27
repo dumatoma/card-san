@@ -15,10 +15,12 @@
             <!-- [カスタムエイド 2026-10-24d] 予約できる枠の丸(ring)と予約済みの×を SVG に(拡大してもぼやけない)。丸の色は #7FBDBA(少し濃く) -->
             <view v-for="(item,index) in weel">
                 <view class="mItem" v-if="item.business == 1">
+                    <!-- [カスタムエイド 2026-10-25] 予約できる枠は、枠のどこを押しても選べる(以前は丸の上だけ)。押した枠はうっすらグレーに -->
                     <view v-if="d <= item.stamp" class="dateItem" v-for="(ite,idx) in item.times"
-                        :style="ite.status == 'selected'? 'background:#fff !important' : '' ">
-                        <image src="../../static/icons/ring.svg" mode="" v-if="ite.status == 'selected'"
-                            @click="addNew(ite)"></image>
+                        :style="ite.status == 'selected'? 'background:#fff !important' : '' "
+                        :class="{ 'cs-tap': ite.status == 'selected' }"
+                        @click="ite.status == 'selected' && addNew(ite)">
+                        <image src="../../static/icons/ring.svg" mode="" v-if="ite.status == 'selected'"></image>
                         <image style="width: 60upx;height: 60upx;" src="../../static/svg/noTime.svg" mode=""
                             v-if="ite.status == 'unselected'"></image>
                     </view>
@@ -311,6 +313,17 @@
 </script>
 
 <style lang="scss">
+    /* [カスタムエイド 2026-10-25] 予約表の枠を押したとき、押した枠がうっすらグレー(#F5F5F7 相当)になる。
+       枠の背景は style で直接指定されている(!important)ため、上に薄い色を重ねて見せる */
+    /* [カスタムエイド 2026-10-26] hover-class をやめ、CSS の :active に(押したあとの切り替えが遅くなっていたため) */
+    .cs-tap:active::after {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; right: 0; bottom: 0;
+        background: rgba(29, 29, 31, 0.05);
+        pointer-events: none;
+    }
+
     .restName {
         width: 100%;
         height: 100%;
@@ -413,6 +426,7 @@
 
             // border-bottom: 2upx solid #eaeaea;
             .dateItem {
+                position: relative;
                 border: 2upx solid #eaeaea;
                 height: 80upx;
                 background: rgba(249, 249, 249, 0.94) !important;

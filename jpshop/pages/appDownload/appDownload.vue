@@ -1,185 +1,107 @@
 <template>
-    <view>
-        <u-navbar title="ダウンロードQR" :placeholder="true" :safeAreaInsetTop="true" :autoBack="true" :border="true"></u-navbar>
-        <view class="tab">
-            <view class="tabContent">
-                <view class="tabItem" :class="current == 0? 'active' : '' " @click.stop="changeTab(0)">
-                    Card-San App
-                </view>
-                <view class="tabItem" :class="current == 1? 'active' : '' " @click.stop="changeTab(1)">
-                    メンバーズカード
-                </view>
-            </view>
-        </view>
-        <view v-if="current == 0">
-            <view class="logo">
-                <image src="../../static/svg/shopinfo.svg" mode=""></image>
-            </view>
-            <view class="qrcode">
-                <image :src='sc' mode=""></image>
-            </view>
-            <!-- <view class="btns">
-                <view class="btn"  v-if="platform == 'ios'">
-                    <image src="../../static/svg/Download_on_the_App_Store_Badge_JP_RGB_blk_100317.svg" mode=""></image>
-                </view>
-                <view class="btn" style="margin-left: 40upx;" v-if="platform == 'android'" >
-                    <image src="../../static/svg/google-play-badge.svg" mode=""></image>
-                </view>
-            </view> -->
-        </view>
-        <view v-else>
-            <view class="membership">
+    <!-- [カスタムエイド 2026-10-26] 店舗QR統一 段階6:「Card-San App(ダウンロード)」と「メンバーズカード」の2つのQRを、お店のQRコード1つにまとめた。
+         ・ダウンロード用の QR は外部サービス(me-qr)の画像だったのをやめた
+         ・お店の QR(card-san.jp/s/店舗ID)は、カメラで読むと:アプリがない人→ダウンロード→そのお店のカード/アプリがある人→そのお店が開く
+         ・QR の画像はサーバーの店舗QR(shop_info.qrcode)。中身を card-san.jp/s/店舗ID に作り直すのはサーバー側の段階8
+         ・控え:_backup/qr6_20261026/appDownload.vue -->
+    <view class="page">
+        <u-navbar title="お店のQRコード" :placeholder="true" :safeAreaInsetTop="true" :autoBack="true" :border="true"></u-navbar>
+        <view class="card-box">
+            <view class="membership" v-if="card">
                 <image :src="card" mode="aspectFill"></image>
             </view>
             <view class="memName" v-text="name"></view>
             <view class="qrcode">
-                <image :src="qrcode" mode=""></image>
+                <image v-if="qrcode" :src="qrcode" mode="aspectFit" @longpress="saveQr"></image>
+            </view>
+            <view class="lead">このQRコード1つで、お客様は<text class="em">アプリのダウンロード</text>と<text class="em">会員カードの受け取り</text>ができます。</view>
+            <view class="sub">iPhone・Android のカメラで読み取れます。アプリをお持ちのお客様は、アプリの「QRコードを読み取る」でも読み取れます。</view>
+        </view>
+        <view class="link-box" v-if="shopUrl">
+            <view class="link-label">お店のページのリンク(SNS・LINE に貼れます)</view>
+            <view class="link-row">
+                <view class="link-url" v-text="shopUrl"></view>
+                <view class="link-btn cs-tap" @click="copyUrl">コピー</view>
             </view>
         </view>
+        <view class="save cs-tap" v-if="qrcode" @click="saveQr">QRコードの画像を保存</view>
     </view>
 </template>
 <script>
-    import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-10-18] 端末の種類はその場で判定(No.10)
-    import {getShopInfo} from "@/api/index.js"
+    import { getShopInfo } from "@/api/index.js"
     export default {
         data() {
             return {
-                current:0,
-                qrcode:"",
-                name:"",
-                card:"",
-                platform:'',
-                sc:""
+                qrcode: "",
+                name: "",
+                card: "",
+                sid: 0
+            }
+        },
+        computed: {
+            shopUrl() {
+                return this.sid ? 'https://card-san.jp/s/' + this.sid : ''
             }
         },
         onLoad() {
-            let that = this 
+            const admin = uni.getStorageSync("admin") || {}
+            this.sid = Number(admin.sid) || 0
             getShopInfo().then((res) => {
-                if(res.code == 200){
-                    that.qrcode = res.data.shop_info.qrcode
-                    that.name = res.data.shop_info.shop_name
-                    that.card = res.data.shop_info.default_card.image
+                if (res.code == 200) {
+                    const s = res.data.shop_info || {}
+                    this.qrcode = s.qrcode
+                    this.name = s.shop_name
+                    this.card = s.default_card && s.default_card.image
+                    if (s.id) this.sid = Number(s.id)
                 }
-            })
-            that.downImage()
-        },
-        onShow() {
-            let that = this
-            that.platform = getPlatform()
+            }).catch(() => {})
         },
         methods: {
-           changeTab(e){
-               this.current = e
-           },
-           downImage(){
-               let that = this 
-               uni.downloadFile({
-                   url:"https://cdn.me-qr.com/qr/125258049.png?v=1725896858",
-                   success:res => {
-                       that.sc = res.tempFilePath
-                   }
-               })
-           }
+            copyUrl() {
+                uni.setClipboardData({
+                    data: this.shopUrl,
+                    success: () => {
+                        uni.showToast({ title: 'リンクをコピーしました', icon: 'none' })
+                    }
+                })
+            },
+            // QR の画像を写真に保存(印刷・SNS 用)
+            saveQr() {
+                if (!this.qrcode) return
+                uni.showLoading({ title: '保存中', mask: true })
+                uni.downloadFile({
+                    url: this.qrcode,
+                    success: (r) => {
+                        uni.saveImageToPhotosAlbum({
+                            filePath: r.tempFilePath,
+                            success: () => { uni.hideLoading(); uni.showToast({ title: '写真に保存しました', icon: 'none' }) },
+                            fail: () => { uni.hideLoading(); uni.showToast({ title: '保存できませんでした(写真へのアクセスを許可してください)', icon: 'none' }) }
+                        })
+                    },
+                    fail: () => { uni.hideLoading(); uni.showToast({ title: '保存できませんでした', icon: 'none' }) }
+                })
+            }
         }
     }
 </script>
 <style lang="scss">
-    .membership{
-        width: 346upx;
-        height: 210upx;
-        margin: 60upx auto 18upx;
-        
-        image{
-            width: 100%;
-            height: 100%;
-        } 
+    .page { min-height: 100vh; background: #F5F5F7; padding-bottom: 60upx; }
+    .card-box { margin: 32upx 30upx 0; background: #fff; border-radius: 24upx; padding: 48upx 40upx 40upx; display: flex; flex-direction: column; align-items: center; }
+    .membership { width: 346upx; height: 210upx; margin-bottom: 18upx; border-radius: 16upx; overflow: hidden;
+        image { width: 100%; height: 100%; }
     }
-    
-    .memName{
-        font-size: 40upx;
-        font-family: Hiragino Sans-W5, Hiragino Sans;
-        font-weight: normal;
-        color: #1D1D1F;
-        text-align: center;
+    .memName { font-size: 36upx; font-family: Hiragino Sans-W5, Hiragino Sans; color: #1D1D1F; text-align: center; }
+    .qrcode { width: 448upx; height: 448upx; box-sizing: border-box; padding: 32upx; margin: 16upx auto 8upx;
+        image { width: 100%; height: 100%; }
     }
-    
-    .tab{
-        width: 100%;
-        height: 210upx;
-        background: #fff;
-        box-sizing: border-box;
-        padding: 64upx 30upx 0;
-        box-shadow: 0px 0px 12upx 2upx rgba(0,0,0,0.16);
-        border-top: 2upx solid #D2D2D7;
-    }
-    
-    .logo{
-        width: 180upx;
-        height: 180upx;
-        margin: 58upx auto 104upx;
-        
-        image{
-            width: 100%;
-            height: 100%;
-        }
-    }
-    
-    .qrcode{
-        width: 448upx;
-        height: 448upx;
-        box-sizing: border-box;
-        padding: 48upx;
-        margin: 0 auto;
-        image{
-            width: 100%;
-            height: 100%
-        }
-    }
-    
-    .tabItem{
-        text-align: center;
-        line-height: 64upx;
-        flex: 1
-    }
-    
-    .tabContent{
-        display: flex;
-        align-items: center;
-        background: #EAEAEA;
-        width: 100%;
-        border-radius: 16upx;
-        height: 72upx;
-    }
-    
-    .active{
-        width: 344upx;
-        height: 64upx;
-        background: #FFFFFF;
-        box-shadow: 0px 6upx 16upx 2upx rgba(0,0,0,0.16);
-        border-radius: 16upx;
-        opacity: 1;
-        border: 2upx solid rgba(255,255,255,0.04);
-        font-size: 32upx;
-        font-family: Hiragino Sans-W5, Hiragino Sans;
-        font-weight: normal;
-        color: #1A73E8;
-    }
-    
-    .btns{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-top: 50upx;
-        
-        .btn{
-            width: 237upx;
-            height: 68upx;
-            
-            image{
-                width: 100%;
-                height: 100%;
-            }
-            
-        }
-    }
+    .lead { font-size: 28upx; color: #1D1D1F; line-height: 46upx; text-align: center; }
+    .em { color: #1A73E8; font-weight: bold; }
+    .sub { margin-top: 16upx; font-size: 24upx; color: #86868B; line-height: 38upx; text-align: center; }
+    .link-box { margin: 24upx 30upx 0; background: #fff; border-radius: 24upx; padding: 28upx 32upx; }
+    .link-label { font-size: 24upx; color: #86868B; margin-bottom: 14upx; }
+    .link-row { display: flex; align-items: center; }
+    .link-url { flex: 1; font-size: 28upx; color: #1D1D1F; word-break: break-all; }
+    .link-btn { margin-left: 20upx; padding: 0 28upx; height: 60upx; line-height: 60upx; border-radius: 30upx; background: #1A73E8; color: #fff; font-size: 26upx; position: relative; overflow: hidden; }
+    .save { margin: 32upx 30upx 0; height: 92upx; line-height: 92upx; text-align: center; border-radius: 46upx; border: 2upx solid #1A73E8; color: #1A73E8; font-size: 30upx; background: #fff; position: relative; overflow: hidden; }
+    .cs-tap:active::after { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(29, 29, 31, 0.05); }
 </style>

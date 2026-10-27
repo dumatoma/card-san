@@ -1045,6 +1045,36 @@ $model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->
 | 記録 | プロジェクト資料「CardSan_チャット画面_送信後に真っ白・すき間・送信ボタン_修正記録_20261025」 |
 
 
+### 91. 2026-10-26〜27 のビルド(Card-San App 1.1.20〜1.1.23(1097)・管理App 1.0.54〜1.0.57(1110))
+
+10/25(90)のあと、GitHub に入れていなかった分をまとめて反映。細かい中身はプロジェクト資料の各修正記録を正とする。
+
+| 版 | おもな中身 | 記録(プロジェクト資料) |
+|---|---|---|
+| 1.1.20・1.0.54 | プッシュ通知・予約通知・チャット、予約表・休憩 | 「CardSan_1.1.20・1.0.54_修正記録」「同_追記(予約表・休憩)」 |
+| 1.1.21・1.0.55 | 通知バッジ、チャットの間とぶれ | 「CardSan_1.1.21・1.0.55_修正記録」 |
+| 1.1.22・1.0.56 | 変換中(下線)のまま送信したときの対策(`utils/csIme.js`)、管理App の間、予約表の遅さ | 「CardSan_1.1.22・1.0.56_修正記録」 |
+| 1.1.22〜1.1.23 | 店舗QR統一(段階1〜6):お店のリンク・QR からアプリのお店を開く(`utils/csShopLink.js`、Universal Links `nativeResources/ios/UniApp.entitlements`)、貼り付け(`uni_modules/cardsan-paste`・`pages/csPaste`)、ログイン・登録画面のボタン(`static/icons/cs_btn_*`) | 「CardSan_店舗QR統一_開発の記録(段階1〜4)」「同(段階5・6)」 |
+
+### 92. 2026-10-27(Card-San App 1.1.23(1097)・管理App 1.0.57(1110))
+
+| 項目 | 内容 |
+|---|---|
+| Card-San App のビルド方法 | Universal Links のため **Standard Mode** でビルド(Safe Mode では associated-domains が `*` になり動かない)。管理App は今までどおり Safe Mode |
+| 同じリンクをもう一度押す | `App.vue`:2回目は開かれなかった → newintent で `csOnNewIntent` |
+| カード登録の画面 | `pagesA/BindCard/BindCard.vue`:もらえるカード(小さい画像)とお店の名前を並べる。「お店の会員登録をします。必須項目のみの入力でOKです。」 |
+| チャットの入力欄 | 4画面(Card-San App メッセージ/管理App メッセージ・スタッフルーム・DM):1行から6行まで伸びる(`utils/csTa.js`)。送ったら1行に戻る |
+| 開いているチャットの通知 | LINE と同じく、相手がそのチャットを開いている間は通知を送らない(`utils/csViewing.js` → サーバー `api/member|shop/cs_viewing`、`docs/server/customaid_CsViewingController.php`・`customaid_viewing_patch.php`) |
+| 通知が2つ出る | `App.vue`(両アプリ):Apple に直接送っている iPhone では、アプリを開いているときにアプリ側で通知を作らない(バッジだけ) |
+| 通知バッジ | サーバー:Apple への通知に正しい件数を付ける(`customaid_CsBadge.php`・`customaid_badge_apns_patch.php`・`customaid_badge_cardonly_patch.php`)。運営からのお知らせ・ユーザー向けお知らせは数に入れない |
+| 予約のお知らせ | 管理App `pages/appointment/notice/notice.vue`:誰か1人が開くと全員既読、「確認済み(最初に開いた人)」を表示。サーバー `customaid_order_notice_patch.php`・`customaid_order_notice_simple_patch.php` |
+| 新規予約の画面 | 管理App `components/appointment/new.vue`:右からスライドして出る(10/26) |
+| SQL 対策 | サーバー `customaid_sqli_smid_patch.php`(OrderController・AdminController の smid を `FIND_IN_SET(?, smids)`) |
+| 予約WEB | `outsiteAppointment/index.html`:次の画面へ進むとき右からスライド(10/26、サーバーに反映済みの内容をソースにも) |
+| サーバーのスクリプト | `docs/server/` に 10/25〜10/27 の修正スクリプトを追加(30ファイル) |
+| 記録 | プロジェクト資料「CardSan_通知・バッジ・予約通知・SQL対策_サーバー修正記録_20261027」 |
+
+
 ## 今後の運用ルール
 
 - 修正は「ソースを修正 → ビルドして本番に配置 → 同じ日に GitHub に反映」を1セットで行う

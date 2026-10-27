@@ -3,11 +3,22 @@
 // 「カメラで撮影/写真を選択」の選択肢やキーボードが閉じる動きと、写真の画面が開く動きが重なるのが原因とみて、
 // 選択肢はアプリ側で出し、閉じきってから(少し待ってから)写真の画面を開く。
 // 使い方は uni.chooseImage と同じ(count, sourceType, sizeType, success, fail, complete)。
+import { checkPerm } from './csPerm.js' // [カスタムエイド 2026-10-23] 許可がないときは日本語の案内
 const WAIT = 350 // 選択肢・キーボードが閉じきるまで待つ時間(ミリ秒)
 
 function open(opts) {
     setTimeout(() => {
-        uni.chooseImage(opts)
+        const st = opts.sourceType || []
+        const kind = st.length == 1 && st[0] == 'camera' ? 'camera' : st.length == 1 && st[0] == 'album' ? 'album' : ''
+        if (!kind) return uni.chooseImage(opts)
+        checkPerm(kind).then((ok) => {
+            if (ok) uni.chooseImage(opts)
+            else {
+                const e = { errMsg: 'chooseImage:fail auth deny' }
+                if (typeof opts.fail == 'function') opts.fail(e)
+                if (typeof opts.complete == 'function') opts.complete(e)
+            }
+        })
     }, WAIT)
 }
 

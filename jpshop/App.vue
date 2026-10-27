@@ -7,6 +7,13 @@
                     let cid = info["clientid"];
                     console.log("cid", cid)
                     uni.setStorageSync("cid", cid)
+                    // [カスタムエイド 2026-10-25] iPhone の通知用の番号(Apple に直接送るため)。前回と変わったら、すぐ1回サーバーに送る
+                    try {
+                        let ptoken = info["token"] || ""
+                        let pold = uni.getStorageSync("push_token") || ""
+                        uni.setStorageSync("push_token", ptoken)
+                        if (ptoken && ptoken !== pold) this.connectPush(true)
+                    } catch (e) {}
                 });
             }, 500)
             this.connectSocket()
@@ -46,9 +53,21 @@
                 }
             }
             // フォアグラウンド受信時：システムは自動で通知バーに出さないため手動でローカル通知を作成し、バッジも更新
+            var csLastPush = { k: '', t: 0 }
             function handlePushReceive(message) {
                 var payload = parsePayload(message)
-                try {
+                // [カスタムエイド 2026-10-25] 個推と Apple の両方から同じ通知が届いたとき、2回出さない(15秒以内の同じ内容は1回だけ)
+                var csKey = (payload.type || '') + ':' + (payload.id || '') + ':' + (payload.content || message.content || message.title || '')
+                var csNow = Date.now()
+                if (csKey === csLastPush.k && csNow - csLastPush.t < 15000) return
+                csLastPush = { k: csKey, t: csNow }
+                // [カスタムエイド 2026-10-27] アプリを開いているときに通知が2つ出ていた。
+                //   原因:10/25 から、Apple の番号(push_token)がある iPhone には、サーバーが Apple に直接送っている。この通知は
+                //   アプリを開いていても iPhone が表示する。そこへ下でアプリがもう1つ通知を作っていたので2つになった。
+                //   直し:Apple の番号がある iPhone では、アプリでは通知を作らない(バッジだけ直す)。Android・番号のない iPhone は今までどおり作る
+                var csIosDirect = false
+                try { csIosDirect = plus.os.name == 'iOS' && !!uni.getStorageSync('push_token') } catch (e) {}
+                if (!csIosDirect) try {
                     var title = payload.title || 'Card-San'
                     var content = payload.content || message.content || '新しい通知があります'
                     plus.push.createMessage(content, JSON.stringify(payload), {
@@ -243,7 +262,7 @@
                 // #endif
             },
 
-            connectPush() {
+            connectPush(once) {
                 let that = this
                 let token = uni.getStorageSync("token")
                 let info = uni.getStorageSync("admin") || {}
@@ -252,6 +271,9 @@
                 if (token && uuid && client_id) {
                     let d2 = {}
                     d2.clientid = client_id
+                    // [カスタムエイド 2026-10-25] Apple に直接送るための番号と、iPhone か Android か
+                    d2.push_token = uni.getStorageSync("push_token") || ""
+                    d2.push_platform = uni.getSystemInfoSync().platform
                     uni.request({
                         url: "https://api.card-san.jp/api/shop/auth/bind_clientid",
                         dataType: "json",
@@ -275,6 +297,7 @@
                         }
                     })
                 } else {
+                    if (once) return // 1回だけ送るとき(番号が変わったとき)は、ログイン待ちをしない
                     setTimeout(() => {
                         that.connectPush()
                     }, 1500)

@@ -6,8 +6,21 @@
         <view class="h-title">
             お客様情報の入力
         </view>
+        <!-- [カスタムエイド 2026-10-26b] 版Bモック(画面5)の文言に(元「メンバーズカード作成に必要なお客様情報のご提供に、ご協力お願いします。」) -->
+        <!-- [カスタムエイド 2026-10-27] 案B:もらえるカードとお店の名前を横に並べる(アプリを入れている人もカードを見てから登録できるように) -->
+        <view class="cs-get" v-if="csCard">
+            <view class="cs-get-card" :style="{ background: (csCard.card && csCard.card.background_color) || '#F2F2F4' }">
+                <image v-if="csCard.card && csCard.card.image" class="cs-get-img" :src="csCard.card.image" mode="widthFix"></image>
+                <view v-else class="cs-get-blank"></view>
+            </view>
+            <view class="cs-get-txt">
+                <view class="cs-get-name">{{ csCard.shop_name || titles }}</view>
+                <view class="cs-get-sub">このカードがもらえます</view>
+            </view>
+        </view>
+        <!-- [カスタムエイド 2026-10-27] 坂本さんの指示の文言に(元「お店が必要としている項目だけ入力してください。」) -->
         <view class="fo-txt">
-            メンバーズカード作成に必要なお客様情報のご提供に、ご協力お願いします。
+            お店の会員登録をします。<br/>必須項目のみの入力でOKです。
         </view>
         <view class="modify-user">
             <u--form labelPosition="top" :model="model1" ref="form1" :labelWidth="200">
@@ -82,9 +95,11 @@
             <cs-picker title="都道府県を選ぶ" @close="showAdd = false"
                 @confirm="confirm" @cancel="showAdd = false" :show="showAdd" :columns="city"></cs-picker>
         </view>
+        <!-- [カスタムエイド 2026-10-26b] 版Bモック(画面5):ボタンを「お店のカードを入手」に(元「メンバー登録」)・角をいっぱいまで丸く・黄緑。下に説明を追加 -->
         <view class="logins" @click="sub" :style="insertAll == true?'' : 'opacity:0.6 !important'" hover-class="op">
-            メンバー登録
+            お店のカードを入手
         </view>
+        <view class="cs-logins-note">入力内容は、アカウント情報の空欄にも保存され、次のお店で使えます</view>
         <view style="height: 20upx;"></view>
         <u-modal :show="showm" :title="titlem" :content='contentm' confirmText="OK" @confirm="confirmm"></u-modal>
     </view>
@@ -99,10 +114,12 @@
         getUserInfos,
         getShopInfo
     } from "@/api/index.js"
+    import { fetchShopCard } from '@/utils/csShopLink.js' // [カスタムエイド 2026-10-27] もらえるカードの画像(ログインなしのお店の情報)
     export default {
         components: { csPicker, csDatePicker },
         data() {
             return {
+                csCard: null, // [カスタムエイド 2026-10-27] もらえるカード(店名・カードの画像)
                 showm:false,
                 titlem:"ありがとうございます！",
                 contentm:"",
@@ -220,6 +237,7 @@
             that.titles = decodeURIComponent(options.name) 
             that.getUserInfo()
             that.getShopInfo(options.sid)
+            fetchShopCard(options.sid, that.$baseUrl).then((d) => { that.csCard = d }) // [カスタムエイド 2026-10-27]
         },
         methods: {
             checkMust() {
@@ -426,8 +444,9 @@
                     getMyCard(data).then((res) => {
                         uni.hideLoading()
                         if (res.code == 200) {
-                            that.showm = true
-                            that.contentm = that.titles + "\nのカードを追加しました"
+                            // [カスタムエイド 2026-10-26b] 版Bモック(画面6):お知らせの窓は出さず、My Card に戻って「[店名] のカードを追加しました」を出す
+                            uni.setStorageSync('csAddedCard', { name: that.titles, at: Date.now() })
+                            uni.reLaunch({ url: "/pages/index/index" }) // [カスタムエイド 2026-10-26c] My Card が2枚重ならないよう、画面を積み直す
                             // uni.showModal({
                             //     title: "ありがとうございます！",
                             //     content: that.titles + "\nのカードを追加しました",
@@ -483,22 +502,33 @@
         // margin-bottom: 10upx;
         margin-top: 60upx;
     }
+    /* [カスタムエイド 2026-10-26b] 版Bモック(画面5):黄緑 #AAF409・黒い文字・角をいっぱいまで丸く(元 青 #1A73E8・白い文字・角 20rpx) */
     .logins {
         width: 90%;
-        margin: 120rpx auto;
+        margin: 120rpx auto 0;
 
-        height: 112rpx;
-        line-height: 112rpx;
-        background-color: #1A73E8;
-        color: #FFFFFF;
+        height: 108rpx;
+        line-height: 108rpx;
+        background-color: #AAF409;
+        color: #1D1D1F;
+        font-weight: 700;
         text-align: center;
-        font-size: 32rpx;
-        border-radius: 20rpx;
+        font-size: 33rpx;
+        border-radius: 54rpx;
     }
+    .cs-logins-note { width: 90%; margin: 20rpx auto 60rpx; text-align: center; font-size: 23rpx; color: #6E6E73; line-height: 1.6; }
 
     .op{
         opacity: 0.6 !important;
     }
+    /* [カスタムエイド 2026-10-27] 案B:もらえるカードとお店の名前 */
+    .cs-get { width: 85%; margin: 40rpx auto 0; padding: 20rpx; box-sizing: border-box; background: #F6F6F8; border-radius: 24rpx; display: flex; align-items: center; }
+    .cs-get-card { width: 240rpx; flex: none; border-radius: 16rpx; overflow: hidden; border: 1px solid #E5E5EA; }
+    .cs-get-img { display: block; width: 100%; }
+    .cs-get-blank { height: 150rpx; }
+    .cs-get-txt { flex: 1; min-width: 0; margin-left: 24rpx; }
+    .cs-get-name { font-size: 30rpx; font-weight: 700; color: #1D1D1F; word-break: break-all; }
+    .cs-get-sub { font-size: 24rpx; color: #6E6E73; margin-top: 8rpx; }
     .fo-txt {
         width: 85%;
         margin: 0 auto;

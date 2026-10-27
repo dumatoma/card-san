@@ -1,0 +1,165 @@
+<template>
+    <!-- [カスタムエイド 2026-10-26] 店舗QR統一 段階5:iPhone で初めて開いたとき、お店のページでコピーした情報を「ペースト」ボタンで受け取る画面
+         ・ボタンは iPhone 標準のペーストボタン(uni_modules/cardsan-paste)。押しても「貼り付けを許可しますか?」の確認は出ない
+         ・受け取れたら、そのお店のカードの画像つきの登録画面へ。受け取れなければ「ようこそ!」へ
+         ・nvue の画面(iPhone 標準のボタンを置けるのは nvue だけのため)
+         [カスタムエイド 2026-10-26b] 版Bモック(画面3)どおりに作り直した(手順の枠・下の2つ目のリンクをなくした)
+         [カスタムエイド 2026-10-26c] 点線のカードの枠はなくした(この時点ではお店が分からず、カードを出せないため。坂本さんの判断) -->
+    <view class="page">
+        <view class="top" :style="{ paddingTop: (statusBar + 44) + 'px' }">
+            <view class="brand">
+                <image class="brand-icon" src="/static/icons/cs_appicon.png"></image>
+                <text class="brand-t">Card-San App</text>
+            </view>
+            <text class="title">{{ titleText }}</text>
+            <text class="lead">{{ leadText }}</text>
+            <view class="box">
+                <view class="paste-wrap">
+                    <cardsan-paste class="paste" @paste="onPaste"></cardsan-paste>
+                </view>
+                <text class="note">{{ noteText }}</text>
+            </view>
+        </view>
+        <view class="bottom" :style="{ paddingBottom: (safeBottom + 32) + 'px' }">
+            <!-- [カスタムエイド 2026-10-26c] 1つの文に(坂本さんの指示)。青い部分を押すと QR を読む -->
+            <view class="link" @click="toScan"><text class="bottom-s">うまく受け取れない場合は、</text><text class="link-t">QRコードを読み取る</text></view>
+        </view>
+    </view>
+</template>
+
+<script>
+    // nvue の画面は別の仕組みで動くため、通信の部品(axios)を読み込む csShopLink.js は使わず、必要な処理だけここに書く(中身は csShopLink.js と同じ)
+    const DAY = 24 * 60 * 60
+    const CS_DEBUG = true // [カスタムエイド 2026-10-26b] 実機の確認用。本番の前に false にする
+    function parseShopId(text) {
+        const s = String(text || '').trim()
+        if (!s) return 0
+        let m = s.match(/^https?:\/\/(?:www\.)?card-san\.jp\/s\/(\d+)/i)
+        if (m) return Number(m[1])
+        m = s.match(/^(?:card-?sanapp|cardsan):\/\/shop\/(\d+)/i) // [カスタムエイド 2026-10-27] card-sanapp:// も読む
+        if (m) return Number(m[1])
+        m = s.match(/^cardsan-shop:(\d+):(\d+)$/)
+        if (m) {
+            const at = Number(m[2])
+            return at && Math.abs(Date.now() / 1000 - at) <= DAY ? Number(m[1]) : 0
+        }
+        if (s.charAt(0) == '{') {
+            try {
+                const j = JSON.parse(s)
+                if (j && (!j.type || j.type == 'shop') && Number(j.id) > 0) return Number(j.id)
+            } catch (e) {}
+        }
+        return 0
+    }
+    // ログイン前なので、店舗IDを覚えて、カードの画像つきの登録画面(ようこそ!)へ(TOP に来たら、そのお店を開く)
+    function openShop(sid) {
+        uni.setStorageSync('csPendingShop', { id: Number(sid), at: Math.floor(Date.now() / 1000) })
+        uni.reLaunch({ url: '/pages/register/register' })
+    }
+    // [カスタムエイド 2026-10-26c] ボタンの部品(CsPasteView.swift)が端末の保存場所(UserDefaults)に書いた文字と確認用の情報を読む。読んだら消す
+    function readNative() {
+        const r = { text: '', dbg: '' }
+        try {
+            const NSUserDefaults = plus.ios.importClass('NSUserDefaults')
+            const d = NSUserDefaults.standardUserDefaults()
+            r.text = String(plus.ios.invoke(d, 'stringForKey:', 'csPasteText') || '')
+            r.dbg = String(plus.ios.invoke(d, 'stringForKey:', 'csPasteDbg') || '')
+            plus.ios.invoke(d, 'removeObjectForKey:', 'csPasteText')
+            plus.ios.invoke(d, 'removeObjectForKey:', 'csPasteDbg')
+            plus.ios.deleteObject(d)
+        } catch (x) { r.dbg = '読めない:' + x }
+        return r
+    }
+    function scanShopId() {
+        return new Promise((resolve) => {
+            uni.scanCode({
+                onlyFromCamera: true,
+                success: (res) => resolve(parseShopId(res && res.result)),
+                fail: () => resolve(-1)
+            })
+        })
+    }
+    export default {
+        data() {
+            return {
+                statusBar: 20, safeBottom: 0, busy: false,
+                titleText: 'お店のカードを\n受け取りましょう',
+                leadText: 'QRコードを読み取ったお店のカードを受け取ります。\n下の青いボタンを押すと、次へ進みます。',
+                noteText: '受け取るのはお店の情報だけです。\nほかの内容は使用しません。'
+            }
+        },
+        onLoad() {
+            const s = uni.getSystemInfoSync()
+            this.statusBar = s.statusBarHeight || 20
+            this.safeBottom = (s.safeAreaInsets && s.safeAreaInsets.bottom) || 0
+            uni.setStorageSync('csPasteShown', 1) // この画面は最初の1回だけ出す
+        },
+        methods: {
+            onPaste(e) {
+                if (this.busy) return
+                // [カスタムエイド 2026-10-26b] 受け取った値の形がどれでも読めるようにする(1回目の確認で「見つかりません」になったため)
+                let raw = ''
+                try { raw = typeof e === 'string' ? e : JSON.stringify(e) } catch (x) {}
+                const d = (e && e.detail) || {}
+                const cands = [d.text, d.detail && d.detail.text, e && e.text, typeof d === 'string' ? d : '']
+                let sid = 0
+                for (let i = 0; i < cands.length && !sid; i++) if (typeof cands[i] === 'string') sid = parseShopId(cands[i])
+                if (!sid) {
+                    const m = raw.match(/cardsan-shop:\d+:\d+|https?:\/\/(?:www\.)?card-san\.jp\/s\/\d+/)
+                    if (m) sid = parseShopId(m[0])
+                }
+                // [カスタムエイド 2026-10-26c] @paste に文字が入っていないことがあるため、ボタンの部品が端末の保存場所に書いた文字も読む
+                const nat = readNative()
+                if (!sid && nat.text) sid = parseShopId(nat.text)
+                if (sid) {
+                    this.busy = true
+                    openShop(sid)
+                    return
+                }
+                // [カスタムエイド 2026-10-26b] 受け取れなかったら「ようこそ!」へ(モックどおり)。
+                //   CS_DEBUG の間だけ、受け取った内容を小さく出す(原因を調べるため。本番の前に CS_DEBUG を false にする)
+                if (CS_DEBUG) {
+                    uni.showModal({
+                        title: 'お店の情報を受け取れませんでした',
+                        content: '(確認用)\n部品:' + (nat.dbg || 'なし') + '\n文字:' + (nat.text ? nat.text.slice(0, 60) : 'なし') + '\n画面:' + (e && e.detail !== undefined ? JSON.stringify(e.detail).slice(0, 80) : 'detail なし'),
+                        showCancel: false,
+                        confirmText: 'OK',
+                        success: () => { this.toRegister() }
+                    })
+                    return
+                }
+                this.toRegister()
+            },
+            toScan() {
+                scanShopId().then((sid) => {
+                    if (sid > 0) { openShop(sid); return }
+                    if (sid === 0) uni.showModal({ title: 'お店の QR コードではありません', content: 'お店に置いてある Card-San の QR コードを読み取ってください。', showCancel: false, confirmText: '閉じる' })
+                })
+            },
+            toRegister() {
+                uni.reLaunch({ url: '/pages/register/register' })
+            }
+        }
+    }
+</script>
+
+<style>
+    /* [カスタムエイド 2026-10-26b] 版Bモック(画面3)の寸法(画面の幅 390px = 750rpx。ボタンが灰色の枠に収まるよう少し小さく) */
+    .page { flex: 1; background-color: #FFFFFF; justify-content: space-between; }
+    .top { padding-left: 48rpx; padding-right: 48rpx; }
+    .brand { flex-direction: row; align-items: center; }
+    .brand-icon { width: 56rpx; height: 56rpx; border-radius: 14rpx; border-width: 1px; border-style: solid; border-color: #E5E5EA; margin-right: 16rpx; }
+    .brand-t { font-size: 28rpx; font-weight: bold; color: #6E6E73; }
+    .title { font-size: 48rpx; line-height: 68rpx; font-weight: bold; color: #1D1D1F; margin-top: 20rpx; }
+    .lead { font-size: 30rpx; line-height: 52rpx; color: #3A3A3C; margin-top: 24rpx; }
+    .box { margin-top: 56rpx; padding-top: 56rpx; padding-bottom: 56rpx; padding-left: 36rpx; padding-right: 36rpx; border-radius: 40rpx; background-color: #F5F5F7; align-items: center; }
+    .card { width: 424rpx; height: 230rpx; border-radius: 24rpx; background-color: #FFFFFF; border-width: 1px; border-style: dashed; border-color: #C7C7CC; align-items: center; justify-content: center; }
+    .card-t { font-size: 24rpx; color: #6E6E73; }
+    .paste-wrap { width: 560rpx; height: 108rpx; border-radius: 28rpx; background-color: #0A66D6; overflow: hidden; }
+    .paste { width: 560rpx; height: 108rpx; }
+    .note { font-size: 24rpx; line-height: 38rpx; color: #6E6E73; text-align: center; margin-top: 28rpx; }
+    .bottom { align-items: center; }
+    .bottom-s { font-size: 26rpx; color: #6E6E73; }
+    .link { flex-direction: row; align-items: center; padding-top: 16rpx; padding-bottom: 16rpx; }
+    .link-t { font-size: 26rpx; color: #0A66D6; font-weight: bold; }
+</style>

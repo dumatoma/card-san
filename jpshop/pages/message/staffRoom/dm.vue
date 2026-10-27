@@ -27,8 +27,9 @@
                 </view>
             </view>
             <!-- [カスタムエイド 2026-10-25] キーボードが出ている間は、その高さの分だけ下に余白を足す -->
-            <view class="blank" :style="kbH ? 'height:' + (blankBase + kbH) + 'px' : ''"></view>
+            <view class="blank" :style="'height:' + ((csBoxPad || blankBase) + kbH) + 'px'"></view>
         </scroll-view>
+        <view class="cs-ime" style="display:none" :prop="csImeTick" :change:prop="csIme.flush"></view>
         <view class="sendBox" :style="{bottom: h > 0 ? h + 'px' : '0'}">
             <view class="boxLeft">
                 <image src="../../../static/images/camera.png" mode="aspectFit" @click="chooseCamear" v-if="!fs"></image>
@@ -37,8 +38,8 @@
             </view>
             <view class="boxRight">
                 <textarea placeholder="メッセージを入力"
-                    :style="'border: 2upx solid #999;min-height:65upx;max-height:400upx;overflow-y:auto;border-radius:30upx;box-sizing:border-box;padding: 10upx 15upx;width:100%;' + (taH ? 'height:' + taH + 'px;' : '')"
-                    v-model="inputText" adjust-position="false" @linechange="onLine" @focus="onFocus" @blur="onBlur"></textarea>
+                    :style="csTaStyle + 'height:' + ((inputText && taH) ? taH : taH1) + 'px;'"
+                    v-model="inputText" :ignore-composition-event="false" @input="csOnInput" adjust-position="false" @linechange="onLine" @focus="onFocus" @blur="onBlur"></textarea>
             </view>
             <view class="boxRights" v-if="inputText != ''">
                 <image src="../../../static/images/send.png" mode="" @touchend.prevent="sendMsg"></image>
@@ -49,6 +50,10 @@
 
 <script>
     import pickImage from '@/utils/pickImage.js' // [カスタムエイド 2026-10-19] 写真を選ぶ画面の「×」が出ない対策
+    import { csMarkSent, csIsLeftover } from '@/utils/csIme.js' // [カスタムエイド 2026-10-26] 変換中のまま送信したとき
+    import { csChatScroll } from '@/utils/csChatScroll.js' // [カスタムエイド 2026-10-25] 最新のメッセージを入力欄のすぐ上に(4画面で共通)
+    import { csTaH, CS_TA_STYLE } from '@/utils/csTa.js' // [カスタムエイド 2026-10-27] 入力欄の高さ(1行〜6行)
+    import { csViewStart, csViewStop } from '@/utils/csViewing.js' // [カスタムエイド 2026-10-27] 開いているチャットの相手からは通知を出さない
     import { getStaffDmMessages, sendStaffDm, readStaffDm, deleteStaffDm } from '@/api/index.js'
     export default {
         data() {
@@ -67,7 +72,11 @@
                 fs: false,
                 h: 0,
                 taH: 0,
+                taH1: csTaH(1), // [カスタムエイド 2026-10-27] 1行の高さ
+                csTaStyle: CS_TA_STYLE,
                 kbH: 0, // [カスタムエイド 2026-10-25] キーボードの高さ(px)
+                csImeTick: 0, // [カスタムエイド 2026-10-26] 送信のたびに増やす(画面側の csIme.flush が動く)
+                csBoxPad: 0, // [カスタムエイド 2026-10-25] 一番下の余白に使う入力欄の高さ(px)
                 blankBase: uni.upx2px(140), // 下の余白(入力欄の分)
             }
         },
@@ -103,7 +112,10 @@
             this.loadHistory()
             this.listenSocket()
         },
+        onShow() { csViewStart(this, 'staff_dm:' + this.toId) }, // [カスタムエイド 2026-10-27] この人とのチャットを開いている
+        onHide() { csViewStop(this) }, // [カスタムエイド 2026-10-27]
         onUnload() {
+            csViewStop(this) // [カスタムエイド 2026-10-27]
             uni.$off('getPositonsOrder', this._socketHandler)
             readStaffDm({ from_id: this.toId }).catch(() => {})
         },
@@ -111,6 +123,15 @@
             this.loadMore()
         },
         methods: {
+            // [カスタムエイド 2026-10-26] 送信の直後に、変換が確定して入力欄に戻ってきた文字(送った文章の残り)は消す
+            csOnInput(e) {
+                const v = e && e.detail ? e.detail.value : ''
+                // [カスタムエイド 2026-10-26] 残りの文字を消すとき、入力欄の高さも元に戻す(残りの文字で一度広がった高さのままになっていた)
+                if (csIsLeftover(this, v)) {
+                    this.$nextTick(() => { this.inputText = ''; this.taH = 0 })
+                    setTimeout(() => { if (!this.inputText) this.taH = 0 }, 400)
+                }
+            },
             isNum(id) {
                 return id != null && !isNaN(Number(id))
             },
@@ -149,9 +170,9 @@
             },
             // 入力欄の高さを8行まで追従させ、それ以上は固定して内部スクロールに任せる
             onLine(e) {
-                if (e.detail && e.detail.lineCount <= 8) {
-                    this.taH = e.detail.height
-                }
+                // [カスタムエイド 2026-10-27] 空なら1行。改行するたびに伸ばし、6行まで(7行目からは中でスクロール)
+                if (!this.inputText) { this.taH = 0; return }
+                this.taH = csTaH(e && e.detail ? e.detail.lineCount : 1)
             },
             listenSocket() {
                 this._socketHandler = (result) => {
@@ -219,7 +240,9 @@
             sendMsg() {
                 if (!this.inputText.trim()) return
                 let text = this.inputText
+                csMarkSent(this, text) // [カスタムエイド 2026-10-26]
                 this.inputText = ''
+                this.csImeTick++ // [カスタムエイド 2026-10-26] 画面の入力欄の変換を確定させて空にする
                 this.taH = 0
                 let now = new Date()
                 let pad = n => n < 10 ? '0' + n : n
@@ -291,26 +314,7 @@
             },
             scrollBottom() {
                 this._autoUntil = this._autoUntil && Date.now() < this._autoUntil ? this._autoUntil : Date.now() + 3000
-                this.$nextTick(() => {
-                    setTimeout(() => {
-                        const q = uni.createSelectorQuery()
-                        q.selectAll('.msgItem').boundingClientRect()
-                        q.select('.sendBox').boundingClientRect()
-                        q.selectViewport().scrollOffset()
-                        q.exec((r) => {
-                            const items = (r && r[0]) || []
-                            const box = r && r[1]
-                            const vp = (r && r[2]) || {}
-                            if (!items.length || !box) {
-                                uni.pageScrollTo({ scrollTop: 0, duration: 0 })
-                                return
-                            }
-                            const last = items[items.length - 1]
-                            const top = (vp.scrollTop || 0) + last.bottom - (box.top - uni.upx2px(24))
-                            uni.pageScrollTo({ scrollTop: Math.max(0, top), duration: 0 })
-                        })
-                    }, 50)
-                })
+                csChatScroll(this) // [カスタムエイド 2026-10-25] 入力欄の位置を測らず、計算で合わせる(utils/csChatScroll.js)
             },
         }
     }
@@ -435,3 +439,23 @@
         display: block;
     }
 </style>
+
+<!-- [カスタムエイド 2026-10-26] 変換中(下線)のまま送信したとき、画面の入力欄の変換を確定させてから空にする(画面側で直接動く処理)。
+     変換が終わるまでは、プログラムから入力欄を空にしても画面に反映されない(Vue の決まり)ため -->
+<script module="csIme" lang="renderjs">
+    export default {
+        methods: {
+            flush(n) {
+                if (!n) return
+                try {
+                    var ta = document.querySelector('.sendBox textarea')
+                    if (!ta) return
+                    var had = document.activeElement === ta
+                    ta.blur()
+                    ta.value = ''
+                    if (had) ta.focus()
+                } catch (e) {}
+            }
+        }
+    }
+</script>

@@ -2,8 +2,8 @@
     "name" : "Card-San",
     "appid" : "__UNI__1ED8C1A",
     "description" : "Card-San",
-    "versionName" : "1.1.19",
-    "versionCode" : 1087,
+    "versionName" : "1.1.23",
+    "versionCode" : 1097,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
@@ -69,6 +69,7 @@
                     "<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>",
                     "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
                 ],
+                "schemes" : "card-sanapp", /* [カスタムエイド 2026-10-26] アプリを外から開く名前(Android)。[カスタムエイド 2026-10-27] cardsan → card-sanapp(坂本さんの指示でハイフンあり。管理App が cardsan を使っていて重なったため) */
                 "minSdkVersion" : 21,
                 "targetSdkVersion" : 36,
                 "abiFilters" : [ "armeabi-v7a", "arm64-v8a", "x86" ]
@@ -76,6 +77,18 @@
             /* ios打包配置 */
             "ios" : {
                 "bundleId" : "com.cardsan.customer",
+                /* [カスタムエイド 2026-10-26] 店舗QR統一:card-san.jp/s/… のリンクでアプリを直接開く(Universal Links)・card-sanapp:// で開く([カスタムエイド 2026-10-27] cardsan は管理App と重なるため変更) */
+                "capabilities" : {
+                    "entitlements" : {
+                        "com.apple.developer.associated-domains" : [ "applinks:card-san.jp" ]
+                    }
+                },
+                "urltypes" : [
+                    {
+                        "urlidentifier" : "com.cardsan.customer",
+                        "urlschemes" : [ "card-sanapp" ]
+                    }
+                ],
                 "dSYMs" : false,
                 "idfa" : false,
                 "privacyDescription" : {

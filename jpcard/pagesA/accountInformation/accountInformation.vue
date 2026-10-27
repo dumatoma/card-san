@@ -95,6 +95,7 @@
 
 <script>
     import {getUserInfos,editUser,getYYs,scanCode} from "@/api/index.js"
+    import { scanShopQr } from '@/utils/csShopLink.js' // [カスタムエイド 2026-10-26] お店の QR の読み取り(共通)
   export default {
     data() {
       return {
@@ -131,32 +132,9 @@
                 }
             })
         },
+        // [カスタムエイド 2026-10-26] お店の QR の読み取りを共通の処理に(以前は会員でないときにお店の名前などを渡しておらず、URL の QR も読めなかった)
         sao() {
-          let that = this
-          uni.scanCode({
-            success: function(res) {
-                let result = JSON.parse(res.result)
-                uni.showLoading({
-                    title:"加载中"
-                })
-                if(result.id){
-                    scanCode(result.id).then((res) => {
-                        uni.hideLoading()
-                        if(res.code==200){
-                            if(res.data.member == 0){
-                                uni.navigateTo({
-                                    url:"../../pagesA/BindCard/BindCard?id="+res.data.cid
-                                })
-                            }else{
-                                uni.navigateTo({
-                                    url:"../../pagesA/shop/shop?id="+result.id+"&cid="+res.data.mid
-                                })
-                            }
-                        }
-                    })
-                }
-            }
-          })
+          scanShopQr()
         },
       setting() {
         uni.navigateTo({
@@ -164,32 +142,7 @@
         })
       },
       saoMa() {
-        let that = this
-        uni.scanCode({
-            onlyFromCamera:true,
-          success: function(res) {
-              let result = JSON.parse(res.result)
-              uni.showLoading({
-                  title:"読み込み中"
-              })
-              if(result.id){
-                  scanCode(result.id).then((res) => {
-                      uni.hideLoading()
-                      if(res.code==200){
-                          if(res.data.member == 0){
-                              uni.navigateTo({
-                                  url:"../../pagesA/BindCard/BindCard?id="+res.data.cid
-                              })
-                          }else{
-                              uni.navigateTo({
-                                  url:"../../pagesA/shop/shop?id="+result.id+"&cid="+res.data.mid
-                              })
-                          }
-                      }
-                  })
-              }
-          }
-        })
+        scanShopQr() // [カスタムエイド 2026-10-26] 共通の処理に
       },
       notice() {
         uni.navigateTo({

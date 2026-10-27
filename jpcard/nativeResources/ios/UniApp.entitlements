@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- [カスタムエイド 2026-10-27] card-san.jp/s/… のリンク(お店の QR)で Card-San App を直接開く(Universal Links)。
+     manifest.json の capabilities だけでは、ビルドしたアプリに入っていなかった(1.1.23(1094) の中身を確かめたら associated-domains が「*」だった)ため、
+     uni-app の公式の説明(iOS原生应用配置文件和资源)にある UniApp.entitlements でも指定する -->
+<plist version="1.0">
+<dict>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:card-san.jp</string>
+	</array>
+</dict>
+</plist>

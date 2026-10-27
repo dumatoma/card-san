@@ -1,10 +1,11 @@
 <template>
     <view class="container">
-        <view style="height: 80upx;"></view>
+        <!-- [カスタムエイド 2026-10-26e] 上の文字が時計(ステータスバー)に重なって切れていたため、ステータスバーの高さぶん下げる(元 80upx 固定) -->
+        <view :style="{ height: (csTop + 24) + 'px' }"></view>
         <view class="top_title">
             <!-- <image src="../../static/icons/title.png" alt="" style="width: 332upx;height: 39upx;"></image>
             <image src="../../static/icons/card_2.png" style="width: 186upx;height: 36upx;" alt=""></image> -->
-            <image src="../../static/icons/tttile.png" mode="widthFix" style="width: 60%;"></image>
+            <image src="../../static/icons/tttile.png" mode="widthFix" style="width: 52%;"></image>
         </view>
         <view class="logo">
             <image src="../../static/icons/start.svg" mode="widthFix" alt=""></image>
@@ -15,19 +16,13 @@
         <view class="register">
             まだアカウントの登録 がお済みでない場合は、アカウント登録をお願いします。<span id="goRegister" @click="toRegister">登録はこちら>></span>
         </view>
-        <view class="logBtns">
-            <view class="btnItem l" @click="toCode">
-                電話番号(SMS)でサインイン
-            </view>
-            <view class="btnItem">
-                <image @click="getUrlLine" src="../../static/icons/line.png" alt=""></image>
-            </view>
-            <view class="btnItem">
-                <image @click="getUrlGoogle" src="../../static/icons/google.png" mode="widthFix" alt=""></image>
-            </view>
-            <view class="btnItem" @click="iosLogin" v-if="env == 'ios'">
-                <image src="../../static/icons/ios.png" mode="widthFix" alt=""></image>
-            </view>
+        <!-- [カスタムエイド 2026-10-26d] 押したとき少し縮んで薄くなる(坂本さんの指示)
+             [カスタムエイド 2026-10-26b] 版Bモックと同じボタン(角をいっぱいまで丸く・同じ書体と太さ・全部「〜でサインイン」)。順番は Apple・Google・LINE・SMS(Android は Apple なし) -->
+        <view class="cs-btns">
+            <view class="cs-btn-w" v-if="env == 'ios'" @click="iosLogin" hover-class="cs-btn-press" :hover-stay-time="120"><image class="cs-btn" src="../../static/icons/cs_btn_apple.png"></image></view>
+            <view class="cs-btn-w" @click="getUrlGoogle" hover-class="cs-btn-press" :hover-stay-time="120"><image class="cs-btn" src="../../static/icons/cs_btn_google.png"></image></view>
+            <view class="cs-btn-w" @click="getUrlLine" hover-class="cs-btn-press" :hover-stay-time="120"><image class="cs-btn" src="../../static/icons/cs_btn_line.png"></image></view>
+            <view class="cs-btn-w" @click="toCode" hover-class="cs-btn-press" :hover-stay-time="120"><image class="cs-btn" src="../../static/icons/cs_btn_sms.png"></image></view>
         </view>
         <view class="userAgreement">
             サインイン、ログインすることでCard-San Appの<br /> <text @click="toProvice"
@@ -40,6 +35,7 @@
 </template>
 <script>
     // [カスタムエイド 2026-10-19] Google プラグイン(JY-GoogleSignin)はアプリに組み込まれていないため読み込みをやめた(Google ログインは uni.login)
+    import { csLineLogin } from '@/utils/csShopLink.js' // [カスタムエイド 2026-10-26e]
     import {
         getLineUrl,
         getGoogleUrl,
@@ -57,6 +53,7 @@
         data() {
             return {
                 query: {},
+                csTop: uni.getSystemInfoSync().statusBarHeight || 20, // [カスタムエイド 2026-10-26e] ステータスバーの高さ(px)
                 env: uni.getSystemInfoSync().platform // [カスタムエイド 2026-10-19] 端末から直接取る
             }
         },
@@ -133,7 +130,7 @@
                             provider: 'apple',
                             success: function(info) {
                                 // console.log("info",info)
-                                setIosLogin(info.userInfo.openId, info.userInfo.identityToken)
+                                setIosLogin(info.userInfo.openId, info.userInfo.identityToken, (info.userInfo.fullName ? ((info.userInfo.fullName.familyName || '') + ' ' + (info.userInfo.fullName.givenName || '')).trim() : '')) /* [カスタムエイド 2026-10-26e] Apple のお名前も送る */
                                     .then((result) => {
                                         if (result.code == 200) {
                                             uni.showToast({
@@ -169,13 +166,9 @@
             },
 
             getUrlLine() {
-                getLineUrl().then((res) => {
-                    if (res.code == 200) {
-                        uni.navigateTo({
-                            url: "../../pagesA/webLogin/webLogin?url=" + res.data.url
-                        })
-                    }
-                }).catch(() => {})
+                // [カスタムエイド 2026-10-26e] LINE のログイン画面を、アプリの中ではなく Safari で開く(LINE アプリにログインしている人は、入力なしでログインできる)。
+                //   ログインが終わると cardsan://line-login でアプリに戻り、App.vue → csShopLink.js の handleLaunchLink で受け取る(どの画面からでも)
+                csLineLogin()
             },
 
             // getUrlGoogle() {
@@ -331,6 +324,12 @@
 </script>
 
 <style lang="scss">
+    /* [カスタムエイド 2026-10-26b] サインインのボタン(版Bモックと同じ寸法) */
+    .cs-btns { display: flex; flex-direction: column; align-items: center; margin-top: 60upx; } /* [カスタムエイド 2026-10-26e] 上との間 100→60upx(ボタンの大きさ・ボタン同士の間は変えない) */
+    .cs-btn-w { width: 540upx; height: 101upx; margin-bottom: 18upx; border-radius: 51upx; transition: transform 0.1s, opacity 0.1s; }
+    .cs-btn-press { transform: scale(0.96); opacity: 0.7; } /* [カスタムエイド 2026-10-26d] 押したときの動き */
+    .cs-btn { display: block; width: 540upx; height: 101upx; }
+
     .container {
         .top_title {
             image {
@@ -341,9 +340,9 @@
 
         .logo {
             text-align: center;
-            margin: 16upx auto 60upx;
-            width: 160upx;
-            height: 160upx;
+            margin: 28upx auto 40upx; /* [カスタムエイド 2026-10-26e] 見やすさの調整(元 16upx auto 60upx・160upx) */
+            width: 132upx;
+            height: 132upx;
 
             image {
                 width: 100%;
@@ -352,9 +351,9 @@
         }
 
         .title {
-            font-size: 48upx;
+            font-size: 44upx; /* [カスタムエイド 2026-10-26e] 元 48upx・細字 */
             font-family: Hiragino Sans-W6, Hiragino Sans;
-            font-weight: normal;
+            font-weight: 700;
             color: #1D1D1F;
             text-align: center;
         }
@@ -364,7 +363,8 @@
             font-family: Hiragino Sans-W3, Hiragino Sans;
             font-weight: normal;
             color: #1D1D1F;
-            margin-top: 80upx;
+            margin-top: 36upx; /* [カスタムエイド 2026-10-26e] 元 80upx */
+            line-height: 1.7;
 
             #goRegister {
                 color: #1a73e8;
@@ -379,7 +379,7 @@
             font-family: Hiragino Sans-W3, Hiragino Sans;
             font-weight: normal;
             color: #707070;
-            margin: 100upx 0 92upx;
+            margin: 40upx 0 60upx; /* [カスタムエイド 2026-10-26e] 元 100upx 0 92upx */
             box-sizing: border-box;
             padding: 0 20upx;
         }

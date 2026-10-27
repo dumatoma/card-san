@@ -1,5 +1,6 @@
 <template>
-    <view class="contains">
+    <!-- [カスタムエイド 2026-10-26] 開くときは右から横にスライドして入る/「<」で戻るときは右へスライドして出る(ほかの画面の移り方と同じに。以前はぱっと出ていた) -->
+    <view class="contains" :class="{ 'cs-leave': csLeaving }">
         <u-navbar title="新規予約" border @leftClick="handleBack" :safeAreaInsetTop="true" bgColor="rgb(251,251,253)" :placeholder="true">
         </u-navbar>
         <!-- [カスタムエイド 2026-10-22] お休み・休憩はお客さまがいないので、お客さまの欄を出さない -->
@@ -129,7 +130,7 @@
         </view>
         <view class="cs-note" v-if="waiType == 'off'">その日の営業時間をすべて止めます。昼休みなどで営業時間が2つに分かれている日は、両方とも止まります。お客さまの予約画面では、この担当者はこの日に選べなくなります。この日に予約が入っているときは、お休みにできません。</view>
         <!-- @click="saveData" -->
-        <view class="cConfirm" hover-class="savehover" @click="askSave" v-text="waiType == 'off' ? 'お休みにする' : waiType == 'break' ? 'この時間を止める' : 'この内容で予約する'">
+        <view class="cConfirm" hover-class="savehover" @click="askSave" v-text="waiType == 'off' ? 'お休みにする' : waiType == 'break' ? '休憩・営業時間外にする' : 'この内容で予約する'">
         </view>
         <!-- 选择性别弹出层 -->
         <u-popup :show="show" @close="show = false" mode="bottom" bgColor="#f9f9f9">
@@ -332,6 +333,7 @@
         mixins: [csTimeDrum],
         data() {
             return {
+                csLeaving: false, // [カスタムエイド 2026-10-26] 右へスライドして出ている途中
                 showm:false,
                 p2:[],
                 config:{
@@ -465,7 +467,10 @@
               }
             },
             handleBack() {
-                this.$emit("cancel", "close")
+                // [カスタムエイド 2026-10-26] 右へスライドして出てから閉じる
+                if (this.csLeaving) return
+                this.csLeaving = true
+                setTimeout(() => { this.$emit("cancel", "close") }, 260)
             },
 
             // [カスタムエイド 2026-10-22] 確認のダイアログ(お休み・休憩は文言を変える)
@@ -482,7 +487,7 @@
                     }
                     that.config = Object.assign({}, that.config, { title: "お休みにしますか？", content: that.date + " の " + that.todaystaff.name + " さんを、営業時間のあいだすべて止めます。", confirmText: "お休みにする" })
                 } else if (that.waiType == 'break') {
-                    that.config = Object.assign({}, that.config, { title: "この時間を止めますか？", content: that.date + " " + that.start + "〜" + that.end + " を、休憩・勤務時間外にします。", confirmText: "止める" })
+                    that.config = Object.assign({}, that.config, { title: "休憩・営業時間外に設定しますか？", content: that.date + " " + that.start + "〜" + that.end + " を、休憩・勤務時間外にします。", confirmText: "設定する" }) // [カスタムエイド 2026-10-25] 文言を「休憩・営業時間外に設定」に
                 } else {
                     that.config = Object.assign({}, that.config, { title: "予約を決定しますか？", content: "決定すると、この予約情報はお客様に送信されます。", confirmText: "予約する" })
                 }
@@ -590,7 +595,7 @@
                 addNewAppoint(data).then((res) => {
                     that.showAle = false
                     that.showm = false
-                    if (that.waiType == 'break') that.maskText = "時間を止めました"
+                    if (that.waiType == 'break') that.maskText = "休憩・営業時間外に設定しました" // [カスタムエイド 2026-10-25]
                     if (res.code == 200) {
                         that.showmask = true
                         setTimeout(function() {
@@ -1035,29 +1040,32 @@
         background: rgba(29,29,31,0.2);
         z-index: 999;
         
+        /* [カスタムエイド 2026-10-25] 完了のお知らせを、ほかの画面の作り直しと同じ見た目に(白いカード・角丸を大きく・文字は濃い色で太字・1行に収まる幅) */
         .maskcontent{
-            width: 320upx;
-            height: 300upx;
+            width: 560upx;
             background: #fff;
-            border-radius: 20upx;
+            border-radius: 32upx;
             text-align: center;
             box-sizing: border-box;
-            padding: 60upx;
-            font-size: 32upx;
-            font-family: Hiragino Sans-W3, Hiragino Sans;
-            font-weight: normal;
-            color: #1A73E8;
+            padding: 56upx 40upx 52upx;
+            font-size: 30upx;
+            font-weight: 700;
+            line-height: 1.5;
+            color: #1D1D1F;
             position: absolute;
-            top: 40%;
+            top: 45%;
             left: 50%;
             transform: translate(-50%,-50%);
-            
+            box-shadow: 0 16upx 48upx rgba(0, 0, 0, 0.12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
             .mi{
-                width: 100upx;
-                height: 100upx;
-                margin-bottom: 40upx;
+                width: 96upx;
+                height: 96upx;
+                margin-bottom: 28upx;
             }
-            
         }
     }
 
@@ -1357,6 +1365,12 @@
         overflow-y: scroll;
         box-sizing: border-box;
         padding: 32upx;
+        animation: csSlideIn 0.3s cubic-bezier(0.2, 0.7, 0.3, 1); /* [カスタムエイド 2026-10-26] 右から横にスライドして入る(Card-San App・予約WEB と同じ 0.3秒) */
+        box-shadow: -8rpx 0 24rpx rgba(0, 0, 0, 0.08);
+
+        &.cs-leave {
+            animation: csSlideOut 0.26s cubic-bezier(0.4, 0, 0.6, 1) forwards; /* [カスタムエイド 2026-10-26] 右へスライドして出る */
+        }
 
         .ct {
             width: 100%;
@@ -1404,5 +1418,14 @@
                 }
             }
         }
+    }
+    /* [カスタムエイド 2026-10-26] 新規予約の画面の移り方(iPhone の画面の移り方に近い速さ) */
+    @keyframes csSlideIn {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+    }
+    @keyframes csSlideOut {
+        from { transform: translateX(0); }
+        to { transform: translateX(100%); }
     }
 </style>

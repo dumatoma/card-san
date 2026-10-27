@@ -9,7 +9,8 @@
         </view>
         <view class="nc-empty" v-if="loaded && array.length == 0">予約の通知はまだありません</view>
         <u-swipe-action>
-            <view class="nc-wrap" v-for="(item,index) in array" :key="item.id">
+            <!-- [カスタムエイド 2026-10-25] 未読のカードは、青い点と同じ色の線で囲む(背景のグレーと見分けやすく) -->
+            <view class="nc-wrap" :class="{ unread: item.is_read == 0 }" v-for="(item,index) in array" :key="item.id">
             <u-swipe-action-item :options="options2" :name="index" @click="hasRead">
                 <view class="nc-card" :class="{ unread: item.is_read == 0 }" @click.stop="toDetail(item,index)">
                     <view class="nc-top">
@@ -21,6 +22,8 @@
                         <text>{{ item.day }}</text><text class="nc-hm">{{ item.time }}</text>
                     </view>
                     <view class="nc-menu" v-if="item.menu_name">{{ item.menu_name }}</view>
+                    <!-- [カスタムエイド 2026-10-27] 誰が確認したかを出す(担当者は、ほかの人が確認していても本人が開くまで未読のまま) -->
+                    <view class="nc-read" v-if="item.read_name">確認済み({{ item.read_name }}さん)</view>
                     <view class="nc-bottom">
                         <view class="nc-staff">
                             <view class="nc-lab">指名</view>
@@ -76,6 +79,13 @@
             this.getList()
         },
         methods: {
+            // [カスタムエイド 2026-10-27] まだ誰も確認していなかった通知は、自分の名前を「確認済み」に出す(サーバーと同じ。次に一覧を読み直すとサーバーの名前になる)
+            csSetReader(index) {
+                const it = this.array[index]
+                if (!it || it.read_name) return
+                const a = uni.getStorageSync('admin') || {}
+                this.$set(it, 'read_name', a.message_name || a.name || '')
+            },
             toDetail(item,index) {
                 let that = this
                  let id = that.array[index].id
@@ -89,6 +99,7 @@
                            url: "../notice/detail/detail?id="+item.oid
                        })
                        that.array[index].is_read = 1
+                       that.csSetReader(index) // [カスタムエイド 2026-10-27]
                     }else{
                         uni.showToast({
                             title:res.message,
@@ -167,6 +178,7 @@
                                 title: res.message
                             })
                            that.array[index].is_read = 1
+                           that.csSetReader(index) // [カスタムエイド 2026-10-27]
                         }else{
                             uni.showToast({
                                 title:res.message,
@@ -212,6 +224,7 @@
     .nc-wrap { margin: 0 32rpx 30rpx; /* [カスタムエイド 2026-10-22] カードのあいだを1.5倍に */ border-radius: 28rpx; overflow: hidden; }
     .nc-card { background: #FFFFFF; padding: 28rpx 32rpx; width: 100%; box-sizing: border-box; }
     .nc-card.unread { background: #F2F7FF; }
+    .nc-wrap.unread { border: 1px solid #1A73E8; } /* [カスタムエイド 2026-10-25] 未読の枠線(青い点と同じ色) */
     .nc-top { display: flex; align-items: center; }
     .nc-dot { width: 16rpx; height: 16rpx; border-radius: 50%; background: #1A73E8; margin-right: 12rpx; flex-shrink: 0; }
     .nc-title { flex: 1; font-size: 28rpx; font-weight: bold; color: #1D1D1F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -219,6 +232,7 @@
     .nc-when { margin-top: 16rpx; font-size: 30rpx; color: #1D1D1F; }
     .nc-hm { margin-left: 20rpx; font-weight: bold; }
     .nc-menu { margin-top: 8rpx; font-size: 26rpx; color: #515154; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+    .nc-read { margin-top: 8rpx; font-size: 22rpx; color: #8A8A8E; } /* [カスタムエイド 2026-10-27] 確認済み(○○さん) */
     .nc-bottom { margin-top: 20rpx; padding-top: 20rpx; border-top: 1px solid #EEEEF0; display: flex; align-items: center; justify-content: space-between; }
     .nc-staff { display: flex; align-items: center; flex-wrap: wrap; font-size: 24rpx; color: #515154; flex: 1; }
     .nc-lab { color: #8A8A8E; }

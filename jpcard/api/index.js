@@ -422,9 +422,10 @@ export const getFacebookInfo = (code) => {
 }
 
 // 获取登录信息（apple）
-export const setIosLogin = (id,token) => {
+// [カスタムエイド 2026-10-26e] Apple が最初の1回だけ渡すお名前(name)も送る。アカウントの名前が「user123456」のままにならないように
+export const setIosLogin = (id,token,name) => {
     return request({
-        url: "/api/member/apple/get_user_info?user_id="+id+"&id_token="+token,
+        url: "/api/member/apple/get_user_info?user_id="+id+"&id_token="+token+(name ? "&name="+encodeURIComponent(name) : ""),
         method: "get"
     })
 }
@@ -491,4 +492,9 @@ export const historyComes = (sid) => {
         url: "/api/member/history/comes" + (sid ? "?sid=" + sid : ""),
         method: "get"
     })
+}
+
+// [カスタムエイド 2026-10-27] 今開いているチャットを知らせる(utils/csViewing.js から使う)
+export const csViewing = (view) => {
+    return request({ url: "/api/member/cs_viewing", method: "post", data: { view: view || "" } })
 }

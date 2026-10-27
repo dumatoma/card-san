@@ -530,7 +530,10 @@
             "path": "pages/appointment/notice/detail/detail",
             "style": {
                 "navigationStyle": "custom",
-                "enablePullDownRefresh": false
+                "enablePullDownRefresh": false,
+                "app-plus": {
+                    /* [カスタムエイド 2026-10-25] 標準の見出しを出さない(ほかの画面と同じ) */ "titleNView": false
+                }
             }
 
         }, {

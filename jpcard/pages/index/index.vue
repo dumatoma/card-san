@@ -1,5 +1,7 @@
 <template>
     <view class="">
+        <!-- [カスタムエイド 2026-10-27] 受け取ったお店を開くあいだ、My Card を隠す白い画面 -->
+        <view class="cs-cover" v-if="csOpening"><view class="cs-cover-t">お店の情報を読み込んでいます</view></view>
         <u-navbar title="My Card" :placeholder="true" :safeAreaInsetTop="true" :border="true" bgColor="#ffffff"
             :height="56">
             <view class="u-nav-slot" slot="left" @click="muLvList()">
@@ -26,12 +28,14 @@
                 </view>
             </view>
             <view style="height: 56px;"></view>
+            <!-- [カスタムエイド 2026-10-26b] 版Bモック(画面6):カードを追加した直後だけ「[店名] のカードを追加しました」 -->
+            <view class="cs-added" v-if="csAdded">{{ csAdded }} のカードを追加しました</view>
             <view class="swiper">
                 <view class="sort1" id="sort1">
                     <view class="sort-item" v-for="(item,index) in cardList" :key="index"
                         @longpress="deleShow(index,item.id,item)" @click.stop="toDetail(item.sid,item.id)" @touchend="ltouchend" @touchstart="ltouchstart">
                         <view class="unread" v-text="item.unread_num" v-if="item.unread_num > 0"></view>
-                        <image :src="item.image" mode="aspectFill" class="big-img"></image>
+                        <image :src="item.image" mode="aspectFill" class="big-img" :class="{ 'cs-added-card': csAdded && item.shop_name == csAdded }"></image>
                         <view class="title" v-if="!item.check">{{item.shop_name}}</view>
                         <view class="delet" v-if="item.check" @click.stop="show = true">
                             <view style="z-index: 999;">
@@ -96,6 +100,7 @@
         historyOrders
     } from "@/api/index.js"
     import { forceLogout } from "@/utils/request.js"
+    import { scanShopQr, consumePendingShop, pendingShopId } from '@/utils/csShopLink.js' // [カスタムエイド 2026-10-26] お店の QR の読み取り(共通)
     import favorite from '../../static/svgjs/favorite'
     import rhMy from '../../static/svgjs/reserveHistoryMy.js' // [カスタムエイド 2026-10-20]
     import shopInfo from "../../pagesA/indexInfo/indexInfo.vue"
@@ -106,6 +111,10 @@
         },
         data() {
             return {
+                csAdded: '', // [カスタムエイド 2026-10-26b] 追加したお店の名前(お知らせ用)
+                // [カスタムエイド 2026-10-27] 受け取ったお店を開くあいだの白い画面。
+                //   [10/27 2回目] 画面が最初に出る瞬間から隠すため、onShow を待たずに、ここで「受け取ったお店があり、ログイン済み」なら最初から白くする
+                csOpening: !!(pendingShopId() && uni.getStorageSync('token')),
                 showInfo: false,
                 show: false,
                 showAle: false,
@@ -142,6 +151,26 @@
             } catch (e) {}
         },
         onShow() {
+            // [カスタムエイド 2026-10-26] ログイン前に受け取ったお店(QR・リンク)があれば、ここで開く
+            // [カスタムエイド 2026-10-27] 開くあいだは My Card の中身を見せず、白い画面に「お店の情報を読み込んでいます」を出す(TOP がチラッと見えないように)。
+            //   お店の画面が開くと onHide で消える。うまく開けなかったときも 5秒で消す
+            if (consumePendingShop()) {
+                this.csOpening = true
+                clearTimeout(this.csOpenTimer)
+                this.csOpenTimer = setTimeout(() => { this.csOpening = false }, 5000)
+            } else {
+                this.csOpening = false // [カスタムエイド 2026-10-27 2回目] 開くお店がないとき(会員情報の画面から戻ったときなど)だけ消す
+            }
+            // [カスタムエイド 2026-10-26b] お店のカードを追加した直後(1分以内)なら、お知らせを出して3秒で消す([カスタムエイド 2026-10-26d] 8秒→3秒。坂本さんの指示)
+            try {
+                const a = uni.getStorageSync('csAddedCard')
+                if (a && a.name && Date.now() - a.at < 60000) {
+                    this.csAdded = a.name
+                    clearTimeout(this.csAddedTimer)
+                    this.csAddedTimer = setTimeout(() => { this.csAdded = '' }, 3000)
+                }
+                if (a) uni.removeStorageSync('csAddedCard')
+            } catch (e) {}
             this.checkOrder() // [カスタムエイド 2026-10-20]
             this.getList()
             this.getNearby()
@@ -398,36 +427,9 @@
                     url: '../../pagesA/accountInformation/accountInformation'
                 })
             },
+            // [カスタムエイド 2026-10-26] お店の QR の読み取りを共通の処理に(新しい URL の QR と今の QR の両方を読める)
             sao() {
-                let that = this
-                uni.scanCode({
-                    onlyFromCamera: true,
-                    success: function(res) {
-                        let result = JSON.parse(res.result)
-                        uni.showLoading({
-                            title: "読み込み中"
-                        })
-                        if (result.id) {
-                            scanCode(result.id).then((res) => {
-                                uni.hideLoading()
-                                if (res.code == 200) {
-                                    if (res.data.member == 0) {
-                                        uni.navigateTo({
-                                            url: "../../pagesA/BindCard/BindCard?id=" + res
-                                                .data.cid + '&sid=' + result.id + "&name=" +
-                                                res.data.shop_name
-                                        })
-                                    } else {
-                                        uni.navigateTo({
-                                            url: "../../pagesA/shop/shop?id=" + result.id +
-                                                "&cid=" + res.data.mid
-                                        })
-                                    }
-                                }
-                            }).catch(() => { uni.hideLoading() })
-                        }
-                    }
-                })
+                scanShopQr()
             },
             closeShow() {
                 this.cardList.forEach((item, index) => {
@@ -520,6 +522,14 @@
     }
 </script>
 <style lang="scss" scoped>
+    /* [カスタムエイド 2026-10-27] 受け取ったお店を開くあいだの白い画面(上のバーも含めて全部隠す) */
+    .cs-cover { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 10000; background: #FFFFFF; display: flex; align-items: center; justify-content: center; }
+    .cs-cover-t { font-size: 28rpx; color: #6E6E73; }
+
+    /* [カスタムエイド 2026-10-26b] 版Bモック(画面6)のお知らせ */
+    .cs-added { margin: 34rpx 30rpx 0; padding: 26rpx 30rpx; border-radius: 26rpx; background: #F3FDE0; border: 1px solid #AAF409; font-size: 27rpx; font-weight: 500; color: #1D1D1F; }
+    .cs-added-card { box-sizing: border-box; border: 2px solid #AAF409; }
+
     .infoShow {
         height: 90vh;
         width: 100%;

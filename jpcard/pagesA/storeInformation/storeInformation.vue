@@ -465,8 +465,10 @@
             },
             copy() {
                 let that = this
-                // アプリダウンロードリンク（正式なQRリンク先で固定。指摘 2026.8.3-1）
-                const downloadUrl = 'https://me-qr.com/tOELaM49'
+                // [カスタムエイド 2026-10-26] 店舗QR統一 段階6:外部サービス(me-qr)のリンクをやめ、自社のお店のページ(card-san.jp/s/店舗ID)にする。
+                //   このリンク1つで、アプリを持っていない人はダウンロード→そのお店のカード、持っている人はそのお店が開く
+                //   (以前:'https://me-qr.com/tOELaM49'。指摘 2026.8.3-1)
+                const downloadUrl = this.sid ? 'https://card-san.jp/s/' + this.sid : 'https://card-san.jp/'
                 uni.setClipboardData({
                     data: downloadUrl,
                     success: () => {

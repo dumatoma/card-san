@@ -244,8 +244,10 @@
             
         },
         onShow() {
-            let that = this 
-            
+            // [カスタムエイド 2026-10-26] 下のメニューのメッセージ・クーポンの数を、画面に戻るたび(チャットから戻ったとき・アプリを開き直したとき)に読み直す。
+            //   以前は画面を開いたとき(onLoad)の1回だけだったため、開いたままの画面では新しい通知の数が増えなかった
+            if (this._csShown) this.csLoadCounts()
+            this._csShown = true
         },
         onPullDownRefresh() {
             if(this.current == 'My Card'){
@@ -278,20 +280,7 @@
             // [カスタムエイド 2026-10-25] 以前は 0.5秒待ってからお店の情報を読みに行っていたため、下のメニューのアイコンが遅れて出ていた。
             //   すぐに読みに行く(前回の情報が端末にあれば、それで開いた瞬間に出す=utils/shopCache.js)
             that.getInfo()
-            getUnreadNum(query.id).then((res) => {
-                if(res.code == 200){
-                    if(res.data.unread_num < 100){
-                        that.number = res.data.unread_num
-                    }else{
-                        that.number = "99+"
-                    }
-                }
-            }).catch(() => {})
-            getMewCoupon(query.id).then((res) => {
-                if(res.code == 200){
-                    that.number1 = res.data.count
-                }
-            }).catch(() => {})
+            that.csLoadCounts()
         },
         onPageScroll(res) {
             // uni.$emit('onPageScroll', res.scrollTop);//传递参数
@@ -300,6 +289,21 @@
             uni.$emit('onReachBottom');
         },
         methods: {
+            // [カスタムエイド 2026-10-26] メッセージ(未読)・クーポン(新着)の数を読む
+            csLoadCounts() {
+                let that = this
+                if (!that.query || !that.query.id) return
+                getUnreadNum(that.query.id).then((res) => {
+                    if (res.code == 200) {
+                        that.number = res.data.unread_num < 100 ? res.data.unread_num : "99+"
+                    }
+                }).catch(() => {})
+                getMewCoupon(that.query.id).then((res) => {
+                    if (res.code == 200) {
+                        that.number1 = res.data.count
+                    }
+                }).catch(() => {})
+            },
             changeColor(url, color) {
                 if (!color) color = "#707070"; // page_footer_icon_color が未設定でも落ちないようにする
                 let res = url.replace(/%23[a-zA-Z0-9]{6}/g, color.replace("#",

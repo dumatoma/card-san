@@ -1041,3 +1041,8 @@ export const updateCome = (id, data) => {
 
 // [カスタムエイド 2026-10-22] お知らせ一覧(Instagram 連携中):連携している Instagram の投稿(Card-San App と同じ内容)
 export const getShopInsMedia = (after) => request({ url: '/api/shop/instagram/media?after=' + (after || ''), method: 'get' })
+
+// [カスタムエイド 2026-10-27] 今開いているチャットを知らせる(utils/csViewing.js から使う)
+export const csViewing = (view) => {
+    return request({ url: "/api/shop/cs_viewing", method: "post", data: { view: view || "" } })
+}

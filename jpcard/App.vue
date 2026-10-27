@@ -1,14 +1,26 @@
 <script>
+    import { handleLaunchLink } from '@/utils/csShopLink.js' // [カスタムエイド 2026-10-26] 店舗QR統一:リンクから開かれたとき
     // import {getAllUnread,getAllUnreadnum} from "@/api/index.js"
     export default {
         onLaunch: function() {
             console.log('App Launch')
+            // #ifdef APP-PLUS
+            // [カスタムエイド 2026-10-27] リンク(card-sanapp://・Universal Links)でアプリが呼ばれた知らせ。アプリが開いたままのときもリンクを受け取る
+            plus.globalEvent.addEventListener('newintent', () => { this.csOnNewIntent() }) // [カスタムエイド 2026-10-27 2回目] 同じリンクをもう一度押したときも開く
+            // #endif
             setTimeout(() => {
                 plus.push.getClientInfoAsync((info) => {
                     console.log("pushinfo", info)
                     let cid = info["clientid"];
                     console.log("cid", cid)
                     uni.setStorageSync("cid", cid)
+                    // [カスタムエイド 2026-10-25] iPhone の通知用の番号(Apple に直接送るため)。前回と変わったら、すぐ1回サーバーに送る
+                    try {
+                        let ptoken = info["token"] || ""
+                        let pold = uni.getStorageSync("push_token") || ""
+                        uni.setStorageSync("push_token", ptoken)
+                        if (ptoken && ptoken !== pold) this.connectPush(true)
+                    } catch (e) {}
                 });
             }, 500)
             
@@ -39,9 +51,21 @@
                 }
             }
             // フォアグラウンド受信時：システムは自動で通知バーに出さないため手動でローカル通知を作成し、バッジも更新
+            var csLastPush = { k: '', t: 0 }
             function handlePushReceive(message) {
                 var payload = parsePayload(message)
-                try {
+                // [カスタムエイド 2026-10-25] 個推と Apple の両方から同じ通知が届いたとき、2回出さない(15秒以内の同じ内容は1回だけ)
+                var csKey = (payload.type || '') + ':' + (payload.id || '') + ':' + (payload.content || message.content || message.title || '')
+                var csNow = Date.now()
+                if (csKey === csLastPush.k && csNow - csLastPush.t < 15000) return
+                csLastPush = { k: csKey, t: csNow }
+                // [カスタムエイド 2026-10-27] アプリを開いているときに通知が2つ出ていた。
+                //   原因:10/25 から、Apple の番号(push_token)がある iPhone には、サーバーが Apple に直接送っている。この通知は
+                //   アプリを開いていても iPhone が表示する。そこへ下でアプリがもう1つ通知を作っていたので2つになった。
+                //   直し:Apple の番号がある iPhone では、アプリでは通知を作らない(バッジだけ直す)。Android・番号のない iPhone は今までどおり作る
+                var csIosDirect = false
+                try { csIosDirect = plus.os.name == 'iOS' && !!uni.getStorageSync('push_token') } catch (e) {}
+                if (!csIosDirect) try {
                     var title = payload.title || 'Card-San'
                     var content = payload.content || message.content || 'メッセージが届きました'
                     plus.push.createMessage(content, JSON.stringify(payload), {
@@ -86,6 +110,7 @@
         },
         onShow: function() {
             this.csSocketWake() // [カスタムエイド 2026-10-25] 切れていればすぐつなぎ直す
+            this.csCheckLaunchLink() // [カスタムエイド 2026-10-26] リンク(card-san.jp/s/… ・cardsan://shop/…)から開かれたら、そのお店へ
             console.log('App Show')
             // this.getWebsocketData()
             switch (uni.getSystemInfoSync().platform) {
@@ -136,10 +161,62 @@
             })
         },
         methods: {
+            // [カスタムエイド 2026-10-26] 店舗QR統一:iPhone のカメラで QR を読んで「Card-San で開く」(Universal Links)や、店舗ページの
+            //   「アプリをお持ちの方はこちら」(cardsan://)から開かれたとき、そのリンクは plus.runtime.arguments に入る。
+            //   起動の直後は画面の準備ができていないので少し待ってから開く。同じリンクを2回開かないように消す
+            // [カスタムエイド 2026-10-27] LINE ログインから card-sanapp:// で戻ったとき、ログインされずに登録画面に戻っていた。
+            //   原因:iPhone では、アプリに戻った瞬間(onShow)には、まだ plus.runtime.arguments が新しいリンクになっていない(管理App の GBP 連携でも同じ対策をしている)。
+            //   直し:そのとき見つからなければ 0.5秒後・1.5秒後にもう一度見る。リンクで呼ばれた知らせ(newintent)でも見る
+            csCheckLaunchLink(isRetry) {
+                // #ifdef APP-PLUS
+                try {
+                    let url = plus.runtime.arguments
+                    if (typeof url === 'string') url = url.trim()
+                    if (!url || typeof url !== 'string' || url === this._csLastLink) {
+                        if (!isRetry) {
+                            setTimeout(() => { this.csCheckLaunchLink(true) }, 500)
+                            setTimeout(() => { this.csCheckLaunchLink(true) }, 1500)
+                        }
+                        return
+                    }
+                    this.csOpenLink(url)
+                } catch (e) {}
+                // #endif
+            },
+            // [カスタムエイド 2026-10-27 2回目] 同じお店のリンク(card-san.jp/s/11 など)をもう一度押しても開かなかった。
+            //   原因:上の csCheckLaunchLink は、前と同じリンクを「古いリンクの読み直し」とみなして無視していた
+            //   (plus.runtime.arguments は公式の説明では読むだけの値で、消しても消えないことがあるため。管理App の GBP 連携と同じ作り)。
+            //   直し:リンクで呼ばれた知らせ(newintent)が来たときだけは、前と同じリンクでも「新しく押された」として開く。
+            //   違うリンクのときは、今までどおり csCheckLaunchLink(すぐ・0.5秒後・1.5秒後)が開く。
+            //   知らせから1.7秒たっても何も開いていなければ「前と同じリンクがもう一度押された」とみなして開く
+            //   (先に開くと、新しいリンクに変わる前の古いリンクを開いてしまうことがあるため待つ)
+            csOnNewIntent() {
+                // #ifdef APP-PLUS
+                const intentAt = Date.now()
+                this.csCheckLaunchLink()
+                setTimeout(() => {
+                    try {
+                        if ((this._csLastAt || 0) >= intentAt) return // この知らせのあと、もう開いた
+                        let url = plus.runtime.arguments
+                        if (typeof url === 'string') url = url.trim()
+                        if (!url || typeof url !== 'string') return
+                        this.csOpenLink(url)
+                    } catch (e) {}
+                }, 1700)
+                // #endif
+            },
+            csOpenLink(url) {
+                // #ifdef APP-PLUS
+                this._csLastLink = url
+                this._csLastAt = Date.now()
+                try { plus.runtime.arguments = '' } catch (e) {}
+                setTimeout(() => { handleLaunchLink(url) }, 800)
+                // #endif
+            },
             handleMessage(e) {
                 console.log("收到了消息", e)
             },
-            connectPush() {
+            connectPush(once) {
                 let that = this
                 let token = uni.getStorageSync("token")
                 let info = uni.getStorageSync("user") || {}
@@ -148,6 +225,9 @@
                 if (token && uuid && client_id) {
                     let d2 = {}
                     d2.clientid = client_id
+                    // [カスタムエイド 2026-10-25] Apple に直接送るための番号と、iPhone か Android か
+                    d2.push_token = uni.getStorageSync("push_token") || ""
+                    d2.push_platform = uni.getSystemInfoSync().platform
                     uni.request({
                         url: "https://api.card-san.jp/api/member/auth/bind_clientid",
                         dataType: "json",
@@ -171,6 +251,7 @@
                         }
                     })
                 } else {
+                    if (once) return // 1回だけ送るとき(番号が変わったとき)は、ログイン待ちをしない
                     setTimeout(() => {
                         that.connectPush()
                     }, 1500)

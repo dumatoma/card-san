@@ -1,15 +1,11 @@
 <template>
     <view class="co">
-        <u-navbar title="予約詳細" :safeAreaInsetTop="true" :border="true" :placeholder="true" autoBack>
-            <view class="u-nav-slot" slot="left">
-                <u-icon name="arrow-left" size="19"></u-icon>
-            </view>
-            <!-- <view class="u-nav-slot" slot="right">
-                <text style="color: #D93025;" @click="toEdit">編集</text>
-            </view> -->
-        </u-navbar>
+        <!-- [カスタムエイド 2026-10-25] 見出しを、予約通知・予約内容の画面と同じ共通の見出しに(戻る矢印は u-navbar の標準)。
+             以前は左に独自の矢印を入れていて、表示が崩れ「undefined」と出て戻れないことがあった -->
+        <u-navbar title="予約詳細" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD"></u-navbar>
         <!-- [カスタムエイド 2026-10-22] 予約詳細を、予約内容(編集)の画面と同じカード型に。お休み・休憩はお客さまの欄を出さない -->
-        <view class="dt-pg">
+        <!-- [カスタムエイド 2026-10-25] 読み込みが終わるまで中身を出さない(読み込み前に info.menu.title を読もうとして、画面の作りが失敗していた) -->
+        <view class="dt-pg" v-if="info.id">
             <view class="dt-when">
                 <view class="dt-day">{{ info.day }}({{ info.week }})</view>
                 <view class="dt-hm">{{ info.time }}</view>
@@ -37,8 +33,8 @@
 
             <view class="dt-sec">メニュー</view>
             <view class="dt-card dt-pad">
-                <view class="dt-mt" :class="{ 'dt-red': isOff && offName == 'お休み', 'dt-green': isOff && offName != 'お休み' }">{{ isOff ? offName : info.menu.title }}</view>
-                <view class="dt-ms" v-if="!isOff">所要時間 {{ info.menu.order_time }}分<text class="dt-price" v-if="info.menu.price">{{ info.menu.price }}</text></view>
+                <view class="dt-mt" :class="{ 'dt-red': isOff && offName == 'お休み', 'dt-green': isOff && offName != 'お休み' }">{{ isOff ? offName : (info.menu ? info.menu.title : '') }}</view>
+                <view class="dt-ms" v-if="!isOff && info.menu">所要時間 {{ info.menu.order_time }}分<text class="dt-price" v-if="info.menu.price">{{ info.menu.price }}</text></view>
             </view>
 
             <view class="dt-sec">担当</view>

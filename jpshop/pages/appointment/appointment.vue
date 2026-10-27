@@ -1029,9 +1029,14 @@
                      this.adid = e.adid
                 }
              
-                setTimeout(() => {
-                     this.addNew = true
-                },500)
+                // [カスタムエイド 2026-10-26] 以前は 0.5秒待ってから新規予約を開いていた(押してから開くまでが遅い原因)。すぐ開く。
+                //   すでに開いていたときだけ、いったん閉じてから開き直す
+                if (this.addNew) {
+                    this.addNew = false
+                    this.$nextTick(() => { this.addNew = true })
+                } else {
+                    this.addNew = true
+                }
                
             }
         }

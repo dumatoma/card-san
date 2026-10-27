@@ -37,6 +37,7 @@
 
 <script>
     import {mapState,mapMutations,mapActions} from "vuex"
+    import { csLineLogin } from '@/utils/csShopLink.js' // [カスタムエイド 2026-10-26e]
     import {getLineUrl,getGoogleUrl,setGoogleLogin,setAppleLogin,getLineInfo,setIosLogin} from "@/api/index.js"
     export default {
         data() {
@@ -81,7 +82,7 @@
                        uni.getUserInfo({
                            provider: 'apple',
                            success: function(info) {
-                              setIosLogin(info.userInfo.openId,info.userInfo.identityToken).then((result) => {
+                              setIosLogin(info.userInfo.openId, info.userInfo.identityToken, (info.userInfo.fullName ? ((info.userInfo.fullName.familyName || '') + ' ' + (info.userInfo.fullName.givenName || '')).trim() : '')) /* [カスタムエイド 2026-10-26e] Apple のお名前も送る */.then((result) => {
                                   if(result.code == 200){
                                       uni.showToast({
                                           title: result.message,
@@ -117,14 +118,10 @@
                });
             },
             
-            getUrlLine(){
-                getLineUrl().then((res) => {
-                    if(res.code == 200){
-                        uni.navigateTo({
-                            url:"../../pagesA/webLogin/webLogin?url="+res.data.url
-                        })
-                    }
-                })
+            getUrlLine() {
+                // [カスタムエイド 2026-10-26e] LINE のログイン画面を、アプリの中ではなく Safari で開く(LINE アプリにログインしている人は、入力なしでログインできる)。
+                //   ログインが終わると cardsan://line-login でアプリに戻り、App.vue → csShopLink.js の handleLaunchLink で受け取る(どの画面からでも)
+                csLineLogin()
             },
             
             getUrlGoogle(){

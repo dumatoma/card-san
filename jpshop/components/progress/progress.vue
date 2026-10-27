@@ -23,7 +23,7 @@
                 <view class="mContent">
                     <!-- <view class="meng" v-if="todayAviable == false"></view> -->
                     <!-- 未过期的预约 -->
-                    <view class="dateItem" v-if="todayAviable == true" v-for="(ite,idx) in item.times"
+                    <view class="dateItem cs-tap" v-if="todayAviable == true" v-for="(ite,idx) in item.times"
                         :style="ite.checked?format(ite.color):ite.open?'background:#fff !important':'background: rgba(217,48,37,0.15);'"
                         @click="addThis(item.name,item.adid,ite,1)">
                         <view :style="`height:${ite.duration * 160}upx`" class="abc">
@@ -428,6 +428,17 @@
 </script>
 
 <style lang="scss">
+    /* [カスタムエイド 2026-10-25] 予約表の枠を押したとき、押した枠がうっすらグレー(#F5F5F7 相当)になる。
+       枠の背景は style で直接指定されている(!important)ため、上に薄い色を重ねて見せる */
+    /* [カスタムエイド 2026-10-26] hover-class(押した状態を部品で管理)をやめ、CSS の :active に。hover-class にしてから、押したあとの画面の切り替えが遅くなっていた(Card-San App・予約WEB と同じやり方) */
+    .cs-tap:active::after {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; right: 0; bottom: 0;
+        background: rgba(29, 29, 31, 0.05);
+        pointer-events: none;
+    }
+
     .hasguo {
         background: #fff !important;
     }
@@ -514,7 +525,7 @@
         overflow: hidden;
         display: flex;
         border-top: none;
-        // border-left: 2upx solid #EAEAEA;
+        border-left: 2upx solid #EAEAEA; /* [カスタムエイド 2026-10-25] いちばん左の担当者の左の縦線(消えていた) */
 
         .mItem {
             width: 140upx;

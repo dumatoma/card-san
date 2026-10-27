@@ -12,6 +12,35 @@
     <title>Card-San 予約</title>
     <!--preload-links-->
     <!--app-context-->
+    <!-- [カスタムエイド 2026-10-26] customaid-slide-20261026b:次の画面へ進むとき、右から横にスライドして入る(戻るときは動かさない)。Card-San App と同じ 0.3秒 -->
+    <style id="customaid-slide-20261026b">
+    html,body{overflow-x:hidden}
+    @keyframes csSlideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+    uni-page.cs-slide-in{animation:csSlideIn .3s cubic-bezier(.2,.7,.3,1) both;box-shadow:-8px 0 24px rgba(0,0,0,.08)}
+    </style>
+    <script>
+    (function(){
+      var back=false,last=null,first=true,timer=null;
+      window.addEventListener('popstate',function(){back=true;});
+      function done(p){if(p)p.classList.remove('cs-slide-in');}
+      function check(){
+        var ps=document.querySelectorAll('uni-page'),cur=null;
+        for(var i=0;i<ps.length;i++){if(ps[i].offsetWidth>0||ps[i].offsetHeight>0||ps[i].getClientRects().length){cur=ps[i];}}
+        if(!cur||cur===last)return;
+        var forward=!back&&!first;
+        if(last)done(last);
+        last=cur;first=false;back=false;
+        if(!forward)return;
+        cur.classList.remove('cs-slide-in');void cur.offsetWidth;cur.classList.add('cs-slide-in');
+        var p=cur;
+        var h=function(e){if(e.target!==p||e.animationName!=='csSlideIn')return;p.removeEventListener('animationend',h);done(p);};
+        p.addEventListener('animationend',h);
+        clearTimeout(timer);timer=setTimeout(function(){p.removeEventListener('animationend',h);done(p);},500);
+      }
+      function start(){new MutationObserver(check).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style']});check();}
+      if(document.body)start();else document.addEventListener('DOMContentLoaded',start);
+    })();
+    </script>
   </head>
   <body>
     <div id="app"><!--app-html--></div>

@@ -111,4 +111,9 @@
     .bc-sub { font-size: 28rpx; font-weight: normal; color: #3C4043; }
     .bc-hm { font-size: 48rpx; font-weight: bold; color: #1D1D1F; margin-top: 12rpx; }
     .bc-off { font-size: 30rpx; color: #6E6E73; margin-top: 16rpx; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .bc-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

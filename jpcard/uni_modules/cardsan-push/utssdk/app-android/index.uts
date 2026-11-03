@@ -1,0 +1,11 @@
+// [カスタムエイド 2026-10-27] Android はまだ何もしない(FCM の部品は、Android で試せるようになってから作る)。iPhone と同じ名前の関数だけ置く
+export function csPushRegister(): void {
+}
+
+export function csPushToken(): string {
+    return ""
+}
+
+export function csPushTake(): string {
+    return ""
+}

@@ -39,7 +39,7 @@
 
 /* 本文(タブレットでは幅600pxで中央) */
 .sp-body { flex: 1; width: 100%; max-width: 600px; margin: 0 auto; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px; }
-.sp-card { background: #fff; border-radius: 14px; }
+.sp-card { background: #fff; border-radius: 14px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10); } /* [カスタムエイド 2026-11-03] カードの影 */
 .sp-card-pad { padding: 16px; }
 .sp-h1 { margin: 0; font-size: 22px; font-weight: 700; }
 .sp-cap { font-size: 12px; color: #6e6e73; }

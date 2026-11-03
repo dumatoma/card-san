@@ -1,9 +1,43 @@
 <script>
+    // #ifdef APP-PLUS
+    import { csPushRegister, csPushToken, csPushTake } from '@/uni_modules/cardsan-push' // [カスタムエイド 2026-10-27] 個推をなくす:iPhone の通知の自前の部品
+    // #endif
+    import { csIconSeq, csIconLatest } from '@/utils/csIcon.js' // [カスタムエイド 2026-10-27c] アイコンのバッジは最後に聞いた分の答えだけ使う
+    import { csCoalesce } from '@/utils/csOnce.js' // [カスタムエイド 2026-10-28]
     import { handleLaunchLink } from '@/utils/csShopLink.js' // [カスタムエイド 2026-10-26] 店舗QR統一:リンクから開かれたとき
     // import {getAllUnread,getAllUnreadnum} from "@/api/index.js"
+    // [カスタムエイド 2026-10-27] 個推の番号の代わりに使う、この端末の番号(アプリで作る。ログアウトで消えたら作り直す)
+    function csLocalCid() {
+        let c = uni.getStorageSync('cs_cid')
+        if (!c) {
+            c = 'cs-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10)
+            uni.setStorageSync('cs_cid', c)
+        }
+        return c
+    }
     export default {
         onLaunch: function() {
             console.log('App Launch')
+            // [カスタムエイド 2026-10-27c] 読んだ・届いたの知らせ(csBadgeRefresh)で、アイコンのバッジもすぐ読み直す。
+            //   以前はアイコンのバッジはアプリを開き直したときだけ更新され、読んだあとも数が残っていた(坂本さんの確認)
+            // [カスタムエイド 2026-10-28] 1.5秒に1回にまとめる(同じ問い合わせを重ねて出し、サーバーに断られていた)
+            this._csIcon = csCoalesce(() => new Promise((resolve) => {
+                let _t = uni.getStorageSync("token"), _u = (uni.getStorageSync("user") || {}).uuid || ''
+                if (!_t || !_u) return resolve()
+                const q = csIconSeq() // [カスタムエイド 2026-10-27c]
+                uni.request({
+                    url: this.$baseUrl + "/api/member/member?request_type=unread_num",
+                    method: "get",
+                    header: { 'token': _t, "uuid": _u },
+                    success(res) {
+                        // #ifdef APP-PLUS
+                        if (res.data && res.data.code == 200 && csIconLatest(q)) plus.runtime.setBadgeNumber(res.data.data.unread_num * 1)
+                        // #endif
+                    },
+                    complete() { resolve() }
+                })
+            }), 1500)
+            uni.$on('csBadgeRefresh', (p) => { this._csIcon(!(p && p.type == 'show')) })
             // #ifdef APP-PLUS
             // [カスタムエイド 2026-10-27] リンク(card-sanapp://・Universal Links)でアプリが呼ばれた知らせ。アプリが開いたままのときもリンクを受け取る
             plus.globalEvent.addEventListener('newintent', () => { this.csOnNewIntent() }) // [カスタムエイド 2026-10-27 2回目] 同じリンクをもう一度押したときも開く
@@ -11,12 +45,12 @@
             setTimeout(() => {
                 plus.push.getClientInfoAsync((info) => {
                     console.log("pushinfo", info)
-                    let cid = info["clientid"];
+                    let cid = info["clientid"] || uni.getStorageSync("cid") || csLocalCid(); // [カスタムエイド 2026-10-27] 個推がないときは、アプリで作った番号
                     console.log("cid", cid)
                     uni.setStorageSync("cid", cid)
                     // [カスタムエイド 2026-10-25] iPhone の通知用の番号(Apple に直接送るため)。前回と変わったら、すぐ1回サーバーに送る
                     try {
-                        let ptoken = info["token"] || ""
+                        let ptoken = info["token"] || uni.getStorageSync("push_token") || "" // [カスタムエイド 2026-10-27] 自前の部品で受け取った番号を消さない
                         let pold = uni.getStorageSync("push_token") || ""
                         uni.setStorageSync("push_token", ptoken)
                         if (ptoken && ptoken !== pold) this.connectPush(true)
@@ -37,9 +71,14 @@
                 }
                 return (p && typeof p === 'object') ? p : {}
             }
+            var csLastClick = { k: '', t: 0 }
             function handlePushClick(message) {
                 message = { payload: parsePayload(message) }
                 if (!message.payload.type) return
+                // [カスタムエイド 2026-10-27] 自前の部品と DCloud の部品の両方から同じタップが届いたとき、1回だけ開く(5秒以内の同じ通知)
+                var csCk = (message.payload.type || '') + ':' + (message.payload.id || '') + ':' + (message.payload.content || '')
+                if (csCk === csLastClick.k && Date.now() - csLastClick.t < 5000) return
+                csLastClick = { k: csCk, t: Date.now() }
                 if (message.payload.type == 'message') {
                     uni.navigateTo({
                         url: "/pagesA/message/chat?sid=" + message.payload.id + "&name=" + message.payload.name
@@ -78,9 +117,40 @@
                         plus.runtime.setBadgeNumber(Number(payload.badge))
                     }
                 } catch (e) {}
+                // [カスタムエイド 2026-10-27b] アプリを開いている最中に通知が届いたら、開いている画面の数(下のメニューのメッセージ・クーポン、カード一覧)も読み直す。
+                //   以前は画面を開き直すまで数が変わらなかった(坂本さんの 10/27 の確認)
+                try { uni.$emit('csBadgeRefresh', payload) } catch (e) {}
             }
             plus.push.addEventListener('click', handlePushClick)
             plus.push.addEventListener('receive', handlePushReceive)
+            // [カスタムエイド 2026-10-27] 個推(GeTui)をなくす(坂本さんの決定:中国とのつながりをなくす)。
+            //   iPhone は自前の部品(uni_modules/cardsan-push)で、Apple の番号・通知のタップ・開いているときの受信を受け取る。
+            //   端末の番号(cid)は、個推の番号の代わりにアプリで作った番号(cs-…)を使う(サーバーの欄 getui_clientid はそのまま使う)
+            // #ifdef APP-PLUS
+            if (plus.os.name == 'iOS') {
+            try { csPushRegister() } catch (e) {}
+            setInterval(() => {
+                try {
+                    if (!uni.getStorageSync('cid')) uni.setStorageSync('cid', csLocalCid())
+                    const tk = csPushToken()
+                    if (tk && tk !== (uni.getStorageSync('push_token') || '')) {
+                        uni.setStorageSync('push_token', tk)
+                        this.connectPush(true)
+                    }
+                    const raw = csPushTake()
+                    if (raw) {
+                        const list = JSON.parse(raw)
+                        for (let i = 0; i < list.length; i++) {
+                            const ev = list[i] || {}
+                            const msg = { payload: ev.payload || '', title: ev.title || '', content: ev.content || '' }
+                            if (ev.type === 'click') handlePushClick(msg)
+                            else if (ev.type === 'receive') handlePushReceive(msg)
+                        }
+                    }
+                } catch (e) {}
+            }, 1000)
+            }
+            // #endif
             this.connectSocket()
             this.connectPush()
             switch (uni.getSystemInfoSync().platform) {
@@ -128,12 +198,13 @@
             let _info = uni.getStorageSync("user") || {}
             let _uuid = _info.uuid || ''
             if (_token && _uuid) {
+                const q = csIconSeq() // [カスタムエイド 2026-10-27c]
                 uni.request({
                     url: this.$baseUrl + "/api/member/member?request_type=unread_num",
                     method: "get",
                     header: { 'token': _token, "uuid": _uuid },
                     success(res) {
-                        if (res.data.code == 200) {
+                        if (res.data.code == 200 && csIconLatest(q)) {
                             plus.runtime.setBadgeNumber(res.data.data.unread_num * 1)
                         }
                     }
@@ -145,6 +216,7 @@
             let info = uni.getStorageSync("user") || {}
             let uuid = info.uuid || ''
             console.log('App Hide')
+            const q = csIconSeq() // [カスタムエイド 2026-10-27c]
             uni.request({
                 url: this.$baseUrl + "/api/member/member?request_type=unread_num",
                 method: "get",
@@ -154,7 +226,7 @@
                 },
                 success(res) {
                     console.log("hideres", res)
-                    if (res.data.code == 200) {
+                    if (res.data.code == 200 && csIconLatest(q)) {
                         plus.runtime.setBadgeNumber(res.data.data.unread_num * 1);
                     }
                 }
@@ -289,6 +361,8 @@
                             if (result.data) {
                                 uni.$emit('getPositonsOrder', result);
                             }
+                            // [カスタムエイド 2026-10-27b] メッセージが届いたら、カード一覧の数も読み直す(お店の画面は getPositonsOrder で読み直す)
+                            try { uni.$emit('csBadgeRefresh', { type: result.type }) } catch (e) {}
                         }
                         if (result.type == 'connect' && result.data) {
                             uni.setStorageSync("client_id", result.data.client_id)

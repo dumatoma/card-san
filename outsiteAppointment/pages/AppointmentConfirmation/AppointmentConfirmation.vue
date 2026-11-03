@@ -14,7 +14,7 @@
         
         <!-- [カスタムエイド 2026-10-22] 予約前の最終確認の画面を見やすく(白いカード・大きめの文字)。ボタンの仕様(氏名・電話番号を入れて確認にチェックするまで薄い色)は今までどおり、色を濃く -->
         <view class="rc-page">
-            <view class="rc-lead">予約内容をご確認ください<text class="rc-lead-s">お名前と電話番号を入力し、内容に間違いがなければ「予約を確定する」を押してください。</text></view>
+            <view class="rc-lead">予約内容をご確認ください<text class="rc-lead-s">お名前・電話番号・メールアドレスを入力し、内容に間違いがなければ「予約を確定する」を押してください。</text></view>
 
             <view class="rc-sec">ご予約の内容</view>
             <view class="rc-card">
@@ -54,7 +54,13 @@
                     <view class="rc-lab"><text class="rc-req">※</text>電話番号</view>
                     <input class="rc-in" v-model="phone" type="tel" placeholder="ハイフンなし(携帯電話)" placeholder-style="color:#AEAEB2" />
                 </view>
+                <!-- [カスタムエイド 2026-10-30] 段階6:メールアドレス(必須)。予約の内容はメールでお送りする -->
+                <view class="rc-row rc-row-in">
+                    <view class="rc-lab"><text class="rc-req">※</text>メール</view>
+                    <input class="rc-in" v-model="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="例:hanako@example.com" placeholder-style="color:#AEAEB2" />
+                </view>
             </view>
+            <view class="rc-mail-note">ご予約の内容は、このメールアドレスにお送りします。<br />「@mail.card-san.jp」からのメールを受け取れるようにしてください。届かないときは、迷惑メールのフォルダもご確認ください。</view>
 
             <view class="rc-sec">ご要望(任意)</view>
             <view class="rc-card rc-pad">
@@ -64,11 +70,21 @@
 
             <view class="rc-card rc-check" @click="isCheck()">
                 <view class="rc-box" :class="{ on: checked }"><text class="rc-tick" v-if="checked">✓</text></view>
-                <view class="rc-check-t">予約内容を確認しました<text class="rc-check-s">お名前・電話番号を入れてチェックすると「予約を確定する」が押せます</text></view>
+                <view class="rc-check-t">予約内容を確認しました<text class="rc-check-s">お名前・電話番号・メールアドレスを入れてチェックすると「予約を確定する」が押せます</text></view>
             </view>
         </view>
         <view class="rc-bar">
             <view class="rc-btn" :class="{ on: checked && !isSubmitting }" hover-class="rc-btn-h" @click="yuYue()">{{ isSubmitting ? '予約しています…' : '予約を確定する' }}</view>
+        </view>
+        <!-- [カスタムエイド 2026-10-30] 段階6:予約する前に、メールアドレスを大きく見せて確かめてもらう(入力は1回だけ) -->
+        <view class="rc-mask" v-if="showMailConfirm" @click.self="showMailConfirm = false">
+            <view class="rc-dlg">
+                <view class="rc-dlg-t">このメールアドレスに<br />予約の内容をお送りします</view>
+                <view class="rc-dlg-mail">{{ emailClean }}</view>
+                <view class="rc-dlg-s">間違いがないか、もう一度ご確認ください。<br />届かないときは、迷惑メールのフォルダもご確認ください。</view>
+                <view class="rc-dlg-ok" hover-class="rc-btn-h" @click="confirmMail()">このアドレスで予約する</view>
+                <view class="rc-dlg-ng" hover-class="rc-btn-h" @click="showMailConfirm = false">メールアドレスを直す</view>
+            </view>
         </view>
     </view>
 </template>
@@ -92,6 +108,8 @@
                 user:{},
                 name:"",
                 phone:"",
+                email:"", // [カスタムエイド 2026-10-30] 段階6
+                showMailConfirm: false,
                 shopname:''
             };
         },
@@ -108,7 +126,17 @@
            that.getDate() 
           
         },
+        computed: {
+            // [カスタムエイド 2026-10-30] 段階6:全角の英数字・記号を半角に、空白を取る
+            emailClean() {
+                return String(this.email || '').replace(/[\uFF01-\uFF5E]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0) }).replace(/[\s\u3000]/g, '')
+            }
+        },
         methods: {
+            // [カスタムエイド 2026-10-30] 段階6:メールアドレスの形か(@ の前後があり、@ の後ろに . がある)
+            isEmail(v) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@.]+$/.test(v) && v.length <= 100
+            },
             // [カスタムエイド 2026-10-22] メニューの1枚目の写真(写真が無ければ空)
             firstImage(img) {
                 if (!img) return ''
@@ -179,6 +207,22 @@
                     return false
                 }
                 
+                // [カスタムエイド 2026-10-30] 段階6:メールアドレスも必須
+                if(!that.emailClean){
+                    uni.showToast({
+                        title:"メールアドレスを入力してください",
+                        icon:"none"
+                    })
+                    return false
+                }
+                if(!that.isEmail(that.emailClean)){
+                    uni.showToast({
+                        title:"メールアドレスの形が正しくありません",
+                        icon:"none"
+                    })
+                    return false
+                }
+
                 if (this.checked == true) {
                     this.checked = false
                 } else {
@@ -197,6 +241,19 @@
                 }
                 // Loading中の連打による予約重複を防止（送信中はボタンを非活性）
                 if (that.isSubmitting) return
+                // [カスタムエイド 2026-10-30] 段階6:チェックのあとにメールアドレスを直した場合も、ここで確かめる
+                if (!that.isEmail(that.emailClean)) {
+                    that.checked = false
+                    uni.showToast({ title: "メールアドレスの形が正しくありません", icon: "none" })
+                    return
+                }
+                that.showMailConfirm = true
+            },
+            // [カスタムエイド 2026-10-30] 段階6:確認の表示で「このアドレスで予約する」を押したら予約する
+            confirmMail() {
+                let that = this
+                that.showMailConfirm = false
+                if (that.isSubmitting) return
                 that.isSubmitting = true
                 let data = {}
                 let date = uni.getStorageSync("orderTime")
@@ -206,13 +263,14 @@
                 data.remark = that.text
                 data.phone = that.phone
                 data.name = that.name
-                console.log(data)
+                data.email = that.emailClean // [カスタムエイド 2026-10-30] 段階6
                 setOrder(data).then((res) => {
                     console.log(res)
                     if(res.code == 200){
                         uni.removeStorageSync("orderTime")
                         uni.setStorageSync("lastOrderImage", that.firstImage(that.orderItem && that.orderItem.image)) // [カスタムエイド 2026-10-22] 予約完了の画面でメニューの写真を出すため
                         uni.removeStorageSync("orderItem")
+                        uni.setStorageSync("lastOrderEmail", that.emailClean) // [カスタムエイド 2026-10-30] 段階6:予約完了の画面で「◯◯にお送りしました」と出すため(アドレスを URL に入れない)
                         uni.navigateTo({
                             url:"../completed/completed?name="+res.data.order.name+"&order_no="+res.data.order.order_no+"&start_time="+res.data.order.start_time+"&amount="+res.data.order.amount+"&remark="+res.data.order.remark+"&appoint_name="+res.data.order.appoint_name+"&menu_name="+res.data.order.menu_name+"&id="+res.data.order.sid+'&phone='+res.data.order.phone+"&appoint_amount="+res.data.order.appoint_amount
                         })
@@ -271,6 +329,15 @@
     .rc-req { color: #D93025; margin-right: 4rpx; }
     .rc-in { flex: 1; height: 88rpx; border: 1px solid #D2D2D7; border-radius: 20rpx; padding: 0 24rpx; font-size: 32rpx; box-sizing: border-box; background: #FFFFFF; }
     .rc-row-in { align-items: center; }
+    /* [カスタムエイド 2026-10-30] 段階6:メールの注意書き・確認の表示 */
+    .rc-mail-note { margin: -28rpx 40rpx 48rpx; font-size: 24rpx; color: #6E6E73; line-height: 1.7; }
+    .rc-mask { position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,.45); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 0 40rpx; }
+    .rc-dlg { width: 100%; max-width: 640rpx; background: #FFFFFF; border-radius: 32rpx; padding: 48rpx 40rpx 32rpx; box-sizing: border-box; text-align: center; }
+    .rc-dlg-t { font-size: 32rpx; font-weight: 700; color: #1D1D1F; line-height: 1.5; }
+    .rc-dlg-mail { margin: 32rpx 0 24rpx; padding: 28rpx 24rpx; background: #F5F5F7; border-radius: 20rpx; font-size: 36rpx; font-weight: 700; color: #1D1D1F; word-break: break-all; line-height: 1.4; }
+    .rc-dlg-s { font-size: 24rpx; color: #6E6E73; line-height: 1.7; margin-bottom: 36rpx; }
+    .rc-dlg-ok { height: 100rpx; border-radius: 28rpx; background: #2B8A87; color: #FFFFFF; font-size: 32rpx; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .rc-dlg-ng { height: 88rpx; margin-top: 16rpx; border-radius: 28rpx; color: #2B8A87; font-size: 30rpx; font-weight: 600; display: flex; align-items: center; justify-content: center; }
 
     ::v-deep .u-navbar__content__title {
         font-size: 40rpx;
@@ -476,5 +543,10 @@
     
     .sss{
         box-sizing: border-box;padding: 40upx 40upx 0;
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .rc-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
 </style>

@@ -924,7 +924,7 @@
     /* [カスタムエイド 2026-10-18] 週のスライド(日にち・予約枠) */
     .cs-wk { width: 100%; background: #fff; }
     .cs-wk-head { display: flex; align-items: center; justify-content: space-between; height: 100upx; box-sizing: border-box; padding: 0 30upx 0 60upx; border-bottom: 1px solid #f5f5f5; }
-    .cs-wk-title { font-size: 34upx; color: #1D1D1F; font-family: Hiragino Sans-W6, Hiragino Sans; }
+    .cs-wk-title { font-size: 38upx; font-weight: 700; color: #1D1D1F; font-family: Hiragino Sans-W7, Hiragino Sans; } /* [カスタムエイド 2026-11-02] 見出し(日:11月2日/週:11月1日〜7日)を約2px大きく(34→38upx)・少し太く(W6→W7)。管理App・Card-San App・予約WEB で同じ */
     .cs-wk-arrows { display: flex; align-items: center; }
     .cs-wk-arrow { width: 80upx; height: 80upx; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .cs-wk-arrow.dis { opacity: .3; }

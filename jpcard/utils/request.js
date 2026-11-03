@@ -80,12 +80,21 @@ export function forceLogout(message, delay) {
 }
 
 // 3.响应拦截器
+// [カスタムエイド 2026-10-27c] 「読んだ」をサーバーに送れたら、すぐに TOP・一覧の数とアイコンのバッジを読み直す(読んだのにバッジが残る対策)
+function csReadHook(config, data) {
+    if (!config) return // 成功・失敗どちらでも読み直す(読み直すだけなので害はない)
+    var u = String(config.url || ''), m = String(config.method || '').toLowerCase(), d = String(config.data || '')
+    // [カスタムエイド 2026-10-28] クーポンは「詳細を開いたら既読」になった(サーバー 10/28)。一覧・チャットの読み込みでは数が変わらないので読み直さない(通信を減らす)
+    var hit = (m == 'post' && u.indexOf('/api/member/message/read') >= 0) || (m == 'get' && /\/api\/member\/coupon\/\d+$/.test(u))
+    if (hit) { try { uni.$emit('csBadgeRefresh', { type: 'read' }) } catch (e) {} }
+}
 service.interceptors.response.use(response => {
     //接收到响应数据并成功后的一些共有的处理，关闭loading等
     
     // console.log('error>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',response)
     if(response.status == 200) {
         let data = response.data;
+        try { csReadHook(response.config, data) } catch (e) {} // [カスタムエイド 2026-10-27c]
         // console.log("data.code",data.data.code)
         if(data.code == 401) {
             console.log("401data",data)

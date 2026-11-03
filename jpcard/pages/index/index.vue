@@ -99,7 +99,9 @@
         getAllUnread,
         historyOrders
     } from "@/api/index.js"
+    import { csCoalesce } from '@/utils/csOnce.js' // [カスタムエイド 2026-10-28]
     import { forceLogout } from "@/utils/request.js"
+    import { csIconSeq, csIconLatest } from '@/utils/csIcon.js' // [カスタムエイド 2026-10-27c]
     import { scanShopQr, consumePendingShop, pendingShopId } from '@/utils/csShopLink.js' // [カスタムエイド 2026-10-26] お店の QR の読み取り(共通)
     import favorite from '../../static/svgjs/favorite'
     import rhMy from '../../static/svgjs/reserveHistoryMy.js' // [カスタムエイド 2026-10-20]
@@ -143,7 +145,18 @@
                 longPressTimeout: null // 用于存储延时器的引用
             }
         },
+        // [カスタムエイド 2026-10-27b] カード一覧を開いている最中に通知が届いたら、カードの未読の数を読み直す(見えていないときは読まない)
+        onHide() {
+            this._csVis = false
+        },
+        onUnload() {
+            if (this._csBadge) uni.$off('csBadgeRefresh', this._csBadge)
+        },
         onLoad() {
+            // [カスタムエイド 2026-10-28] 1.5秒に1回にまとめる(同じ問い合わせを重ねて出し、サーバーに断られていた)
+            this._csList = csCoalesce(() => { if (this._csVis) this.getList(); return new Promise((r) => setTimeout(r, 1000)) }, 1500)
+            this._csBadge = (p) => { if (this._csVis) this._csList(!(p && p.type == 'show')) }
+            uni.$on('csBadgeRefresh', this._csBadge)
             // [カスタムエイド 2026-10-24] 前回のカードを先に出す(同じ人のときだけ)。最新のものは onShow で読み込んで入れ替える
             try {
                 const c = uni.getStorageSync('cs_cards'), u = uni.getStorageSync('user')
@@ -151,6 +164,7 @@
             } catch (e) {}
         },
         onShow() {
+            this._csVis = true // [カスタムエイド 2026-10-27b]
             // [カスタムエイド 2026-10-26] ログイン前に受け取ったお店(QR・リンク)があれば、ここで開く
             // [カスタムエイド 2026-10-27] 開くあいだは My Card の中身を見せず、白い画面に「お店の情報を読み込んでいます」を出す(TOP がチラッと見えないように)。
             //   お店の画面が開くと onHide で消える。うまく開けなかったときも 5秒で消す
@@ -174,8 +188,9 @@
             this.checkOrder() // [カスタムエイド 2026-10-20]
             this.getList()
             this.getNearby()
+            const csQ = csIconSeq() // [カスタムエイド 2026-10-27c] 最後に聞いた分の答えだけ使う
             getAllUnread().then((res) => {
-                if (res.code == 200) {
+                if (res.code == 200 && csIconLatest(csQ)) {
                     plus.runtime.setBadgeNumber(res.data.unread_num * 1);
                 }
             }).catch(() => {})
@@ -838,5 +853,10 @@
         border-radius: 50%;
         background: #FF9500;
         box-shadow: 0 0 0 4rpx #FFFFFF;
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .big-img {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
 </style>

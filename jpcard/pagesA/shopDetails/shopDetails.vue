@@ -15,12 +15,14 @@
             </view>
         </u-navbar>
         <view>
+            <!-- [カスタムエイド 2026-10-28] 会員証を読み込めなかったとき -->
+            <view class="cs-load-err" v-if="loadErr">会員証を読み込めませんでした。画面を下に引っぱって読み直してください。</view>
             <view class="top-box">
                 <view class="con">
                     <!-- [カスタムエイド 2026-10-19] 会員番号(NO)はある時だけ表示(今までは無いと「NO:-」と出ていた) -->
                     <view class="left" v-if="info.member_no">NO: {{info.member_no}}</view>
                     <view class="cs-mlbl">会員証</view>
-                    <view class="title" v-text="`${info.name} さん`"></view>
+                    <view class="title" v-text="info.name ? `${info.name} さん` : ''"></view><!-- [カスタムエイド 2026-10-28] 読み込む前・読めなかったときに「undefined」と出さない -->
                     <view class="img" v-if="info.card_type != 3">
                         <image :src="info.qrcode" mode=""></image>
                     </view>
@@ -33,7 +35,7 @@
             <view class="cardInfo">
                 <!-- [カスタムエイド 2026-10-25] カード名の右にスタンプの数(3 / 10) -->
                 <view class="cs-ct">
-                    <view class="cardTitle" v-text="`${info.card_name}`"></view>
+                    <view class="cardTitle" v-text="info.card_name || ''"></view>
                     <view class="cs-chip" v-if="csTotal > 0 && info.card_type != 3">{{csSealed}} / {{csTotal}}</view>
                 </view>
                 <view class="cardY" v-if="info.card_type == 1" :style="frameCss">
@@ -243,6 +245,7 @@
 </template>
 
 <script>
+    import { csRetry } from '@/utils/csOnce.js' // [カスタムエイド 2026-10-28]
     import sp from "@/components/swiper-direct-com.vue"
     import list from '../../components/list.vue'
     import svg1 from '../../static/svgjs/sv_01.js'
@@ -278,6 +281,7 @@
                 card_no: "",
                 caiDanShow: false,
                 info: {},
+                loadErr: false, // [カスタムエイド 2026-10-28] 会員証を読み込めなかった
                 tableList: [],
                 list: [],
                 orders: [],
@@ -363,8 +367,9 @@
                 let that = this
                 if(newVal == true){
                     that.checkOrder() // [カスタムエイド 2026-10-20]
-                    getCardInfo(this.id).then((res) => {
-                        if (res.code == 200) {
+                    csRetry(() => getCardInfo(this.id)).then((res) => { // [カスタムエイド 2026-10-28] 読めなかったら少し待ってやり直す
+                        that.loadErr = !(res && res.code == 200)
+                        if (res && res.code == 200) {
                             // [カスタムエイド 2026-10-20] 満了したかを覚えておき、カードを並べたあとで知らせる(onFull)
                             that.fullDone = res.data.member.seals.length == res.data.member.card.count && res.data.member.card.type != 3
                             let array = []
@@ -425,8 +430,9 @@
             let that = this
             that.checkOrder() // [カスタムエイド 2026-10-20]
 
-            getCardInfo(this.id).then((res) => {
-                if (res.code == 200) {
+            csRetry(() => getCardInfo(this.id)).then((res) => { // [カスタムエイド 2026-10-28] 読めなかったら少し待ってやり直す(2回まで)。以前は1回失敗すると「undefined さん」のままだった
+                that.loadErr = !(res && res.code == 200)
+                if (res && res.code == 200) {
                     // [カスタムエイド 2026-10-20] 満了したかを覚えておき、カードを並べたあとで知らせる(onFull)
                     that.fullDone = res.data.member.seals.length == res.data.member.card.count && res.data.member.card.type != 3
                     let array = []
@@ -1529,4 +1535,6 @@
     .special {
         margin-top: 36rpx !important;
     }
+    /* [カスタムエイド 2026-10-28] 会員証を読み込めなかったとき */
+    .cs-load-err { margin: 24rpx 24rpx 0; padding: 24rpx 28rpx; background: #FFF4E5; color: #8A5300; border-radius: 20rpx; font-size: 26rpx; line-height: 1.6; }
 </style>

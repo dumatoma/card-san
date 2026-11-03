@@ -2,8 +2,8 @@
     "name" : "Card-San",
     "appid" : "__UNI__1ED8C1A",
     "description" : "Card-San",
-    "versionName" : "1.1.23",
-    "versionCode" : 1097,
+    "versionName" : "1.1.25",
+    "versionCode" : 1101,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
@@ -80,7 +80,9 @@
                 /* [カスタムエイド 2026-10-26] 店舗QR統一:card-san.jp/s/… のリンクでアプリを直接開く(Universal Links)・card-sanapp:// で開く([カスタムエイド 2026-10-27] cardsan は管理App と重なるため変更) */
                 "capabilities" : {
                     "entitlements" : {
-                        "com.apple.developer.associated-domains" : [ "applinks:card-san.jp" ]
+                        "com.apple.developer.associated-domains" : [ "applinks:card-san.jp" ],
+                        /* [カスタムエイド 2026-10-27] 通知(Apple に直接送る)。個推をなくしても入るように書いておく */
+                        "aps-environment" : "production"
                     }
                 },
                 "urltypes" : [
@@ -123,12 +125,8 @@
                     }
                 },
                 "share" : {},
-                "push" : {
-                    "unipush" : {
-                        "offline" : true,
-                        "fcm" : {}
-                    }
-                },
+                /* [カスタムエイド 2026-10-27] 個推(uni-push・GeTui)をなくした(坂本さんの決定)。push モジュール(Push)は残す:自前の通知の部品(uni_modules/cardsan-push)が Apple の番号を受け取るのに必要 */
+                "push" : {},
                 "payment" : {
                     "appleiap" : {}
                 },

@@ -4338,4 +4338,6 @@
         width: 0;
         height: 0;
     }
+/* [カスタムエイド 2026-11-03] カードの影(アプリと同じ決まり。下へ1px・ぼかし4px・黒10%) */
+.tab { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10) !important; }
 </style>

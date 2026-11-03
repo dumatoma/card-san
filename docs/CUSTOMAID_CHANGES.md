@@ -1075,6 +1075,23 @@ $model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->
 | 記録 | プロジェクト資料「CardSan_通知・バッジ・予約通知・SQL対策_サーバー修正記録_20261027」 |
 
 
+### 93. 2026-10-28〜11-03(管理App 1.0.58〜1.0.60・Card-San App 1.1.24〜1.1.25・予約WEB・管理WEB(ソースのみ)・サーバー)
+
+| 項目 | 内容 |
+|---|---|
+| 版 | 管理App 1.0.58(1113)・1.0.59(1114)・**1.0.60(1115)**/Card-San App 1.1.24(1100)・**1.1.25(1101)**。いずれも iOS をビルドしてデリバリ済み |
+| 通信のまとめ・やり直し(10/28) | 両アプリ `utils/csOnce.js`(同じ通信を1回にまとめる)・`utils/request.js`。TOP の数をまとめて1回で読む |
+| 通知(10/27〜28) | 両アプリ `uni_modules/cardsan-push`(個推をやめるための部品)。「CardSan_個推(GeTui)をなくす_計画書_20261027」 |
+| 予約まわり(10/31・1.0.59) | 管理App:予約の取り消し(赤い知らせ・予約通知の一覧へ戻る)、予約通知の日付を太字、連絡のしかたのマーク `components/csContact`・`static/icons/cs_ct_*`(予約通知・予約詳細・予約内容)。予約WEB:メールアドレスの欄・完了画面・`static/image/mail.svg`・`template.h5.html` |
+| 無料期間の帯・全面のお知らせ(11/03・1.0.60) | 管理App `components/csNotice/csBanner.vue`(A1:31人目から24時間、TOP と予約の画面)・`csLock.vue`(A2 無料期間が終わりました/A3 ご契約が終了しました。下のタブを隠す)。見本 Artifact「Card-San お知らせ見本」。サーバーの `cs_notice` を使う |
+| 購入を復元(11/03・1.0.60) | 管理App `pages/accounts/package/package.vue`(iPhone だけ)。サーバー `POST /api/shop/cs/iap/restore`(`docs/server/iaprestore/`) |
+| 止まったお店(11/03・1.1.25) | Card-San App `pagesA/shop/shop.vue`:サーバーの `cs_app_stopped` が 1 のとき「このお店のアプリは、現在ご利用できません」 |
+| カードの影(11/03) | 両アプリ・予約WEB・管理WEB のカードに `box-shadow: 0 1px 4px rgba(0,0,0,0.10)`(アプリは `0 2rpx 8rpx`)。印 `[カスタムエイド 2026-11-03] カードの影`。予約WEB・管理WEB はソースだけで、本番にはまだ入れていない |
+| 管理WEB(ソースのみ) | `jppc/jp-card-pc/src/views/`:カードの影(appointment・appointmentSetting・download・downloads・sp/sp.css・sp/spPlan)、ログイン画面の管理アプリのダウンロード QR(login・deputyAdmin。本番は 10/27 にビルド済みのファイルを置き換え済み)。本番への反映は、アプリの開発が終わってからまとめて行う |
+| サーバー(写し) | `docs/server/`:App内課金→カード払いの予約 `iapswitch/`、無料期間の終わり方 `trialend/`、お店へのお知らせメール `notice/`・見本どおりのメール `notice2/`(11/03 にお知らせメールの送信を ON)、購入を復元 `iaprestore/` ほか、10/28〜11/03 のスクリプト |
+| 記録 | プロジェクト資料「CardSan_管理App1.0.60・CardSanApp1.1.25_修正記録…_20261103」「CardSan_お店へのお知らせメール(サーバー②)_作業記録_20261103」「CardSan_無料期間の終わり方とお知らせ_決定事項_20261102」「CardSan_カードのドロップシャドウ_決定と作業計画_20261103」 |
+
+
 ## 今後の運用ルール
 
 - 修正は「ソースを修正 → ビルドして本番に配置 → 同じ日に GitHub に反映」を1セットで行う

@@ -1,5 +1,19 @@
 <template>
     <view>
+        <!-- [カスタムエイド 2026-11-03] お店の契約が切れているとき(cs_app_stopped)。坂本さん確認済みの案(stop_sample) -->
+        <view class="cs-stop" v-if="shopInfo.cs_app_stopped == 1">
+            <view class="cs-stop-bar" :style="`padding-top:${csTop}px`">
+                <view class="cs-stop-name">{{ shopInfo.shop_name }}</view>
+            </view>
+            <view class="cs-stop-body">
+                <view class="cs-stop-card">
+                    <view class="cs-stop-ic">!</view>
+                    <view class="cs-stop-t">このお店のアプリは、</view>
+                    <view class="cs-stop-t">現在ご利用できません</view>
+                    <view class="cs-stop-btn" @click="csBack">My Card にもどる</view>
+                </view>
+            </view>
+        </view>
         <cardInfo @changes="changeTas" v-if="current == 'My Card'" :refresh="refresh" :tabs="bottomTabs" :id="query.cid" :sid="query.id"
             :color="shopInfo.page_header_font_color || '#000'" :sp="slideData" :bgColor="shopInfo.page_header_color || '#fff'">
         </cardInfo>
@@ -169,6 +183,7 @@
         getNewNotice,
         getInsList
     } from "@/api/index.js"
+    import { csCoalesce } from '@/utils/csOnce.js' // [カスタムエイド 2026-10-28]
     import sp from "@/components/swiper-direct-com.vue"
     import cardInfo from "../shopDetails/shopDetails.vue"
     import shopInfo from "../storeInformation/storeInformation.vue"
@@ -193,6 +208,7 @@
         },
         data() {
             return {
+                csTop: (uni.getSystemInfoSync().statusBarHeight || 20), // [カスタムエイド 2026-11-03]
                 refresh:false,
                 svgData1: '"' + svg1 + '"',
                 svgData2: '"' + svg2 + '"',
@@ -246,7 +262,7 @@
         onShow() {
             // [カスタムエイド 2026-10-26] 下のメニューのメッセージ・クーポンの数を、画面に戻るたび(チャットから戻ったとき・アプリを開き直したとき)に読み直す。
             //   以前は画面を開いたとき(onLoad)の1回だけだったため、開いたままの画面では新しい通知の数が増えなかった
-            if (this._csShown) this.csLoadCounts()
+            if (this._csShown) this._csCnt() // [カスタムエイド 2026-10-28] まとめて1回
             this._csShown = true
         },
         onPullDownRefresh() {
@@ -262,12 +278,21 @@
         // [カスタムエイド 2026-10-20] 予約履歴の「メニューを見る」から戻ったとき、メニューのタブを開く
         onUnload() {
             if (this._csTab) uni.$off('csShopTab', this._csTab)
+            // [カスタムエイド 2026-10-27b]
+            if (this._csBadge) { uni.$off('csBadgeRefresh', this._csBadge); uni.$off('getPositonsOrder', this._csBadge) }
+            clearTimeout(this._csBadgeT)
         },
         onLoad(options) {
             this._csTab = (name) => {
                 this.changeTas(name)
             }
             uni.$on('csShopTab', this._csTab)
+            // [カスタムエイド 2026-10-27b] この画面を開いている最中に通知(メッセージ・クーポン)やメッセージが届いたら、下のメニューの数を読み直す。
+            //   以前は、アプリを閉じて開き直すまでメッセージの数が変わらなかった。続けて届いたときは 0.5秒まとめて1回だけ読む
+            this._csCnt = csCoalesce(() => this.csLoadCounts(), 1500) // [カスタムエイド 2026-10-28] 1.5秒に1回にまとめる
+            this._csBadge = () => { this._csCnt(true) }
+            uni.$on('csBadgeRefresh', this._csBadge)
+            uni.$on('getPositonsOrder', this._csBadge)
             let that = this 
             if(options.source == 'push'){
                 that.current = "クーポン"
@@ -280,7 +305,7 @@
             // [カスタムエイド 2026-10-25] 以前は 0.5秒待ってからお店の情報を読みに行っていたため、下のメニューのアイコンが遅れて出ていた。
             //   すぐに読みに行く(前回の情報が端末にあれば、それで開いた瞬間に出す=utils/shopCache.js)
             that.getInfo()
-            that.csLoadCounts()
+            that._csCnt() // [カスタムエイド 2026-10-28] まとめて1回
         },
         onPageScroll(res) {
             // uni.$emit('onPageScroll', res.scrollTop);//传递参数
@@ -289,20 +314,24 @@
             uni.$emit('onReachBottom');
         },
         methods: {
+            csBack() { // [カスタムエイド 2026-11-03] My Card にもどる
+                uni.navigateBack({ fail() { uni.reLaunch({ url: '/pages/index/index' }) } })
+            },
             // [カスタムエイド 2026-10-26] メッセージ(未読)・クーポン(新着)の数を読む
             csLoadCounts() {
                 let that = this
                 if (!that.query || !that.query.id) return
-                getUnreadNum(that.query.id).then((res) => {
+                const a = getUnreadNum(that.query.id).then((res) => {
                     if (res.code == 200) {
                         that.number = res.data.unread_num < 100 ? res.data.unread_num : "99+"
                     }
                 }).catch(() => {})
-                getMewCoupon(that.query.id).then((res) => {
+                const b = getMewCoupon(that.query.id).then((res) => {
                     if (res.code == 200) {
                         that.number1 = res.data.count
                     }
                 }).catch(() => {})
+                return Promise.all([a, b]) // [カスタムエイド 2026-10-28]
             },
             changeColor(url, color) {
                 if (!color) color = "#707070"; // page_footer_icon_color が未設定でも落ちないようにする
@@ -500,6 +529,16 @@
 </script>
 
 <style lang="scss">
+    /* [カスタムエイド 2026-11-03] 止まっているお店の画面(白いカード・影) */
+    .cs-stop { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 9990; background: #F5F5F7; display: flex; flex-direction: column; }
+    .cs-stop-bar { background: #FFFFFF; border-bottom: 1px solid #E5E5EA; }
+    .cs-stop-name { height: 88rpx; line-height: 88rpx; text-align: center; font-weight: bold; font-size: 34rpx; color: #1D1D1F; padding: 0 40rpx; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .cs-stop-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 40rpx; }
+    .cs-stop-card { width: 100%; box-sizing: border-box; background: #FFFFFF; border-radius: 32rpx; box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10); padding: 64rpx 40rpx; text-align: center; }
+    .cs-stop-ic { width: 88rpx; height: 88rpx; line-height: 88rpx; border-radius: 44rpx; background: #8E8E93; color: #FFFFFF; font-size: 44rpx; font-weight: bold; margin: 0 auto 32rpx; }
+    .cs-stop-t { font-size: 34rpx; font-weight: bold; line-height: 1.6; color: #1D1D1F; }
+    .cs-stop-btn { margin-top: 48rpx; padding: 28rpx; border-radius: 24rpx; border: 1px solid #D2D2D7; font-size: 32rpx; font-weight: bold; color: #1D1D1F; background: #FFFFFF; }
+
     page {
         background: #fff;
     }

@@ -13,7 +13,8 @@
         </u-navbar>
         <!-- <view style="height: 142upx;"></view> -->
         <view class="cou-list-box" style="box-sizing:border-box;padding-top: 40upx;">
-            <view class="cou-item" v-for="(item,index) in couponList" :key="index" @click.stop="toDetail(item.id)">
+            <!-- [カスタムエイド 2026-10-29] 未読(詳細をまだ開いていない)のクーポンは赤い枠と、NO の行の右に赤丸(数字なし) -->
+            <view class="cou-item" :class="{ 'cs-unread': item.unread == 1 }" v-for="(item,index) in couponList" :key="index" @click.stop="toDetail(item.id)">
                 <view class="">
                     <!-- [カスタムエイド 2026-10-19] 画像が2枚以上のときだけ右下に枚数(詳細で全部見られる) -->
                     <view class="cou-img" v-if="item.images.length > 0">
@@ -25,6 +26,7 @@
                     </view>
                     <view class="id" style="font-weight: bold;">
                         NO ：<text v-if="item.number">{{item.number}}</text><text v-else>-</text>
+                        <view class="cs-dot" v-if="item.unread == 1"></view>
                     </view>
                     <view class="cou-title">
                         {{item.title}}
@@ -94,6 +96,9 @@
 
             },
             toDetail(id) {
+                // [カスタムエイド 2026-10-29] 詳細を開くとサーバーで既読になるので、一覧の赤い枠・赤丸もすぐ消す
+                const it = this.couponList.find((v) => v.id == id)
+                if (it && it.unread == 1) this.$set(it, 'unread', 0)
                 uni.navigateTo({
                     url: "../couponDetail/couponDetail?id=" + id
                 })
@@ -284,5 +289,21 @@
     .cou-list-box .cou-item .cou-img .cs-count .cs-count-num {
         color: #FFFFFF;
         font-size: 24rpx;
+    }
+    /* [カスタムエイド 2026-10-29] 未読のクーポン:赤い枠と、NO の行の右端に赤丸(数字なし)。背景の白はそのまま */
+    .cou-list-box .cou-item.cs-unread {
+        border: 2px solid #D93025 !important;
+    }
+    .cou-list-box .cou-item .id {
+        display: flex;
+        align-items: center;
+    }
+    .cou-list-box .cou-item .id .cs-dot {
+        width: 20rpx;
+        height: 20rpx;
+        border-radius: 50%;
+        background: #D93025;
+        margin-left: auto;
+        flex-shrink: 0;
     }
 </style>

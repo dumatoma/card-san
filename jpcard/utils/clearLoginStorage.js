@@ -4,7 +4,8 @@
 // 端末に紐づく値だけ残して、それ以外(ログイン情報など)を消す。
 // [カスタムエイド 2026-10-26] 店舗QR統一:ログイン前に受け取ったお店(csPendingShop)・この端末で一度ログインしたことがあるか(csHadLogin)・iPhone の通知用の番号(push_token)も残す
 // [カスタムエイド 2026-10-26] 段階5:「ペースト」で受け取る画面を一度出したか(csPasteShown)も残す
-const KEEP_KEYS = ['env', 'cid', 'client_id', 'push_token', 'csPendingShop', 'csHadLogin', 'csPasteShown']
+// [カスタムエイド 2026-10-27] 個推をなくしたあとの端末の番号(cs_cid)も残す
+const KEEP_KEYS = ['env', 'cid', 'client_id', 'push_token', 'csPendingShop', 'csHadLogin', 'csPasteShown', 'cs_cid']
 
 export function clearLoginStorage() {
     const keep = {}
@@ -34,14 +35,35 @@ export function goLogin() {
     if ((p && p.id) || !uni.getStorageSync('csHadLogin')) {
         // [カスタムエイド 2026-10-26] 段階5:iPhone(iOS 16 以上)で初めて開いた人には、先に「お店のカードを受け取りましょう(ペースト)」の画面を1回だけ出す
         // [カスタムエイド 2026-10-26b] モックどおり:コピーされた文字があるときだけ出す(ないときは「ようこそ!」へ。お店のページを見ずにアプリを入れた人に、意味のない画面を出さない)
+        // [カスタムエイド 2026-10-27] お店のページ(card-san.jp/s/店舗ID)を見ずに入れた人(TestFlight・App Store から直接)にも出ていた
+        //   (何か別の文字がコピーされていると出していたため。坂本さんの確認)。
+        //   直し:お店のページを開いたことをサーバーが30分だけ覚えているので、それを聞いて、見ていたときだけペーストの画面を出す。
+        //   見ていなければ、ふつうの「ようこそ!」。答えが返らないとき(通信できない)は「ようこそ!」
         if (!(p && p.id) && csCanPaste() && !uni.getStorageSync('csPasteShown') && csClipHasText()) {
-            uni.reLaunch({ url: '/pages/csPaste/csPaste' })
+            if (_csChecking) return
+            _csChecking = true
+            csSeenShopPage((seen) => {
+                _csChecking = false
+                uni.reLaunch({ url: seen ? '/pages/csPaste/csPaste' : '/pages/register/register' })
+            })
             return
         }
         uni.reLaunch({ url: '/pages/register/register' })
         return
     }
     uni.reLaunch({ url: '/pages/login/login' })
+}
+
+// [カスタムエイド 2026-10-27] この端末(同じ接続元)で30分以内にお店のページを見たか、サーバーに聞く
+let _csChecking = false
+function csSeenShopPage(done) {
+    uni.request({
+        url: 'https://api.card-san.jp/api/cs/claim?p=ios',
+        method: 'GET',
+        timeout: 4000,
+        success: (r) => done(!!(r && r.data && r.data.code == 200 && r.data.data && Number(r.data.data.seen) > 0)),
+        fail: () => done(false)
+    })
 }
 
 // [カスタムエイド 2026-10-26] 段階5:iPhone 標準の「ペースト」ボタンが使えるか(iPhone で iOS 16 以上)

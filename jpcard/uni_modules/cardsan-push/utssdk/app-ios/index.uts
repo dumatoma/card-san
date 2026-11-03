@@ -1,0 +1,28 @@
+// [カスタムエイド 2026-10-27] 個推(GeTui)をなくす:iPhone の通知の部品(中身は同じフォルダの CsPushCore.swift)
+//   ・CsPushHook:アプリの起動・Apple の番号ができたときに iPhone から呼ばれる(UTSiOSHookProxy。export するだけで自動で登録される。HBuilderX 3.97 以降)
+//   ・csPushRegister():通知の許可を聞いて番号を作ってもらう/csPushToken():Apple の番号/csPushTake():たまった通知の知らせ(JSON の文字。なければ空)
+export class CsPushHook implements UTSiOSHookProxy {
+    applicationDidFinishLaunchingWithOptions(application: UIApplication | null, launchOptions: Map<UIApplication.LaunchOptionsKey, any> | null = null): boolean {
+        CsPushCore.install()
+        return false
+    }
+    didRegisterForRemoteNotifications(deviceToken: Data | null) {
+        if (deviceToken != null) {
+            CsPushCore.setToken(deviceToken!)
+        }
+    }
+    didFailToRegisterForRemoteNotifications(error: NSError | null) {
+    }
+}
+
+export function csPushRegister(): void {
+    CsPushCore.register()
+}
+
+export function csPushToken(): string {
+    return CsPushCore.token()
+}
+
+export function csPushTake(): string {
+    return CsPushCore.take()
+}

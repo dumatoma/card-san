@@ -168,7 +168,7 @@
 </script>
 
 <style>
-    .sp-plan { width: 100%; border-radius: 14px; background: #fff; background-clip: padding-box; overflow: hidden; border: 2px solid transparent; }
+    .sp-plan { width: 100%; border-radius: 14px; background: #fff; background-clip: padding-box; overflow: hidden; border: 2px solid transparent; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10); } /* [カスタムエイド 2026-11-03] カードの影 */
     .sp-plan.on { border-color: #1a73e8; box-shadow: 0 2px 10px rgba(26,115,232,0.18); }
     .sp-plan-strip { height: 10px; }
     .sp-plan-head { width: 100%; padding: 16px; border: 0; background: transparent; display: flex; align-items: center; gap: 12px; text-align: left; }

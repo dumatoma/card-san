@@ -43,8 +43,10 @@
       </view>
 
       <view class="rc-card rc-pad rd-msg">
-        <image src="../../static/image/message.png" mode="aspectFit"></image>
-        <view class="rd-msg-t"><text v-if="query.phone">“{{query.phone}}”宛に</text>SMSで予約内容を送信しましたのでご確認ください。</view>
+        <image src="../../static/image/mail.svg" mode="aspectFit"></image> <!-- [カスタムエイド 2026-10-31] メールで送るので、メールのマークに(以前は吹き出し message.png) -->
+        <!-- [カスタムエイド 2026-10-30] 段階6:WEB予約はメールでお送りする(SMS は送らない) -->
+        <view class="rd-msg-t" v-if="email">“{{email}}”宛に、メールで予約内容をお送りしましたのでご確認ください。<text class="rd-msg-s">届かないときは、迷惑メールのフォルダもご確認ください。</text></view>
+        <view class="rd-msg-t" v-else>ご登録のメールアドレス宛に、メールで予約内容をお送りしましたのでご確認ください。<text class="rd-msg-s">届かないときは、迷惑メールのフォルダもご確認ください。</text></view>
       </view>
       <view class="rd-top" hover-class="rc-btn-h" @click="back()">TOPに戻る</view>
     </view>
@@ -57,7 +59,8 @@
     data() {
       return {
         query:{},
-        photo: '' // [カスタムエイド 2026-10-22] メニューの1枚目の写真(予約内容確認から受け取る)
+        photo: '', // [カスタムエイド 2026-10-22] メニューの1枚目の写真(予約内容確認から受け取る)
+        email: '' // [カスタムエイド 2026-10-30] 段階6:予約内容確認で入れたメールアドレス
       };
     },
     created() {
@@ -71,6 +74,7 @@
         let query = optiosn
         that.query = query
         try { that.photo = uni.getStorageSync("lastOrderImage") || '' } catch (e) {}
+        try { that.email = uni.getStorageSync("lastOrderEmail") || '' } catch (e) {}
     },
     computed: {
       // [カスタムエイド 2026-10-22] 金額はお店が書いたまま(数字だけのときは ¥ とカンマを付ける。以前は「5,000〜」も ¥5,000 になっていた)
@@ -159,6 +163,7 @@
     .rd-msg { display: flex; align-items: center; }
     .rd-msg image { width: 64rpx; height: 54rpx; flex-shrink: 0; margin-right: 24rpx; }
     .rd-msg-t { font-size: 30rpx; color: #1D1D1F; line-height: 1.6; }
+    .rd-msg-s { display: block; margin-top: 8rpx; font-size: 24rpx; color: #6E6E73; } /* [カスタムエイド 2026-10-30] 段階6 */
     .rd-page { padding-bottom: calc(80rpx + env(safe-area-inset-bottom)); }
     .rd-top { margin: 0 24rpx; height: 104rpx; border-radius: 28rpx; background: #FFFFFF; border: 1px solid #D2D2D7; color: #1D1D1F; font-size: 32rpx; font-weight: 700; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
 
@@ -271,4 +276,9 @@
       color: #1D1D1F;
     }
   }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .rc-card, .rd-hero {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

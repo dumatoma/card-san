@@ -2217,4 +2217,6 @@
         font-size: 10px;
         margin-bottom: 5px;
     }
+/* [カスタムエイド 2026-11-03] カードの影(アプリと同じ決まり。下へ1px・ぼかし4px・黒10%) */
+.card_item { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10) !important; }
 </style>

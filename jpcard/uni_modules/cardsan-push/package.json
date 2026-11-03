@@ -1,0 +1,27 @@
+{
+  "id": "cardsan-push",
+  "displayName": "cardsan-push",
+  "version": "1.0.0",
+  "description": "[カスタムエイド 2026-10-27] 個推(GeTui)をなくすための自前の通知の部品(iPhone)。Apple の番号を受け取り、通知のタップ・アプリを開いているときの受信をアプリに渡す",
+  "keywords": ["cardsan", "push", "apns"],
+  "repository": "",
+  "engines": { "HBuilderX": "^3.97" },
+  "dcloudext": {
+    "type": "uts",
+    "sale": { "regular": { "price": "0.00" }, "sourcecode": { "price": "0.00" } },
+    "contact": { "qq": "" },
+    "declaration": { "ads": "无", "data": "无", "permissions": "无" },
+    "npmurl": ""
+  },
+  "uni_modules": {
+    "dependencies": [],
+    "encrypt": [],
+    "platforms": {
+      "cloud": { "tcb": "y", "aliyun": "y" },
+      "client": {
+        "Vue": { "vue2": "y", "vue3": "y" },
+        "App": { "app-android": "y", "app-ios": "y" }
+      }
+    }
+  }
+}

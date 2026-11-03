@@ -1,6 +1,6 @@
 {
-    "name" : "outsiteAppointment",
-    "appid" : "__UNI__26F5B98",
+    "name" : "Card-San 予約",
+    "appid" : "__UNI__4CFBF5B",
     "description" : "",
     "versionName" : "1.0.0",
     "versionCode" : "100",
@@ -71,6 +71,7 @@
     "vueVersion" : "2",
     "h5" : {
         "title" : "Card-San 予約",
+        "template" : "template.h5.html",
         "router" : {
             "mode" : "history",
             "base" : "/reserve/"

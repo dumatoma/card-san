@@ -44,7 +44,7 @@
     			</div>
     			<div class="u-flex u-row-between u-col-bottom">
     				<div class="store u-flex-col u-col-center">
-    					<img class="one_img no-size" src="https://cdn.me-qr.com/qr/125260401.png?v=1725897315" />
+    					<img class="one_img no-size" src="https://api.card-san.jp/storage/qrcode/kanri_app.png" /><!-- [カスタムエイド 2026-10-27] 外部サービス me-qr をやめ、自社の QR(https://api.card-san.jp/kanri。card-san.jp/s/ の下は Card-San App が開くため使わない)に -->
                         <div class="dobtns">
                             <img class="two_img" src="../../static/icon/Download_on_the_App_Store_Badge_JP_RGB_blk_100317.svg" />
                             <img class="two_img" src="../../static/icon/google-play-badge.svg" />

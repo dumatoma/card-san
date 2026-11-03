@@ -1046,3 +1046,12 @@ export const getShopInsMedia = (after) => request({ url: '/api/shop/instagram/me
 export const csViewing = (view) => {
     return request({ url: "/api/shop/cs_viewing", method: "post", data: { view: view || "" } })
 }
+
+// [カスタムエイド 2026-11-03] 購入を復元(App内課金・iPhone)
+export const csIapRestore = (data) => {
+    return request({
+        url: '/api/shop/cs/iap/restore',
+        method: 'post',
+        data: data
+    })
+}

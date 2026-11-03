@@ -92,4 +92,9 @@
     .ad-step.done .bar, .ad-step.now .bar { background: #1A73E8; }
     .ad-step.now { font-weight: 700; }
     .ad-center { text-align: center; margin-top: 16rpx; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .ad-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

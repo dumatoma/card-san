@@ -1,15 +1,27 @@
 <script>
+    // #ifdef APP-PLUS
+    import { csPushRegister, csPushToken, csPushTake } from '@/uni_modules/cardsan-push' // [カスタムエイド 2026-10-27] 個推をなくす:iPhone の通知の自前の部品
+    // #endif
+    // [カスタムエイド 2026-10-27] 個推の番号の代わりに使う、この端末の番号(アプリで作る。ログアウトで消えたら作り直す)
+    function csLocalCid() {
+        let c = uni.getStorageSync('cs_cid')
+        if (!c) {
+            c = 'cs-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10)
+            uni.setStorageSync('cs_cid', c)
+        }
+        return c
+    }
     export default {
         onLaunch: function() {
             setTimeout(() => {
                 plus.push.getClientInfoAsync((info) => {
                     console.log("pushinfo", info)
-                    let cid = info["clientid"];
+                    let cid = info["clientid"] || uni.getStorageSync("cid") || csLocalCid(); // [カスタムエイド 2026-10-27] 個推がないときは、アプリで作った番号
                     console.log("cid", cid)
                     uni.setStorageSync("cid", cid)
                     // [カスタムエイド 2026-10-25] iPhone の通知用の番号(Apple に直接送るため)。前回と変わったら、すぐ1回サーバーに送る
                     try {
-                        let ptoken = info["token"] || ""
+                        let ptoken = info["token"] || uni.getStorageSync("push_token") || "" // [カスタムエイド 2026-10-27] 自前の部品で受け取った番号を消さない
                         let pold = uni.getStorageSync("push_token") || ""
                         uni.setStorageSync("push_token", ptoken)
                         if (ptoken && ptoken !== pold) this.connectPush(true)
@@ -31,9 +43,14 @@
                 }
                 return (p && typeof p === 'object') ? p : {}
             }
+            var csLastClick = { k: '', t: 0 }
             function handlePushClick(message) {
-                message = { payload: parsePayload(message) }
+                message = { payload: parsePayload(message), title: (message && message.title) || '' } // [カスタムエイド 2026-10-27b] 題名も残す(スタッフ間チャットの相手の名前に使う)
                 if (!message.payload.type) return
+                // [カスタムエイド 2026-10-27] 自前の部品と DCloud の部品の両方から同じタップが届いたとき、1回だけ開く(5秒以内の同じ通知)
+                var csCk = (message.payload.type || '') + ':' + (message.payload.id || '') + ':' + (message.payload.content || '')
+                if (csCk === csLastClick.k && Date.now() - csLastClick.t < 5000) return
+                csLastClick = { k: csCk, t: Date.now() }
                 if (message.payload.type == 'message') {
                     uni.navigateTo({
                         url: "/pages/message/chat/chat?uid=" + message.payload.id + "&name=" + message.payload.name
@@ -47,8 +64,17 @@
                         url: "/pages/message/staffRoom/groupChat"
                     })
                 } else if (message.payload.type == 'staff_dm') {
+                    // [カスタムエイド 2026-10-27b] スタッフ間チャットの通知は、その人との個別のチャットを開く(以前はメンバー一覧が開いていた。坂本さんの確認)。
+                    //   送った人の番号(from_id)が分からないときだけ、今までどおりメンバー一覧
+                    var csFrom = parseInt(message.payload.from_id, 10) || 0
+                    var csName = String((message.payload.name || message.title || '')).replace(/\s*\(スタッフルーム\)\s*$/, '')
                     uni.navigateTo({
-                        url: "/pages/message/staffRoom/memberList"
+                        url: csFrom ? "/pages/message/staffRoom/dm?to_id=" + csFrom + "&name=" + encodeURIComponent(csName) : "/pages/message/staffRoom/memberList"
+                    })
+                } else if (message.payload.type == 'gbp_review') {
+                    // [カスタムエイド 2026-10-27b] 口コミの通知をタップしたら口コミの画面へ(以前は何も起きなかった)
+                    uni.navigateTo({
+                        url: "/pages/message/gbpReviews/gbpReviews"
                     })
                 }
             }
@@ -79,9 +105,40 @@
                         plus.runtime.setBadgeNumber(Number(payload.badge))
                     }
                 } catch (e) {}
+                // [カスタムエイド 2026-10-27b] アプリを開いている最中に通知が届いたら、TOP・メッセージ一覧の数(お客様のメッセージ・予約・スタッフルーム・口コミ)を読み直す。
+                //   以前は画面を開き直すまで数が変わらなかった(坂本さんの確認)
+                try { uni.$emit('csBadgeRefresh', payload) } catch (e) {}
             }
             plus.push.addEventListener('click', handlePushClick)
             plus.push.addEventListener('receive', handlePushReceive)
+            // [カスタムエイド 2026-10-27] 個推(GeTui)をなくす(坂本さんの決定:中国とのつながりをなくす)。
+            //   iPhone は自前の部品(uni_modules/cardsan-push)で、Apple の番号・通知のタップ・開いているときの受信を受け取る。
+            //   端末の番号(cid)は、個推の番号の代わりにアプリで作った番号(cs-…)を使う(サーバーの欄 getui_clientid はそのまま使う)
+            // #ifdef APP-PLUS
+            if (plus.os.name == 'iOS') {
+            try { csPushRegister() } catch (e) {}
+            setInterval(() => {
+                try {
+                    if (!uni.getStorageSync('cid')) uni.setStorageSync('cid', csLocalCid())
+                    const tk = csPushToken()
+                    if (tk && tk !== (uni.getStorageSync('push_token') || '')) {
+                        uni.setStorageSync('push_token', tk)
+                        this.connectPush(true)
+                    }
+                    const raw = csPushTake()
+                    if (raw) {
+                        const list = JSON.parse(raw)
+                        for (let i = 0; i < list.length; i++) {
+                            const ev = list[i] || {}
+                            const msg = { payload: ev.payload || '', title: ev.title || '', content: ev.content || '' }
+                            if (ev.type === 'click') handlePushClick(msg)
+                            else if (ev.type === 'receive') handlePushReceive(msg)
+                        }
+                    }
+                } catch (e) {}
+            }, 1000)
+            }
+            // #endif
             uni.setStorageSync("ale", "aviliable")
             uni.setStorageSync("socketStatus", "unconnect")
             uni.request({
@@ -104,6 +161,7 @@
         },
         onShow: function() {
             this.csSocketWake() // [カスタムエイド 2026-10-25] 切れていればすぐつなぎ直す
+            try { uni.$emit('csBadgeRefresh', { type: 'show' }) } catch (e) {} // [カスタムエイド 2026-10-27b] アプリに戻ったら、TOP・一覧の数とアイコンのバッジを読み直す
             // GBP連携：外部ブラウザから cardsan://gbp?... で復帰した場合
             this.handleGbpScheme(false)
             // #ifdef APP-PLUS
@@ -333,6 +391,8 @@
                             if (result.data) {
                                 uni.$emit('getPositonsOrder', result);
                             }
+                            // [カスタムエイド 2026-10-27b] メッセージ・スタッフルームが届いたら、TOP・メッセージ一覧の数も読み直す(開いているチャットには通知が来ないため)
+                            try { uni.$emit('csBadgeRefresh', { type: result.type }) } catch (e) {}
                         }
                         if (result.type == 'connect' && result.data) {
                             uni.setStorageSync("client_id", result.data.client_id)

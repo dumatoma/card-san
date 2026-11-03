@@ -13,6 +13,7 @@
                     <view class="ed-lab">電話番号</view>
                     <input class="ed-in" type="text" v-model="info.phone" placeholder="入力してください" placeholder-class="ed-ph" />
                 </view>
+                <cs-contact v-if="!wai" :contact="info.contact || ''" :email="info.email || ''"></cs-contact> <!-- [カスタムエイド 2026-10-31] 連絡方法・メール(予約詳細と同じ部品) -->
                 <view class="ed-row" v-if="!wai">
                     <view class="ed-lab">会員ID</view>
                     <view class="ed-val ed-gray">{{ info.member_id || 'ー' }}</view>
@@ -190,6 +191,8 @@
             </view>
         </u-popup>
         <mod :config="config" v-if="showAle == true" @getStatus="changeStatus"></mod>
+        <!-- [カスタムエイド 2026-10-31] 予約を取り消したときの知らせ(赤い枠に白い文字。以前は「削除しました」) -->
+        <view class="cs-red-toast" v-if="csRedToast">予約を取り消しました</view>
         <u-popup :show="show1" @close="show1 = false" @cancel="show1 = false" >
             <view class="maskContent">
                 <view class="mkitem" :class="sending == true?'cccc' : ''" style="color: #1A73E8;" @click="sendMessage">
@@ -224,15 +227,17 @@
     } from '@/api/index.js'
     import mod from "@/components/mod.vue"
     import csPicker from "@/components/csPicker/csPicker.vue" // [カスタムエイド 2026-10-22]
+    import csContact from "@/components/csContact/csContact.vue" // [カスタムエイド 2026-10-31]
     import csTimeDrum from "@/utils/csTimeDrum.js"
     export default {
-        components:{mod, csPicker},
+        components:{mod, csPicker, csContact},
         mixins: [csTimeDrum],
         data() {
             return {
                 showm:false,
                 show1:false,
                 showAle:false,
+                csRedToast:false, // [カスタムエイド 2026-10-31]
                 showmask:false,
                 config:{
                     title:"この予約を取り消しますか？",
@@ -622,13 +627,25 @@
                     that.showm = false
                    that.showAle = false
                    if(res.code == 200){
-                        uni.showToast({
-                            title:res.message
-                        })
+                        // [カスタムエイド 2026-10-31] 予約の取り消しは「予約を取り消しました」(赤い枠・白い文字)。お休み・休憩は今までどおり
+                        if (that.wai) {
+                            uni.showToast({
+                                title:res.message
+                            })
+                        } else {
+                            that.csRedToast = true
+                        }
                         setTimeout(function() {
                             let pages = getCurrentPages();
                             let currPage = pages[pages.length - 1] //当前页面
                             let prePage = pages[pages.length - 2] //上一个页面
+                            // [カスタムエイド 2026-10-31] 予約の取り消しは、もう無い予約の「予約詳細」を飛ばして、その前の画面(予約通知一覧など)へ戻る(取り消したか迷わないように)
+                            if (!that.wai && prePage && prePage.route == "pages/appointment/notice/detail/detail" && pages.length >= 3) {
+                                let before = pages[pages.length - 3]
+                                if (before && before.route == "pages/appointment/appointment" && before.$vm.reload) before.$vm.reload()
+                                uni.navigateBack({ delta: 2 })
+                                return
+                            }
                             //调用上一页拉取数据的方法
                             if (prePage.route == "pages/appointment/notice/detail/detail") {
                                 prePage.$vm.getDetail(that.query.id)
@@ -1013,6 +1030,8 @@
     .ed-green, .detail .allname.ed-green { color: #137333 !important; }
     .ed-ta { width: 100%; height: 200rpx; border: 1px solid #D2D2D7; border-radius: 24rpx; padding: 24rpx 28rpx; font-size: 30rpx; line-height: 1.6; box-sizing: border-box; display: block; }
     .ed-btn { margin-top: 64rpx; height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; font-size: 32rpx; font-family: 'Hiragino Sans-W5', sans-serif; display: flex; align-items: center; justify-content: center; }
+    /* [カスタムエイド 2026-10-31] 予約を取り消したときの知らせ */
+    .cs-red-toast { position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%); z-index: 10090; background: #D93025; color: #FFFFFF; font-size: 32rpx; font-weight: 600; padding: 28rpx 48rpx; border-radius: 20rpx; box-shadow: 0 8rpx 32rpx rgba(0,0,0,.18); white-space: nowrap; }
     .ed-del { margin-top: 48rpx; height: 104rpx; border-radius: 28rpx; background: #FFFFFF; color: #D93025; font-size: 32rpx; display: flex; align-items: center; justify-content: center; }
     .ed-hover { opacity: 0.6; }
     .ed-x { position: absolute; right: 24rpx; top: 20rpx; width: 64rpx; height: 64rpx; border-radius: 50%; background: #E5E5EA; color: #6E6E73; font-size: 36rpx; line-height: 64rpx; text-align: center; z-index: 2; }
@@ -1187,5 +1206,10 @@
                 }
             }
         }
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .ed-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
 </style>

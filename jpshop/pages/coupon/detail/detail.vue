@@ -210,4 +210,9 @@
     .cd-btn-sub { background: #FFFFFF; color: #D93025; border: 2rpx solid #D93025; }
     .cd-del { height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: 30rpx; color: #D93025; margin-top: 8rpx; }
     .cd-hover { opacity: 0.7; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .cd-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

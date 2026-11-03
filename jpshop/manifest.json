@@ -2,8 +2,8 @@
     "name" : "CardSan管理",
     "appid" : "__UNI__40CEDE2",
     "description" : "",
-    "versionName" : "1.0.57",
-    "versionCode" : 1110,
+    "versionName" : "1.0.60",
+    "versionCode" : 1115,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
@@ -110,21 +110,8 @@
             },
             /* SDK配置 */
             "sdkConfigs" : {
-                "push" : {
-                    "unipush" : {
-                        "offline" : true,
-                        "fcm" : {},
-                        "icons" : {
-                            "small" : {
-                                "ldpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/店铺端icon/CardSan管理app_iocn_Android/GooglePlayStore.png",
-                                "mdpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/店铺端icon/CardSan管理app_icon_ios/Icon-Small.png",
-                                "hdpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/店铺端icon/CardSan管理app_icon_ios/Icon-Small-40.png",
-                                "xhdpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/店铺端icon/CardSan管理app_icon_ios/48x48.png",
-                                "xxhdpi" : "C:/Users/Administrator/Desktop/新建文件夹 (16)/店铺端icon/CardSan管理app_icon_ios/64x64.png"
-                            }
-                        }
-                    }
-                },
+                /* [カスタムエイド 2026-10-27] 個推(uni-push・GeTui)をなくした(坂本さんの決定)。push モジュール(Push)は残す:自前の通知の部品(uni_modules/cardsan-push)が Apple の番号を受け取るのに必要 */
+                "push" : {},
                 "share" : {},
                 "ad" : {},
                 "geolocation" : {

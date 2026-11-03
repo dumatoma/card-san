@@ -358,4 +358,9 @@
     .bs-err { color: #D93025; font-size: 24rpx; margin-top: 24rpx; }
     .bs-btn { margin-top: 56rpx; height: 104rpx; line-height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; text-align: center; font-size: 32rpx; font-weight: bold; }
     .bs-btn.off { background: #A8C7FA; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .bh-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

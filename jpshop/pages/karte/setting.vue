@@ -200,4 +200,9 @@
     .ks-tagtt { flex: 1; margin-left: 20rpx; font-size: 28rpx; font-weight: 700; color: #1A73E8; display: flex; flex-direction: column; }
     .ks-tags { font-size: 22rpx; font-weight: 400; color: #6E6E73; margin-top: 4rpx; }
     .k-ic { width: 48rpx; height: 48rpx; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .ks-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

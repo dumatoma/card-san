@@ -270,4 +270,14 @@
     .nl-btn { height: 104rpx; border-radius: 28rpx; background: #1A73E8; color: #FFFFFF; font-size: 32rpx; font-family: 'Hiragino Sans-W5', sans-serif; display: flex; align-items: center; justify-content: center; flex: 1; }
     .nl-btn-g { background: #FFFFFF; color: #1D1D1F; border: 2rpx solid #D1D1D6; margin-right: 24rpx; flex: 0 0 280rpx; }
     .nl-btn-del { background: #D93025; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .nl-acc {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影をそろえる(下へ1px・ぼかし4px・黒10%) */
+    .nl-ins, .nl-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

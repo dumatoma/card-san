@@ -70,12 +70,20 @@ axios.defaults.adapter = function(config) {
 }
 
 // 3.响应拦截器
+// [カスタムエイド 2026-10-27c] 「読んだ」をサーバーに送れたら、すぐに TOP・一覧の数とアイコンのバッジを読み直す(読んだのにバッジが残る対策)
+function csReadHook(config, data) {
+    if (!config) return // 成功・失敗どちらでも読み直す(読み直すだけなので害はない)
+    var u = String(config.url || ''), m = String(config.method || '').toLowerCase(), d = String(config.data || '')
+    var hit = (m == 'post' && (u.indexOf('/api/shop/message/read') >= 0 || u.indexOf('/api/shop/staff_room/messages/read') >= 0 || u.indexOf('/api/shop/staff_room/dm/read') >= 0)) || (m == 'post' && /\/api\/shop\/order_notice\/\d+$/.test(u) && d.indexOf('"read"') >= 0)
+    if (hit) { try { uni.$emit('csBadgeRefresh', { type: 'read' }) } catch (e) {} }
+}
 service.interceptors.response.use(response => {
     //接收到响应数据并成功后的一些共有的处理，关闭loading等
     console.log('r',response)
     // console.log('error>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',response)
     if(response.status == 200) {
         let data = response.data;
+        try { csReadHook(response.config, data) } catch (e) {} // [カスタムエイド 2026-10-27c]
         // console.log("data.code",data.data.code)
         if(data.code == 401) {
             uni.showToast({

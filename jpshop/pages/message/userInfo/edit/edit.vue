@@ -76,8 +76,8 @@
                     <!-- [カスタムエイド 2026-10-21] 口コミボタン(アプリのメッセージではボタン、SMS ではリンク) -->
                     <block v-if="type == 4 && current == 1">
                         <view class="am-rv-l">続けて口コミボタンが届きます</view>
-                        <image v-if="shop.comment_button_style_image" class="am-rv" :src="shop.comment_button_style_image" mode="aspectFill"></image>
-                        <view v-else class="am-rv am-rv-no">Googleの口コミを書く</view>
+                        <image v-if="shop.comment_button_style_image" class="am-rv-img" :src="shop.comment_button_style_image" mode="aspectFill"></image>
+                        <view v-else class="am-rv-img am-rv-no">Googleの口コミを書く</view>
                     </block>
                 </scroll-view>
                 <view class="am-small">{{ type == 4 ? 'サンキューメッセージは、アプリのメッセージだけに届きます(SMS では送りません)。お名前は見本です。' : 'アプリのメッセージにも SMS にも、この文章が届きます。お名前・予約の内容は見本です。' }}</view>
@@ -315,7 +315,8 @@
     .am-sheet { position: relative; padding: 24rpx 40rpx calc(48rpx + env(safe-area-inset-bottom)); }
     .am-shx { position: absolute; right: 24rpx; top: 20rpx; width: 64rpx; height: 64rpx; border-radius: 50%; background: #F2F2F7; color: #6E6E73; font-size: 36rpx; line-height: 64rpx; text-align: center; z-index: 2; }
     .am-rv-l { font-size: 24rpx; color: #6E6E73; margin: 28rpx 0 12rpx; }
-    .am-rv { display: block; width: 100%; height: 150rpx; border-radius: 20rpx; }
+    /* [カスタムエイド 2026-10-29] 見本の口コミボタンの絵は am-rv-img(前は am-rv で、口コミのブロック(am-card am-rv)にも高さ150・幅100%がかかり、右にはみ出していた) */
+    .am-rv-img { display: block; width: 100%; height: 150rpx; border-radius: 20rpx; }
     .am-rv-no { background: #1A73E8; color: #FFFFFF; font-size: 30rpx; display: flex; align-items: center; justify-content: center; }
     .am-bub-s { font-size: 26rpx; }
     .am-grip { width: 80rpx; height: 10rpx; border-radius: 6rpx; background: #D2D2D7; margin: 0 auto 36rpx; }
@@ -323,4 +324,9 @@
     .am-bub-wrap { max-height: 56vh; }
     .am-bub { background: #F2F2F7; border-radius: 36rpx; padding: 32rpx 36rpx; font-size: 28rpx; line-height: 1.65; color: #1D1D1F; white-space: pre-wrap; }
     .am-close { margin-top: 48rpx; height: 104rpx; border-radius: 28rpx; background: #F2F2F7; color: #1D1D1F; font-size: 32rpx; display: flex; align-items: center; justify-content: center; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .am-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

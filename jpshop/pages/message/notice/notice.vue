@@ -194,4 +194,9 @@
         background: rgba(242, 242, 247, 0.78); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(0, 0, 0, 0.06); }
     .nl-btn { height: 104rpx; border-radius: 28rpx; background: #34C759; color: #FFFFFF; font-size: 32rpx; font-family: 'Hiragino Sans-W5', sans-serif;
         display: flex; align-items: center; justify-content: center; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .nl-sum, .nl-list, .nl-empty {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

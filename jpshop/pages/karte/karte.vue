@@ -429,4 +429,9 @@
     .k-ic { width: 48rpx; height: 48rpx; }
     .kp-empty-i .k-ic { width: 64rpx; height: 64rpx; }
     .k-lock { width: 30rpx; height: 30rpx; vertical-align: -4rpx; margin-right: 8rpx; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .kp-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

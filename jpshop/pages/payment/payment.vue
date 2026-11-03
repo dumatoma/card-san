@@ -644,4 +644,9 @@
     .pm-agree { margin-top: 8rpx; text-align: center; font-size: 24rpx; line-height: 1.7; color: #515154; }
     .pm-agree-link { color: #1a73e8; text-decoration: underline; }
     .pm-btn { margin-top: 32rpx; height: 104rpx; border-radius: 52rpx; background: #1a73e8; color: #fff; font-size: 32rpx; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .pm-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

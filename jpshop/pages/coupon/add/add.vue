@@ -29,14 +29,14 @@
             <view class="ca-card">
                 <view class="ca-h"><text class="ca-req">※</text>タイトル</view>
                 <input class="ca-in" :class="{ on: fk == 't' }" v-model="info.title" placeholder="例:お誕生月 全メニュー10%OFF" placeholder-class="ca-ph"
-                    @focus="fk = 't'" @blur="fk = ''" />
+                    @focus="fk = 't'" @blur="csBlur" />
                 <view class="ca-h ca-h2">詳細</view>
                 <textarea class="ca-ta" :class="{ on: fk == 'd' }" v-model="info.detail" maxlength="-1" :show-confirm-bar="false"
                     :disable-default-padding="true" placeholder="クーポンの内容・使い方を入力" placeholder-class="ca-ph"
-                    @focus="fk = 'd'" @blur="fk = ''"></textarea>
+                    @focus="fk = 'd'" @blur="csBlur"></textarea>
                 <view class="ca-h ca-h2">クーポン番号 <text class="ca-sub">(英数字・10桁まで・なくても可)</text></view>
                 <input class="ca-in" :class="{ on: fk == 'n' }" v-model="info.number" maxlength="10" placeholder="例:BD2026" placeholder-class="ca-ph"
-                    @focus="fk = 'n'" @blur="fk = ''" />
+                    @focus="fk = 'n'" @blur="csBlur" />
             </view>
 
             <view class="ca-card">
@@ -88,7 +88,7 @@
                         <view class="ca-lbl">バーコードの番号</view>
                         <input class="ca-in" :class="{ on: fk == 'b', ng: bcCheck.message && !bcCheck.ok }" v-model="info.bcValue" :type="info.bcType == 1 ? 'number' : 'text'"
                             :maxlength="info.bcType == 1 ? 13 : 48" :placeholder="info.bcType == 1 ? '例:4912345678904' : '例:CS-2026-001'" placeholder-class="ca-ph"
-                            @focus="fk = 'b'" @blur="fk = ''" />
+                            @focus="fk = 'b'" @blur="csBlur" />
                         <view class="ca-chk" :class="{ ok: bcCheck.ok }" v-if="bcCheck.message">{{ bcCheck.ok ? '✓ ' : '' }}{{ bcCheck.message }}</view>
                         <view class="ca-bc" v-if="bcBars.length">
                             <view class="ca-bc-l">お客様に出るバーコード(見本)</view>
@@ -106,7 +106,7 @@
                 <view class="ca-h">備考 <text class="ca-sub">(お客様にも表示されます)</text></view>
                 <textarea class="ca-ta ca-ta-s" :class="{ on: fk == 'r' }" v-model="info.remark" maxlength="-1" :show-confirm-bar="false"
                     :disable-default-padding="true" placeholder="例:ほかのクーポンとの併用はできません" placeholder-class="ca-ph"
-                    @focus="fk = 'r'" @blur="fk = ''"></textarea>
+                    @focus="fk = 'r'" @blur="csBlur"></textarea>
             </view>
 
             <view class="ca-btn" :class="{ off: !(info.title || '').trim() }" hover-class="ca-hover" @click="nextStep">次へ(配信先・日時の設定)</view>
@@ -237,8 +237,20 @@
                 ]
             }
         },
+        // [カスタムエイド 2026-10-28] キーボードが出たまま有効期限などのスイッチを押すと、キーボードが閉じる動きで画面が一番上に戻っていた(坂本さんの確認)。
+        //   入力欄から離れた瞬間の位置を覚えておき、キーボードが閉じたらその位置に戻す
+        onPageScroll(e) { this._csTop = e.scrollTop },
+        onUnload() { if (this._csKb && uni.offKeyboardHeightChange) uni.offKeyboardHeightChange(this._csKb) },
         onLoad(options) {
             this.query = options
+            this._csKb = (res) => {
+                if (res.height > 0 || this._csKeep == null || Date.now() - this._csKeepAt > 1500) return
+                const t = this._csKeep
+                this._csKeep = null
+                const back = () => uni.pageScrollTo({ scrollTop: t, duration: 0 })
+                setTimeout(back, 30); setTimeout(back, 250) // 戻す動きが遅れて来ることがあるので2回
+            }
+            if (uni.onKeyboardHeightChange) uni.onKeyboardHeightChange(this._csKb)
             if (options.source == 'copy') {
                 const c = uni.getStorageSync('couponCopy')
                 if (c) this.fill(c, true)
@@ -254,6 +266,12 @@
             }
         },
         methods: {
+            // [カスタムエイド 2026-10-28] 入力欄から離れたとき:今の位置を覚える(キーボードが閉じたら戻す)
+            csBlur() {
+                this.fk = ''
+                this._csKeep = this._csTop || 0
+                this._csKeepAt = Date.now()
+            },
             dLabel(s) {
                 if (!s) return ''
                 const p = String(s).slice(0, 10).split('-')
@@ -500,4 +518,9 @@
     .ca-pv-k { width: 160rpx; flex-shrink: 0; color: #6E6E73; }
     .ca-pv-rm { flex: 1; white-space: pre-wrap; }
     .ca-close { margin-top: 32rpx; height: 104rpx; border-radius: 28rpx; background: #F2F2F7; color: #1D1D1F; font-size: 32rpx; display: flex; align-items: center; justify-content: center; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .ca-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

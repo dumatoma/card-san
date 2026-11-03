@@ -21,6 +21,7 @@
                     <view class="dt-lab">電話番号</view>
                     <view class="dt-val">{{ info.phone || 'ー' }}</view>
                 </view>
+                <cs-contact :contact="info.contact || ''" :email="info.email || ''"></cs-contact> <!-- [カスタムエイド 2026-10-31] 連絡方法・メール(予約内容と同じ部品) -->
                 <view class="dt-row">
                     <view class="dt-lab">会員ID</view>
                     <view class="dt-val dt-gray">{{ info.member_id || 'ー' }}</view>
@@ -94,7 +95,9 @@
         deleteAppointOrder,
         cahngeInof
     } from '@/api/index.js'
+    import csContact from "@/components/csContact/csContact.vue" // [カスタムエイド 2026-10-31]
     export default {
+        components: { csContact },
         data() {
             return {
                 mask:false,
@@ -355,5 +358,10 @@
                 }
             }
         }
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .dt-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
 </style>

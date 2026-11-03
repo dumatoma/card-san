@@ -181,4 +181,14 @@
     .ad-name { font-size: 30rpx; font-weight: 700; margin-bottom: 6rpx; }
     .ad-phone { font-size: 26rpx; color: #515154; font-variant-numeric: tabular-nums; }
     .ad-del { width: 88rpx; height: 76rpx; margin-left: 16rpx; border: 1px solid #D2D2D7; border-radius: 20rpx; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .ad-card, .ad-empty {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影をそろえる(下へ1px・ぼかし4px・黒10%) */
+    .ad-item {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

@@ -104,4 +104,9 @@
     .link-btn { margin-left: 20upx; padding: 0 28upx; height: 60upx; line-height: 60upx; border-radius: 30upx; background: #1A73E8; color: #fff; font-size: 26upx; position: relative; overflow: hidden; }
     .save { margin: 32upx 30upx 0; height: 92upx; line-height: 92upx; text-align: center; border-radius: 46upx; border: 2upx solid #1A73E8; color: #1A73E8; font-size: 30upx; background: #fff; position: relative; overflow: hidden; }
     .cs-tap:active::after { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(29, 29, 31, 0.05); }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .card-box, .link-box {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

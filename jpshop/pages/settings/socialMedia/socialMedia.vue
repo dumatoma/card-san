@@ -605,4 +605,9 @@
         opacity: 0; pointer-events: none; transition: all 0.25s; z-index: 999; white-space: nowrap;
         &.show { opacity: 1; transform: translateX(-50%) translateY(-12rpx); }
     }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .historyItem, .previewCard {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

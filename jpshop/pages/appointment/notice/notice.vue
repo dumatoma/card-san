@@ -15,6 +15,7 @@
                 <view class="nc-card" :class="{ unread: item.is_read == 0 }" @click.stop="toDetail(item,index)">
                     <view class="nc-top">
                         <view class="nc-dot" v-if="item.is_read == 0"></view>
+                        <cs-contact class="nc-ct" mode="icon" :contact="item.contact || ''"></cs-contact> <!-- [カスタムエイド 2026-10-31] 連絡のしかた(アプリ・メール・LINE・SMS) -->
                         <view class="nc-title">{{ item.title }}</view>
                         <view class="nc-time">{{ item.create_time }}</view>
                     </view>
@@ -52,7 +53,9 @@
         changeAppointNotice,
         delAppointNotice
     } from "@/api/index.js"
+    import csContact from "@/components/csContact/csContact.vue" // [カスタムエイド 2026-10-31]
     export default {
+        components: { csContact },
         data() {
             return {
                 number: 0,
@@ -227,9 +230,10 @@
     .nc-wrap.unread { border: 1px solid #1A73E8; } /* [カスタムエイド 2026-10-25] 未読の枠線(青い点と同じ色) */
     .nc-top { display: flex; align-items: center; }
     .nc-dot { width: 16rpx; height: 16rpx; border-radius: 50%; background: #1A73E8; margin-right: 12rpx; flex-shrink: 0; }
+    .nc-ct { margin-right: 12rpx; } /* [カスタムエイド 2026-10-31] 連絡のしかたのマーク */
     .nc-title { flex: 1; font-size: 28rpx; font-weight: bold; color: #1D1D1F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .nc-time { font-size: 22rpx; color: #8A8A8E; margin-left: 16rpx; flex-shrink: 0; }
-    .nc-when { margin-top: 16rpx; font-size: 30rpx; color: #1D1D1F; }
+    .nc-when { margin-top: 16rpx; font-size: 34rpx; font-weight: bold; color: #1D1D1F; } /* [カスタムエイド 2026-10-31] 日付も太字・少し大きく(30→34rpx。約2px) */
     .nc-hm { margin-left: 20rpx; font-weight: bold; }
     .nc-menu { margin-top: 8rpx; font-size: 26rpx; color: #515154; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
     .nc-read { margin-top: 8rpx; font-size: 22rpx; color: #8A8A8E; } /* [カスタムエイド 2026-10-27] 確認済み(○○さん) */
@@ -344,5 +348,10 @@
             }
         }
 
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .nc-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
 </style>

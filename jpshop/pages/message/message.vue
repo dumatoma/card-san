@@ -44,7 +44,9 @@
                 <input class="ms-search-in" v-model="keywords" placeholder="名前、電話番号、IDで検索" placeholder-class="ms-ph"
                     @focus="searchFocus = true" @blur="searchFocus = false" />
             </view>
-            <view class="ms-count">メンバー <text class="ms-count-n">{{array.length}}</text> 人</view>
+            <!-- [カスタムエイド 2026-10-28] 読み込めなかったときは「0 人」ではなく、読み直し方を出す -->
+            <view class="ms-err" v-if="loadErr && !array.length" @click="csReload">読み込めませんでした。ここを押すか、画面を下に引っぱって読み直してください。</view>
+            <view class="ms-count" v-else>メンバー <text class="ms-count-n">{{array.length}}</text> 人</view>
             <view class="ms-card" v-if="array.length">
                 <view class="ms-row" v-for="(item, index) in array" :key="index" hover-class="ms-row-hover" @click="toDetail(item.uid, item.name)">
                     <image :src="item.avatar || '../../static/images/avatar.png'" class="ms-av" mode="aspectFill"></image>
@@ -67,6 +69,7 @@
 </template>
 
 <script>
+    import { csCoalesce, csRetry } from '@/utils/csOnce.js' // [カスタムエイド 2026-10-28]
     import {
         getMessageList,
         bindSocket,
@@ -83,6 +86,7 @@
         data() {
             return {
                 showpermission:false,
+                loadErr: false, // [カスタムエイド 2026-10-28] 一覧を読み込めなかった
                 staffRoomOn: false,
                 staffRoomJoin: false,
                 staffRoomName: '',
@@ -112,19 +116,26 @@
             }
         },
         onUnload() {
+            if (this._csBadge) uni.$off('csBadgeRefresh', this._csBadge) // [カスタムエイド 2026-10-27b]
             // this.scoketClose()
             this.socketIo.traderDetailIndex = 100 // 初始化 tabIndex 
         },
         onHide() {
+            this._csVis = false // [カスタムエイド 2026-10-28]
             // this.scoketClose()
         },
         mounted() {},
         onLoad() {
             this.getWebsocketData()
+            // [カスタムエイド 2026-10-27b] 通知・メッセージが届いたら、一覧の数(スタッフルーム・スタッフ間チャット・お客様)を読み直す。続けて届いたときは 0.8秒まとめて1回
+            // [カスタムエイド 2026-10-28] 1.5秒に1回にまとめる(同じ問い合わせを重ねて出し、サーバーに断られて一覧が空になっていた)。この画面を見ていないときは読まない(開いたときに読む)
+            this._csRefresh = csCoalesce(() => Promise.all([this.loadStaffRoom(), this.getList()]), 1500)
+            this._csBadge = (p) => { if (this._csVis) this._csRefresh(!(p && p.type == 'show')) }
+            uni.$on('csBadgeRefresh', this._csBadge)
         },
         onShow() {
-            this.getList()
-            this.loadStaffRoom()
+            this._csVis = true
+            this._csRefresh() // [カスタムエイド 2026-10-28]
         },
         onPullDownRefresh() {
             uni.showLoading({
@@ -139,6 +150,11 @@
             lastText(item) {
                 const m = item.message || ''
                 return m.indexOf('<p>') > -1 ? '【運営からのメッセージ】' : m
+            },
+            csReload() { // [カスタムエイド 2026-10-28]
+                uni.showLoading({ title: "読み込み中", mask: true })
+                this.getList()
+                this.loadStaffRoom()
             },
             toSend() {
                 uni.navigateTo({
@@ -218,7 +234,7 @@
                 }   
             },
             loadStaffRoom() {
-                getStaffRoom().then(res => {
+                const a = getStaffRoom().then(res => {
                     if (res.code == 200) {
                         this.staffRoomOn    = res.data.room.is_on == 1
                         this.staffRoomJoin  = res.data.my_join == 1
@@ -228,12 +244,13 @@
                         this.staffRoomLastMessage = res.data.room.last_message || ''
                     }
                 }).catch(() => {})
-                getStaffRoomUnread().then(res => {
+                const b = getStaffRoomUnread().then(res => {
                     if (res.code == 200) this.groupUnread = res.data.group_unread
                 }).catch(() => {})
-                getDmThreads().then(res => {
+                const c = getDmThreads().then(res => {
                     if (res.code == 200) this.dmThreads = res.data.threads || []
                 }).catch(() => {})
+                return Promise.all([a, b, c]) // [カスタムエイド 2026-10-28] 終わったら次の読み直しができるように
             },
             toGroupChat() {
                 uni.navigateTo({ url: '../message/staffRoom/groupChat' })
@@ -246,6 +263,7 @@
                     url: "../index/index"
                 })
             },
+            // [カスタムエイド 2026-10-28] 読めなかったら少し待ってやり直す(2回まで)。それでも読めなければ「読み込めませんでした」を出す(以前は空のままで「メンバー 0 人」になっていた)
             getList() {
                 let that = this
                 let data = {}
@@ -253,18 +271,20 @@
                 data["uid"] = 0
                 data["mid"] = 0
                 data["timestamp"] = 0
-                getMessageList(data).then((res) => {
+                const q = that._csQ = (that._csQ || 0) + 1
+                return csRetry(() => getMessageList(data)).then((res) => {
                     uni.hideLoading()
                     uni.stopPullDownRefresh()
-                    if (res.code == 200) {
+                    if (q !== that._csQ) return // あとから頼んだ分の答えを使う
+                    if (res && res.code == 200) {
                         that.allMessages = res.data.messages
+                        that.loadErr = false
+                    } else if (res && res.message) {
+                        uni.showToast({ title: res.message, icon: "none" })
                     } else {
-                        uni.showToast({
-                            title: res.message,
-                            icon: "none"
-                        })
+                        that.loadErr = true
                     }
-                }).catch(() => { uni.hideLoading(); uni.stopPullDownRefresh() })
+                })
             },
             showTimePipe(unix_stamp) { // unix_stamp 精确到微秒
                 var _today_obj = new Date(),
@@ -664,5 +684,12 @@
         font-size: 30rpx;
         font-weight: 700;
         color: #1D1D1F;
+    }
+    /* [カスタムエイド 2026-10-28] 読み込めなかったとき */
+    .ms-err { margin: 20rpx 8rpx 16rpx; padding: 24rpx 28rpx; background: #FFF4E5; color: #8A5300; border-radius: 20rpx; font-size: 26rpx; line-height: 1.6; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .ms-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
 </style>

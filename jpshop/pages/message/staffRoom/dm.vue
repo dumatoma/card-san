@@ -169,7 +169,18 @@
                 this.scrollBottom()
             },
             // 入力欄の高さを8行まで追従させ、それ以上は固定して内部スクロールに任せる
+            // [カスタムエイド 2026-10-27b] 入力欄の行数を、画面側(下の renderjs)で文字を実際に並べて数えたもの。変換中(下線)の文字も数える。
+            //   以前は uni-app の linechange だけを使っていたが、変換中は「文字が無い」として1行と知らせてくるため、
+            //   変換中だけ入力欄が1行に縮んでいた(坂本さんの 10/27 の確認)。画面側で数えられたら、そちらだけを使う
+            csTaLines(e) {
+                this._csTaRjs = true
+                const n = e && e.n ? e.n : 1
+                if (!this.inputText && !(e && e.v)) { this.taH = 0; return }
+                this.taH = csTaH(n)
+            },
             onLine(e) {
+                // [カスタムエイド 2026-10-27b] 画面側で数えられているときは、こちらは使わない(変換中に1行と知らせてくるため)
+                if (this._csTaRjs) return
                 // [カスタムエイド 2026-10-27] 空なら1行。改行するたびに伸ばし、6行まで(7行目からは中でスクロール)
                 if (!this.inputText) { this.taH = 0; return }
                 this.taH = csTaH(e && e.detail ? e.detail.lineCount : 1)
@@ -443,8 +454,39 @@
 <!-- [カスタムエイド 2026-10-26] 変換中(下線)のまま送信したとき、画面の入力欄の変換を確定させてから空にする(画面側で直接動く処理)。
      変換が終わるまでは、プログラムから入力欄を空にしても画面に反映されない(Vue の決まり)ため -->
 <script module="csIme" lang="renderjs">
+    // [カスタムエイド 2026-10-27b] 入力欄の行数を、画面側で数えて知らせる(変換中の文字も入れて数える)。
+    //   見えない箱に入力欄と同じ幅・同じ文字の大きさで今の文字を並べ、その高さから行数を出す(入力欄そのものには触らない)
     export default {
+        mounted() {
+            var self = this
+            this._csTaFn = function(e) {
+                var t = e && e.target
+                if (!t || t.tagName !== 'TEXTAREA' || !t.closest || !t.closest('.sendBox')) return
+                self.csTaMeasure(t)
+            }
+            try {
+                document.addEventListener('input', this._csTaFn, true)
+                document.addEventListener('compositionupdate', this._csTaFn, true)
+                document.addEventListener('compositionend', this._csTaFn, true)
+            } catch (e) {}
+        },
         methods: {
+            csTaMeasure(ta) {
+                try {
+                    var cs = getComputedStyle(ta)
+                    var lh = parseFloat(cs.lineHeight) || 22
+                    var w = ta.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0)
+                    if (!(w > 0)) return
+                    var m = this._csMirror
+                    if (!m) { m = document.createElement('div'); document.body.appendChild(m); this._csMirror = m }
+                    m.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;pointer-events:none;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;box-sizing:content-box;padding:0;border:0;margin:0;' +
+                        'width:' + w + 'px;font-family:' + cs.fontFamily + ';font-size:' + cs.fontSize + ';font-weight:' + cs.fontWeight +
+                        ';letter-spacing:' + cs.letterSpacing + ';word-break:' + cs.wordBreak + ';line-height:' + lh + 'px;'
+                    m.textContent = (ta.value || '') + '\u200b'
+                    var n = Math.max(1, Math.round(m.offsetHeight / lh))
+                    this.$ownerInstance.callMethod('csTaLines', { n: n, v: ta.value ? 1 : 0 })
+                } catch (e) {}
+            },
             flush(n) {
                 if (!n) return
                 try {

@@ -1,5 +1,8 @@
 <template>
     <view class="contain" style="padding-top: 80upx;">
+        <!-- [カスタムエイド 2026-11-03] 帯(A1)と全面のお知らせ(A2・A3)。見本「Card-San お知らせ見本」 -->
+        <cs-banner :notice="csNotice" @apply="tobuyplan(1)"></cs-banner>
+        <cs-lock :notice="csNotice" :locked="csLocked" @apply="tobuyplan(1)" @contract="toContract" @logout="logOut"></cs-lock>
         <view class="shopInfo">
             <view class="info">
                 <view class="shopName" v-text="shopInfo.shop_name"></view>
@@ -277,6 +280,7 @@
     </view>
 </template>
 <script>
+    import { csCoalesce } from '@/utils/csOnce.js' // [カスタムエイド 2026-10-28]
     import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-10-18] 端末の種類はその場で判定(No.10)
     var googlePay = uni.requireNativePlugin('sn-googlepay5');
     import {
@@ -294,10 +298,14 @@
     import { gbpReviewUnread } from "@/api/gbpContent.js"
     import { fillRuleDaysDaily } from "@/utils/csBusiness.js" // [カスタムエイド 2026-10-22] 一部の週だけ休み(第2・第4など)の休みを先の日付まで入れる
     import mod from "@/components/mod.vue"
+    import csBanner from "@/components/csNotice/csBanner.vue" // [カスタムエイド 2026-11-03]
+    import csLock from "@/components/csNotice/csLock.vue" // [カスタムエイド 2026-11-03]
     import permission from "@/components/permission/permission.vue"
     export default {
         components: {
             mod,
+            csBanner,
+            csLock,
             permission
         },
         data() {
@@ -318,6 +326,8 @@
                 showModule: false,
                 showModule1: false,
                 showd: false,
+                csNotice: null, // [カスタムエイド 2026-11-03] サーバーの cs_notice(帯・全面のお知らせ)
+                csLocked: false,
                 value: 0,
                 value2: 0,
                 value3: 0,
@@ -387,7 +397,7 @@
                 handler(nval, oval) {
                     let that = this
                     if (nval) {
-                        that.getUnread()
+                        if (that._csRefresh) that._csRefresh(true); else that.getUnread() // [カスタムエイド 2026-10-28] まとめて1回
                     }
                 },
                 deep: true, // 深度监听
@@ -397,6 +407,12 @@
         onLoad: function() {
             // クチコミ画面で既読にした時に即時反映（gbpReviews.vue が uni.$emit('gbpReviewUnread', n)）
             uni.$on('gbpReviewUnread', this.onGbpReviewUnread)
+            // [カスタムエイド 2026-10-27b] 通知・メッセージが届いたら、TOP の数(お客様のメッセージ・予約・スタッフルーム・口コミ)を読み直す。続けて届いたときは 0.8秒まとめて1回
+            // [カスタムエイド 2026-10-28] 何回呼ばれても 1.5秒に1回にまとめる(同じ問い合わせを重ねて出し、サーバーに断られていた)。
+            //   アプリに戻った(show)ときは、少し前に読んだばかりなら読み直さない。読んだ・届いたときは必ずもう1回読む
+            this._csRefresh = csCoalesce(() => Promise.all([this.getUnread(), this.getLists(), this.getStaffRoomBadge(), this.getGbpReviewBadge()]), 1500)
+            this._csBadge = (p) => { this._csRefresh(!(p && p.type == 'show')) }
+            uni.$on('csBadgeRefresh', this._csBadge)
             // 创建示例
             // this._iap = new Iap({
             //     products: ['premium_halfyear'] // 苹果开发者中心创建
@@ -423,10 +439,7 @@
             //     }
             // })
             that.admin = uni.getStorageSync("admin")
-            that.getUnread()
-            that.getLists()
-            that.getStaffRoomBadge()
-            that.getGbpReviewBadge()
+            that._csRefresh() // [カスタムエイド 2026-10-28] TOP の数(まとめて1回)
             let cid = uni.getStorageSync("cid")
             getConfig().then((res) => {
                 let data = {}
@@ -451,6 +464,12 @@
                     that.day_order_count = res.data.day_order_count
                     that.member_count = res.data.member_count
                     that.month_order_count = res.data.month_order_count
+                    // [カスタムエイド 2026-11-03] 帯・全面のお知らせ。予約の画面の帯にも使うので覚えておく
+                    that.csNotice = res.data.shop_info.cs_notice || null
+                    uni.setStorageSync('csNotice', that.csNotice)
+                    let csEnded = !res.data.shop_info.vip.type && that.csNotice && (that.csNotice.state == 'trial_ended' || that.csNotice.state == 'contract_ended')
+                    that.csLocked = !!csEnded
+                    if (csEnded) { that.showd = false; uni.hideTabBar({ fail() {} }) } else { uni.showTabBar({ fail() {} }) }
                     // [カスタムエイド 2026-10-18] 超過のお知らせは、サーバーの結果どおりに出す/消す(支払い後に開いたまま残らないように)
                     that.sms = res.data.shop_info.vip_sms_alert == 1
                     if (!that.sms) that.showSmsStripeInfo = false
@@ -472,7 +491,7 @@
                         } else {
                             that.gtype = 2
                         }
-                        that.showd = true
+                        that.showd = !that.csLocked // [カスタムエイド 2026-11-03] 全面のお知らせを出すときは、前の窓は出さない
                         // uni.hideTabBar()
                     } else {
                         that.showd = false
@@ -489,6 +508,7 @@
 
         onUnload() {
             uni.$off('gbpReviewUnread', this.onGbpReviewUnread)
+            if (this._csBadge) uni.$off('csBadgeRefresh', this._csBadge) // [カスタムエイド 2026-10-27b]
         },
         onHide() {
             setTimeout(() => {
@@ -736,6 +756,9 @@
                 that.showPackage = false
                 // that.showalert = true
             },
+            toContract() { // [カスタムエイド 2026-11-03] 全面のお知らせの「契約内容を見る」
+                uni.navigateTo({ url: "/pages/accounts/contract/contract" })
+            },
             tobuyplan(e) {
                 if (this.admin_type == 1) {
                     uni.navigateTo({
@@ -921,7 +944,9 @@
             },
             getLists() {
                 let that = this
-                getAppointNoticeList(1).then((res) => {
+                const csQ = that._csQ_getLists = (that._csQ_getLists || 0) + 1 // [カスタムエイド 2026-10-27c] 最後に聞いた分の答えだけ使う(古い答えがあとから届いても数を戻さない)
+                return getAppointNoticeList(1).then((res) => {
+                    if (csQ !== that._csQ_getLists) return
                     if (res.code == 200) {
                         that.value2 = res.data.unread_count
                         plus.runtime.setBadgeNumber(that.value * 1 + that.value2 * 1 + that.value3 * 1 + that.value4 * 1);
@@ -930,12 +955,14 @@
             },
             getUnread() {
                 let that = this
+                const csQ = that._csQ_getUnread = (that._csQ_getUnread || 0) + 1 // [カスタムエイド 2026-10-27c] 最後に聞いた分の答えだけ使う(古い答えがあとから届いても数を戻さない)
                 let data = {}
                 data["type"] = "list"
                 data["uid"] = 0
                 data["mid"] = 0
                 data["timestamp"] = 0
-                getMessageList(data).then((res) => {
+                return getMessageList(data).then((res) => {
+                    if (csQ !== that._csQ_getUnread) return
                     let number = 0
                     if (res.code == 200) {
                         res.data.messages.forEach((val, index) => {
@@ -949,7 +976,9 @@
             // スタッフルーム(グループ+DM)の未読をバッジに加算
             getStaffRoomBadge() {
                 let that = this
-                getStaffRoomUnread().then(res => {
+                const csQ = that._csQ_getStaffRoomBadge = (that._csQ_getStaffRoomBadge || 0) + 1 // [カスタムエイド 2026-10-27c] 最後に聞いた分の答えだけ使う(古い答えがあとから届いても数を戻さない)
+                return getStaffRoomUnread().then(res => {
+                    if (csQ !== that._csQ_getStaffRoomBadge) return
                     if (res.code == 200) {
                         let dm = 0
                         let dmUnread = res.data.dm_unread || {}
@@ -962,11 +991,14 @@
             // GBPクチコミ未読をバッジに加算（code==200 の時のみ。403・未連携・失敗は 0 で他の計数に影響させない）
             getGbpReviewBadge() {
                 let that = this
-                gbpReviewUnread().then(res => {
+                const csQ = that._csQ_getGbpReviewBadge = (that._csQ_getGbpReviewBadge || 0) + 1 // [カスタムエイド 2026-10-27c] 最後に聞いた分の答えだけ使う(古い答えがあとから届いても数を戻さない)
+                return gbpReviewUnread().then(res => {
+                    if (csQ !== that._csQ_getGbpReviewBadge) return
                     let n = 0
                     if (res && res.code == 200 && res.data) n = parseInt(res.data.unread, 10) || 0
                     that.onGbpReviewUnread(n)
                 }).catch(() => {
+                    if (csQ !== that._csQ_getGbpReviewBadge) return
                     that.onGbpReviewUnread(0)
                 })
             },

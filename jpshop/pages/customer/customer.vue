@@ -47,6 +47,8 @@
                     </u-swipe-action-item>
                 </u-swipe-action>
             </view>
+            <!-- [カスタムエイド 2026-10-28] 読み込めなかったときは「まだいません」ではなく、読み直し方を出す -->
+            <view class="cm-empty" v-else-if="loadErr" @click="getList">読み込めませんでした。ここを押すか、画面を下に引っぱって読み直してください。</view>
             <view class="cm-empty" v-else>メンバーはまだいません</view>
         </view>
         <u-action-sheet @select="selectClick" :actions="list" @close="closeMask" :show="show"
@@ -56,6 +58,7 @@
 </template>
 
 <script>
+    import { csRetry } from '@/utils/csOnce.js' // [カスタムエイド 2026-10-28]
     import {
         getMemberList,delMember
     } from "../../api/index.js";
@@ -90,6 +93,7 @@
                     }
                 ],
                 array: [],
+                loadErr: false, // [カスタムエイド 2026-10-28] 一覧を読み込めなかった
                 searchFocus: false, // [カスタムエイド 2026-10-20]
                 sortName: '五十音順', // [カスタムエイド 2026-10-20] 今の並び順の名前
                 requestData:{
@@ -123,12 +127,18 @@
                 this.showModule = true
             },
             // 获取列表
+            // [カスタムエイド 2026-10-28] 読めなかったら少し待ってやり直す(2回まで)。それでも読めなければ「読み込めませんでした」(以前は空のまま)
             getList(){
                 let that = this
-                getMemberList(that.requestData).then((res)=>{
+                const q = that._csQ = (that._csQ || 0) + 1
+                return csRetry(() => getMemberList(that.requestData)).then((res)=>{
                     uni.stopPullDownRefresh()
-                    if(res.code == 200){
+                    if (q !== that._csQ) return // あとから頼んだ分(並び替え・検索)の答えを使う
+                    if(res && res.code == 200){
                         that.array = res.data.members
+                        that.loadErr = false
+                    } else if (!res) {
+                        that.loadErr = true
                     }
                 })
             },
@@ -442,5 +452,10 @@
         text-align: center;
         font-size: 22rpx;
         color: #8A8A8E;
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .cm-list {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
 </style>

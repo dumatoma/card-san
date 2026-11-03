@@ -43,7 +43,9 @@
                     </view>
                 </view>
             </view>
-            <view class="cl-empty" v-if="loaded && !array.length">まだクーポンはありません</view>
+            <!-- [カスタムエイド 2026-10-28] 読み込めなかったときは「まだありません」ではなく、読み直し方を出す -->
+            <view class="cl-empty" v-if="loaded && !array.length && loadErr" @click="getList">読み込めませんでした。ここを押して読み直してください。</view>
+            <view class="cl-empty" v-else-if="loaded && !array.length">まだクーポンはありません</view>
             <view class="cl-hint" v-if="array.length">カードを押すと、コピー・削除ができます。左のチェックで、まとめて削除もできます。</view>
         </view>
 
@@ -62,6 +64,7 @@
 </template>
 
 <script>
+    import { csRetry } from '@/utils/csOnce.js' // [カスタムエイド 2026-10-28]
     import {
         getCouponList,
         deleteCoupon,
@@ -89,6 +92,7 @@
                 showpermission: false,
                 showDel: false,
                 loaded: false,
+                loadErr: false, // [カスタムエイド 2026-10-28] 一覧を読み込めなかった
                 coupon_count: 0,
                 sum_count: 3000,
                 picked: [],
@@ -120,17 +124,21 @@
                 if (item.is_indate != 1) return '期限なし'
                 return this.md(item.indate_start_time) + ' 〜 ' + this.md(item.indate_end_time) + 'まで有効'
             },
+            // [カスタムエイド 2026-10-28] 読めなかったら少し待ってやり直す(2回まで)。それでも読めなければ「読み込めませんでした」(以前は「まだクーポンはありません」と出ていた)
             getList() {
-                getCouponList().then((res) => {
+                const q = this._csQ = (this._csQ || 0) + 1
+                return csRetry(() => getCouponList()).then((res) => {
+                    if (q !== this._csQ) return
                     this.loaded = true
-                    if (res.code == 200) {
+                    this.loadErr = !res
+                    if (res && res.code == 200) {
                         this.array = res.data.coupons || []
                         this.coupon_count = res.data.coupon_count || 0
                         this.sum_count = res.data.sum_count || 3000
                         const ids = this.array.map((v) => v.id)
                         this.picked = this.picked.filter((id) => ids.indexOf(id) > -1)
                     }
-                }).catch(() => { this.loaded = true })
+                })
             },
             toBack() {
                 uni.switchTab({ url: "../index/index" })
@@ -222,4 +230,9 @@
     .cl-btn { height: 104rpx; border-radius: 28rpx; background: #D93025; color: #FFFFFF; font-size: 32rpx; font-family: 'Hiragino Sans-W5', sans-serif; display: flex; align-items: center; justify-content: center; flex: 1; }
     .cl-btn-g { background: #FFFFFF; color: #1D1D1F; border: 2rpx solid #D1D1D6; margin-right: 24rpx; flex: 0 0 280rpx; }
     .cl-hover { opacity: 0.7; }
+
+    /* [カスタムエイド 2026-11-03] カードの影をそろえる(下へ1px・ぼかし4px・黒10%) */
+    .cl-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

@@ -76,4 +76,9 @@
     .kt-d { font-size: 22rpx; color: #D93025; margin-top: 4rpx; }
     .kt-rs { font-size: 26rpx; color: #1A73E8; border: 1px solid #1A73E8; border-radius: 28rpx; padding: 6rpx 28rpx; }
     .kt-empty { text-align: center; color: #8E8E93; font-size: 26rpx; padding: 80rpx 0; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .kt-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

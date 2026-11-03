@@ -208,4 +208,14 @@
     .sf-act { flex: 1; height: 76rpx; border: 1px solid #D2D2D7; border-radius: 20rpx; display: flex; align-items: center; justify-content: center; font-size: 28rpx; font-weight: 500; box-sizing: border-box; text { margin-left: 8rpx; } }
     .sf-icon-btn { width: 88rpx; height: 76rpx; margin-left: 16rpx; border: 1px solid #D2D2D7; border-radius: 20rpx; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
     .sf-icon-btn.off { background: #F5F5F7; border-color: #E5E5EA; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .sf-empty {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影をそろえる(下へ1px・ぼかし4px・黒10%) */
+    .sf-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

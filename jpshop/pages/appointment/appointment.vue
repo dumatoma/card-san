@@ -9,6 +9,7 @@
                     @click="showSetting"></image>
             </view>
         </u-navbar>
+        <cs-banner :notice="csNotice" @apply="csApply"></cs-banner><!-- [カスタムエイド 2026-11-03] 帯(A1)。TOP で読んだ cs_notice を使う -->
         <!-- [カスタムエイド 2026-10-22] 予約通知・今日の予約を横に2つ並べ、高さを半分ほどに -->
         <view class="cs-top">
             <view class="cs-tile" hover-class="cs-hover" @click="toNotice">
@@ -156,6 +157,7 @@
     import settingDetail from "@/components/appointment/addDetail.vue"
     import newAppoint from "@/components/appointment/new.vue"
     import permission from "@/components/permission/permission.vue"
+    import csBanner from "@/components/csNotice/csBanner.vue" // [カスタムエイド 2026-11-03]
     import {
         getAppointmentList,
         getCalendar,
@@ -166,6 +168,7 @@
     } from "@/api/index.js"
     export default {
         components: {
+            csBanner,
             progres,
             week,
             setting,
@@ -175,6 +178,7 @@
         },
         data() {
             return {
+                csNotice: null, // [カスタムエイド 2026-11-03] 帯(A1)
                 showpermission:false,
                 status: "day",
                 setting: false, //设置
@@ -289,12 +293,18 @@
         },
         onShow() {
             let that = this
+            that.csNotice = uni.getStorageSync('csNotice') || null // [カスタムエイド 2026-11-03] 帯
             // that.dDate = that.getToday()
             that.getLists()
            let ding = uni.getSystemInfoSync().statusBarHeight
            that.totalDing = ding
         },
         methods: {
+            csApply() { // [カスタムエイド 2026-11-03] 帯の「お申し込み」→ ご利用プラン(副管理者はできない)
+                let a = uni.getStorageSync('admin') || {}
+                if (a.admin_type && a.admin_type != 1) { uni.showToast({ title: '実行する権限がありません', icon: 'none' }); return }
+                uni.navigateTo({ url: '/pages/accounts/package/package' })
+            },
             getCalendar(){
                 let that = this
                 let data = {}
@@ -1139,7 +1149,7 @@
     /* ===== [カスタムエイド 2026-10-19] 日付の帯・スライド(予約WEBページと同じ見た目) ===== */
     .cs-wk { width: 100%; background: #fff; }
     .cs-wk-head { display: flex; align-items: center; justify-content: space-between; height: 100upx; box-sizing: border-box; padding: 0 30upx 0 60upx; border-bottom: 1px solid #f5f5f5; }
-    .cs-wk-title { font-size: 34upx; color: #1D1D1F; font-family: Hiragino Sans-W6, Hiragino Sans; }
+    .cs-wk-title { font-size: 38upx; font-weight: 700; color: #1D1D1F; font-family: Hiragino Sans-W7, Hiragino Sans; } /* [カスタムエイド 2026-11-02] 見出し(日:11月2日/週:11月1日〜7日)を約2px大きく(34→38upx)・少し太く(W6→W7)。管理App・Card-San App・予約WEB で同じ */
     .cs-wk-arrows { display: flex; align-items: center; }
     .cs-wk-arrow { width: 80upx; height: 80upx; display: flex; align-items: center; justify-content: center; }
     .cs-chev { width: 22upx; height: 22upx; border-top: 4upx solid #1A73E8; border-left: 4upx solid #1A73E8; }
@@ -1214,5 +1224,10 @@
                 }
             }
         }
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .cs-tile {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
 </style>

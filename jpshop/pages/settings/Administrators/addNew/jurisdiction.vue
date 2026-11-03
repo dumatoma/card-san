@@ -348,5 +348,10 @@
     .ad-check-mark { width: 12rpx; height: 22rpx; border-right: 5rpx solid #FFFFFF; border-bottom: 5rpx solid #FFFFFF; transform: rotate(45deg); margin-top: -6rpx; }
     .ad-perm-label { font-size: 30rpx; color: #8A8A8E; }
     .ad-perm-label.on { color: #1D1D1F; font-weight: 500; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .ad-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>
 

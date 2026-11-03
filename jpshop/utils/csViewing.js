@@ -13,4 +13,7 @@ export function csViewStop(vm, quiet) {
     clearInterval(vm._csViewTimer)
     vm._csViewTimer = null
     if (!quiet) { try { csViewing('').catch(() => {}) } catch (e) {} }
+    // [カスタムエイド 2026-10-27b] チャットを閉じたら(読んだあと)、TOP・一覧の数とアイコンのバッジを読み直す。
+    //   以前は、読んだあともバッジの数が残り、画面を何回か移るまで消えなかった(坂本さんの確認)
+    if (!quiet) { try { uni.$emit('csBadgeRefresh', { type: 'read' }) } catch (e) {} }
 }

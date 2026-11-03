@@ -483,4 +483,9 @@
     .ne-pv-rv-img { width: 100%; height: 100%; }
     .ne-empty { font-size: 26rpx; color: #8A8A8E; text-align: center; padding: 40rpx 0; }
     .ne-close { margin-top: 48rpx; height: 104rpx; border-radius: 28rpx; background: #F2F2F7; color: #1D1D1F; font-size: 32rpx; display: flex; align-items: center; justify-content: center; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .ne-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

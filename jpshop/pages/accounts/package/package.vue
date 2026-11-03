@@ -56,6 +56,8 @@
 
             <view class="pk-note">注1)クーポン、メッセージチャットの配信数は、3,000件/月を超過した場合は、3,000件毎に1,200円/月の追加料金が発生します。</view>
             <view class="pk-note">注2)予約SMS送信数は、100件を超過した場合は、100件毎に1,200円/月の追加料金が発生します。</view>
+            <!-- [カスタムエイド 2026-11-03] 購入を復元(iPhone だけ)。払ったのにプランが反映されないとき、Apple に聞き直してサーバーへ送り直す -->
+            <view class="pk-restore" v-if="isIos" hover-class="pk-hover" @click="csRestore">購入を復元</view>
         </view>
 
         <!-- 下に止めておく「このプランで次へ」 -->
@@ -89,8 +91,10 @@
     import {
         getShopInfo,
         getPackageList,
-        delPlan
+        delPlan,
+        csIapRestore
     } from "@/api/index.js"
+    import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-11-03]
     export default {
         data() {
             return {
@@ -122,12 +126,48 @@
         },
         computed: {
             // [カスタムエイド 2026-10-20] ご利用中のプランの名前
+            isIos() { return getPlatform() == 'ios' }, // [カスタムエイド 2026-11-03] 購入を復元は iPhone だけ
             currentName() {
                 const t = this.info.type || this.info1.type
                 return t == 1 ? 'ライト' : t == 2 ? 'スタンダード' : t == 3 ? 'プレミアム' : 'なし'
             }
         },
         methods: {
+            // [カスタムエイド 2026-11-03] 購入を復元:Apple に残っている購入を受け取り、サーバー(/api/shop/cs/iap/restore)で確かめて反映する
+            csRestore() {
+                // #ifdef APP-PLUS
+                uni.showLoading({ title: '確認しています…', mask: true })
+                plus.payment.getChannels(res => {
+                    const iap = res.find(i => i.id === 'appleiap')
+                    if (!iap) { uni.hideLoading(); uni.showModal({ content: '購入の情報を読めませんでした。しばらくしてから、もう一度お試しください。', showCancel: false }); return }
+                    iap.restoreComplateRequest({ manualFinishTransaction: true }, results => {
+                        const items = (results || []).filter(r => r && r.transactionReceipt).map(r => ({
+                            transaction_id: r.transactionIdentifier || '',
+                            pay_token: r.transactionReceipt,
+                            product_id: (r.payment && r.payment.productid) || ''
+                        }))
+                        if (!items.length) { uni.hideLoading(); uni.showModal({ content: '復元できる購入はありませんでした。', showCancel: false }); return }
+                        csIapRestore({ items: items }).then(re => {
+                            uni.hideLoading()
+                            ;(results || []).forEach(r => { try { iap.finishTransaction(r, () => {}, () => {}) } catch (e) {} })
+                            uni.showModal({ content: (re && re.message) || '確認しました。', showCancel: false, success: () => {
+                                if (re && re.code == 200 && re.data && re.data.restored) uni.reLaunch({ url: '/pages/index/index' })
+                                else this.getShopInfo()
+                            } })
+                        }).catch(() => {
+                            uni.hideLoading()
+                            uni.showModal({ content: '通信できませんでした。電波のよい所で、もう一度お試しください。', showCancel: false })
+                        })
+                    }, () => {
+                        uni.hideLoading()
+                        uni.showModal({ content: '購入の情報を読めませんでした。Apple ID でサインインしているか確かめて、もう一度お試しください。', showCancel: false })
+                    })
+                }, () => {
+                    uni.hideLoading()
+                    uni.showModal({ content: '購入の情報を読めませんでした。しばらくしてから、もう一度お試しください。', showCancel: false })
+                })
+                // #endif
+            },
             // [カスタムエイド 2026-10-20] 機能の一覧表・機能詳細(管理WEBと同じ)
             has(p, f) {
                 return (p.functions || []).indexOf(f.e_name) != -1
@@ -242,6 +282,9 @@
 </script>
 
 <style lang="scss">
+    /* [カスタムエイド 2026-11-03] 購入を復元(下に小さく) */
+    .pk-restore { margin: 40rpx auto 8rpx; text-align: center; font-size: 26rpx; color: #6E6E73; text-decoration: underline; padding: 16rpx; }
+
     /* [カスタムエイド 2026-10-20] 管理WEB(スマホ・タブレット版)と同じ見た目 */
     .pk {
         min-height: 100vh;
@@ -618,5 +661,10 @@
         text-align: center;
         font-size: 30rpx;
         font-weight: 700;
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .pk-card, .pk-plan, .pk-table-box {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
 </style>

@@ -269,4 +269,9 @@
     .nt-pv-t { font-size: 32rpx; color: #1D1D1F; font-family: 'Hiragino Sans-W5', sans-serif; line-height: 1.4; }
     .nt-pv-d { font-size: 28rpx; color: #1D1D1F; line-height: 1.7; white-space: pre-wrap; margin-top: 16rpx; }
     .nt-close { margin-top: 32rpx; height: 104rpx; border-radius: 28rpx; background: #F2F2F7; color: #1D1D1F; font-size: 32rpx; display: flex; align-items: center; justify-content: center; }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .nt-card {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
 </style>

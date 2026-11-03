@@ -1,0 +1,26 @@
+    // [カスタムエイド 2026-10-27] お店のページを開いた・ボタンを押した記録(30分)。接続元は暗号化した値で持つ(IP そのものは残さない)
+    public function mark($id)
+    {
+        $id = (int) $id; $ua = (string) request()->header('User-Agent');
+        $p = preg_match('/iPhone|iPad|iPod/i', $ua) ? 'ios' : (preg_match('/Android/i', $ua) ? 'android' : 'pc');
+        if ($id > 0 && $p !== 'pc' && DB::table('web_shop')->where('id', $id)->exists()) {
+            $k = 'csclaim:' . sha1('cs' . request()->ip()); $now = time();
+            $a = array_values(array_filter((array) \Cache::get($k, []), function ($x) use ($now) { return $now - $x['at'] < 1800; }));
+            $a[] = ['sid' => $id, 'p' => $p, 'at' => $now];
+            \Cache::put($k, array_slice($a, -20), 1800);
+        }
+        return response('', 204)->header('Cache-Control', 'no-store');
+    }
+
+    // [カスタムエイド 2026-10-27] アプリを初めて開いたときの照合。seen=30分以内に同じ接続元・同じ種類の端末からお店のページを見た数(ペーストの画面を出すかに使う)。1つのお店だけなら sid
+    public function claim()
+    {
+        $k = 'csclaim:' . sha1('cs' . request()->ip()); $p = (string) request()->query('p', ''); $now = time(); $ids = [];
+        foreach ((array) \Cache::get($k, []) as $x) {
+            if ($now - $x['at'] >= 1800 || ($p !== '' && $x['p'] !== $p)) continue;
+            $ids[$x['sid']] = 1;
+        }
+        $sid = count($ids) === 1 ? (int) array_keys($ids)[0] : 0;
+        @file_put_contents(storage_path('logs/cs_claim.log'), date('Y-m-d H:i:s') . " p=$p cand=" . implode(',', array_keys($ids)) . " sid=$sid\n", FILE_APPEND);
+        return response()->json(['code' => 200, 'message' => '', 'data' => ['sid' => $sid, 'seen' => count($ids)]])->header('Cache-Control', 'no-store');
+    }

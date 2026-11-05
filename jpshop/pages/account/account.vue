@@ -37,10 +37,18 @@
             </view>
         </view> -->
         
-        <view class="settingItem border_b" @click="toNext(8)">
+        <view class="settingItem" @click="toNext(8)">
             <view class="itemLeft">
                 <view class="itemName">
                     ご契約内容
+                </view>
+            </view>
+        </view>
+        <!-- [カスタムエイド 2026-11-03] 段階8-2:ご利用状況(副管理者も見られる) -->
+        <view class="settingItem border_b" @click="toNext(9)">
+            <view class="itemLeft">
+                <view class="itemName">
+                    ご利用状況
                 </view>
             </view>
         </view>
@@ -168,14 +176,14 @@
                         url:"../accounts/rules/rules"
                     })
                 }else if(e == 8){
-                    if(this.admin_type == 2){
-                        this.show = true
-                    }
-                    if(this.admin_type == 1){
-                       uni.navigateTo({
-                           url:"../accounts/contract/contract"
-                       }) 
-                    }
+                    // [カスタムエイド 2026-11-03] 副管理者もご契約内容を見られる(プラン変更・解約などのボタンは「権限がありません」)
+                    uni.navigateTo({
+                        url:"../accounts/contract/contract"
+                    })
+                }else if(e == 9){
+                    uni.navigateTo({
+                        url:"../accounts/usage/usage" // [カスタムエイド 2026-11-03]
+                    })
                 }
             }
         },

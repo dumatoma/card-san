@@ -1055,3 +1055,43 @@ export const csIapRestore = (data) => {
         data: data
     })
 }
+
+// [カスタムエイド 2026-11-03] 段階7:予約Webサイトの「メール」(予約受付用メールアドレス・写し)
+export const csReserveMail = () => {
+    return request({ url: '/api/shop/cs/reserve-mail', method: 'get' })
+}
+export const csReserveMailSave = (data) => {
+    return request({ url: '/api/shop/cs/reserve-mail', method: 'post', data: data })
+}
+export const csReserveMailResend = () => {
+    return request({ url: '/api/shop/cs/reserve-mail/resend', method: 'post', data: {} })
+}
+export const csReserveMailBcc = (data) => {
+    return request({ url: '/api/shop/cs/reserve-mail/bcc', method: 'post', data: data })
+}
+
+// [カスタムエイド 2026-11-03] 段階8-1:受け付ける方法(メール・SMS)と今月の予約SMS の残り
+export const csReserveCh = () => {
+    return request({ url: '/api/shop/cs/reserve-ch', method: 'get' })
+}
+export const csReserveChSave = (data) => {
+    return request({ url: '/api/shop/cs/reserve-ch', method: 'post', data: data })
+}
+
+// [カスタムエイド 2026-11-03] 段階8-2:ご利用状況
+export const csUsage = () => {
+    return request({ url: '/api/shop/cs/usage', method: 'get' })
+}
+// [カスタムエイド 2026-11-04 段階9] LINE で予約のお知らせ:状態(鍵ははじめとおわりの3文字だけ・今月の通数)・保存して確かめる・解除・試し送りの住所
+export const csLine = () => {
+    return request({ url: '/api/shop/cs/line', method: 'get' })
+}
+export const csLineSave = (data) => {
+    return request({ url: '/api/shop/cs/line', method: 'post', data: data })
+}
+export const csLineRemove = () => {
+    return request({ url: '/api/shop/cs/line/remove', method: 'post', data: {} })
+}
+export const csLineTestUrl = () => {
+    return request({ url: '/api/shop/cs/line/test-url', method: 'get' })
+}

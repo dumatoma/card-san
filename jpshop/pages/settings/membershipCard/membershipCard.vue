@@ -440,4 +440,8 @@
     .ml-empty, .ml-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 一覧の中のカードの絵(枠)にも影(坂本さん) */
+    .ml-thumb {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10);
+    }
 </style>

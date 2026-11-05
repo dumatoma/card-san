@@ -24,12 +24,12 @@
                     <!-- <view class="meng" v-if="todayAviable == false"></view> -->
                     <!-- 未过期的预约 -->
                     <view class="dateItem cs-tap" v-if="todayAviable == true" v-for="(ite,idx) in item.times"
-                        :style="ite.checked?format(ite.color):ite.open?'background:#fff !important':'background: rgba(217,48,37,0.15);'"
+                        :style="ite.checked?format(ite.color)+csLine(ite):ite.open?'background:#fff !important':'background: rgba(217,48,37,0.15);'"
                         @click="addThis(item.name,item.adid,ite,1)">
                         <view :style="`height:${ite.duration * 160}upx`" class="abc">
                             <view class="itemName" :style="`color:${ite.color}`">
                                 <view class="bd" v-if="ite.start" :style="`background:${ite.color}`"></view>
-                                {{ite.name}}
+                                <text class="cs-xtag" v-if="ite.start && ite.kind == 'ext'">外部</text>{{ite.name}}
                                 <!-- {{ite.duration}} -->
                             </view>
                             <view class="itemEvent" :style="`color:${ite.color}`">
@@ -39,10 +39,10 @@
                     </view>
                     <!-- 已经过期的预约 -->
                     <view v-if="todayAviable == false" class="dateItem" v-for="(ite,idx) in item.times"
-                        :style="ite.checked?format(ite.color):'background: #fff'" @click="addThis(ite,2)">
+                        :style="ite.checked?format(ite.color)+csLine(ite):'background: #fff'" @click="addThis(ite,2)">
                         <view class="itemName" :style="`color:${ite.color}`">
                             <view class="bd" v-if="ite.start" :style="`background:${ite.color}`"></view>
-                            {{ite.name}}
+                            <text class="cs-xtag" v-if="ite.start && ite.kind == 'ext'">外部</text>{{ite.name}}
                         </view>
                         <view class="itemEvent" :style="`color:${ite.color}`">
                             {{ite.event}}
@@ -319,6 +319,10 @@
                                                 .start) {
                                                 array[i].times[k].start = true
                                                 array[i].times[k].checked = true
+                                                // [カスタムエイド 2026-11-03] 枠の線のための種類・始まり・終わり
+                                                array[i].times[k].kind = array[i].events[j].kind || 'order'
+                                                array[i].times[k].first = true
+                                                array[i].times[k].last = (array[i].events[j].duration * 2) <= 1
                                                 array[i].times[k].name = array[i].events[j].name
                                                 array[i].times[k].event = array[i].events[j].event
                                                 array[i].times[k].color = array[i].events[j]
@@ -332,6 +336,9 @@
                                                 if (k > start && k < start + (array[i].events[j]
                                                         .duration) * 2) {
                                                     array[i].times[k].checked = true
+                                                    array[i].times[k].kind = array[i].events[j].kind || 'order' // [カスタムエイド 2026-11-03]
+                                                    array[i].times[k].first = false
+                                                    array[i].times[k].last = k == start + (array[i].events[j].duration) * 2 - 1
                                                     array[i].times[k].color = array[i].events[j]
                                                         .appoint_said == 0 ? 'rgb(170,170,170)' :
                                                         array[i].color
@@ -394,6 +401,16 @@
 
         },
         methods: {
+            // [カスタムエイド 2026-11-03] 枠の線:ふつうの予約(指名なしも)は実線・外部の予約は破線。お休み・休憩・勤務時間外は線なし
+            csLine(ite) {
+                if (!ite || !ite.kind || ite.kind == 'off') return ''
+                const st = ite.kind == 'ext' ? 'dashed' : 'solid'
+                const c = ite.color || '#AAAAAA'
+                let r = ';border-left:3rpx ' + st + ' ' + c + ';border-right:3rpx ' + st + ' ' + c + ';box-sizing:border-box'
+                if (ite.first) r += ';border-top:3rpx ' + st + ' ' + c
+                if (ite.last) r += ';border-bottom:3rpx ' + st + ' ' + c
+                return r
+            },
             format(e) {
                 if (e) {
                     let color = e.replace(")", ",0.15)")
@@ -609,4 +626,6 @@
         }
 
     }
+    /* [カスタムエイド 2026-11-03] 外部の予約の印 */
+    .cs-xtag { display: inline-block; font-size: 18rpx; font-weight: 700; color: #FFFFFF; background: #1D1D1F; border-radius: 6rpx; padding: 0 8rpx; margin-right: 6rpx; line-height: 1.6; vertical-align: middle; }
 </style>

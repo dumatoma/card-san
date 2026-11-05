@@ -10,6 +10,14 @@
             </view>
         </u-navbar>
         <cs-banner :notice="csNotice" @apply="csApply"></cs-banner><!-- [カスタムエイド 2026-11-03] 帯(A1)。TOP で読んだ cs_notice を使う -->
+        <!-- [カスタムエイド 2026-11-03] 予約受付用メールアドレスが未登録・確認待ちのときの知らせ(閉じられない)。押すと「予約Webサイト」 -->
+        <view class="cs-mailnote" :class="csMail.state == 'none' ? 'red' : 'warn'" v-if="csMail && csMail.need == 1 && csMailOn" hover-class="cs-hover" @click="toWebSite">
+            <view class="cs-mailnote-t">
+                <text class="cs-mailnote-b">{{ csMail.state == 'none' ? '予約受付用メールアドレスが未登録です' : 'メールアドレスの確認が済んでいません' }}</text>
+                <text>{{ csMail.state == 'none' ? 'お客様からの返信を受け取るために登録してください。' : '届いたメールのボタンを押してください。' }}</text>
+            </view>
+            <text class="cs-mailnote-go">{{ csMail.state == 'none' ? '登録 ›' : '確認 ›' }}</text>
+        </view>
         <!-- [カスタムエイド 2026-10-22] 予約通知・今日の予約を横に2つ並べ、高さを半分ほどに -->
         <view class="cs-top">
             <view class="cs-tile" hover-class="cs-hover" @click="toNotice">
@@ -22,6 +30,20 @@
             <view class="cs-tile">
                 <view class="cs-tile-l">今日の予約</view>
                 <view class="cs-tile-r"><text class="cs-num">{{ todayNum || 0 }}</text><text class="cs-unit">件</text></view>
+            </view>
+        </view>
+        <!-- [カスタムエイド 2026-11-03] 段階8-2:予約SMS の今月の残り(SMS オプション契約中のお店だけ)。白 → 残り1割で黄色 → 超えたら赤。押すとご利用状況 -->
+        <view class="cs-smsrow" v-if="csSms">
+            <view class="cs-sms" :class="csSms.cls" hover-class="cs-hover" @click="toUsage">
+                <image class="cs-sms-i" src="../../static/icons/cs_ct_sms.png" mode="aspectFit"></image>
+                <text>{{ csSms.text }} ›</text>
+            </view>
+        </view>
+        <!-- [カスタムエイド 2026-11-04 段階9] LINE の今月の上限に達したとき(LINE で受け付けているのに、予約WEB に LINE を出せない)。押すと予約Webサイト -->
+        <view class="cs-smsrow" v-if="csLineOver">
+            <view class="cs-sms red" hover-class="cs-hover" @click="toWebSite">
+                <image class="cs-sms-i" src="../../static/icons/cs_ct_line.svg" mode="aspectFit"></image>
+                <text>LINE の今月の上限に達しました ›</text>
             </view>
         </view>
         <view class="content">
@@ -164,7 +186,9 @@
         getStaffList,
         getAppointNoticeList,
         getConfig,
-        getAdminDetail
+        getAdminDetail,
+        csReserveMail,
+        csReserveCh
     } from "@/api/index.js"
     export default {
         components: {
@@ -181,6 +205,9 @@
                 csNotice: null, // [カスタムエイド 2026-11-03] 帯(A1)
                 showpermission:false,
                 status: "day",
+                csMail: null, // [カスタムエイド 2026-11-03] 予約受付用メールアドレスの状態
+                csMailOn: true, // [カスタムエイド 2026-11-03] メールで受け付けているか
+                csCh: null, // [カスタムエイド 2026-11-03] 受け付ける方法と予約SMS の残り
                 setting: false, //设置
                 current: 0,
                 staffId: 0,
@@ -228,6 +255,20 @@
             }
         },
         computed: {
+            // [カスタムエイド 2026-11-03] 予約SMS の残り(SMS オプション契約中だけ)
+            csSms() {
+                const c = this.csCh
+                if (!c || c.opt_sms != 1 || !c.sms_info) return null
+                const i = c.sms_info, m = i.month || 100, left = Number(i.left) || 0, extra = Number(i.extra) || 0
+                if (left <= 0 && extra < 0) return { cls: 'red', text: '予約SMS 今月分を超えています(超過 ' + (-extra) + '通)' }
+                if (left <= 0) return { cls: 'red', text: '予約SMS 今月の残り 0通' + (extra > 0 ? '(追加分 ' + extra + '通)' : '') }
+                return { cls: left / m <= 0.1 ? 'yellow' : '', text: '予約SMS 今月の残り ' + left + '通' }
+            },
+            // [カスタムエイド 2026-11-04 段階9] LINE で受け付けている(line_on)のに、予約WEB に出していない(line=0)= 今月の上限(設定の解除のときは line_on も 0 になる)
+            csLineOver() {
+                const c = this.csCh
+                return !!(c && c.opt_line == 1 && c.line_on == 1 && c.line == 0)
+            },
             // ===== [カスタムエイド 2026-10-19] 日付の帯・スライド =====
             headPanes() {
                 let base = this.sundayOf(this.dDate)
@@ -294,6 +335,11 @@
         onShow() {
             let that = this
             that.csNotice = uni.getStorageSync('csNotice') || null // [カスタムエイド 2026-11-03] 帯
+            csReserveMail().then((res) => { if (res.code == 200) that.csMail = res.data }).catch(() => {}) // [カスタムエイド 2026-11-03] 予約受付用メールアドレスの知らせ
+            csReserveCh().then((res) => {
+                that.csMailOn = !(res.code == 200 && res.data && res.data.mail == 0) // [カスタムエイド 2026-11-03] メールをオフにしたお店は、アドレスの登録は不要
+                that.csCh = res.code == 200 ? res.data : null // [カスタムエイド 2026-11-03] 予約SMS の残り
+            }).catch(() => {})
             // that.dDate = that.getToday()
             that.getLists()
            let ding = uni.getSystemInfoSync().statusBarHeight
@@ -333,6 +379,20 @@
                         }
                     }
                 }).catch(() => { uni.hideLoading() })
+            },
+            // [カスタムエイド 2026-11-03] 枠の種類:'ext' 外部の予約 / 'off' お休み・休憩・勤務時間外(枠の線なし)/ 'order' ふつうの予約(実線の枠)
+            csKind(v) {
+                if (v && v.cs_ext == 1) return 'ext'
+                if (!v || (!v.cate_name && (!v.name || v.name == 'お休み' || v.name == '休憩・勤務時間外'))) return 'off'
+                return 'order'
+            },
+            // [カスタムエイド 2026-11-03] 予約SMS の残りを押したとき:ご利用状況へ
+            toUsage() {
+                uni.navigateTo({ url: '../accounts/usage/usage' })
+            },
+            // [カスタムエイド 2026-11-03] 知らせを押したとき:予約Webサイトの画面へ
+            toWebSite() {
+                uni.navigateTo({ url: "../outAppoint/outAppoint" })
             },
             toout(){
               uni.navigateTo({
@@ -567,6 +627,9 @@
                                     t.duration = value.m / 60
                                     t.name = value.name || (value.cate_name ? '' : '休憩・勤務時間外') // [カスタムエイド 2026-10-22] 名前のない枠(今までの休憩・勤務時間外)
                                     t.event = value.cate_name
+                                    // [カスタムエイド 2026-11-03] 外部の予約:予約元とお客様名を名前に、メニュー(自由に入力)を下の行に
+                                    t.kind = that.csKind(value)
+                                    if (t.kind == 'ext') { t.name = (value.cs_ext_src || '外部') + (value.name ? ' ' + value.name + ' 様' : ''); t.event = value.cs_ext_menu || '' }
                                     t.id = value.id
                                     t.appoint_said = value.appoint_said
                                     obj.events.push(t)
@@ -691,8 +754,9 @@
                                         start: value.start_time,
                                         end: value.end_time,
                                         duration: value.m / 60,
-                                        name: value.name || (value.cate_name ? '' : '休憩・勤務時間外'), // [カスタムエイド 2026-10-22] 名前のない枠(今までの休憩・勤務時間外)
-                                        event: value.cate_name,
+                                        name: that.csKind(value) == 'ext' ? (value.cs_ext_src || '外部') + (value.name ? ' ' + value.name + ' 様' : '') : (value.name || (value.cate_name ? '' : '休憩・勤務時間外')), // [カスタムエイド 2026-10-22] 名前のない枠(今までの休憩・勤務時間外)/[カスタムエイド 2026-11-03] 外部の予約
+                                        event: that.csKind(value) == 'ext' ? (value.cs_ext_menu || '') : value.cate_name,
+                                        kind: that.csKind(value),
                                         id: value.id,
                                         appoint_said: value.appoint_said
                                     })
@@ -1230,4 +1294,17 @@
     .cs-tile {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 予約受付用メールアドレスの知らせ */
+    .cs-mailnote { display: flex; align-items: center; margin: 16rpx 24rpx 0; padding: 20rpx 24rpx; border-radius: 20rpx; box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10); }
+    .cs-mailnote.red { background: #FCE8E6; color: #B3261E; }
+    .cs-mailnote.warn { background: #FFF4E5; color: #8A4B00; }
+    .cs-mailnote-t { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 24rpx; line-height: 1.6; }
+    .cs-mailnote-b { font-size: 26rpx; font-weight: 700; }
+    .cs-mailnote-go { flex-shrink: 0; margin-left: 16rpx; font-size: 26rpx; font-weight: 700; }
+    /* [カスタムエイド 2026-11-03] 予約SMS の残り */
+    .cs-smsrow { padding: 0 24rpx; margin-top: 16rpx; }
+    .cs-sms { display: inline-flex; align-items: center; font-size: 24rpx; font-weight: 700; color: #1D1D1F; background: #FFFFFF; border: 1px solid #E5E5EA; border-radius: 20rpx; padding: 10rpx 20rpx; box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10); }
+    .cs-sms.yellow { background: #FFF4E5; color: #8A4B00; border-color: #FFE0B2; }
+    .cs-sms.red { background: #FCE8E6; color: #B3261E; border-color: #F6C7C2; }
+    .cs-sms-i { width: 32rpx; height: 32rpx; margin-right: 10rpx; }
 </style>

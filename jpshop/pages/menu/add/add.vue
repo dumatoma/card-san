@@ -7,7 +7,7 @@
     <view class="mf">
         <u-navbar title="メニュー登録" :placeholder="true" :border="true" :autoBack="true" :safeAreaInsetTop="true" bgColor="#FBFBFD">
             <view class="u-nav-slot" slot="right">
-                <image src="../../../static/svg/pre.svg" style="width: 50upx;height: 50upx;" @click="showPop = true" mode=""></image>
+                <text class="cs-pv" @click="showPop = true">プレビュー</text><!-- [カスタムエイド 2026-11-03] 目のアイコン→青い文字の「プレビュー」(お知らせ・クーポンと同じ) -->
             </view>
         </u-navbar>
         <view class="mf-body">
@@ -99,33 +99,30 @@
                     メニュー
                 </view>
             </view>
-            <view class="pContent">
-                <view class="pDetail">
-                    <view class="dLeft">
-                        <view class="dTop">
-                            {{title || 'メニュータイトル・予約なしの場合'}}
-                        </view>
-                        <view class="dBottom">
-                            <view class="dPrice">
-                                {{price || '価格'}}<!-- [カスタムエイド 2026-10-21] 価格はお店が書いたまま(以前は先頭に ￥ を付けていたので「￥9,000円」になった) -->
-                            </view>
-                            <view class="dTime">
-                                所要時間：{{time}}分
+            <!-- [カスタムエイド 2026-11-03] プレビューを Card-San App のメニュー(最新)と同じ作りに(jpcard pagesA/menu/menu.vue から写した) -->
+            <view class="cs-mp">
+                <view class="cs-mp-item">
+                    <view class="cs-mp-row">
+                        <view class="cs-mp-radio" v-if="appoint"></view>
+                        <view class="cs-mp-mid">
+                            <view class="cs-mp-tit">{{title || 'メニュータイトル'}}</view>
+                            <view class="cs-mp-pri">
+                                <text class="cs-mp-pl">{{price || '価格'}}</text>
+                                <text v-if="appoint">　・　所要時間 {{time}}分</text>
                             </view>
                         </view>
+                        <image class="cs-mp-heart" src="../../../static/icons/cs_love.png" mode=""></image>
                     </view>
-                    <view class="dRight">
-                        <image class="dr" src="../../../static/icons/collection.png" mode=""></image>
-                    </view>
-                </view>
-                <view class="dc">
-                    <view class="dcLeft">
-                        <view class="imageCotent">
-                            <image class="album" src="../../../static/icons/album.png" mode=""></image>
-                            <image style="width: 100%;height: 100%;" :src="array[0]" mode="aspectFill"></image>
+                    <view class="cs-mp-btm" v-if="array.length > 0 || details">
+                        <view class="cs-mp-pic" v-if="array.length > 0">
+                            <image :src="array[0]" mode="aspectFill" class="cs-mp-img"></image>
+                            <view class="cs-mp-count" v-if="array.length > 1">
+                                <image src="../../../static/svg/multiPhoto.svg" class="cs-mp-ci"></image>
+                                <text class="cs-mp-cn">{{array.length}}</text>
+                            </view>
                         </view>
+                        <view class="cs-mp-des">{{details}}</view>
                     </view>
-                    <view class="dcRight" v-text="details"></view>
                 </view>
             </view>
         </u-popup>
@@ -808,4 +805,23 @@
     .mf-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 右上の「プレビュー」(お知らせ・クーポンと同じ青い文字) */
+    .cs-pv { font-size: 30rpx; color: #1A73E8; padding: 0 8rpx; }
+    /* [カスタムエイド 2026-11-03] メニューのプレビュー:Card-San App のメニュー(最新)と同じ見た目 */
+    .cs-mp { background: #F5F5F7; padding: 32rpx 24rpx calc(48rpx + env(safe-area-inset-bottom)); }
+    .cs-mp-item { background: #FFFFFF; border: 1px solid #E8E8ED; border-radius: 24rpx; box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08); padding: 28rpx; }
+    .cs-mp-row { display: flex; justify-content: space-between; align-items: flex-start; }
+    .cs-mp-radio { flex-shrink: 0; width: 32rpx; height: 32rpx; border-radius: 50%; border: 2rpx solid #707070; box-sizing: border-box; margin: 6rpx 24rpx 0 0; }
+    .cs-mp-mid { flex: 1; min-width: 0; }
+    .cs-mp-tit { font-size: 32rpx; font-weight: 700; line-height: 1.4; color: #1D1D1F; margin-bottom: 8rpx; }
+    .cs-mp-pri { font-size: 26rpx; line-height: 1.4; color: #6E6E73; }
+    .cs-mp-pl { font-size: 28rpx; font-weight: 600; color: #1D1D1F; }
+    .cs-mp-heart { flex-shrink: 0; margin-left: 16rpx; width: 56rpx; height: 56rpx; }
+    .cs-mp-btm { margin-top: 20rpx; display: flex; }
+    .cs-mp-pic { position: relative; flex-shrink: 0; margin-right: 24rpx; width: 208rpx; height: 208rpx; }
+    .cs-mp-img { width: 208rpx; height: 208rpx; border-radius: 16rpx; background: #F5F5F7; }
+    .cs-mp-count { position: absolute; right: 12rpx; bottom: 12rpx; height: 44rpx; padding: 0 14rpx; border-radius: 22rpx; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; }
+    .cs-mp-ci { width: 24rpx; height: 24rpx; margin-right: 8rpx; }
+    .cs-mp-cn { color: #FFFFFF; font-size: 24rpx; }
+    .cs-mp-des { color: #3A3A3C; font-size: 26rpx; line-height: 1.6; flex: 1; min-width: 0; white-space: pre-line; }
 </style>

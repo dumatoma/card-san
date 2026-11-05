@@ -11,8 +11,7 @@
                 </view>
             </view>
             <view class="u-nav-slot" slot="right">
-                <image src="../../static/icons/preview.svg" style="width: 50upx;height: 50upx;" @click="showPopup = true"
-                    mode=""></image>
+                <text class="cs-pv" @click="showPopup = true">プレビュー</text><!-- [カスタムエイド 2026-11-03] 目のアイコン→青い文字の「プレビュー」(お知らせ・クーポンと同じ) -->
             </view>
         </u-navbar>
 
@@ -72,7 +71,7 @@
                 </view>
                 <view class="preTitle">
                     <view class="iconLeft"><image src="../../static/icons/menu1.png" mode=""></image></view>
-                    <view class="iconMiddle">CARD BOX</view>
+                    <view class="iconMiddle">Card-San</view><!-- [カスタムエイド 2026-11-03] CARD BOX → Card-San(坂本さん) -->
                     <view class="iconRight"><image src="../../static/icons/heart.png" mode=""></image></view>
                 </view>
                 <view class="preContent">
@@ -538,4 +537,9 @@
     .ic-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 右上の「プレビュー」(お知らせ・クーポンと同じ青い文字) */
+    .cs-pv { font-size: 30rpx; color: #1A73E8; padding: 0 8rpx; }
+    /* [カスタムエイド 2026-11-03] プレビューのカードを、Card-San App の TOP(My Card)と同じ角丸・影・店名の太さに */
+    .ic-pv .preContent .preItem .preImage { border-radius: 10rpx; box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10); }
+    .ic-pv .preContent .preItem .preName { font-weight: 600; }
 </style>

@@ -12,7 +12,7 @@
                 <view class="dt-cre" v-if="info.create_time">受付 {{ info.create_time }}</view>
             </view>
 
-            <view class="dt-card" v-if="!isOff">
+            <view class="dt-card" v-if="!isOff && !isExt"><!-- [カスタムエイド 2026-11-03] 外部の予約はお客様の欄を出さない -->
                 <view class="dt-row">
                     <view class="dt-lab">氏名</view>
                     <view class="dt-val dt-link">{{ info.name || 'ー' }}</view>
@@ -21,7 +21,7 @@
                     <view class="dt-lab">電話番号</view>
                     <view class="dt-val">{{ info.phone || 'ー' }}</view>
                 </view>
-                <cs-contact :contact="info.contact || ''" :email="info.email || ''"></cs-contact> <!-- [カスタムエイド 2026-10-31] 連絡方法・メール(予約内容と同じ部品) -->
+                <cs-contact :contact="info.contact || ''" :email="info.email || ''" :ng="info.cs_line == 'ng'"></cs-contact> <!-- [カスタムエイド 2026-10-31] 連絡方法・メール(予約内容と同じ部品) -->
                 <view class="dt-row">
                     <view class="dt-lab">会員ID</view>
                     <view class="dt-val dt-gray">{{ info.member_id || 'ー' }}</view>
@@ -32,8 +32,28 @@
                 </view>
             </view>
 
+            <!-- [カスタムエイド 2026-11-03] 外部の予約 -->
+            <view class="dt-card" v-if="isExt">
+                <view class="dt-row">
+                    <view class="dt-lab">予約元</view>
+                    <view class="dt-val"><text class="cs-xtag">外部</text>{{ info.cs_ext_src || 'ー' }}</view>
+                </view>
+                <view class="dt-row">
+                    <view class="dt-lab">お客様名</view>
+                    <view class="dt-val">{{ info.name ? info.name + ' 様' : 'ー' }}</view>
+                </view>
+                <view class="dt-row">
+                    <view class="dt-lab">予約番号</view>
+                    <view class="dt-val dt-gray">{{ info.order_no }}</view>
+                </view>
+            </view>
+            <view class="cs-extnote" v-if="isExt">外部の予約です。お客様へのメール・SMS・アプリのお知らせは送りません。</view>
+
             <view class="dt-sec">メニュー</view>
-            <view class="dt-card dt-pad">
+            <view class="dt-card dt-pad" v-if="isExt">
+                <view class="dt-mt">{{ info.cs_ext_menu || '外部の予約' }}</view>
+            </view>
+            <view class="dt-card dt-pad" v-else>
                 <view class="dt-mt" :class="{ 'dt-red': isOff && offName == 'お休み', 'dt-green': isOff && offName != 'お休み' }">{{ isOff ? offName : (info.menu ? info.menu.title : '') }}</view>
                 <view class="dt-ms" v-if="!isOff && info.menu">所要時間 {{ info.menu.order_time }}分<text class="dt-price" v-if="info.menu.price">{{ info.menu.price }}</text></view>
             </view>
@@ -127,7 +147,10 @@
         computed: {
             // [カスタムエイド 2026-10-22] メニューのない予約 = お休み・休憩・勤務時間外
             isOff() {
-                return !!(this.info && this.info.id) && !this.info.menu
+                return !!(this.info && this.info.id) && !this.info.menu && !this.isExt // [カスタムエイド 2026-11-03] 外部の予約は除く
+            },
+            isExt() {
+                return !!(this.info && this.info.cs_ext == 1) // [カスタムエイド 2026-11-03]
             },
             offName() {
                 return this.info.name == 'お休み' ? 'お休み' : '休憩・勤務時間外'
@@ -364,4 +387,7 @@
     .dt-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 外部の予約 */
+    .cs-xtag { display: inline-block; font-size: 20rpx; font-weight: 700; color: #FFFFFF; background: #1D1D1F; border-radius: 6rpx; padding: 0 8rpx; margin-right: 8rpx; line-height: 1.6; vertical-align: middle; }
+    .cs-extnote { margin: 20rpx 0 0; padding: 20rpx 24rpx; border-radius: 20rpx; background: #F2F2F7; color: #3A3A3C; font-size: 24rpx; line-height: 1.7; }
 </style>

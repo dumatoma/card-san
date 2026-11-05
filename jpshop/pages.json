@@ -1061,6 +1061,16 @@
             
         }
         ,{
+            "path" : "pages/accounts/usage/usage", // [カスタムエイド 2026-11-03] 段階8-2:ご利用状況
+            "style" :
+            {
+                "navigationStyle": "custom",
+                "navigationBarTitleText": "ご利用状況",
+                "enablePullDownRefresh": false,
+                "app-plus": { "titleNView": false }
+            }
+        }
+        ,{
             "path" : "pages/pautextr/pautextr",
             "style" :                                                                                    
             {
@@ -1168,6 +1178,14 @@
                 "enablePullDownRefresh": false
             }
             
+        },
+        {
+            "path" : "pages/outAppoint/lineSetting", // [カスタムエイド 2026-11-04 段階9] LINE予約の設定(鍵の表示・設定を解除する)
+            "style" :
+            {
+                "navigationStyle": "custom",
+                "enablePullDownRefresh": false
+            }
         },
         {
             "path" : "pages/accounts/breakoff/breakoff",

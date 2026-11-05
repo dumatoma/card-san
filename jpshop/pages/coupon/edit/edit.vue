@@ -2,8 +2,7 @@
     <view class="contain border_top">
         <u-navbar :placeholder='true' title="クーポン編集" :autoBack="true" :border="true" :safeAreaInsetTop="true">
             <view class="u-nav-slot" slot="right">
-                <image src="../../../static/svg/pre.svg" style="width: 60upx;height: 60upx;" @click="show3 = true" mode="">
-                </image>
+                <text class="cs-pv" @click="show3 = true">プレビュー</text> <!-- [カスタムエイド 2026-11-03] 目玉のアイコン → 青い文字「プレビュー」 -->
             </view>
         </u-navbar>
         <view class="topImage">
@@ -130,45 +129,41 @@
                     <image class="closee" src="../../../static/icons/tclose.png" mode="" @click="show3 = false"></image>
                     <view>プレビュー</view>
                 </view>
-                <u-swiper :list="info.banner"height="251" indicator :autoplay="false" indicatorMode="dot"
-                    indicatorActiveColor='#000' indicatorInactiveColor="rgba(0,0,0,.3)"></u-swiper>
-                <view class="popInfo">
-                    <view class="cId">
-                        クーポン番号
+                <!-- [カスタムエイド 2026-11-03] プレビューを Card-San App のクーポン詳細(最新)と同じ並び・見た目に(jpcard pagesA/couponDetail から写した) -->
+                    <view class="cs-cp">
+                        <view class="cs-cp-img" v-if="info.banner.length">
+                            <swiper class="cs-cp-sw" @change="cpIdx = $event.detail.current">
+                                <swiper-item v-for="(u, i) in info.banner" :key="i"><image class="cs-cp-im" :src="u" mode="aspectFill"></image></swiper-item>
+                            </swiper>
+                            <view class="cs-cp-count" v-if="info.banner.length > 1">{{cpIdx + 1}} / {{info.banner.length}}</view>
+                        </view>
+                        <view class="cs-cp-tit">クーポン番号<view class="cs-cp-sn">{{info.number || '-'}}</view></view>
+                        <view class="cs-cp-ma" v-if="info.value3">
+                            <image class="cs-cp-bar" src="../../../static/images/ITF.png" mode="aspectFit"></image>
+                            <view class="cs-cp-masn">(バーコードはお客様ごとに付きます)</view>
+                        </view>
+                        <view class="cs-cp-ps" v-if="false">
+                            <view class="cs-cp-slide"><text class="cs-cp-slide-t">スライドして使う</text><view class="cs-cp-knob">›</view></view>
+                            <view class="cs-cp-hint">お店のスタッフの前で操作してください。<br />使うとバーコードが出ます(使う前は出ません)。</view>
+                        </view>
+                        <view class="cs-cp-box">
+                            <view class="cs-cp-title">{{info.title || 'タイトル'}}</view>
+                            <view class="cs-cp-des" v-if="info.detail">{{info.detail}}</view>
+                        </view>
+                        <view class="cs-cp-itm">
+                            <view class="cs-cp-vb">有効期限</view>
+                            <view class="cs-cp-v" v-if="info.value">{{info.endDate}}まで有効</view>
+                            <view class="cs-cp-v" v-else>無期限のクーポンです</view>
+                        </view>
+                        <view class="cs-cp-bz" v-if="info.value2 && info.count">
+                            <view class="cs-cp-bb">利用回数</view>
+                            <view class="cs-cp-b">残り{{info.count}}回</view>
+                        </view>
+                        <view class="cs-cp-bz" v-if="info.remark">
+                            <view class="cs-cp-bb">備考</view>
+                            <view class="cs-cp-b">{{info.remark}}</view>
+                        </view>
                     </view>
-                    <view class="cNum" v-text="info.number"></view>
-                    <view class="cCode" v-if="info.value3">
-                        <image src="../../../static/images/ITF.png" mode=""></image>
-                    </view>
-                    <view class="cNumber" v-if="info.value3">95268723536355</view>
-                </view>
-                <view style="width: 100%;height: 44upx;border-bottom: 2upx solid #d2d2d7;"></view>
-                <view class="pContents">
-                    <view class="pcTitle" v-text="info.title"></view>
-                    <view class="pcContent" v-text="info.detail"></view>
-                </view>
-                <view class="pcItem" v-if="info.value">
-                    <view class="pcTop ac">
-                        有効期限
-                    </view>
-                    <view>
-                        {{info.startDate}} ~ {{info.endDate}}
-                    </view>
-                </view>
-                <view class="pcItem" v-if="info.value2">
-                    <view class="pcTop">
-                        利用回数
-                    </view>
-                    <view>
-                        残り{{info.count}}回
-                    </view>
-                </view>
-                <view class="pcItem">
-                    <view class="pcTop">
-                        　備考　
-                    </view>
-                    <view v-text="info.remark"></view>
-                </view>
             </view>
         </u-popup>
         <view class="mask" v-if="alerts" @click="alerts = false">
@@ -191,6 +186,7 @@
                 show1: false,
                 show2: false,
                 show3: false,
+                cpIdx: 0, // [カスタムエイド 2026-11-03] プレビューの画像の今の位置
                 dateType: 0,
                 alerts:false,
                 query:{},
@@ -813,4 +809,30 @@
             }
         }
     }
+    /* [カスタムエイド 2026-11-03] クーポンのプレビュー:Card-San App のクーポン詳細(最新)と同じ見た目 */
+    .cs-cp { background: #FFFFFF; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+    .cs-cp-img { position: relative; }
+    .cs-cp-sw { width: 100%; height: 500rpx; }
+    .cs-cp-im { width: 100%; height: 500rpx; }
+    .cs-cp-count { position: absolute; right: 24rpx; bottom: 24rpx; z-index: 2; padding: 6rpx 20rpx; border-radius: 24rpx; background: rgba(0, 0, 0, 0.6); color: #FFFFFF; font-size: 24rpx; font-weight: 500; letter-spacing: 1rpx; }
+    .cs-cp-tit { text-align: center; font-size: 32rpx; color: #1D1D1F; padding: 24rpx 0 20rpx; border-bottom: 1px solid #D2D2D7; }
+    .cs-cp-sn { font-size: 56rpx; color: #1A73E8; font-weight: 700; margin-top: 4rpx; }
+    .cs-cp-ma { width: 95%; margin: 0 auto; padding: 24rpx 0 28rpx; border-bottom: 1px solid #D2D2D7; text-align: center; }
+    .cs-cp-bar { width: 500rpx; height: 160rpx; }
+    .cs-cp-masn { margin-top: 10rpx; font-size: 26rpx; color: #6E6E73; }
+    .cs-cp-ps { padding: 8rpx 32rpx 40rpx; border-bottom: 1px solid #D2D2D7; }
+    .cs-cp-slide { position: relative; height: 120rpx; border-radius: 60rpx; background: #FCE8E6; overflow: hidden; margin-top: 16rpx; }
+    .cs-cp-slide-t { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; color: #D93025; font-weight: 700; font-size: 30rpx; padding-left: 60rpx; }
+    .cs-cp-knob { position: absolute; left: 10rpx; top: 10rpx; width: 100rpx; height: 100rpx; border-radius: 50%; background: #D93025; color: #FFFFFF; font-size: 48rpx; display: flex; align-items: center; justify-content: center; box-shadow: 0 4rpx 10rpx rgba(217, 48, 37, 0.35); }
+    .cs-cp-hint { font-size: 24rpx; color: #8A8A8E; text-align: center; line-height: 1.6; margin-top: 16rpx; }
+    .cs-cp-box { padding: 28rpx 32rpx; border-bottom: 1px solid #D2D2D7; }
+    .cs-cp-title { color: #1D1D1F; font-weight: 700; font-size: 32rpx; margin-bottom: 16rpx; }
+    .cs-cp-des { font-size: 30rpx; color: #707070; line-height: 1.6; white-space: pre-line; }
+    .cs-cp-itm, .cs-cp-bz { padding: 28rpx 32rpx; border-bottom: 1px solid #D2D2D7; }
+    .cs-cp-vb, .cs-cp-bb { width: 152rpx; height: 52rpx; line-height: 52rpx; font-size: 28rpx; text-align: center; border-radius: 20rpx; margin-bottom: 16rpx; box-sizing: border-box; }
+    .cs-cp-vb { color: #1A73E8; border: 2rpx solid #1A73E8; }
+    .cs-cp-bb { color: #707070; background: #F5F5F7; border: 2rpx solid #707070; }
+    .cs-cp-v { color: #1D1D1F; font-size: 32rpx; font-weight: 700; }
+    .cs-cp-b { font-size: 30rpx; color: #1D1D1F; line-height: 1.6; white-space: pre-line; }
+    .cs-pv { font-size: 30rpx; color: #1A73E8; padding: 0 8rpx; }
 </style>

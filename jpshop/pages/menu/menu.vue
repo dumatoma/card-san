@@ -6,10 +6,7 @@
     <view class="mn">
         <u-navbar title="メニュー" :placeholder="true" :border="true" :autoBack="false" @leftClick="goBack"
             :safeAreaInsetTop="true" bgColor="#FBFBFD">
-            <view class="u-nav-slot" slot="right">
-                <image src="../../static/svg/addblue.svg" style="width: 60upx;height: 60upx;" @click="add" mode="">
-                </image>
-            </view>
+            <!-- [カスタムエイド 2026-11-03] 右上の(+)は消した(下の大きい追加ボタンがあるため。坂本さん) -->
         </u-navbar>
         <view class="mn-chips-wrap">
             <scroll-view class="mn-chips" scroll-x>

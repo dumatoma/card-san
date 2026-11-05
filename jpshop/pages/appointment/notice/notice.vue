@@ -15,7 +15,7 @@
                 <view class="nc-card" :class="{ unread: item.is_read == 0 }" @click.stop="toDetail(item,index)">
                     <view class="nc-top">
                         <view class="nc-dot" v-if="item.is_read == 0"></view>
-                        <cs-contact class="nc-ct" mode="icon" :contact="item.contact || ''"></cs-contact> <!-- [カスタムエイド 2026-10-31] 連絡のしかた(アプリ・メール・LINE・SMS) -->
+                        <cs-contact class="nc-ct" mode="icon" :contact="item.contact || ''" :ng="item.cs_line == 'ng'"></cs-contact> <!-- [カスタムエイド 2026-10-31] 連絡のしかた(アプリ・メール・LINE・SMS) -->
                         <view class="nc-title">{{ item.title }}</view>
                         <view class="nc-time">{{ item.create_time }}</view>
                     </view>

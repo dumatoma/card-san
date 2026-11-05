@@ -5,10 +5,7 @@
          ・「スタッフ追加」の大きいボタン(右上の+も残す) -->
     <view class="sf">
         <u-navbar :border="true" :placeholder='true' title="スタッフ" :autoBack="false" @leftClick = "goBack" :safeAreaInsetTop="true" bgColor="#FBFBFD">
-            <view class="u-nav-slot" slot="right">
-                <image src="../../../static/icons/addB.png" style="width: 60upx;height: 60upx;" @click="toAddnew"
-                    mode=""></image>
-            </view>
+            <!-- [カスタムエイド 2026-11-03] 右上の(+)は消した(下の大きい追加ボタンがあるため。坂本さん) -->
         </u-navbar>
         <view class="sf-body">
             <view class="sf-add" hover-class="sf-btn-hover" @click="toAddnew">

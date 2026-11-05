@@ -7,8 +7,8 @@
         <view class="bs-body">
             <view class="bs-card">
                 <view class="bs-row" hover-class="bs-hover" @click="toOut">
-                    <view class="bs-row-t">予約ページのURL(外部リンク)</view>
-                    <view class="bs-chev"></view>
+                    <view class="bs-row-t">予約Webサイト</view><!-- [カスタムエイド 2026-11-03] 「予約ページのURL(外部リンク)」→「予約Webサイト」(URL・メール・SMS・LINE の設定) -->
+                    <view class="bs-row-r"><text class="bs-need" v-if="csNeed">要設定</text><view class="bs-chev"></view></view>
                 </view>
             </view>
 
@@ -51,7 +51,9 @@
         getShopInfo,
         getStaffList,
         setPoint,
-        setStaffAppointInfo
+        setStaffAppointInfo,
+        csReserveMail,
+        csReserveCh
     } from '@/api/index.js'
     export default {
         name: "add",
@@ -62,12 +64,17 @@
             return {
                 value: false,
                 manager: [],
-                no_appoint:0
+                no_appoint:0,
+                csNeed: false // [カスタムエイド 2026-11-03] 予約受付用メールアドレスが未登録・確認待ち
             };
         },
         created() {
             this.getShopInfo()
             this.getStaffList()
+            csReserveMail().then((res) => {
+                const need = res.code == 200 && res.data && res.data.need == 1
+                csReserveCh().then((r2) => { this.csNeed = need && !(r2.code == 200 && r2.data && r2.data.mail == 0) }).catch(() => { this.csNeed = need })
+            }).catch(() => {}) // [カスタムエイド 2026-11-03] メールをオフにしたお店は「要設定」を出さない
         },
         methods: {
             openZ(){
@@ -290,4 +297,7 @@
     .bs-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 要設定 */
+    .bs-row-r { display: flex; align-items: center; }
+    .bs-need { font-size: 22rpx; font-weight: 700; color: #B3261E; background: #FCE8E6; padding: 6rpx 16rpx; border-radius: 20rpx; margin-right: 16rpx; }
 </style>

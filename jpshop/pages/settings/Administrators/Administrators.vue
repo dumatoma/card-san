@@ -4,10 +4,7 @@
          ・削除はゴミ箱のボタン(横スワイプはやめた)。「副管理者を追加」の大きいボタン(右上の+も残す) -->
     <view class="ad">
         <u-navbar :border="true" :placeholder='true' :autoBack="true" title="副管理者一覧" :safeAreaInsetTop="true" bgColor="#FBFBFD">
-            <view class="u-nav-slot" slot="right">
-                <image src="../../../static/svg/addblue.svg" style="width: 60upx;height: 60upx;" @click="toAddnew"
-                    mode=""></image>
-            </view>
+            <!-- [カスタムエイド 2026-11-03] 右上の(+)は消した(下の大きい追加ボタンがあるため。坂本さん) -->
         </u-navbar>
         <view class="ad-body">
             <view class="ad-btn ad-add" hover-class="ad-btn-hover" @click="toAddnew"><text class="ad-plus">+</text>副管理者を追加</view>

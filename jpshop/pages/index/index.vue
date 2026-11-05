@@ -8,8 +8,10 @@
                 <view class="shopName" v-text="shopInfo.shop_name"></view>
                 <view class="shopId" v-if="admin.admin_type == 1" v-text="`ID:${admin.email}`"></view>
                 <view class="shopId" v-if="admin.admin_type != 1" v-text="`ID:${admin.phone}`"></view>
-                <view class="shopId">
-                    ご利用プラン：{{shopInfo.vip.type==2?'スタンダード':shopInfo.vip.type == 1? 'ライト' : shopInfo.vip.type == 3? 'プレミアム' : ''}}
+                <!-- [カスタムエイド 2026-11-03] 「プラン:〇〇」に短くし、同じ行に「ご利用状況 ›」(押すとご利用状況) -->
+                <view class="shopId cs-planrow">
+                    <text>プラン：{{shopInfo.vip.type==2?'スタンダード':shopInfo.vip.type == 1? 'ライト' : shopInfo.vip.type == 3? 'プレミアム' : ''}}</text>
+                    <text class="cs-usage-link" @click.stop="toUsage">ご利用状況 ›</text>
                 </view>
             </view>
             <view class="logouts">
@@ -758,6 +760,10 @@
             },
             toContract() { // [カスタムエイド 2026-11-03] 全面のお知らせの「契約内容を見る」
                 uni.navigateTo({ url: "/pages/accounts/contract/contract" })
+            },
+            // [カスタムエイド 2026-11-03] ご利用状況(副管理者も見られる)
+            toUsage() {
+                uni.navigateTo({ url: '../accounts/usage/usage' })
             },
             tobuyplan(e) {
                 if (this.admin_type == 1) {
@@ -1781,4 +1787,7 @@
         background: #fff;
         margin: 30upx 0 60upx;
     }
+    /* [カスタムエイド 2026-11-03] TOP の「プラン:〇〇　ご利用状況 ›」 */
+    .cs-planrow { display: flex; align-items: center; }
+    .cs-usage-link { color: #1A73E8; font-weight: 600; margin-left: 20rpx; }
 </style>

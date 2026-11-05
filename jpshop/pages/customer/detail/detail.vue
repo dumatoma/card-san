@@ -30,6 +30,11 @@
                     <text class="md-link-val blue">{{userInfo.card_name || '-'}}</text>
                     <view class="md-chev"></view>
                 </view>
+                <!-- [カスタムエイド 2026-11-03] 他社のバーコード番号(他社のバーコードのカードのときだけ)。ここでは見るだけ。変えるのは右上の「編集」から -->
+                <view class="md-link cs-ext" v-if="userInfo.cs_ext_bc_type > 0">
+                    <text class="md-link-name">他社のバーコード番号</text>
+                    <text class="md-link-val" :class="{ 'cs-ext-none': !userInfo.cs_ext_bc_value }">{{userInfo.cs_ext_bc_value || '未登録'}}</text>
+                </view>
             </view>
 
             <view class="md-card">
@@ -637,4 +642,7 @@
     .md-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 他社のバーコード番号(見るだけ) */
+    .cs-ext .md-link-val { letter-spacing: 1rpx; }
+    .cs-ext .md-link-val.cs-ext-none { color: #8A8A8E; }
 </style>

@@ -15,8 +15,7 @@
                 </view>
             </view>
             <view class="u-nav-slot" slot="right">
-                <image src="../../static/icons/preview.svg" style="width: 50upx;height: 50upx;"
-                    @click="showPopup = true" mode=""></image>
+                <text class="cs-pv" @click="showPopup = true">プレビュー</text><!-- [カスタムエイド 2026-11-03] 目のアイコン→青い文字の「プレビュー」(お知らせ・クーポンと同じ) -->
             </view>
         </u-navbar>
 
@@ -129,9 +128,10 @@
             <!-- ポイント付与設定(ポイントカード) -->
             <block v-if="type == 3">
                 <view class="cf-h3">ポイント付与設定</view>
+                <!-- [カスタムエイド 2026-11-03] 並び:設定する → 設定・表示しない → 他社のバーコードを表示する(新)。他社のバーコードかどうかは作成後は変えられない -->
                 <view class="cf-card">
-                    <view class="cf-opt" :class="{ on: use }">
-                        <view class="cf-opt-head" @click="use = true">
+                    <view class="cf-opt" :class="{ on: use, off: isEdit && extType > 0 }">
+                        <view class="cf-opt-head" @click="pickPt('point')">
                             <view class="cf-radio" :class="{ on: use }"></view>
                             <text>設定する</text>
                         </view>
@@ -149,13 +149,28 @@
                             <text class="cf-sub">例:100円ごとに1ポイント → 5,000円で50ポイント</text>
                         </view>
                     </view>
-                    <view class="cf-opt" :class="{ on: !use }">
-                        <view class="cf-opt-head" @click="use = false">
-                            <view class="cf-radio" :class="{ on: !use }"></view>
+                    <view class="cf-opt" :class="{ on: !use && !extType, off: isEdit && extType > 0 }">
+                        <view class="cf-opt-head" @click="pickPt('none')">
+                            <view class="cf-radio" :class="{ on: !use && !extType }"></view>
                             <text>設定・表示しない</text>
                         </view>
-                        <text class="cf-opt-note">他社のポイント管理システムをご利用の場合も、こちらを選択してください。</text>
                     </view>
+                    <view class="cf-opt" :class="{ on: !use && extType > 0, off: isEdit && !extType }">
+                        <view class="cf-opt-head" @click="pickPt('ext')">
+                            <view class="cf-radio" :class="{ on: !use && extType > 0 }"></view>
+                            <text>他社のバーコードを表示する</text>
+                        </view>
+                        <text class="cf-opt-note">他社のポイントシステム(レジ)をお使いのときに選びます。お客様のアプリに、そのバーコードが出ます。来店やポイントは他社のシステムで管理してください。</text>
+                        <view class="cf-opt-body" v-if="!use && extType > 0">
+                            <view class="cf-ext-lbl">バーコードの種類</view>
+                            <view class="cf-seg">
+                                <view class="cf-seg-item" :class="{ on: extType == 1 }" @click="pickExt(1)">JAN(13桁・8桁の数字)</view>
+                                <view class="cf-seg-item" :class="{ on: extType == 2 }" @click="pickExt(2)">CODE128(英数字)</view>
+                            </view>
+                            <text class="cf-sub">番号はお客様ごとに、「メンバー編集」で入れます。</text>
+                        </view>
+                    </view>
+                    <text class="cf-sub cf-ext-lock" v-if="isEdit">「他社のバーコードを表示する」かどうかと、バーコードの種類は、作成後は変えられません。変えたいときは、新しいカードを作ってください。</text>
                 </view>
             </block>
 
@@ -310,14 +325,15 @@
                     プレビュー
                 </view>
             </view>
-            <view class="containe">
+            <view class="containe cs-pvn"><!-- [カスタムエイド 2026-11-03] プレビューを Card-San App の会員証(最新)と同じ作りに:薄いグレーの上に白いカード -->
                 <view class="storeName" v-text="shop_name"></view>
                 <view class="userInfo">
                     <view class="userNo">
                         NO:105
                     </view>
+                    <view class="cs-mlbl">会員証</view>
                     <view class="usersName">
-                        山田太郎さん
+                        山田太郎 さん
                     </view>
                     <view class="userCode" v-if="type != 3">
                         <image src="../../static/images/qrcode.png" mode=""></image>
@@ -339,7 +355,10 @@
                 </view>
 
                 <view class="cardInfo">
-                    <view class="cardTitle" style="display: block;text-align: center;border: none;" v-text="name"></view>
+                    <view class="cs-ct">
+                        <view class="cardTitle" style="border: none;" v-text="name"></view>
+                        <view class="cs-chip" v-if="type != 3 && list.length">{{pvSealed}} / {{list.length}}</view>
+                    </view>
                     <!-- 带笑脸的印章 -->
                     <view class="cardY" style="height: auto;" :style="frameCss" v-if="type ==1">
                         <!-- [カスタムエイド 2026-10-20] お客様アプリと同じく、3段以上は高さを2段半に止めて中をスクロール -->
@@ -419,6 +438,12 @@
                             </view>
                         </view>
                     </view>
+                    <view class="cs-prog" v-if="type != 3 && list.length && pvSealed < list.length">
+                        <view class="cs-bar"><view class="cs-bar-i" :style="{ width: (pvSealed / list.length * 100) + '%' }"></view></view>
+                        <text>あと{{list.length - pvSealed}}個{{value2 ? 'で特典' : ''}}</text>
+                    </view>
+                </view>
+                <view class="cardInfo cs-kvcard" v-if="value == true || value1 == true">
                     <view class="cardInfos">
                         <view class="ciItem" v-if="value == true">
                             <view class="ciLeft">
@@ -489,12 +514,13 @@
                     </view>
                 </view>
                 <view class="special" v-if="value2 == true">
+                    <view class="cs-swipe" v-if="banner.length > 0">
+                        <u-swiper :list="banner" height="250" :indicator="false" :radius="0" :autoplay="false" @change="pvBenefit = $event.current"></u-swiper>
+                        <view class="cs-top-count" v-if="banner.length > 1">{{pvBenefit + 1}} / {{banner.length}}</view>
+                    </view>
                     <view class="specialTitle">
                         特 典
                     </view>
-                    <u-swiper :list="banner" height="250" :indicator="true"
-                        indicatorMode="dot" indicatorActiveColor="#000000" indicatorInactiveColor="rgba(0,0,0,.3)" v-if="banner.length > 0">
-                    </u-swiper>
                    <!-- <view class="remark">
                         {{yTitle}}
                     </view> -->
@@ -553,6 +579,7 @@
         },
         data() {
             return {
+                pvBenefit: 0, // [カスタムエイド 2026-11-03] プレビューの特典の画像の位置
                 fk: '',
                 // 今までの画面と同じ値(サーバーに送る形も同じ)
                 background: '#54DBDB',
@@ -580,6 +607,7 @@
                 point: '',
                 amount: '',
                 use: false,
+                extType: 0, // [カスタムエイド 2026-11-03] 他社のバーコード 0:なし 1:JAN 2:CODE128
                 // 枠の画像(新しい機能)
                 CF_ROW: 142, // [カスタムエイド 2026-10-20] 見本のスタンプカードAの1段の高さ(rpx)
                 CF_TR: 72, // [カスタムエイド 2026-10-20] 見本のスタンプカードBの1行の高さ(rpx)
@@ -602,6 +630,7 @@
             }
         },
         computed: {
+            pvSealed() { return (this.list || []).filter(i => i && i.sealed).length }, // [カスタムエイド 2026-11-03] プレビューの「3 / 10」
             isEdit() {
                 return this.mode == 'edit'
             },
@@ -654,6 +683,24 @@
             if (this.isEdit && this.cardId) this.getDetail(this.cardId)
         },
         methods: {
+            // [カスタムエイド 2026-11-03] ポイント付与設定を選ぶ。他社のバーコードかどうかは、編集では変えられない
+            pickPt(m) {
+                const ext = m == 'ext'
+                if (this.isEdit && ext != (this.extType > 0)) {
+                    uni.showToast({ title: '変えたいときは、新しいカードを作ってください。', icon: 'none', duration: 2500 })
+                    return
+                }
+                if (m == 'point') { this.use = true; if (!this.isEdit) this.extType = 0 }
+                else if (m == 'none') { this.use = false; if (!this.isEdit) this.extType = 0 }
+                else { this.use = false; if (!this.extType) this.extType = 1 }
+            },
+            pickExt(n) {
+                if (this.isEdit) {
+                    if (n != this.extType) uni.showToast({ title: '変えたいときは、新しいカードを作ってください。', icon: 'none', duration: 2500 })
+                    return
+                }
+                this.extType = n
+            },
             goBack() {
                 if (this.cpShow) {
                     this.cpShow = false
@@ -684,6 +731,7 @@
                     this.point = c.point
                     this.selfLogo = c.seal_icon
                     this.use = c.is_point != 0
+                    this.extType = (c.cs_ext_bc_type || 0) * 1 // [カスタムエイド 2026-11-03]
                     this.value = c.valid_type != 0
                     this.value1 = c.is_remark != 0
                     this.value2 = c.is_discount != 0
@@ -944,6 +992,7 @@
                 data.is_remark = this.value1 == true ? 1 : 0
                 data.amount = this.amount
                 data.is_point = this.use == true ? 1 : 0
+                data.cs_ext_bc_type = (!this.use && this.extType > 0) ? this.extType : 0 // [カスタムエイド 2026-11-03] 他社のバーコード(サーバーは作るときだけ保存)
                 data.image = this.image
                 data.seal_icon_name = this.fileName
                 // 枠の画像(新しい機能。色でぬるときは空にする)
@@ -2575,4 +2624,40 @@
     .cf-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 右上の「プレビュー」(お知らせ・クーポンと同じ青い文字) */
+    .cs-pv { font-size: 30rpx; color: #1A73E8; padding: 0 8rpx; }
+    /* ===== [カスタムエイド 2026-11-03] プレビュー:Card-San App の会員証(最新)と同じ見た目(jpcard shopDetails.vue の 10-25 の作りを写した) ===== */
+    .cf-pv .cs-pvn { background: #F5F5F7; padding-bottom: 48rpx; }
+    .cf-pv .cs-pvn .userInfo,
+    .cf-pv .cs-pvn .cardInfo,
+    .cf-pv .cs-pvn .appoint,
+    .cf-pv .cs-pvn .special {
+        background: #FFFFFF !important; border-radius: 28rpx; margin: 36rpx 24rpx 0 !important;
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important; border-bottom: none !important; width: auto !important; overflow: hidden;
+    }
+    .cf-pv .cs-pvn .userInfo { padding: 8rpx 0 32rpx !important; }
+    .cf-pv .cs-mlbl { margin-top: 24rpx; text-align: center; font-size: 22rpx; letter-spacing: 4rpx; color: #86868B; }
+    .cf-pv .cs-pvn .cardInfo { padding: 32rpx 28rpx 28rpx !important; }
+    .cf-pv .cs-ct { display: flex; align-items: center; justify-content: space-between; }
+    .cf-pv .cs-ct .cardTitle { flex: 1; min-width: 0; width: auto !important; text-align: left !important; font-weight: 700 !important; font-size: 30rpx !important; padding: 0 !important; }
+    .cf-pv .cs-chip { flex-shrink: 0; margin-left: 16rpx; padding: 6rpx 20rpx; border-radius: 999rpx; background: #EEF4FF; color: #1A73E8; font-size: 24rpx; font-weight: 700; }
+    .cf-pv .cs-pvn .cardY { margin-top: 24rpx !important; border-radius: 20rpx !important; }
+    .cf-pv .cs-prog { display: flex; align-items: center; margin-top: 24rpx; font-size: 24rpx; color: #6E6E73; }
+    .cf-pv .cs-bar { flex: 1; height: 10rpx; border-radius: 10rpx; background: #E5E5EA; overflow: hidden; margin-right: 16rpx; }
+    .cf-pv .cs-bar-i { height: 100%; background: #1A73E8; border-radius: 10rpx; }
+    .cf-pv .cs-pvn .cs-kvcard { padding: 8rpx 32rpx !important; }
+    .cf-pv .cs-kvcard .cardInfos { margin-top: 0 !important; padding: 0 !important; }
+    .cf-pv .cs-kvcard .cardInfos .ciItem { margin-bottom: 0 !important; padding: 24rpx 0; border-bottom: 1px solid #E5E5EA; align-items: flex-start !important; }
+    .cf-pv .cs-kvcard .cardInfos .ciItem:last-child { border-bottom: none; }
+    .cf-pv .cs-kvcard .cardInfos .ciItem .ciLeft { width: 140rpx !important; height: auto !important; line-height: 1.65 !important; background: transparent !important; text-align: left !important; color: #6E6E73 !important; flex-shrink: 0; }
+    .cf-pv .cs-kvcard .cardInfos .ciItem .ciRight { flex: 1; min-width: 0; line-height: 1.65; }
+    .cf-pv .cs-pvn .appoint { padding: 32rpx !important; }
+    .cf-pv .cs-pvn .special { padding: 0 0 8rpx !important; }
+    .cf-pv .cs-swipe { position: relative; }
+    .cf-pv .cs-top-count { position: absolute; right: 20rpx; bottom: 20rpx; padding: 4rpx 16rpx; border-radius: 999rpx; background: rgba(0, 0, 0, 0.55); color: #FFFFFF; font-size: 22rpx; }
+    .cf-pv .cs-pvn .special .specialTitle { width: auto !important; display: inline-block; height: auto !important; line-height: 1.6 !important; padding: 4rpx 22rpx; border-radius: 12rpx !important; font-size: 24rpx !important; font-weight: 700; margin: 28rpx 0 0 32rpx !important; position: static !important; }
+    .cf-pv .cs-pvn .special .remark { padding: 16rpx 32rpx 28rpx !important; font-size: 28rpx !important; line-height: 1.7; white-space: pre-wrap; }
+    /* [カスタムエイド 2026-11-03] 他社のバーコード */
+    .cf-ext-lbl { font-size: 24rpx; font-weight: 600; color: #1D1D1F; margin: 4rpx 0 12rpx; }
+    .cf-ext-lock { display: block; margin-top: 20rpx; }
 </style>

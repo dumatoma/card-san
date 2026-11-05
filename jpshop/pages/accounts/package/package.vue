@@ -57,7 +57,7 @@
             <view class="pk-note">注1)クーポン、メッセージチャットの配信数は、3,000件/月を超過した場合は、3,000件毎に1,200円/月の追加料金が発生します。</view>
             <view class="pk-note">注2)予約SMS送信数は、100件を超過した場合は、100件毎に1,200円/月の追加料金が発生します。</view>
             <!-- [カスタムエイド 2026-11-03] 購入を復元(iPhone だけ)。払ったのにプランが反映されないとき、Apple に聞き直してサーバーへ送り直す -->
-            <view class="pk-restore" v-if="isIos" hover-class="pk-hover" @click="csRestore">購入を復元</view>
+            <view class="pk-restore" v-if="isIos" hover-class="pk-hover" @click="csDeny() || csRestore()">購入を復元</view>
         </view>
 
         <!-- 下に止めておく「このプランで次へ」 -->
@@ -66,7 +66,7 @@
                 <view class="pk-bar-cap">選択中</view>
                 <view class="pk-bar-name">{{list[current] ? list[current].name : '-'}}</view>
             </view>
-            <view class="pk-bar-btn" :class="{ dis: !list[current] }" hover-class="pk-hover" @click="list[current] && ton()">このプランで次へ</view>
+            <view class="pk-bar-btn" :class="{ dis: !list[current] }" hover-class="pk-hover" @click="list[current] && (csDeny() || ton())">このプランで次へ</view>
         </view>
 
         <!-- 各プランの機能一覧 -->
@@ -84,6 +84,7 @@
                 <view class="pk-close" hover-class="pk-hover" @click="show = false">閉じる</view>
             </view>
         </u-popup>
+        <cs-no-perm :show="csNoPerm" @close="csNoPerm = false"></cs-no-perm><!-- [カスタムエイド 2026-11-03] 副管理者 -->
     </view>
 </template>
 
@@ -95,9 +96,12 @@
         csIapRestore
     } from "@/api/index.js"
     import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-11-03]
+    import csNoPerm from "@/components/csNoPerm/csNoPerm.vue" // [カスタムエイド 2026-11-03]
     export default {
+        components: { csNoPerm },
         data() {
             return {
+                csNoPerm: false, // [カスタムエイド 2026-11-03] 副管理者が「次へ」「購入を復元」を押したとき
                 checked: true,
                 show: false,
                 info: {
@@ -133,6 +137,12 @@
             }
         },
         methods: {
+            // [カスタムエイド 2026-11-03] 副管理者はプランを見る・選ぶまで。「次へ」「購入を復元」は「権限がありません」(サーバーでも断る)
+            csDeny() {
+                const a = uni.getStorageSync('admin') || {}
+                if (a.admin_type == 2) { this.csNoPerm = true; return true }
+                return false
+            },
             // [カスタムエイド 2026-11-03] 購入を復元:Apple に残っている購入を受け取り、サーバー(/api/shop/cs/iap/restore)で確かめて反映する
             csRestore() {
                 // #ifdef APP-PLUS

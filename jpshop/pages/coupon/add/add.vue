@@ -133,24 +133,40 @@
                 <view class="ca-shx" hover-class="ca-hover" @click="show3 = false">×</view><view class="ca-sh-t">プレビュー</view>
                 <view class="ca-sh-tip">端末やOSによって、実際の見え方と少し異なる場合があります。</view>
                 <scroll-view scroll-y class="ca-pvw">
-                    <swiper v-if="info.banner.length" class="ca-pv-sw" :indicator-dots="info.banner.length > 1">
-                        <swiper-item v-for="(u, i) in info.banner" :key="i"><image class="ca-pv-img" :src="u" mode="aspectFill"></image></swiper-item>
-                    </swiper>
-                    <view class="ca-pv-b">
-                        <view class="ca-pv-t">{{ info.title || 'タイトル' }}</view>
-                        <view class="ca-pv-no" v-if="info.number">クーポン番号 {{ info.number }}</view>
-                        <view class="ca-pv-bar" v-if="info.value3 && info.bcMode == 0">
-                            <image class="ca-pv-bar-img" src="../../../static/images/ITF.png" mode="aspectFit"></image>
-                            <view class="ca-pv-bar-n">(バーコードはお客様ごとに付きます)</view>
+                    <!-- [カスタムエイド 2026-11-03] プレビューを Card-San App のクーポン詳細(最新)と同じ並び・見た目に(jpcard pagesA/couponDetail から写した) -->
+                    <view class="cs-cp">
+                        <view class="cs-cp-img" v-if="info.banner.length">
+                            <swiper class="cs-cp-sw" @change="cpIdx = $event.detail.current">
+                                <swiper-item v-for="(u, i) in info.banner" :key="i"><image class="cs-cp-im" :src="u" mode="aspectFill"></image></swiper-item>
+                            </swiper>
+                            <view class="cs-cp-count" v-if="info.banner.length > 1">{{cpIdx + 1}} / {{info.banner.length}}</view>
                         </view>
-                        <view class="ca-pv-bar" v-if="info.value3 && info.bcMode == 1">
-                            <view class="ca-pv-slide">スライドして使う</view>
-                            <view class="ca-pv-bar-n">(お客様が「今すぐ使う」を押すと、お店のバーコードが10分間出ます)</view>
+                        <view class="cs-cp-tit">クーポン番号<view class="cs-cp-sn">{{info.number || '-'}}</view></view>
+                        <view class="cs-cp-ma" v-if="info.value3 && info.bcMode == 0">
+                            <image class="cs-cp-bar" src="../../../static/images/ITF.png" mode="aspectFit"></image>
+                            <view class="cs-cp-masn">(バーコードはお客様ごとに付きます)</view>
                         </view>
-                        <view class="ca-pv-d" v-if="info.detail">{{ info.detail }}</view>
-                        <view class="ca-pv-r"><text class="ca-pv-k">有効期限</text><text>{{ info.value ? dLabel(info.sDate) + ' 〜 ' + dLabel(info.eDate) : '期限なし' }}</text></view>
-                        <view class="ca-pv-r" v-if="info.value2"><text class="ca-pv-k">利用回数</text><text>残り{{ info.count }}回</text></view>
-                        <view class="ca-pv-r" v-if="info.remark"><text class="ca-pv-k">備考</text><text class="ca-pv-rm">{{ info.remark }}</text></view>
+                        <view class="cs-cp-ps" v-if="info.value3 && info.bcMode == 1">
+                            <view class="cs-cp-slide"><text class="cs-cp-slide-t">スライドして使う</text><view class="cs-cp-knob">›</view></view>
+                            <view class="cs-cp-hint">お店のスタッフの前で操作してください。<br />使うとバーコードが出ます(使う前は出ません)。</view>
+                        </view>
+                        <view class="cs-cp-box">
+                            <view class="cs-cp-title">{{info.title || 'タイトル'}}</view>
+                            <view class="cs-cp-des" v-if="info.detail">{{info.detail}}</view>
+                        </view>
+                        <view class="cs-cp-itm">
+                            <view class="cs-cp-vb">有効期限</view>
+                            <view class="cs-cp-v" v-if="info.value">{{dLabel(info.eDate)}}まで有効</view>
+                            <view class="cs-cp-v" v-else>無期限のクーポンです</view>
+                        </view>
+                        <view class="cs-cp-bz" v-if="info.value2 && info.count">
+                            <view class="cs-cp-bb">利用回数</view>
+                            <view class="cs-cp-b">残り{{info.count}}回</view>
+                        </view>
+                        <view class="cs-cp-bz" v-if="info.remark">
+                            <view class="cs-cp-bb">備考</view>
+                            <view class="cs-cp-b">{{info.remark}}</view>
+                        </view>
                     </view>
                 </scroll-view>
                 <view class="ca-close" hover-class="ca-hover" @click="show3 = false">閉じる</view>
@@ -191,6 +207,7 @@
                 fk: '',
                 uploading: false,
                 show3: false,
+                cpIdx: 0, // [カスタムエイド 2026-11-03] プレビューの画像の今の位置
                 showRange: false,
                 calKey: 0, // [カスタムエイド 2026-10-21] 開くたびに選んでいる月から見せる
                 rFrom: '',
@@ -523,4 +540,29 @@
     .ca-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] クーポンのプレビュー:Card-San App のクーポン詳細(最新)と同じ見た目 */
+    .cs-cp { background: #FFFFFF; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+    .cs-cp-img { position: relative; }
+    .cs-cp-sw { width: 100%; height: 500rpx; }
+    .cs-cp-im { width: 100%; height: 500rpx; }
+    .cs-cp-count { position: absolute; right: 24rpx; bottom: 24rpx; z-index: 2; padding: 6rpx 20rpx; border-radius: 24rpx; background: rgba(0, 0, 0, 0.6); color: #FFFFFF; font-size: 24rpx; font-weight: 500; letter-spacing: 1rpx; }
+    .cs-cp-tit { text-align: center; font-size: 32rpx; color: #1D1D1F; padding: 24rpx 0 20rpx; border-bottom: 1px solid #D2D2D7; }
+    .cs-cp-sn { font-size: 56rpx; color: #1A73E8; font-weight: 700; margin-top: 4rpx; }
+    .cs-cp-ma { width: 95%; margin: 0 auto; padding: 24rpx 0 28rpx; border-bottom: 1px solid #D2D2D7; text-align: center; }
+    .cs-cp-bar { width: 500rpx; height: 160rpx; }
+    .cs-cp-masn { margin-top: 10rpx; font-size: 26rpx; color: #6E6E73; }
+    .cs-cp-ps { padding: 8rpx 32rpx 40rpx; border-bottom: 1px solid #D2D2D7; }
+    .cs-cp-slide { position: relative; height: 120rpx; border-radius: 60rpx; background: #FCE8E6; overflow: hidden; margin-top: 16rpx; }
+    .cs-cp-slide-t { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; color: #D93025; font-weight: 700; font-size: 30rpx; padding-left: 60rpx; }
+    .cs-cp-knob { position: absolute; left: 10rpx; top: 10rpx; width: 100rpx; height: 100rpx; border-radius: 50%; background: #D93025; color: #FFFFFF; font-size: 48rpx; display: flex; align-items: center; justify-content: center; box-shadow: 0 4rpx 10rpx rgba(217, 48, 37, 0.35); }
+    .cs-cp-hint { font-size: 24rpx; color: #8A8A8E; text-align: center; line-height: 1.6; margin-top: 16rpx; }
+    .cs-cp-box { padding: 28rpx 32rpx; border-bottom: 1px solid #D2D2D7; }
+    .cs-cp-title { color: #1D1D1F; font-weight: 700; font-size: 32rpx; margin-bottom: 16rpx; }
+    .cs-cp-des { font-size: 30rpx; color: #707070; line-height: 1.6; white-space: pre-line; }
+    .cs-cp-itm, .cs-cp-bz { padding: 28rpx 32rpx; border-bottom: 1px solid #D2D2D7; }
+    .cs-cp-vb, .cs-cp-bb { width: 152rpx; height: 52rpx; line-height: 52rpx; font-size: 28rpx; text-align: center; border-radius: 20rpx; margin-bottom: 16rpx; box-sizing: border-box; }
+    .cs-cp-vb { color: #1A73E8; border: 2rpx solid #1A73E8; }
+    .cs-cp-bb { color: #707070; background: #F5F5F7; border: 2rpx solid #707070; }
+    .cs-cp-v { color: #1D1D1F; font-size: 32rpx; font-weight: 700; }
+    .cs-cp-b { font-size: 30rpx; color: #1D1D1F; line-height: 1.6; white-space: pre-line; }
 </style>

@@ -10,10 +10,16 @@
                     <view class="ed-val" :class="{ 'ed-link': info.mid }" @click="info.mid && toCustomer()">{{ info.name || 'ー' }}</view>
                 </view>
                 <view class="ed-row" v-if="!wai">
-                    <view class="ed-lab">電話番号</view>
+                    <view class="ed-lab cs-lab">電話番号<text class="cs-badge-req">必須</text></view>
                     <input class="ed-in" type="text" v-model="info.phone" placeholder="入力してください" placeholder-class="ed-ph" />
                 </view>
-                <cs-contact v-if="!wai" :contact="info.contact || ''" :email="info.email || ''"></cs-contact> <!-- [カスタムエイド 2026-10-31] 連絡方法・メール(予約詳細と同じ部品) -->
+                <!-- [カスタムエイド 2026-11-03] 会員でないお客様は、メールアドレスを入れ直せる(入れるとメール、空なら SMS) -->
+                <view class="ed-row" v-if="!wai && !info.mid">
+                    <view class="ed-lab cs-lab">メール<text class="cs-badge-opt">任意</text></view>
+                    <input class="ed-in" type="text" v-model="info.email" placeholder="入力してください" placeholder-class="ed-ph" />
+                </view>
+                <view class="cs-mailhint" v-if="!wai && !info.mid">メールアドレスを入れると、予約のお知らせはメールで届きます(入れないときは SMS)。</view>
+                <cs-contact v-if="!wai" :contact="info.contact || ''" :email="info.mid ? (info.email || '') : ''" :ng="info.cs_line == 'ng'"></cs-contact> <!-- [カスタムエイド 2026-10-31] 連絡方法・メール(予約詳細と同じ部品) -->
                 <view class="ed-row" v-if="!wai">
                     <view class="ed-lab">会員ID</view>
                     <view class="ed-val ed-gray">{{ info.member_id || 'ー' }}</view>
@@ -24,10 +30,34 @@
                 </view>
             </view>
 
+            <!-- [カスタムエイド 2026-11-03] 外部の予約:予約元(必須)・お客様名・メニュー(任意)を直せる -->
+            <view class="ed-card" v-if="ext">
+                <view class="ed-row">
+                    <view class="ed-lab cs-lab">予約元<text class="cs-badge-req">必須</text></view>
+                    <view class="cs-chips">
+                        <view class="cs-chip" :class="{ on: extSrc == 'ホットペッパー' }" @click="extSrc = 'ホットペッパー'">ホットペッパー</view>
+                        <view class="cs-chip" :class="{ on: extSrc == 'その他' }" @click="extSrc = 'その他'">その他</view>
+                    </view>
+                </view>
+                <view class="ed-row" v-if="extSrc == 'その他'">
+                    <view class="ed-lab">予約元の名前</view>
+                    <input class="ed-in" type="text" v-model="extSrcOther" maxlength="50" placeholder="例:楽天ビューティ、電話" placeholder-class="ed-ph" />
+                </view>
+                <view class="ed-row">
+                    <view class="ed-lab cs-lab">お客様名<text class="cs-badge-opt">任意</text></view>
+                    <input class="ed-in" type="text" v-model="extName" maxlength="50" placeholder="入力してください" placeholder-class="ed-ph" />
+                </view>
+                <view class="ed-row">
+                    <view class="ed-lab cs-lab">メニュー<text class="cs-badge-opt">任意</text></view>
+                    <input class="ed-in" type="text" v-model="extMenu" maxlength="100" placeholder="カット+カラー など" placeholder-class="ed-ph" />
+                </view>
+            </view>
+            <view class="cs-extnote" v-if="ext">外部の予約です。お客様へのメール・SMS・アプリのお知らせは送りません。</view>
+
             <view class="ed-sec">メニュー</view>
-            <view class="ed-card ed-menu" hover-class="ed-hover" @click="timeShow = true">
+            <view class="ed-card ed-menu" hover-class="ed-hover" @click="!ext && (timeShow = true)">
                 <view class="ed-menu-l">
-                    <view class="ed-menu-t" :class="{ 'ed-red': wai && waiName == 'お休み', 'ed-green': wai && waiName != 'お休み' }">{{ wai ? waiName : menu.title }}</view>
+                    <view class="ed-menu-t" :class="{ 'ed-red': wai && !ext && waiName == 'お休み', 'ed-green': wai && !ext && waiName != 'お休み' }">{{ ext ? '外部の予約' : wai ? waiName : menu.title }}</view>
                     <view class="ed-menu-s" v-if="!wai">所要時間 {{ menu.order_time }}分<text class="ed-price" v-if="menu.price">{{ menu.price }}</text></view>
                 </view>
                 <u-icon name="arrow-right" color="#C7C7CC" size="16"></u-icon>
@@ -252,6 +282,11 @@
                 mid:"",
                 wai:false,
                 waiName: "休憩・勤務時間外", // [カスタムエイド 2026-10-22] お休み・休憩のどちらか(サーバーに名前として保存)
+                ext: false, // [カスタムエイド 2026-11-03] 外部の予約
+                extSrc: 'ホットペッパー',
+                extSrcOther: '',
+                extName: '',
+                extMenu: '',
                 // お休み・勤務時間外の長さ(分)。開始時刻・日付を変えても終了時刻はこの長さを保つ
                 waiDur:0,
                 menu:{},
@@ -370,8 +405,36 @@
                 let data = {}
                 data._method = "put"
                 data.mid = that.info.mid
-                data.name = that.wai ? that.waiName : that.info.name // [カスタムエイド 2026-10-22]
+                data.name = that.ext ? String(that.extName || '').trim() : that.wai ? that.waiName : that.info.name // [カスタムエイド 2026-10-22]
+                // [カスタムエイド 2026-11-03] 外部の予約:予約元・メニューも送る(お客様へのお知らせはサーバーで送らない)
+                if (that.ext) {
+                    const src = that.extSrc == 'その他' ? String(that.extSrcOther || '').trim() : 'ホットペッパー'
+                    if (!src) {
+                        clearTimeout(that.saveTimer); that.showm = false
+                        uni.showToast({ title: '予約元の名前を入れてください', icon: 'none', duration: 2500 })
+                        return
+                    }
+                    data.cs_ext = 1
+                    data.cs_ext_src = src
+                    data.cs_ext_menu = String(that.extMenu || '').trim()
+                }
                 data.phone = that.info.phone
+                // [カスタムエイド 2026-11-03] 電話番号は必須(会員でないお客様)。保存の前に知らせる
+                if (!that.wai && !that.info.mid && !String(that.info.phone || '').trim()) {
+                    clearTimeout(that.saveTimer); that.showm = false
+                    uni.showToast({ title: '電話番号を入れてください', icon: 'none', duration: 2500 })
+                    return
+                }
+                // [カスタムエイド 2026-11-03] 会員でないお客様のメールアドレス(読み込めたときだけ送る。送らないとサーバーは今のまま)
+                if (!that.wai && !that.info.mid && Object.prototype.hasOwnProperty.call(that.info, 'email')) {
+                    const em = String(that.info.email || '').trim()
+                    if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.replace(/[\uFF01-\uFF5E]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)))) {
+                        clearTimeout(that.saveTimer); that.showm = false
+                        uni.showToast({ title: 'メールアドレスの形が正しくありません', icon: 'none', duration: 2500 })
+                        return
+                    }
+                    data.email = em
+                }
                 data.sex = that.info.sex
                 data.member_id = that.info.member_id
                 // お休み・勤務時間外は menu が null で返るため 0 とする（null参照で透明マスクが残り操作不能になっていた）
@@ -552,6 +615,16 @@
                         that.wai = !(that.menu && that.menu.id)
                         // [カスタムエイド 2026-10-22] 名前が「お休み」ならお休み、それ以外(今までの空の名前を含む)は休憩・勤務時間外
                         that.waiName = res.data.order.name == 'お休み' ? 'お休み' : '休憩・勤務時間外'
+                        // [カスタムエイド 2026-11-03] 外部の予約
+                        that.ext = res.data.order.cs_ext == 1
+                        if (that.ext) {
+                            const src = res.data.order.cs_ext_src || ''
+                            that.extSrc = src == 'ホットペッパー' ? 'ホットペッパー' : 'その他'
+                            that.extSrcOther = src == 'ホットペッパー' ? '' : src
+                            that.extName = res.data.order.name || ''
+                            that.extMenu = res.data.order.cs_ext_menu || ''
+                            that.waiName = '外部の予約'
+                        }
                         if (!that.menu) {
                             that.menu = { id: 0, title: that.waiName, order_time: 0 }
                         }
@@ -1212,4 +1285,15 @@
     .ed-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 必須・任意の印 */
+    .ed-lab.cs-lab { width: 230rpx; display: flex; align-items: center; }
+    .cs-badge-req, .cs-badge-opt { font-size: 20rpx; font-weight: 700; padding: 2rpx 10rpx; border-radius: 8rpx; margin-left: 10rpx; line-height: 1.6; }
+    .cs-badge-req { color: #FFFFFF; background: #D93025; }
+    .cs-badge-opt { color: #6E6E73; background: #F2F2F7; border: 1px solid #D2D2D7; }
+    .cs-mailhint { font-size: 24rpx; color: #8A8A8E; line-height: 1.6; padding: 12rpx 0 16rpx; border-bottom: 1px solid #E5E5EA; }
+    /* [カスタムエイド 2026-11-03] 外部の予約 */
+    .cs-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+    .cs-chip { font-size: 26rpx; padding: 10rpx 24rpx; border-radius: 30rpx; border: 1px solid #D2D2D7; color: #1D1D1F; margin-left: 12rpx; }
+    .cs-chip.on { border-color: #1D1D1F; background: #F2F2F7; font-weight: 700; }
+    .cs-extnote { margin: 20rpx 0 0; padding: 20rpx 24rpx; border-radius: 20rpx; background: #F2F2F7; color: #3A3A3C; font-size: 24rpx; line-height: 1.7; }
 </style>

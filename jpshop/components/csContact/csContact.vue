@@ -2,15 +2,18 @@
     <!-- [カスタムエイド 2026-10-31] 予約の「連絡のしかた」(アプリ・メール・LINE・SMS)。予約詳細・予約内容で同じ部品を使う。
          mode="icon" はマークだけ(予約通知の一覧)。mode="rows" は「連絡方法」の行と、メールの予約ならメールアドレスの行 -->
     <view v-if="info" class="cs-ct-wrap" :class="mode == 'icon' ? 'cs-ct-iconmode' : ''">
-        <image v-if="mode == 'icon'" class="cs-ct-icon-s" :src="info.icon" mode="aspectFit"></image>
+        <!-- [カスタムエイド 2026-11-04 段階9] LINE の予約が届かない(ブロック・設定の解除)ときは、マークの代わりに赤い「届きません」 -->
+        <text v-if="mode == 'icon' && ngLine" class="cs-ct-ngchip">届きません</text>
+        <image v-else-if="mode == 'icon'" class="cs-ct-icon-s" :src="info.icon" mode="aspectFit"></image>
         <block v-else>
             <view class="cs-ct-row">
                 <view class="cs-ct-lab">連絡方法</view>
-                <view class="cs-ct-val">
+                <view class="cs-ct-val" :class="{ 'cs-ct-ng': ngLine }">
                     <image class="cs-ct-icon" :src="info.icon" mode="aspectFit"></image>
-                    <text>{{ info.name }}</text>
+                    <text>{{ ngLine ? 'LINE(ブロックされています・届きません)' : info.name }}</text>
                 </view>
             </view>
+            <view class="cs-ct-ngnote" v-if="ngLine">電話番号を押すと電話をかけられます。ほかの方法には自動で切り替えません。</view>
             <view class="cs-ct-row" v-if="email">
                 <view class="cs-ct-lab">メール</view>
                 <view class="cs-ct-val cs-ct-mail" hover-class="cs-ct-hover" @click="openMail">{{ email }}</view>
@@ -31,10 +34,12 @@
         props: {
             contact: { type: String, default: '' }, // app / mail / line / sms(サーバーの CsOrderContact と同じ)
             email: { type: String, default: '' },
-            mode: { type: String, default: 'rows' } // rows / icon
+            mode: { type: String, default: 'rows' }, // rows / icon
+            ng: { type: Boolean, default: false } // [カスタムエイド 2026-11-04 段階9] LINE の予約が届かない(サーバーの cs_line が ng)
         },
         computed: {
-            info() { return LIST[this.contact] || null }
+            info() { return LIST[this.contact] || null },
+            ngLine() { return this.contact == 'line' && this.ng } // [カスタムエイド 2026-11-04 段階9]
         },
         methods: {
             // メールアドレスを押すと、メールを書く画面を開く(開けないときはコピー)
@@ -65,4 +70,8 @@
     .cs-ct-icon { width: 40rpx; height: 40rpx; margin-right: 12rpx; flex-shrink: 0; }
     .cs-ct-mail { color: #1A73E8; }
     .cs-ct-hover { opacity: 0.6; }
+    /* [カスタムエイド 2026-11-04 段階9] LINE の予約が届かないとき */
+    .cs-ct-ng { color: #B3261E; font-weight: 700; }
+    .cs-ct-ngnote { font-size: 24rpx; color: #6E6E73; line-height: 1.6; padding: 12rpx 0 16rpx; border-bottom: 1px solid #E5E5EA; }
+    .cs-ct-ngchip { font-size: 22rpx; font-weight: 700; color: #B3261E; background: #FCE8E6; border-radius: 20rpx; padding: 4rpx 14rpx; white-space: nowrap; }
 </style>

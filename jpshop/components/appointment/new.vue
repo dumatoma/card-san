@@ -14,7 +14,7 @@
             </view>
             <view class="ctItem">
                 <view class="itemName">
-                    氏名
+                    氏名<text class="cs-badge-req">必須</text>
                 </view>
                 <view class="itemDetail">
                     <u--input v-model="info.name" @change="insert1" placeholder="名前" border="bottom" clearable>
@@ -23,13 +23,24 @@
             </view>
             <view class="ctItem">
                 <view class="itemName">
-                    電話番号
+                    電話番号<text class="cs-badge-req">必須</text>
                 </view>
                 <view class="itemDetail">
                     <u--input v-model="info.phone" @change="insert2" placeholder="入力してください" border="bottom" clearable>
                     </u--input>
                 </view>
             </view>
+            <!-- [カスタムエイド 2026-11-03] お客様のメールアドレス(なくてもよい)。入れるとメールで、なければ SMS で予約のお知らせが届く(アプリの会員はアプリに届く) -->
+            <view class="ctItem">
+                <view class="itemName">
+                    メール<text class="cs-badge-opt">任意</text>
+                </view>
+                <view class="itemDetail">
+                    <u--input v-model="info.email" type="text" placeholder="入力してください" border="bottom" clearable>
+                    </u--input>
+                </view>
+            </view>
+            <view class="cs-mailhint">メールアドレスを入れると、予約のお知らせはメールで届きます(入れないときは SMS)。</view>
             <view class="ctItem">
                 <view class="itemName">
                     性别
@@ -56,8 +67,29 @@
                 <view v-if="menu.id == -1">
                     メニューを選択
                 </view>
-                <view v-else v-text="menu.name" :class="{ 'cs-off': waiType == 'off', 'cs-brk': waiType == 'break' }"></view>
+                <view v-else v-text="menu.name" :class="{ 'cs-off': waiType == 'off', 'cs-brk': waiType == 'break', 'cs-ext': waiType == 'ext' }"></view>
                 <u-icon name="arrow-right"></u-icon>
+            </view>
+        </view>
+        <!-- [カスタムエイド 2026-11-03] 外部の予約の入力(予約元は必須・お客様名とメニューは任意) -->
+        <view class="ct cs-extbox" v-if="waiType == 'ext'">
+            <view class="cs-exrow">
+                <view class="cs-exl">予約元<text class="cs-badge-req">必須</text></view>
+                <view class="cs-exv">
+                    <view class="cs-chips">
+                        <view class="cs-chip" :class="{ on: extSrc == 'ホットペッパー' }" @click="extSrc = 'ホットペッパー'">ホットペッパー</view>
+                        <view class="cs-chip" :class="{ on: extSrc == 'その他' }" @click="extSrc = 'その他'">その他</view>
+                    </view>
+                    <input v-if="extSrc == 'その他'" class="cs-exin" v-model="extSrcOther" maxlength="50" placeholder="例:楽天ビューティ、電話" placeholder-class="cs-exph" />
+                </view>
+            </view>
+            <view class="cs-exrow">
+                <view class="cs-exl">お客様名<text class="cs-badge-opt">任意</text></view>
+                <input class="cs-exin" v-model="extName" maxlength="50" placeholder="入力してください" placeholder-class="cs-exph" />
+            </view>
+            <view class="cs-exrow">
+                <view class="cs-exl">メニュー<text class="cs-badge-opt">任意</text></view>
+                <input class="cs-exin" v-model="extMenu" maxlength="100" placeholder="カット+カラー など" placeholder-class="cs-exph" />
             </view>
         </view>
         <view class="ct" style="padding: 20upx 32upx;">
@@ -130,7 +162,8 @@
         </view>
         <view class="cs-note" v-if="waiType == 'off'">その日の営業時間をすべて止めます。昼休みなどで営業時間が2つに分かれている日は、両方とも止まります。お客さまの予約画面では、この担当者はこの日に選べなくなります。この日に予約が入っているときは、お休みにできません。</view>
         <!-- @click="saveData" -->
-        <view class="cConfirm" hover-class="savehover" @click="askSave" v-text="waiType == 'off' ? 'お休みにする' : waiType == 'break' ? '休憩・営業時間外にする' : 'この内容で予約する'">
+        <view class="cs-note cs-extnote" v-if="waiType == 'ext'">この時間は予約で埋まり、Card-San の予約WEB やアプリからは選べなくなります。お客様へのメール・SMS・アプリのお知らせは送りません(SMS の通数も使いません)。</view><!-- [カスタムエイド 2026-11-03] -->
+        <view class="cConfirm" :class="{ 'cs-extbtn': waiType == 'ext' }" hover-class="savehover" @click="askSave" v-text="waiType == 'off' ? 'お休みにする' : waiType == 'break' ? '休憩・営業時間外にする' : waiType == 'ext' ? '外部の予約として押さえる' : 'この内容で予約する'">
         </view>
         <!-- 选择性别弹出层 -->
         <u-popup :show="show" @close="show = false" mode="bottom" bgColor="#f9f9f9">
@@ -168,6 +201,19 @@
                         <view>
                             <view class="allname cs-brk">休憩・勤務時間外</view>
                             <view class="cs-wai-d">休憩・遅い出勤・早い退勤など、時間を決めて止めます</view>
+                        </view>
+                    </view>
+                    <!-- [カスタムエイド 2026-11-03] 外部の予約(ホットペッパーなど)。お休み・休憩の下 -->
+                    <view class="selectAll cs-wai" @click="changeWai('ext')">
+                        <view class="selectContent">
+                            <view class="unselect" v-if="waiType != 'ext'"></view>
+                            <view class="selected" v-if="waiType == 'ext'">
+                                <view class="fill"></view>
+                            </view>
+                        </view>
+                        <view>
+                            <view class="allname cs-ext">外部の予約(ホットペッパーなど)</view>
+                            <view class="cs-wai-d">Card-San 以外で受けた予約の時間を押さえます。お客様への連絡はしません</view>
                         </view>
                     </view>
                     <view class="settingD">
@@ -362,7 +408,11 @@
                 info: {},
 				tempInfo:{},
                 wai: false,
-                waiType: "", // [カスタムエイド 2026-10-22] 'off' = お休み(1日) / 'break' = 休憩・勤務時間外
+                waiType: "", // [カスタムエイド 2026-10-22] 'off' = お休み(1日) / 'break' = 休憩・勤務時間外 / 'ext' = 外部の予約(2026-11-03)
+                extSrc: 'ホットペッパー', // [カスタムエイド 2026-11-03] 外部の予約の予約元
+                extSrcOther: '',
+                extName: '',
+                extMenu: '',
                 offRanges: [], // お休みで止める時間(営業時間)
                 offLabel: "読み込み中…",
                 maskText: "予約しました",
@@ -486,6 +536,17 @@
                         return
                     }
                     that.config = Object.assign({}, that.config, { title: "お休みにしますか？", content: that.date + " の " + that.todaystaff.name + " さんを、営業時間のあいだすべて止めます。", confirmText: "お休みにする" })
+                } else if (that.waiType == 'ext') {
+                    // [カスタムエイド 2026-11-03] 外部の予約
+                    if (that.extSrc == 'その他' && !String(that.extSrcOther || '').trim()) {
+                        uni.showToast({ title: "予約元の名前を入れてください", icon: "none" })
+                        return
+                    }
+                    if (!that.todaystaff || !that.todaystaff.id) {
+                        uni.showToast({ title: "担当者を選択してください", icon: "none" })
+                        return
+                    }
+                    that.config = Object.assign({}, that.config, { title: "外部の予約として押さえますか？", content: that.date + " " + that.start + "〜" + that.end + " を押さえます。お客様への連絡はしません。", confirmText: "押さえる" })
                 } else if (that.waiType == 'break') {
                     that.config = Object.assign({}, that.config, { title: "休憩・営業時間外に設定しますか？", content: that.date + " " + that.start + "〜" + that.end + " を、休憩・勤務時間外にします。", confirmText: "設定する" }) // [カスタムエイド 2026-10-25] 文言を「休憩・営業時間外に設定」に
                 } else {
@@ -572,7 +633,13 @@
                 if (that.waiType == 'off') return that.saveOff()
                 that.showm = true
                 let data = {}
-                data.name = that.waiType == 'break' ? BREAK_NAME : that.info.name
+                data.name = that.waiType == 'break' ? BREAK_NAME : that.waiType == 'ext' ? String(that.extName || '').trim() : that.info.name
+                // [カスタムエイド 2026-11-03] 外部の予約:予約元・メニュー(自由に入力)。電話番号・メール・会員は送らない
+                if (that.waiType == 'ext') {
+                    data.cs_ext = 1
+                    data.cs_ext_src = that.extSrc == 'その他' ? String(that.extSrcOther || '').trim() : 'ホットペッパー'
+                    data.cs_ext_menu = String(that.extMenu || '').trim()
+                }
                 data.phone = that.info.phone
                 data.sex = that.info.sex
                 data.member_id = that.ID || ''
@@ -580,6 +647,22 @@
                 data.start_time = that.date + " " + that.start
                 data.end_time = that.date + " " + that.end
                 data.remark = that.remark
+                // [カスタムエイド 2026-11-03] 電話番号は必須(会員を選んでいないとき)。保存の前に知らせる
+                if (that.waiType != 'break' && that.waiType != 'ext' && !that.ID && !String(that.info.phone || '').trim()) {
+                    that.showm = false
+                    uni.showToast({ title: '電話番号を入れてください', icon: 'none', duration: 2500 })
+                    return
+                }
+                // [カスタムエイド 2026-11-03] お客様のメールアドレス(休憩のときは送らない)
+                if (that.waiType != 'break' && that.waiType != 'ext') {
+                    const em = String(that.info.email || '').trim()
+                    if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.replace(/[\uFF01-\uFF5E]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)))) {
+                        that.showm = false
+                        uni.showToast({ title: 'メールアドレスの形が正しくありません', icon: 'none', duration: 2500 })
+                        return
+                    }
+                    if (em) data.email = em
+                }
                 if (that.person.id) {
                     data.appoint_said = that.person.id
                     data.day_said = that.person.id
@@ -596,6 +679,7 @@
                     that.showAle = false
                     that.showm = false
                     if (that.waiType == 'break') that.maskText = "休憩・営業時間外に設定しました" // [カスタムエイド 2026-10-25]
+                    if (that.waiType == 'ext') that.maskText = "外部の予約を押さえました" // [カスタムエイド 2026-11-03]
                     if (res.code == 200) {
                         that.showmask = true
                         setTimeout(function() {
@@ -653,7 +737,7 @@
                 let array = that.array
                 that.end = "00:00"
                 that.wai = true
-                that.waiType = type == 'off' ? 'off' : 'break' 
+                that.waiType = type == 'off' ? 'off' : type == 'ext' ? 'ext' : 'break' // [カスタムエイド 2026-11-03] 'ext' = 外部の予約
                 that.array.forEach((value, index) => {
                     value.items.forEach((val, idx) => {
                         val.checked = false
@@ -901,7 +985,7 @@
                 let ix
                 let menu = {}
                 menu["id"] = 0
-                menu["name"] = that.waiType == 'off' ? OFF_NAME : BREAK_NAME
+                menu["name"] = that.waiType == 'off' ? OFF_NAME : that.waiType == 'ext' ? '外部の予約' : BREAK_NAME
                 if (that.wai == true) {
                     that.menu = menu
                     that.totalTime = 0
@@ -1428,4 +1512,26 @@
         from { transform: translateX(0); }
         to { transform: translateX(100%); }
     }
+    /* [カスタムエイド 2026-11-03] メールアドレスの説明 */
+    .cs-mailhint { font-size: 24rpx; color: #8A8A8E; line-height: 1.6; margin-top: 12rpx; padding-left: 230upx; }
+    /* [カスタムエイド 2026-11-03] 必須・任意の印(見出しの幅を 140 → 230upx に広げて、印が入るように) */
+    .ct .ctItem .itemName { width: 230upx !important; display: flex; align-items: center; }
+    .cs-badge-req, .cs-badge-opt { font-size: 20rpx; font-weight: 700; padding: 2rpx 10rpx; border-radius: 8rpx; margin-left: 10rpx; line-height: 1.6; }
+    .cs-badge-req { color: #FFFFFF; background: #D93025; }
+    .cs-badge-opt { color: #6E6E73; background: #F2F2F7; border: 1px solid #D2D2D7; }
+    /* [カスタムエイド 2026-11-03] 外部の予約 */
+    .cs-ext { color: #1D1D1F !important; }
+    .cs-extbox { padding: 8upx 32upx !important; }
+    .cs-exrow { display: flex; align-items: center; padding: 24rpx 0; border-bottom: 1px solid #E5E5EA; }
+    .cs-exrow:last-child { border-bottom: 0; }
+    .cs-exl { width: 230upx; flex-shrink: 0; display: flex; align-items: center; font-size: 30rpx; color: #707070; }
+    .cs-exv { flex: 1; min-width: 0; }
+    .cs-exin { flex: 1; width: 100%; height: 72rpx; font-size: 30rpx; color: #1D1D1F; border-bottom: 1px solid #D2D2D7; }
+    .cs-exv .cs-exin { margin-top: 16rpx; }
+    .cs-exph { color: #AEAEB2; }
+    .cs-chips { display: flex; flex-wrap: wrap; }
+    .cs-chip { font-size: 26rpx; padding: 10rpx 24rpx; border-radius: 30rpx; border: 1px solid #D2D2D7; color: #1D1D1F; margin: 0 12rpx 8rpx 0; }
+    .cs-chip.on { border-color: #1D1D1F; background: #F2F2F7; font-weight: 700; }
+    .cs-extnote { background: #F2F2F7; color: #3A3A3C; }
+    .cs-extbtn { background: #1D1D1F !important; }
 </style>

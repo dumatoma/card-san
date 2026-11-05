@@ -8,7 +8,7 @@
             <view class="ct-alert red" v-if="isexpire == false">
                 <view class="ct-alert-title">ご契約期間終了のため、現在ご利用できません。</view>
                 <view class="ct-alert-text">お申し込みを再開することで、すぐにご利用ができます。</view>
-                <view class="ct-btn" hover-class="ct-hover" @click="tone">再開はこちら</view>
+                <view class="ct-btn" hover-class="ct-hover" @click="csDeny() || tone()">再開はこちら</view>
             </view>
             <!-- 解約手続き済み(終了日まで使える) -->
             <view class="ct-alert" v-if="isexpire == true && vips[0].cancel_time > 0">
@@ -17,7 +17,7 @@
                     <view class="ct-alert-text" v-if="vips[0].card_type == 1">ご契約は <text class="bd">{{vips[0].end_time}}</text> に終了します(解約手続き済み)。終了日までは、すべての機能をご利用いただけます。</view>
                     <view class="ct-alert-text" v-else>ご契約は <text class="bd">{{vips[0].end_time}}</text> に終了します(解約手続き済み)。ご利用を継続するには、各端末の「設定」から手続きをお願いします。</view>
                 </view>
-                <view class="ct-btn" hover-class="ct-hover" v-if="vips[0].card_type == 1" @click="toResume">継続する</view>
+                <view class="ct-btn" hover-class="ct-hover" v-if="vips[0].card_type == 1" @click="csDeny() || toResume()">継続する</view>
             </view>
 
             <!-- ご契約 -->
@@ -28,14 +28,14 @@
                         <view class="ct-cap">ご利用中のプラン</view>
                         <view class="ct-val">{{planName(isexpire == true ? vips[0].type : (vip || {}).type)}}</view>
                     </view>
-                    <view class="ct-pill" hover-class="ct-hover" @click="changeT">プランを変更</view>
+                    <view class="ct-pill" hover-class="ct-hover" @click="csDeny() || changeT()">プランを変更</view>
                 </view>
                 <view class="ct-row" v-if="vips[0].is_try != 1">
                     <view class="ct-row-left">
                         <view class="ct-cap">支払い周期</view>
                         <view class="ct-val">{{(isexpire == true ? vips[0].month : (vip || {}).month) ? (isexpire == true ? vips[0].month : (vip || {}).month) + 'ヶ月' : '-'}}</view>
                     </view>
-                    <view class="ct-pill" hover-class="ct-hover" @click="changeZ">周期を変更</view>
+                    <view class="ct-pill" hover-class="ct-hover" @click="csDeny() || changeZ()">周期を変更</view>
                 </view>
                 <view class="ct-row" v-if="isexpire == true && vips[0].is_try == 1">
                     <view class="ct-row-left">
@@ -73,8 +73,8 @@
                 <view class="ct-pay ct-muted" v-else>{{isexpire == true && vips[0].is_try == 1 ? '無料お試し中のため、お支払い方法の登録はありません。' : '-'}}</view>
             </view>
 
-            <view class="ct-btn ct-mt" hover-class="ct-hover" v-if="vips.length != 0 && vips[0].is_try == 1" @click="toc">お申し込みはこちら</view>
-            <view class="ct-link-red" hover-class="ct-hover" v-if="isexpire == true && vips[0].cancel_time == 0 && vips[0].is_try == 0" @click="toff">解約手続き</view>
+            <view class="ct-btn ct-mt" hover-class="ct-hover" v-if="vips.length != 0 && vips[0].is_try == 1" @click="csDeny() || toc()">お申し込みはこちら</view>
+            <view class="ct-link-red" hover-class="ct-hover" v-if="isexpire == true && vips[0].cancel_time == 0 && vips[0].is_try == 0" @click="csDeny() || toff()">解約手続き</view>
         </view>
         <u-popup :show="show" @close="show = false">
             <subscribe @btmnclick="changeS" :title="title" :content="content"></subscribe>
@@ -88,6 +88,7 @@
               
           </view> -->
         </u-popup>
+        <cs-no-perm :show="csNoPerm" @close="csNoPerm = false"></cs-no-perm><!-- [カスタムエイド 2026-11-03] 副管理者 -->
     </view>
 </template>
 
@@ -96,6 +97,7 @@
     import subscribe from "@/components/subscribe/subscribe.vue"
     import subscribee from "@/components/su1b/su1b.vue"
     import sios from "@/components/sios.vue"
+    import csNoPerm from "@/components/csNoPerm/csNoPerm.vue" // [カスタムエイド 2026-11-03]
     import {
         getShopInfo,
         getPackageList,
@@ -107,10 +109,12 @@
         components: {
             subscribe,
             subscribee,
-            sios
+            sios,
+            csNoPerm
         },
         data() {
             return {
+                csNoPerm: false, // [カスタムエイド 2026-11-03] 副管理者が契約の操作を押したとき
                 show: false,
                 shows: false,
                 show2: false,
@@ -144,6 +148,12 @@
             }).catch(() => {})
         },
         methods: {
+            // [カスタムエイド 2026-11-03] 副管理者は見るだけ。プラン変更・周期変更・解約・継続・再開・お申し込みは「権限がありません」(サーバーでも断る)
+            csDeny() {
+                const a = uni.getStorageSync('admin') || {}
+                if (a.admin_type == 2) { this.csNoPerm = true; return true }
+                return false
+            },
             // [カスタムエイド 2026-10-20] プランの名前
             planName(t) {
                 return t == 1 ? 'ライト' : t == 2 ? 'スタンダード' : t == 3 ? 'プレミアム' : '-'

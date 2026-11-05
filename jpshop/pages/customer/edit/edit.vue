@@ -24,6 +24,22 @@
                         <view class="me-chev"></view>
                     </view>
                 </view>
+                <!-- [カスタムエイド 2026-11-03] 他社のバーコード番号(他社のバーコードのカードのときだけ)。手で入れる/カメラで読む。下の「保存する」で一緒に保存 -->
+                <view class="me-field" v-if="extType > 0">
+                    <view class="me-label">他社のバーコード番号</view>
+                    <view class="me-ext-note">お客様のポイントカードの番号を入れてください。種類:{{extType == 1 ? 'JAN(13桁・8桁の数字)' : 'CODE128(英数字)'}}</view>
+                    <input class="me-in" :class="{ on: fk == 'ext', ng: extCheck.message && !extCheck.ok }" v-model="extValue" :type="extType == 1 ? 'number' : 'text'"
+                        :maxlength="extType == 1 ? 13 : 48" :placeholder="extType == 1 ? '例:4912345678904' : '例:AB123456'" placeholder-class="me-ph"
+                        @focus="fk = 'ext'" @blur="fk = ''" />
+                    <view class="me-ext-chk" :class="{ ok: extCheck.ok }" v-if="extCheck.message">{{ extCheck.ok ? '✓ ' : '' }}{{ extCheck.message }}</view>
+                    <view class="me-ext-bc" v-if="extBars.length">
+                        <view class="me-ext-bars">
+                            <view v-for="(b, i) in extBars" :key="i" class="me-ext-b" :style="{ flex: b.w, background: b.b ? '#000' : 'transparent' }"></view>
+                        </view>
+                        <view class="me-ext-n">{{ extCheck.value }}</view>
+                    </view>
+                    <view class="me-ext-cam" hover-class="me-hover" @click="scanExt">カメラで読む</view>
+                </view>
                 <view class="me-field">
                     <view class="me-label">備考</view>
                     <textarea class="me-ta" :class="{ on: fk == 'remark' }" v-model="userInfo.remark" :maxlength="-1"
@@ -61,6 +77,7 @@
         editMemberInformation,
         getMemberDetail
     } from '@/api/index.js'
+    import { checkCode, barcodeBars } from '@/utils/csBarcode.js' // [カスタムエイド 2026-11-03] 他社のバーコード番号の確かめ・見本の線
     export default {
         data() {
             return {
@@ -70,7 +87,10 @@
                 userId: "",
                 userInfo:{},
                 cards:{},
-                fk: '' // [カスタムエイド 2026-10-20] いま入力中の欄
+                fk: '', // [カスタムエイド 2026-10-20] いま入力中の欄
+                extType: 0, // [カスタムエイド 2026-11-03] 他社のバーコード 0:なし 1:JAN 2:CODE128(カードの設定)
+                extValue: '', // [カスタムエイド 2026-11-03] 他社のバーコード番号
+                extLoaded: false // [カスタムエイド 2026-11-03] 番号は最初に読んだときだけ入れる(カメラから戻ったときに、入れかけの番号を消さない)
             }
         },
         onLoad(options) {
@@ -89,7 +109,23 @@
                 that.getDetail(that.query.userId)
             },1000)
         },
+        computed: {
+            // [カスタムエイド 2026-11-03] 他社のバーコード番号の確かめ(クーポンと同じ決まり)
+            extCheck() { return checkCode(this.extType, this.extValue) },
+            extBars() { return this.extCheck.ok ? barcodeBars(this.extType, this.extCheck.value) : [] }
+        },
         methods: {
+            // [カスタムエイド 2026-11-03] お客様のプラスチックのカードをカメラで読む
+            scanExt() {
+                uni.scanCode({
+                    onlyFromCamera: true,
+                    scanType: ['barCode'],
+                    success: (r) => {
+                        const v = String(r.result || '').trim()
+                        if (v) this.extValue = v
+                    }
+                })
+            },
             bac() {
                 uni.navigateBack()
             },
@@ -102,6 +138,8 @@
                     if(res.code == 200){
                         that.userInfo = res.data
                         that.cards = res.data.card
+                        that.extType = (res.data.cs_ext_bc_type || 0) * 1 // [カスタムエイド 2026-11-03]
+                        if (!that.extLoaded) { that.extValue = res.data.cs_ext_bc_value || ''; that.extLoaded = true }
                     }
                 })
             },
@@ -120,6 +158,14 @@
                 data._method = "put"
                 data.member_no = that.no
                 data.remark = that.userInfo.remark
+                // [カスタムエイド 2026-11-03] 他社のバーコード番号(他社のカードのときだけ送る。空なら消す)
+                if (that.extType > 0) {
+                    if (that.extValue && !that.extCheck.ok) {
+                        uni.showToast({ title: that.extCheck.message || '他社のバーコード番号を確かめてください', icon: 'none', duration: 2500 })
+                        return
+                    }
+                    data.cs_ext_bc_value = that.extValue ? that.extCheck.value : ''
+                }
                 obj.id = that.userId
                 editMemberInformation(data, that.userId).then((res) => {
                     if (res.code == 200) {
@@ -305,4 +351,14 @@
     .me-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 他社のバーコード番号 */
+    .me-ext-note { font-size: 24rpx; color: #6E6E73; line-height: 1.6; margin-bottom: 12rpx; }
+    .me-in.ng { border-color: #D93025; }
+    .me-ext-chk { font-size: 24rpx; color: #D93025; margin-top: 10rpx; }
+    .me-ext-chk.ok { color: #188038; }
+    .me-ext-bc { border: 1px solid #E5E5EA; border-radius: 24rpx; padding: 24rpx 24rpx 16rpx; margin-top: 20rpx; text-align: center; background: #FFFFFF; }
+    .me-ext-bars { display: flex; height: 120rpx; }
+    .me-ext-b { height: 100%; }
+    .me-ext-n { font-size: 26rpx; letter-spacing: 4rpx; color: #1D1D1F; margin-top: 8rpx; }
+    .me-ext-cam { margin-top: 20rpx; height: 80rpx; border-radius: 24rpx; background: #F2F2F7; color: #1A73E8; font-size: 28rpx; font-weight: 600; display: flex; align-items: center; justify-content: center; }
 </style>

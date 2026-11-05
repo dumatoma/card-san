@@ -9,8 +9,7 @@
         <!-- 自定义顶部导航 -->
         <u-navbar title="店舗情報" :placeholder="true" :safeAreaInsetTop="true" :border="true" :autoBack="true" bgColor="#FBFBFD">
             <view class="u-nav-slot" slot="right">
-                <image src="../../../static/icons/preview.svg" style="width: 50upx;height: 50upx;"
-                    @click="showPopup = true" mode="aspectFill"></image>
+                <text class="cs-pv" @click="showPopup = true">プレビュー</text><!-- [カスタムエイド 2026-11-03] 目のアイコン→青い文字の「プレビュー」(お知らせ・クーポンと同じ) -->
             </view>
         </u-navbar>
 
@@ -1104,4 +1103,6 @@
     .si-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 右上の「プレビュー」(お知らせ・クーポンと同じ青い文字) */
+    .cs-pv { font-size: 30rpx; color: #1A73E8; padding: 0 8rpx; }
 </style>

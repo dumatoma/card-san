@@ -43,9 +43,11 @@
       </view>
 
       <view class="rc-card rc-pad rd-msg">
-        <image src="../../static/image/mail.svg" mode="aspectFit"></image> <!-- [カスタムエイド 2026-10-31] メールで送るので、メールのマークに(以前は吹き出し message.png) -->
+        <image :src="line ? '../../static/image/ch_line.svg' : (sms ? '../../static/image/ch_sms.svg' : '../../static/image/mail.svg')" mode="aspectFit"></image> <!-- [カスタムエイド 2026-10-31] メールで送るので、メールのマークに(以前は吹き出し message.png)/[カスタムエイド 2026-11-03] SMS のときは SMS のマーク -->
         <!-- [カスタムエイド 2026-10-30] 段階6:WEB予約はメールでお送りする(SMS は送らない) -->
-        <view class="rd-msg-t" v-if="email">“{{email}}”宛に、メールで予約内容をお送りしましたのでご確認ください。<text class="rd-msg-s">届かないときは、迷惑メールのフォルダもご確認ください。</text></view>
+        <view class="rd-msg-t" v-if="line">LINE の「{{line}}」のトーク画面に、予約内容をお送りしましたのでご確認ください。</view><!-- [カスタムエイド 2026-11-04 追記6] -->
+        <view class="rd-msg-t" v-else-if="sms">“{{sms}}”宛に、SMS で予約内容をお送りしましたのでご確認ください。</view><!-- [カスタムエイド 2026-11-03] -->
+        <view class="rd-msg-t" v-else-if="email">“{{email}}”宛に、メールで予約内容をお送りしましたのでご確認ください。<text class="rd-msg-s">届かないときは、迷惑メールのフォルダもご確認ください。</text></view>
         <view class="rd-msg-t" v-else>ご登録のメールアドレス宛に、メールで予約内容をお送りしましたのでご確認ください。<text class="rd-msg-s">届かないときは、迷惑メールのフォルダもご確認ください。</text></view>
       </view>
       <view class="rd-top" hover-class="rc-btn-h" @click="back()">TOPに戻る</view>
@@ -60,7 +62,9 @@
       return {
         query:{},
         photo: '', // [カスタムエイド 2026-10-22] メニューの1枚目の写真(予約内容確認から受け取る)
-        email: '' // [カスタムエイド 2026-10-30] 段階6:予約内容確認で入れたメールアドレス
+        email: '', // [カスタムエイド 2026-10-30] 段階6:予約内容確認で入れたメールアドレス
+        sms: '', // [カスタムエイド 2026-11-03] SMS を選んだときの電話番号
+        line: '' // [カスタムエイド 2026-11-04 追記6] LINE で受け取ったときのお店の LINE の名前
       };
     },
     created() {
@@ -75,6 +79,8 @@
         that.query = query
         try { that.photo = uni.getStorageSync("lastOrderImage") || '' } catch (e) {}
         try { that.email = uni.getStorageSync("lastOrderEmail") || '' } catch (e) {}
+        try { that.sms = uni.getStorageSync("lastOrderSms") || '' } catch (e) {} // [カスタムエイド 2026-11-03]
+        try { that.line = uni.getStorageSync("lastOrderLine") || '' } catch (e) {} // [カスタムエイド 2026-11-04 追記6]
     },
     computed: {
       // [カスタムエイド 2026-10-22] 金額はお店が書いたまま(数字だけのときは ¥ とカンマを付ける。以前は「5,000〜」も ¥5,000 になっていた)

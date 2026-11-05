@@ -68,12 +68,17 @@
         .fix-btn,
         .fix-btn-ok,
         .uni-actionsheet,
-        .u-popup__content {
+        .u-popup__content,
+        .rc-bar { // [カスタムエイド 2026-11-04 追記9] 坂本さん:PC で予約内容確認・予約完了の下のボタンが画面いっぱいに広がっていた
             left: 50% !important;
             right: auto !important;
             width: 100% !important;
             max-width: 480px;
             transform: translateX(-50%);
+        }
+        // [カスタムエイド 2026-11-04 追記9] 下のボタンの帯は左右の余白の分だけ、中央の幅からはみ出していた(サーバーの index.ae311185.js も同じように直した)
+        .rc-bar {
+            box-sizing: border-box;
         }
         // 画面幅(100vw)で作られている部分を、中央の幅に収める
         uni-page-body .date,

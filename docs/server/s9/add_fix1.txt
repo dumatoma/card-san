@@ -1,0 +1,11 @@
+        // 4. [カスタムエイド 2026-11-04 追記] LINE ログインの欄に Messaging API のチャネルの ID・シークレットを入れていないか
+        //    (3 の確かめでは、Messaging API のチャネルでも通ってしまうため。短い期間のトークンが取れるのは Messaging API のチャネルだけ ※確認が必要)
+        if (!isset($err['login_secret']) && $k['login_secret'] === $k['msg_secret']) {
+            $err['login_secret'] = 'Messaging API のチャネルシークレットと同じです。LINE ログインのチャネルのシークレットを入れてください';
+        } elseif (!isset($err['login_secret'])) {
+            list($c5, $st) = self::http('POST', 'https://api.line.me/v2/oauth/accessToken', [], null, ['grant_type' => 'client_credentials', 'client_id' => $k['login_id'], 'client_secret' => $k['login_secret']]);
+            if ($c5 === 200 && !empty($st['access_token'])) {
+                self::http('POST', 'https://api.line.me/v2/oauth/revoke', [], null, ['access_token' => $st['access_token']]);
+                $err['login_id'] = 'これは Messaging API のチャネルの ID です。LINE ログインのチャネルの ID とシークレットを入れてください';
+            }
+        }

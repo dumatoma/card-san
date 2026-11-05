@@ -1,11 +1,12 @@
 <template>
-    <view>
+    <view class="cs-si">
         <view class="titleTop">
             <view v-text="name"></view>
             <image src="../../static/svg/button.svg" alt="" style="width: 48upx;height: 48upx;position: absolute;left: 32upx;top: 32upx;" @click="closeThis">
             <image/>
         </view>
         <view style="height: 112upx;"></view>
+        <!-- [カスタムエイド 2026-11-03] Near By のプレビューを、店舗情報の画面(最新)と同じ作りに(storeInformation.vue から写した。地図のボタンは今までどおり toMap) -->
         <view class="swiper">
             <!-- [カスタムエイド 2026-10-19] 点(●●●)をやめ、2枚以上のときだけ右下に「3 / 12」と今の位置を表示。
                  画像を押したら全画面で表示し、左右にスワイプで次の画像(メニューの写真と同じ) -->
@@ -16,12 +17,24 @@
         <view class="items-boxs">
             <view class="jj" v-if="shopInfo.des" v-text="shopInfo.des">
             </view>
+            <!-- クチコミ（Googleビジネス連携店舗のみ表示） -->
+            <view class="review-entry" v-if="reviewInfo.connected" @click="toReviews" hover-class="hover1">
+                <view class="review-badge">★</view>
+                <view class="review-score">{{ reviewInfo.avg_rating ? reviewInfo.avg_rating.toFixed(1) : '0.0' }}</view>
+                <view class="review-stars">
+                    <text v-for="i in 5" :key="i"
+                        :class="i <= Math.round(reviewInfo.avg_rating) ? 'star-on' : 'star-off'">★</text>
+                </view>
+                <view class="review-count">・{{ reviewInfo.total }}クチコミ</view>
+                <view class="review-arrow">›</view>
+            </view>
+            <view class="cs-group">
             <view class="items">
                 <view class="items-fle">
                     <view class="left">
                         TEL　
                     </view>
-                    <view class="midd" v-text="shopInfo.phone"></view>
+                    <view class="midd w328" v-text="shopInfo.phone"></view>
                     <view class="right phone-btn" @click.stop="call" hover-class="click-hover">
                         電話する
                     </view>
@@ -32,8 +45,7 @@
                     <view class="left">
                         営業時間
                     </view>
-                    <view class="midd">
-                        <view v-html="shopInfo.business_time"></view>
+                    <view class="midd" v-text="shopInfo.business_time">
                     </view>
                 </view>
             </view>
@@ -42,8 +54,7 @@
                     <view class="left">
                         定休日
                     </view>
-                    <view class="midd">
-                        <view class="" v-html="shopInfo.rest_time"></view>
+                    <view class="midd" v-text="shopInfo.rest_time">
                     </view>
                 </view>
             </view>
@@ -52,12 +63,11 @@
                     <view class="left">
                         本日
                     </view>
-                    <view class="midd">
+                    <view class="midd w328">
                         <view class="">
                             {{today.month}}月{{today.date}}日({{today.week}})
                         </view>
                         <view :style="`color:${shopInfo.business_color}`">{{shopInfo.business_name}}</view>
-                        <!-- <view>{{bsTime[0].start}}</view> -->
                         <view class="" v-if="bsTime.length > 0 && shopInfo.business_name != '休業日'">
                             <view v-for="(item,index) in bsTime">
                                 {{item.start}}~{{item.end}}
@@ -66,17 +76,16 @@
                     </view>
                     <view class="right ri-img" @click="toca"
                         style="border: 2upx solid #707070;display: flex;align-items: center;justify-content: center;"
-                        hover-class="cs-btn-hover">
-                        <image src="../../static/image/rili.png" mode="" style="vertical-align: middle;"></image>
+                        hover-class="cs-map-hover">
+                        <!-- [カスタムエイド 2026-10-25] アイコンもボタンの文字と同じ青に -->
+                        <view class="cs-cal-ic"></view>
                         <text>カレンダー</text>
                     </view>
                 </view>
             </view>
+            </view>
         </view>
-        <!-- <view class="maps">
-            <image class="map" src="../../static/image/map.png" mode="aspectFill"></image>
-           
-        </view> -->
+        <view class="cs-group">
         <view class="zhu-item" style="border-top: none !important;">
             <view class="zhu-box">
                 <view class="zhu-left">
@@ -95,8 +104,10 @@
                 </view>
             </view>
             <!-- [カスタムエイド 2026-10-19] 地図ボタンの前の空白(39px)をなくし、ボタンは住所のすぐ下に並べる -->
-            <view class="map-btn" @click="toMap" hover-class="cs-btn-hover">
-                地図アプリで見る
+            <!-- [カスタムエイド 2026-10-25] 薄い青・横いっぱい。頭に地図のアイコン(下のメニューの「店舗情報」と同じ形・赤) -->
+            <view class="map-btn" @click="toMap" hover-class="cs-map-hover">
+                <view class="cs-map-ic" :style="`backgroundImage: url(${svgMap})`"></view>
+                <text>地図アプリで見る</text>
             </view>
         </view>
         <view class="zhu-item">
@@ -104,8 +115,7 @@
                 <view class="zhu-left">
                     アクセス　　
                 </view>
-                <view class="zhu-right">
-                    <view class="" v-text="shopInfo.traffic_explain"></view>
+                <view class="midd ml" v-text="shopInfo.traffic_explain">
                 </view>
             </view>
         </view>
@@ -128,8 +138,7 @@
                 <view class="zhu-left">
                     利用可能決済
                 </view>
-                <view class="zhu-right">
-                    <view class="" v-text="shopInfo.pay_type"></view>
+                <view class="midd ml" v-text="shopInfo.pay_type">
                 </view>
             </view>
         </view>
@@ -138,13 +147,15 @@
                 <view class="zhu-left">
                     備考
                 </view>
-                <view class="zhu-right" v-text="shopInfo.remark">
+                <view class="midd ml" v-text="shopInfo.remark">
                 </view>
             </view>
+        </view>
         </view>
         <view class="staff">
             STAFF
         </view>
+        <view class="cs-group" v-if="shopInfo.staff_des == 1 && staff.length > 0">
         <view class="store-popel-box" v-for="(item,index) in staff" :key="index" v-if="shopInfo.staff_des == 1">
             <view class="store-box">
                 <view class="store-left" v-if="staff.length > 0">
@@ -168,13 +179,14 @@
                 </view>
             </view>
         </view>
+        </view>
         <view class="shar" v-if="shopInfo.share_line == 1">
             <view class="shar-tit">
                 友達にアプリを紹介
             </view>
             <view class="shar-btn" @click="copy">
-                <image src="../../static/image/shaere.png" mode=""></image>
-                <text>アプリダウンロードリンクをコピー</text>
+                <image src="../../static/icons/infoa.png" mode=""></image>
+                <view class="w">アプリダウンロードリンクをコピー</view>
             </view>
         </view>
         <view class="shar-line"> </view>
@@ -192,6 +204,9 @@
                 <image src="../../static/image/Twitter.png" v-if="shopInfo.sns_twitter == 1"
                     @click="shareClick(shopInfo.sns_twitter_url)" mode=""></image>
             </view>
+        </view>
+        <!-- [カスタムエイド 2026-10-25] 一番下の余白(下のメニューに隠れないように) -->
+        <view class="cs-si-bottom">
         </view>
         <u-popup :show="imgListShow" :round="10" mode="center" overlayOpacity="1">
             <view class="tu-list">
@@ -243,6 +258,7 @@
     import tabbar from '../../components/tabbar.vue'
     import sp from "@/components/swiper-direct-com.vue"
     import svg30 from '../../static/svgjs/sv_30.js'
+    import svgPin from '../../static/svgjs/s2.js' // [カスタムエイド 2026-11-03] 地図アプリで見るのアイコン
     import {
         getCardInfo,
         getShopInfo,
@@ -258,6 +274,9 @@
         props: ["sid","name"],
         data() {
             return {
+                reviewInfo: { connected: false, avg_rating: 0, total: 0 }, // [カスタムエイド 2026-11-03] クチコミ
+                svgMap: '"' + svgPin + '"', // [カスタムエイド 2026-11-03]
+
                 topIndex: 0, // [カスタムエイド 2026-10-19] TOP画像の今の位置
                 value: 1,
                 showA: false,
@@ -288,7 +307,8 @@
             that.getShopInfo()
             that.today = that.getToday()
             that.getDay()
-            that.svgData30 = that.changeColor(that.svgData30, that.color);
+            that.svgData30 = that.changeColor(that.svgData30, that.color || '#000000');
+            that.svgMap = that.changeColor(that.svgMap, '#EA4335'); // [カスタムエイド 2026-11-03]
             // // #ifdef APP-PLUS
             // var currentWebview = this.$parent.$scope.$getAppWebview()
             // that.currentWebview = currentWebview
@@ -315,6 +335,12 @@
         // 	});
         // },
         methods: {
+            changeColor(url, color) { // [カスタムエイド 2026-11-03] 使っていたのに無くなっていた(コメントになっていた)ので戻した
+                return url.replace(/%23[a-zA-Z0-9]{6}/g, (color || '#000000').replace("#", "%23"));
+            },
+            toReviews() { // [カスタムエイド 2026-11-03] クチコミ(店舗情報と同じ)
+                uni.navigateTo({ url: '../googleReviews/googleReviews?sid=' + this.sid + '&name=' + encodeURIComponent(this.shopInfo.shop_name || '') })
+            },
             // [カスタムエイド 2026-10-19] TOP画像:今の位置を覚える/押したら全画面で表示
             topChange(e) {
                 this.topIndex = (e && e.current) || 0
@@ -414,6 +440,7 @@
                     if (res.code == 200) {
                         that.shopInfo = res.data.shop
                         that.staff = res.data.admin3
+                        that.reviewInfo = res.data.review || { connected: false, avg_rating: 0, total: 0 } // [カスタムエイド 2026-11-03]
                         uni.request({
                             url: "https://maps.googleapis.com/maps/api/geocode/json?address=〒" + that
                                 .shopInfo.zip_code + " " + that.shopInfo.address1 + that.shopInfo.address2 +
@@ -1089,5 +1116,865 @@
     .store-popel-box .store-box .store-right .store-des {
         font-size: 26rpx !important;
         line-height: 1.6;
+    }
+</style>
+<style lang="scss" scoped>
+    /* [カスタムエイド 2026-11-03] 店舗情報(storeInformation.vue)の見た目をそのまま写した。Near By のプレビューを最新の作りにするため */
+    .review-entry{
+        display: flex;
+        align-items: center;
+        padding: 28upx 40upx;
+        border-bottom: 2rpx solid #d2d2d7;
+    }
+    .review-entry .review-badge{
+        width: 44upx;
+        height: 44upx;
+        border-radius: 10upx;
+        background: #E8F0FE;
+        color: #1A73E8;
+        font-size: 26upx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 18upx;
+    }
+    .review-entry .review-score{
+        font-size: 32upx;
+        font-weight: bold;
+        color: #1D1D1F;
+        margin-right: 12upx;
+    }
+    .review-entry .review-stars{
+        font-size: 30upx;
+    }
+    .review-entry .review-stars .star-on{
+        color: #FBBC04;
+    }
+    .review-entry .review-stars .star-off{
+        color: #D2D2D7;
+    }
+    .review-entry .review-count{
+        flex: 1;
+        font-size: 26upx;
+        color: #707070;
+        margin-left: 8upx;
+    }
+    .review-entry .review-arrow{
+        font-size: 44upx;
+        color: #C7C7CC;
+        margin-left: 12upx;
+    }
+
+    .jj{
+        font-size: 32rpx;
+        // font-family: Noto Sans Kannada, Noto Sans Kannada;
+        color: #1D1D1F;
+        font-weight: bold;
+        border-bottom: 2rpx solid #d2d2d7;
+        padding: 40upx;
+        white-space: pre-wrap;
+    }
+    
+    .jj textarea{
+        display: block;
+        margin: 0 auto;
+        width: 100% !important;
+    }
+    .mask {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(29, 29, 31, 0.2);
+        z-index: 999;
+
+        .maskcontent {
+            width: 356upx;
+            height: 292upx;
+            background: #fff;
+            border-radius: 20upx;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 60upx;
+            font-size: 32upx;
+            color: #707070;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+
+            .mi {
+                width: 100upx;
+                height: 100upx;
+                margin-bottom: 40upx;
+            }
+
+        }
+    }
+
+    .click-hover {
+        background: rgba(26, 115, 232, .6) !important;
+    }
+
+    .hover1 {
+        background: rgba(29, 29, 31, .16) !important;
+    }
+
+    .hover2 {
+        background: rgba(26, 115, 232, .6) !important;
+    }
+
+    page {
+        font-family: Hiragino Sans-W3, Hiragino Sans, Hiragino Sans-W5 !important;
+    }
+
+    ::v-deep .u-tabbar__content {
+        height: 164rpx;
+    }
+
+    ::v-deep .u-tabbar__content__item-wrapper {
+        padding-top: 20rpx;
+    }
+
+    ::v-deep .u-navbar__content__title {
+        font-size: 40rpx;
+        color: #1D1D1F;
+    }
+    .w328{
+        width: 328rpx !important;
+    }
+    .cop {
+        width: 120upx;
+        height: 52upx;
+        line-height: 52rpx;
+        text-align: center;
+        color: #86868B;
+        font-weight: 700;
+        font-size: 24rpx;
+        border: 2rpx solid #86868B;
+        border-radius: 10rpx;
+        z-index: 9 !important;
+        background-color: #F5F5F7;
+    }
+
+    .u-nav-right {
+        image {
+            width: 48rpx;
+            height: 48rpx;
+        }
+    }
+    .ml{
+        font-size: 28rpx;
+        color: #1D1D1F;
+        white-space: pre-wrap;
+    }
+    .items-boxs {
+        // margin-top: 80rpx;
+
+        .items {
+            border-bottom: 1px solid #D2D2D7;
+
+            .items-fle {
+                width: 90%;
+                margin: 0 auto;
+                height: 150rpx;
+                display: flex;
+                // justify-content: space-between;
+                align-items: center;
+
+                .left {
+                    font-size: 28rpx;
+                    width: 114rpx;
+                    font-family: Hiragino Sans-W3;
+                    color: #707070;
+                    flex-shrink: 0;
+                }
+
+                .midd {
+                    font-size: 28rpx;
+                    color: #1D1D1F;
+                    margin-left: 40rpx;
+                    white-space: pre-wrap;
+                    
+                    .blue {
+                        color: #1A73E8;
+                    }
+                }
+
+                .ri-img {
+                    width: 236rpx;
+                    height: 80rpx;
+                    line-height: 80rpx;
+                    text-align: center;
+                    font-size: 28rpx;
+                    color: #707070;
+                    background: #F5F5F7;
+                    border-radius: 20rpx;
+
+                    image {
+                        width: 38rpx;
+                        height: 32rpx;
+                        vertical-align: middle;
+                    }
+
+                    text {
+                        margin-left: 12rpx;
+                        vertical-align: middle;
+                    }
+                }
+
+                .phone-btn {
+                    width: 200rpx;
+                    height: 80rpx;
+                    line-height: 80rpx;
+                    text-align: center;
+                    background: #1A73E8;
+                    font-size: 28rpx;
+                    border-radius: 20rpx;
+                    color: #FFFFFF;
+                    z-index: 9
+                }
+            }
+        }
+    }
+
+    .fix {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+
+        .fix-cen {
+            width: 90%;
+            margin: 0 auto;
+            height: 112rpx;
+            line-height: 112rpx;
+            font-size: 40rpx;
+            background: #FFFFFF;
+            border-radius: 28rpx;
+            box-sizing: border-box;
+            padding: 0 40rpx;
+            margin-bottom: 20rpx;
+            display: flex;
+            align-items: center;
+
+            image {
+                width: 48rpx;
+                height: 48rpx;
+                margin-right: 33rpx;
+
+            }
+
+            text {
+
+                color: #1A73E8;
+
+            }
+
+            .xiao {
+                display: inline-block;
+                width: 100%;
+                color: #D93025;
+                text-align: center;
+            }
+
+            .phone {
+                margin-left: 50rpx;
+            }
+        }
+    }
+
+    .maps {
+        width: 100%;
+        height: 416rpx;
+        // background-color: #F5F5F7;
+        // padding-bottom: 60rpx;
+        position: relative;
+
+        .map {
+            width: 100%;
+            height: 100%;
+        }
+
+
+    }
+
+
+
+    .map-btn {
+        width: 232rpx;
+        height: 68rpx;
+        line-height: 68rpx;
+        text-align: center;
+        color: #86868B;
+        font-weight: 700;
+        font-size: 24rpx;
+        border: 2rpx solid #86868B;
+        border-radius: 10rpx;
+        z-index: 9 !important;
+        background-color: #F5F5F7;
+        position: absolute;
+        right: 40upx;
+        bottom: 20upx
+    }
+
+    .zhu-item {
+        border-top: 1px solid #D2D2D7;
+        background: #FFFFFF;
+        // height: 192rpx;
+        position: relative;
+
+        .zhu-box {
+            width: 90%;
+            margin: 40rpx auto;
+            display: flex;
+
+            .zhu-left {
+                flex-shrink: 0;
+                width: 112rpx;
+                font-size: 28rpx;
+                color: #707070;
+                margin-right: 40rpx;
+            }
+
+            .zhu-right {
+                font-size: 28rpx;
+                color: #1D1D1F;
+
+                .lian {
+                    color: #007AFF;
+                }
+            }
+        }
+    }
+
+    .zhu-item-border {
+        border-bottom: 1px solid #D2D2D7;
+        margin-bottom: 120rpx;
+    }
+
+    .staff {
+        height: 92rpx;
+        line-height: 92rpx;
+        background: #F5F5F7;
+        font-size: 40rpx;
+        text-align: center;
+        font-weight: 700;
+        color: #1D1D1F;
+    }
+
+    .store-popel-box {
+        background-color: #fff;
+        padding: 60rpx 0;
+        border-bottom: 1px solid #D2D2D7;
+
+        .store-box {
+            width: 90%;
+            margin: 0 auto;
+            display: flex;
+
+            .store-left {
+                flex-shrink: 0;
+                border-radius: 8rpx;
+                width: 278rpx;
+                height: 370rpx;
+                margin-right: 32rpx;
+                position: relative;
+
+                .store-img {
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 8rpx;
+                }
+
+                .cs-count {
+                    position: absolute;
+                    right: 12rpx;
+                    bottom: 12rpx;
+                    height: 44rpx;
+                    padding: 0 14rpx;
+                    border-radius: 22rpx;
+                    background: rgba(0, 0, 0, 0.6);
+                    display: flex;
+                    align-items: center;
+
+                    .cs-count-icon {
+                        width: 24rpx;
+                        height: 24rpx;
+                        margin-right: 8rpx;
+                    }
+
+                    .cs-count-num {
+                        color: #FFFFFF;
+                        font-size: 24rpx;
+                    }
+                }
+            }
+
+            .store-right {
+                color: #1D1D1F;
+                font-size: 32rpx;
+
+                .store-name {
+                    font-weight: 700;
+                    margin-bottom: 40rpx;
+
+
+                }
+
+                .store-identity {
+                    margin-bottom: 36rpx;
+                }
+
+                .store-des {
+                    font-size: 28rpx;
+                    color: #707070;
+                }
+            }
+        }
+    }
+
+    .tu-list {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        background-color: #000;
+
+        .icon {
+            position: absolute;
+            top: 144rpx;
+            left: 38rpx;
+            z-index: 99;
+        }
+
+        .shu-sum {
+            position: absolute;
+            bottom: 122rpx;
+            left: 50%;
+            transform: translate(-50%, 0);
+            color: #fff;
+            font-size: 36rpx;
+        }
+
+        swiper {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translate(0, -50%);
+            width: 100%;
+            height: 560rpx;
+
+            swiper-item {
+                width: 100%;
+                height: 100%;
+
+                .swiper-item {
+                    width: 100%;
+                    height: 100%;
+
+                    .tu-img {
+                        width: 100%;
+                        height: 100%;
+                    }
+                }
+            }
+        }
+    }
+
+    .shar {
+        width: 90%;
+        margin: 0 auto;
+        margin-top: 44rpx;
+        margin-bottom: 44rpx;
+
+        .shar-tit {
+            color: #1D1D1F;
+            font-size: 32rpx;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .shar-btn {
+            margin-top: 24rpx;
+            width: 100%;
+            text-align: center;
+            background: #FFFFFF;
+            box-shadow: 0px 0px 12rpx 2rpx rgba(29, 29, 31, 0.16);
+            border-radius: 12rpx;
+            border: 2rpx solid #EAEAEA;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 14upx 0;
+            font-size: 28upx;
+            justify-content: center;
+            
+            image {
+                width: 60rpx;
+                height: 60rpx;
+            }
+
+            .w {
+                margin-left: 20rpx;
+                color: #1D1D1F;
+                font-size: 28rpx;
+                text-align: left;
+            }
+        }
+    }
+
+    .shar-line {
+        width: 100%;
+        height: 1px;
+        background-color: #EAEAEA;
+        margin-bottom: 80rpx;
+    }
+
+    .sns {
+        width: 80%;
+        margin: 0rpx auto;
+        padding-bottom: 240rpx;
+
+        .sns-tit {
+            font-size: 32rpx;
+            color: #1D1D1F;
+            font-weight: 700;
+            margin-bottom: 40rpx;
+            text-align: center;
+        }
+
+        .img-sns {
+            display: flex;
+            justify-content: center;
+           
+            align-items: center;
+
+            image {
+                width: 72rpx;
+                height: 72rpx;
+                 margin: 0 40rpx;
+            }
+        }
+    }
+
+    /* [カスタムエイド 2026-10-19] TOP画像の枚数表示(メニュー写真の枚数ラベルと同じ形) */
+    .swiper {
+        position: relative;
+    }
+    .cs-top-count {
+        position: absolute;
+        right: 24rpx;
+        bottom: 24rpx;
+        z-index: 2;
+        padding: 6rpx 20rpx;
+        border-radius: 24rpx;
+        background: rgba(0, 0, 0, 0.6);
+        color: #FFFFFF;
+        font-size: 24rpx;
+        font-weight: 500;
+        letter-spacing: 1rpx;
+        pointer-events: none;
+    }
+
+    /* ===== [カスタムエイド 2026-10-19] 店舗情報の間延びを直す(モック「Card-San App UI 改善案」) ===== */
+    /* 説明文:太字のまま、余白と行間を詰める */
+    .jj {
+        padding: 28upx 40upx !important;
+        line-height: 1.6;
+    }
+    /* TEL・営業時間などの行:高さの固定(75px)をやめ、上下の余白で決める */
+    .items-boxs .items .items-fle {
+        height: auto !important;
+        min-height: 0 !important;
+        padding: 26rpx 0 !important;
+    }
+    .items-boxs .items .items-fle .left,
+    .zhu-item .zhu-box .zhu-left {
+        width: 140rpx !important; // 「アクセス」が2行に割れないように
+    }
+    .items-boxs .items .items-fle .midd,
+    .zhu-item .zhu-box .zhu-right,
+    .ml {
+        line-height: 1.6;
+    }
+    .zhu-item .zhu-box {
+        margin: 26rpx auto !important;
+        align-items: center;
+    }
+    .zhu-item .zhu-box .zhu-right {
+        flex: 1;
+        min-width: 0;
+        word-break: break-all;
+    }
+    /* 地図アプリで見る:住所のすぐ下・右寄せ(線と重ならないように、浮かせずに並べる) */
+    .map-btn {
+        position: static !important;
+        display: block;
+        margin: -8rpx 5% 26rpx auto;
+    }
+    /* HP:リンクの右にコピー */
+    .zhu-item .zhu-box .cop {
+        flex-shrink: 0;
+        margin-left: 20rpx;
+    }
+    /* カレンダー・地図アプリで見る・コピー:地の色 #F5F5F7、押すと少し濃く */
+    .map-btn,
+    .cop,
+    .ri-img {
+        background-color: #F5F5F7 !important;
+    }
+    .cs-btn-hover {
+        background-color: #E5E5EA !important;
+    }
+    /* STAFF:写真を小さく(139×185px → 90×120px)、文字と余白も詰める */
+    .staff {
+        height: 80rpx !important;
+        line-height: 80rpx !important;
+        font-size: 32rpx !important;
+        letter-spacing: 2rpx;
+    }
+    .store-popel-box {
+        padding: 32rpx 0 !important;
+    }
+    .store-popel-box .store-box .store-left {
+        width: 180rpx !important;
+        height: 240rpx !important;
+        margin-right: 28rpx !important;
+        border-radius: 12rpx;
+        overflow: hidden;
+    }
+    .store-popel-box .store-box .store-right {
+        min-width: 0;
+    }
+    .store-popel-box .store-box .store-right .store-name {
+        font-size: 30rpx;
+        margin-bottom: 8rpx !important;
+    }
+    .store-popel-box .store-box .store-right .store-identity {
+        font-size: 26rpx;
+        color: #515154;
+        margin-bottom: 12rpx !important;
+    }
+    .store-popel-box .store-box .store-right .store-des {
+        font-size: 26rpx !important;
+        line-height: 1.6;
+    }
+
+    /* ===== [カスタムエイド 2026-10-25] 店舗情報:まとまりごとに白いカード(モック「Card-San App 画面改善モック」2回目) ===== */
+    .cs-si {
+        background: #F5F5F7;
+        min-height: 100vh;
+    }
+    /* 画像の下のすき間を2倍に(28 → 56) */
+    .jj {
+        padding-top: 56upx !important;
+        background: #FFFFFF;
+        border-bottom: none !important;
+    }
+    .cs-group,
+    .review-entry,
+    .shar,
+    .sns {
+        background: #FFFFFF;
+        border-radius: 28rpx;
+        margin: 24rpx 24rpx 0 !important;
+        overflow: hidden;
+        width: auto !important;
+    }
+    .review-entry {
+        border-bottom: none !important;
+        padding: 28upx 32upx !important;
+    }
+    /* カードの中の行:左右の余白をそろえ、ボタンの右端をそろえる */
+    .items-boxs .items .items-fle,
+    .zhu-item .zhu-box {
+        width: auto !important;
+        margin-left: 32rpx !important;
+        margin-right: 32rpx !important;
+    }
+    .items-boxs .items {
+        border-bottom: 1px solid #E5E5EA !important;
+    }
+    .items-boxs .cs-group .items:last-child {
+        border-bottom: none !important;
+    }
+    .zhu-item {
+        border-top: 1px solid #E5E5EA !important;
+        background: transparent !important;
+    }
+    .cs-group > .zhu-item:first-child {
+        border-top: none !important;
+    }
+    .zhu-item-border {
+        border-bottom: none !important;
+        margin-bottom: 0 !important;
+    }
+    .items-boxs .items .items-fle .midd {
+        flex: 1;
+        min-width: 0;
+    }
+    .items-boxs .items .items-fle .right,
+    .zhu-item .zhu-box .cop {
+        margin-left: auto !important;
+        flex-shrink: 0;
+    }
+    /* ボタン:色・大きさは今のまま。角を丸く、文字は太字にしない */
+    .items-boxs .items .items-fle .phone-btn,
+    .items-boxs .items .items-fle .ri-img,
+    .cop {
+        border-radius: 999rpx !important;
+        font-weight: normal !important;
+    }
+    /* 地図アプリで見る:住所のすぐ下・横いっぱい・薄い青。線はボタンの下(次の行の上の線) */
+    .map-btn {
+        position: static !important;
+        width: auto !important;
+        height: 80rpx !important;
+        line-height: normal !important;
+        margin: 0 32rpx 32rpx !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        border: none !important;
+        border-radius: 999rpx !important;
+        background-color: #EEF4FF !important;
+        color: #1A73E8 !important;
+        font-size: 28rpx !important;
+        font-weight: normal !important;
+    }
+    .cs-map-ic {
+        width: 40rpx;
+        height: 40rpx;
+        margin-right: 10rpx;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+    .cs-map-hover {
+        background-color: #DCE8FD !important;
+    }
+    /* STAFF:見出しは背景の上に、写真と紹介は白いカードに */
+    .staff {
+        background: transparent !important;
+        margin-top: 16rpx;
+    }
+    .store-popel-box {
+        background: transparent !important;
+        border-bottom: 1px solid #E5E5EA !important;
+    }
+    .cs-group .store-popel-box:last-child {
+        border-bottom: none !important;
+    }
+    .store-popel-box .store-box {
+        width: auto !important;
+        margin: 0 32rpx !important;
+    }
+    /* 友達に紹介・SNS もカードに */
+    .shar {
+        padding: 32rpx;
+    }
+    .shar .shar-btn {
+        box-shadow: none !important;
+    }
+    .shar-line {
+        display: none;
+    }
+    .sns {
+        padding: 32rpx 0 40rpx !important;
+    }
+    .cs-si-bottom {
+        height: 240rpx;
+    }
+
+    /* [カスタムエイド 2026-10-25] 読み込めなかったとき */
+    .cs-fail {
+        background: #FFFFFF;
+        border-radius: 28rpx;
+        margin: 24rpx;
+        padding: 40rpx 32rpx;
+        text-align: center;
+    }
+    .cs-fail-t {
+        font-size: 30rpx;
+        font-weight: 700;
+        color: #1D1D1F;
+    }
+    .cs-fail-m {
+        margin-top: 12rpx;
+        font-size: 26rpx;
+        color: #6E6E73;
+        line-height: 1.6;
+    }
+    .cs-fail-b {
+        margin: 28rpx auto 0;
+        width: 360rpx;
+        height: 80rpx;
+        line-height: 80rpx;
+        border-radius: 999rpx;
+        background: #EEF4FF;
+        color: #1A73E8;
+        font-size: 28rpx;
+    }
+    /* [カスタムエイド 2026-10-25] 項目名(アクセス・利用可能決済など)が2行に割れないように、幅を広げて1行に */
+    .items-boxs .items .items-fle .left,
+    .zhu-item .zhu-box .zhu-left {
+        width: 176rpx !important;
+        white-space: nowrap;
+        margin-right: 24rpx !important;
+    }
+    .items-boxs .items .items-fle .midd {
+        margin-left: 0 !important;
+    }
+
+    /* ===== [カスタムエイド 2026-10-25 c] 店舗情報:ボタンの色・STAFF の位置・カードの間 ===== */
+    /* 電話する・カレンダー・地図アプリで見る:薄い青の地・青の文字・青の枠線(3つとも同じ配色) */
+    .items-boxs .items .items-fle .phone-btn,
+    .items-boxs .items .items-fle .ri-img,
+    .map-btn {
+        background-color: #EEF4FF !important;
+        color: #1A73E8 !important;
+        border: 2rpx solid #1A73E8 !important;
+        box-sizing: border-box;
+    }
+    .items-boxs .items .items-fle .ri-img {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+    .items-boxs .items .items-fle .ri-img text {
+        color: #1A73E8 !important;
+    }
+    .cs-cal-ic {
+        width: 36rpx;
+        height: 36rpx;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231A73E8' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2.5'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3Ccircle cx='8' cy='14' r='.6' fill='%231A73E8'/%3E%3Ccircle cx='12' cy='14' r='.6' fill='%231A73E8'/%3E%3Ccircle cx='16' cy='14' r='.6' fill='%231A73E8'/%3E%3Ccircle cx='8' cy='17.5' r='.6' fill='%231A73E8'/%3E%3Ccircle cx='12' cy='17.5' r='.6' fill='%231A73E8'/%3E%3C/svg%3E") center / contain no-repeat;
+        flex-shrink: 0;
+    }
+    .click-hover,
+    .cs-map-hover {
+        background-color: #DCE8FD !important;
+    }
+    /* カードとカードの間を 1.5倍に(24 → 36) */
+    .cs-group,
+    .review-entry,
+    .shar,
+    .sns {
+        margin-top: 36rpx !important;
+    }
+    /* STAFF:スタッフのカードのすぐ上(約5px)に */
+    .staff {
+        height: auto !important;
+        line-height: 1.4 !important;
+        margin: 48rpx 0 0 !important;
+        padding: 0 !important;
+    }
+    .staff + .cs-group {
+        margin-top: 10rpx !important;
+    }
+
+    /* [カスタムエイド 2026-11-03] カードの影(2026-11-03):下へ1px・ぼかし4px・黒10%。グレーの背景と白いカードの境目を分かりやすく */
+    .cs-group, .review-entry, .shar, .sns, .cs-fail {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
 </style>

@@ -1,0 +1,1 @@
+cd /www/wwwroot/api.card-san.jp && grep -n "'shop' =>" -A4 config/auth.php | head -12; grep -rn "privileges" app --include=*.php | grep -v "^\S*Libs/Cs" | head -15; grep -n "cs-mail-ok\|CsShopMail" routes/web.php routes/api.php; grep -n "cs/iap/restore" -B3 routes/api.php

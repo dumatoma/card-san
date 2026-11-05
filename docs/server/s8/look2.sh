@@ -1,0 +1,1 @@
+cd /www/wwwroot/api.card-san.jp && sed -n 45,60p routes/api.php; echo ===VIP; grep -n "vip\|Vip\|stripe\|Stripe\|subscri\|cancel\|cs/iap" routes/api.php | sed -n 1,60p; echo ===MW; grep -n "shop.privilege\|shop.auth" app/Http/Kernel.php; ls app/Http/Middleware | head -30

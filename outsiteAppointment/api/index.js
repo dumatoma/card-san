@@ -366,3 +366,53 @@ export const getAppleInfo = (id,token) => {
         method: "get"
     })
 }
+
+// [カスタムエイド 2026-11-04] 段階9:LINE で受け取る(LIFF)。予約の内容を預ける・読む・LINE で本人を確かめる
+export const csLineDraft = (data) => {
+    return request({
+        url: "/api/member/cs-line/draft",
+        method: "post",
+        data: data
+    })
+}
+export const csLineDraftGet = (d) => {
+    return request({
+        url: "/api/member/cs-line/draft?d=" + encodeURIComponent(d),
+        method: "get"
+    })
+}
+export const csLineLiff = (data) => {
+    return request({
+        url: "/api/member/cs-line/liff",
+        method: "post",
+        data: data
+    })
+}
+
+// [カスタムエイド 2026-11-04 追記6] LINE の中で予約が終わったことを預ける・予約WEB の元の画面が聞く
+export const csLineDone = (data) => {
+    return request({
+        url: "/api/member/cs-line/done",
+        method: "post",
+        data: data
+    })
+}
+export const csLineDoneGet = (d) => {
+    return request({
+        url: "/api/member/cs-line/done?d=" + encodeURIComponent(d),
+        method: "get"
+    })
+}
+// [カスタムエイド 2026-11-04 追記9] パソコンで LINE だけのお店:ブラウザで LINE にログインする(住所をもらう)・戻ったあと友だちか確かめる
+export const csLineAuth = (sid, back) => {
+    return request({
+        url: "/api/member/cs-line/auth?sid=" + encodeURIComponent(sid) + "&back=" + encodeURIComponent(back),
+        method: "get"
+    })
+}
+export const csLineTicket = (sid, t) => {
+    return request({
+        url: "/api/member/cs-line/ticket?sid=" + encodeURIComponent(sid) + "&t=" + encodeURIComponent(t),
+        method: "get"
+    })
+}

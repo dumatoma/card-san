@@ -1,0 +1,1 @@
+cd /www/wwwroot/api.card-san.jp && grep -n "public function\|phone\|'name'\|email\|return \[" app/Validators/OrderValidator.php | head -40; echo ===; sed -n 263,300p app/Http/Controllers/Api/Shop/OrderController.php; echo ===; sed -n 480,520p app/Http/Controllers/Api/Shop/OrderController.php

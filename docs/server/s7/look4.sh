@@ -1,0 +1,1 @@
+cd /www/wwwroot/api.card-san.jp && sed -n 18,60p app/Validators/OrderValidator.php; echo ===INDEX; sed -n 36,120p app/Http/Controllers/Api/Shop/OrderController.php | grep -n "'name'\|cate_name\|'m' =>\|appoint_said\|orders\[\]\|=> \$v->\|=> \$order->" | head -30

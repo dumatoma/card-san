@@ -1,0 +1,1 @@
+cd /www/wwwroot/api.card-san.jp && cat app/Http/Middleware/ShopPrivilege.php; echo ===; sed -n 205,235p routes/api.php; echo ===; grep -n "public function" app/Http/Controllers/Api/Shop/VipController.php app/Http/Controllers/Api/Shop/VipCountController.php

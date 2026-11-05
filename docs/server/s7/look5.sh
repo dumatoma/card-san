@@ -1,0 +1,1 @@
+cd /www/wwwroot/api.card-san.jp && F=app/Http/Controllers/Api/Shop/OrderController.php; sed -n 395,425p $F; echo ===UPD; sed -n 712,736p $F; echo ===DEL; sed -n 836,862p $F; echo ===OTHER; grep -rln "CsSmsText::build\|CsReserveMail::send" app | grep -v OrderController

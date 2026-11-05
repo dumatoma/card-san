@@ -1092,6 +1092,21 @@ $model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->
 | 記録 | プロジェクト資料「CardSan_管理App1.0.60・CardSanApp1.1.25_修正記録…_20261103」「CardSan_お店へのお知らせメール(サーバー②)_作業記録_20261103」「CardSan_無料期間の終わり方とお知らせ_決定事項_20261102」「CardSan_カードのドロップシャドウ_決定と作業計画_20261103」 |
 
 
+### 94. 2026-11-03〜11-05(管理App 1.0.61〜1.0.62・Card-San App 1.1.26〜1.1.27・予約WEB・サーバー)
+
+| 項目 | 内容 |
+|---|---|
+| 版 | 管理App 1.0.61(1116)・**1.0.62(1117)**/Card-San App 1.1.26(1102)・**1.1.27(1103)**。いずれも iOS をビルドしてデリバリ済み |
+| 予約Webサイトの設定(段階7〜9・管理App) | `pages/outAppoint/outAppoint.vue`(予約ページの URL・メール・SMS・LINE のブロック)・`pages/outAppoint/lineSetting.vue`(LINE予約の設定:鍵の見せ方・Webhook/コールバックの URL・解除)・`pages/accounts/usage/usage.vue`(ご利用状況)・`components/csNoPerm/csNoPerm.vue`。外部の予約・お店が入れる予約のメール欄(`components/appointment/new.vue`・`add.vue`・`progress.vue`・`pages/appointment/…`) |
+| LINE が届かないときの赤い表示(管理App) | `components/csContact/csContact.vue`(`ng`)、予約通知・予約詳細・予約内容、予約の画面の「LINE の今月の上限」 |
+| 他社のバーコード(管理App・Card-San App) | 管理App `components/csCardForm/csCardForm.vue`・`pages/customer/detail`・`edit`/Card-San App `pagesA/shopDetails/shopDetails.vue`(マイカードにバーコードと番号) |
+| Card-San App 1.1.27 | LINE でサインインの下の一文(`pages/login/login.vue`・`pages/register/register.vue`)、Near By のプレビュー(`pagesA/indexInfo/indexInfo.vue`)、マイカードの影といちばん下の間 |
+| 予約WEB | LINE で受け取る(`pages/liff/liff.vue`・`pages/AppointmentConfirmation/AppointmentConfirmation.vue`:パソコンで LINE だけのお店はブラウザの LINE ログイン)・`api/index.js`・`App.vue`(フッターの帯の幅)・受け付ける方法のマーク `static/image/ch_*.svg`。11/04 に公開済み |
+| サーバー(写し) | `docs/server/s7`(予約受付用メールアドレス・外部の予約)・`s8`(SMS オプション・ご利用状況・副管理者)・`s9`(LINE 予約。追記1〜11)・`extbc`(他社のバーコード)・`customaid_*.tgz`。`s9/CsLine.php` はサーバーと同じ中身(追記10 まで) |
+| LINE ログインの鍵(11/05) | Card-San App の LINE ログインのシークレットを `app/Libs/Line.php` から `.env` に移して作り直した。合言葉が固定だった古い入口 `get_login_url` は止めた(`s9/s9_line_fix11.php`) |
+| 記録 | プロジェクト資料「CardSan_LINEで予約のお知らせ(段階9)_仕様書_20261103」「CardSan_LINE予約_サポートページと他システムからの乗り換え_決定事項_20261104」「CardSan_LINEログインの鍵と合言葉・LINE鍵のエラー文_修正記録_20261105」 |
+
+
 ## 今後の運用ルール
 
 - 修正は「ソースを修正 → ビルドして本番に配置 → 同じ日に GitHub に反映」を1セットで行う

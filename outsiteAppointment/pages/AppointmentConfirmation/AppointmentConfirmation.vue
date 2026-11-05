@@ -14,7 +14,7 @@
         
         <!-- [カスタムエイド 2026-10-22] 予約前の最終確認の画面を見やすく(白いカード・大きめの文字)。ボタンの仕様(氏名・電話番号を入れて確認にチェックするまで薄い色)は今までどおり、色を濃く -->
         <view class="rc-page">
-            <view class="rc-lead">予約内容をご確認ください<text class="rc-lead-s">お名前・電話番号・メールアドレスを入力し、内容に間違いがなければ「予約を確定する」を押してください。</text></view>
+            <view class="rc-lead">予約内容をご確認ください<text class="rc-lead-s">{{ leadText }}</text></view>
 
             <view class="rc-sec">ご予約の内容</view>
             <view class="rc-card">
@@ -44,23 +44,48 @@
                 <view class="rc-note">予約確定後のキャンセルは、直接お店にご連絡ください。</view>
             </view>
 
-            <view class="rc-sec">お客様情報(<text class="rc-req">※</text>は必須)</view>
-            <view class="rc-card">
-                <view class="rc-row rc-row-in">
-                    <view class="rc-lab"><text class="rc-req">※</text>氏名</view>
-                    <input class="rc-in" v-model="name" placeholder="例:山田 花子" placeholder-style="color:#AEAEB2" />
+            <!-- [カスタムエイド 2026-11-03] 段階8-1:受け取り方法(お店がオンにした方法だけ。2つ以上のときだけボタンを出す)と、その方法に必要な欄 -->
+            <view class="rc-sec">お客様情報</view>
+            <view class="rc-card rc-fcard">
+                <block v-if="chCount > 1">
+                    <view class="rc-flab rc-flab-ch">予約内容の受け取り方法</view>
+                    <view class="rc-chs">
+                        <view v-if="chs.mail" class="rc-chb m" :class="{ on: pick == 'mail' }" @click="pickCh('mail')">
+                            <image class="rc-chi" src="../../static/image/ch_mail.svg" mode="aspectFit"></image>
+                            <text class="rc-cht">メール</text>
+                            <text class="rc-ck" v-if="pick == 'mail'">✓</text>
+                        </view>
+                        <view v-if="chs.sms" class="rc-chb s" :class="{ on: pick == 'sms' }" @click="pickCh('sms')">
+                            <image class="rc-chi" :src="pick == 'sms' ? '../../static/image/ch_sms_w.svg' : '../../static/image/ch_sms.svg'" mode="aspectFit"></image>
+                            <text class="rc-cht">SMS(電話番号に送信)</text>
+                            <text class="rc-ck" v-if="pick == 'sms'">✓</text>
+                        </view>
+                        <!-- [カスタムエイド 2026-11-04] 段階9:LINE(スマホのときだけ。LINE アプリの中で予約を確定する) -->
+                        <view v-if="chs.line" class="rc-chb l" :class="{ on: pick == 'line' }" @click="pickCh('line')">
+                            <image class="rc-chi" src="../../static/image/ch_line.svg" mode="aspectFit"></image>
+                            <text class="rc-cht">LINE</text>
+                            <text class="rc-ck" v-if="pick == 'line'">✓</text>
+                        </view>
+                    </view>
+                </block>
+                <!-- [カスタムエイド 2026-11-04 追記9] 坂本さん:LINE だけのお店をパソコンで開いたときは、ブラウザで LINE にログインしてもらう -->
+                <view v-if="linePc" class="rc-ch-note">パソコンでは、LINE へのログインが必要です(スマホの LINE で QR コードを読むか、メールアドレス・パスワードで)。</view>
+                <view class="rc-fg">
+                    <view class="rc-flab">お名前<text class="rc-b-req">必須</text></view>
+                    <input class="rc-fin" v-model="name" placeholder="例:山田 花子" placeholder-style="color:#AEAEB2" />
                 </view>
-                <view class="rc-row rc-row-in">
-                    <view class="rc-lab"><text class="rc-req">※</text>電話番号</view>
-                    <input class="rc-in" v-model="phone" type="tel" placeholder="ハイフンなし(携帯電話)" placeholder-style="color:#AEAEB2" />
+                <view class="rc-fg">
+                    <view class="rc-flab">{{ pick == 'sms' ? '電話番号(携帯電話)' : '電話番号' }}<text class="rc-b-req">必須</text></view>
+                    <input class="rc-fin" v-model="phone" type="tel" placeholder="ハイフンなし(携帯電話)" placeholder-style="color:#AEAEB2" />
                 </view>
-                <!-- [カスタムエイド 2026-10-30] 段階6:メールアドレス(必須)。予約の内容はメールでお送りする -->
-                <view class="rc-row rc-row-in">
-                    <view class="rc-lab"><text class="rc-req">※</text>メール</view>
-                    <input class="rc-in" v-model="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="例:hanako@example.com" placeholder-style="color:#AEAEB2" />
+                <view class="rc-fg" v-if="pick == 'mail'">
+                    <view class="rc-flab">メール<text class="rc-b-req">必須</text></view>
+                    <input class="rc-fin" v-model="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="例:hanako@example.com" placeholder-style="color:#AEAEB2" />
                 </view>
+                <view class="rc-fnote" v-if="pick == 'mail'">ご予約の内容は、このメールアドレスにお送りします。「@mail.card-san.jp」からのメールを受け取れるようにしてください。届かないときは、迷惑メールのフォルダもご確認ください。</view>
+                <view class="rc-fnote" v-else-if="pick == 'sms'">この電話番号(携帯電話)あてに、SMS で予約内容をお送りします。メールアドレスは入れなくてかまいません。</view>
+                <view class="rc-fnote" v-else>下の「LINE で受け取る」を押すと LINE アプリが開きます。LINE の画面で「予約を確定する」を押すと予約が完了し、お店の LINE から予約内容が届きます。</view>
             </view>
-            <view class="rc-mail-note">ご予約の内容は、このメールアドレスにお送りします。<br />「@mail.card-san.jp」からのメールを受け取れるようにしてください。届かないときは、迷惑メールのフォルダもご確認ください。</view>
 
             <view class="rc-sec">ご要望(任意)</view>
             <view class="rc-card rc-pad">
@@ -70,11 +95,11 @@
 
             <view class="rc-card rc-check" @click="isCheck()">
                 <view class="rc-box" :class="{ on: checked }"><text class="rc-tick" v-if="checked">✓</text></view>
-                <view class="rc-check-t">予約内容を確認しました<text class="rc-check-s">お名前・電話番号・メールアドレスを入れてチェックすると「予約を確定する」が押せます</text></view>
+                <view class="rc-check-t">予約内容を確認しました<text class="rc-check-s">{{ pick == 'mail' ? 'お名前・電話番号・メールアドレス' : 'お名前・電話番号' }}を入れてチェックすると「{{ pick == 'line' ? 'LINE で受け取る' : '予約を確定する' }}」が押せます</text></view>
             </view>
         </view>
         <view class="rc-bar">
-            <view class="rc-btn" :class="{ on: checked && !isSubmitting }" hover-class="rc-btn-h" @click="yuYue()">{{ isSubmitting ? '予約しています…' : '予約を確定する' }}</view>
+            <view class="rc-btn" :class="{ on: checked && !isSubmitting, line: pick == 'line' }" hover-class="rc-btn-h" @click="yuYue()">{{ isSubmitting ? (pick == 'line' ? 'LINE を開いています…' : '予約しています…') : (pick == 'line' ? 'LINE で受け取る' : '予約を確定する') }}</view>
         </view>
         <!-- [カスタムエイド 2026-10-30] 段階6:予約する前に、メールアドレスを大きく見せて確かめてもらう(入力は1回だけ) -->
         <view class="rc-mask" v-if="showMailConfirm" @click.self="showMailConfirm = false">
@@ -94,7 +119,11 @@
     import {
         getStaffList,
         getUserInfo,
-        setOrder
+        setOrder,
+        getShopInfo,
+        csLineDraft,
+        csLineDoneGet,
+        csLineAuth
     } from "@/api/index.js"
     export default {
         data() {
@@ -110,11 +139,18 @@
                 phone:"",
                 email:"", // [カスタムエイド 2026-10-30] 段階6
                 showMailConfirm: false,
+                chs: { mail: 1, sms: 0, line: 0 }, // [カスタムエイド 2026-11-03] お店が受け付ける方法([カスタムエイド 2026-11-04] line を足した)
+                pick: 'mail', // [カスタムエイド 2026-11-03] お客様が選んだ方法
+                lineD: '', lineTimer: null, lineUntil: 0, // [カスタムエイド 2026-11-04 追記6] LINE の中で予約が終わったかを聞くため
+                linePc: false, // [カスタムエイド 2026-11-04 追記9] パソコンで LINE(ブラウザで LINE にログインする)
                 shopname:''
             };
         },
         onShow() {
             setShopTitle()
+        },
+        onUnload() {
+            this.stopLine() // [カスタムエイド 2026-11-04 追記6]
         },
         onLoad(options) {
            let that = this
@@ -123,10 +159,19 @@
            that.query = query
            that.orderItem = uni.getStorageSync("orderItem")
            that.getStaff(query.staff,query.sid)
+           that.loadCh(query.sid) // [カスタムエイド 2026-11-03]
            that.getDate() 
           
         },
         computed: {
+            chCount() { return (this.chs.mail ? 1 : 0) + (this.chs.sms ? 1 : 0) + (this.chs.line ? 1 : 0) },
+            // [カスタムエイド 2026-11-04] 坂本さん:上の説明の文を、選んだ受け取り方法に合わせる
+            leadText() {
+                const head = this.chCount > 1 ? '受け取り方法を選び、' : ''
+                const fields = this.pick == 'mail' ? 'お名前・電話番号・メールアドレス' : 'お名前・電話番号'
+                const btn = this.pick == 'line' ? 'LINE で受け取る' : '予約を確定する'
+                return head + fields + 'を入力し、内容に間違いがなければ「' + btn + '」を押してください。'
+            }, // [カスタムエイド 2026-11-03] ([カスタムエイド 2026-11-04] line)
             // [カスタムエイド 2026-10-30] 段階6:全角の英数字・記号を半角に、空白を取る
             emailClean() {
                 return String(this.email || '').replace(/[\uFF01-\uFF5E]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0) }).replace(/[\s\u3000]/g, '')
@@ -147,6 +192,33 @@
                 return Array.isArray(img) ? (img[0] || '') : ''
             },
 
+            // [カスタムエイド 2026-11-03] お店が受け付ける方法を読む。前に選んだ方法(このブラウザ)があれば、それを選んだ状態に
+            loadCh(sid) {
+                getShopInfo(sid).then((res) => {
+                    const c = res && res.code == 200 && res.data && (res.data.cs_ch || (res.data.shop && res.data.shop.cs_ch))
+                    if (!c) return
+                    // [カスタムエイド 2026-11-04] 段階9:LINE はスマホ(LINE アプリが開ける)のときだけ。パソコンなどでは出さない。LINE だけのお店でも、パソコンにはメールを出す
+                    // [カスタムエイド 2026-11-04 追記9] 坂本さん:LINE だけのお店(メール・SMS なし)は、パソコンでも LINE を出し、ブラウザで LINE にログインしてもらう。メールも受け付けるお店は、パソコンではメールだけ
+                    const lineOnly = c.mail != 1 && c.sms != 1
+                    const lineOk = c.line == 1 && (this.isPhone() || lineOnly)
+                    this.linePc = lineOk && !this.isPhone()
+                    this.chs = { mail: c.mail == 1 ? 1 : 0, sms: c.sms == 1 ? 1 : 0, line: lineOk ? 1 : 0 }
+                    if (!this.chs.mail && !this.chs.sms && !this.chs.line) this.chs.mail = 1
+                    let last = ''
+                    try { last = uni.getStorageSync('cs_ch_pick') || '' } catch (e) {}
+                    if (last && this.chs[last]) this.pick = last
+                    else this.pick = this.chs.mail ? 'mail' : (this.chs.sms ? 'sms' : 'line')
+                }).catch(() => {})
+            },
+            // [カスタムエイド 2026-11-04] 段階9:スマホ(iPhone・Android)か
+            isPhone() {
+                try { return /iPhone|Android.+Mobile|Android/.test(navigator.userAgent || '') && !/iPad/.test(navigator.userAgent || '') } catch (e) { return false }
+            },
+            pickCh(v) {
+                if (!this.chs[v] || this.pick == v) return
+                this.pick = v
+                this.checked = false
+            },
             leftClick() {
                 uni.navigateBack()
             },
@@ -207,15 +279,15 @@
                     return false
                 }
                 
-                // [カスタムエイド 2026-10-30] 段階6:メールアドレスも必須
-                if(!that.emailClean){
+                // [カスタムエイド 2026-10-30] 段階6:メールアドレスも必須([カスタムエイド 2026-11-03] メールを選んだときだけ)
+                if(that.pick == 'mail' && !that.emailClean){
                     uni.showToast({
                         title:"メールアドレスを入力してください",
                         icon:"none"
                     })
                     return false
                 }
-                if(!that.isEmail(that.emailClean)){
+                if(that.pick == 'mail' && !that.isEmail(that.emailClean)){
                     uni.showToast({
                         title:"メールアドレスの形が正しくありません",
                         icon:"none"
@@ -241,6 +313,18 @@
                 }
                 // Loading中の連打による予約重複を防止（送信中はボタンを非活性）
                 if (that.isSubmitting) return
+                // [カスタムエイド 2026-11-04] 段階9:LINE を選んだときは、入れた内容をサーバーに預けて LINE アプリを開く(LINE の中で予約を確定する)
+                if (that.pick == 'line') {
+                    if (!that.phone) { that.checked = false; uni.showToast({ title: "電話番号を入力してください", icon: "none" }); return }
+                    that.openLine()
+                    return
+                }
+                // [カスタムエイド 2026-11-03] SMS を選んだときは、メールアドレスの確認の表示を出さずに予約する
+                if (that.pick == 'sms') {
+                    if (!that.phone) { that.checked = false; uni.showToast({ title: "電話番号を入力してください", icon: "none" }); return }
+                    that.confirmMail()
+                    return
+                }
                 // [カスタムエイド 2026-10-30] 段階6:チェックのあとにメールアドレスを直した場合も、ここで確かめる
                 if (!that.isEmail(that.emailClean)) {
                     that.checked = false
@@ -248,6 +332,111 @@
                     return
                 }
                 that.showMailConfirm = true
+            },
+            // [カスタムエイド 2026-11-04] 段階9:予約の内容(送るもの・LINE の画面に見せるもの)を預けて、LIFF の住所を開く
+            openLine() {
+                let that = this
+                if (that.isSubmitting) return
+                that.isSubmitting = true
+                const order = {
+                    start_time: that.comeTime,
+                    smid: uni.getStorageSync("orderItem").id,
+                    said: that.query.staff * 1,
+                    remark: that.text,
+                    phone: that.phone,
+                    name: that.name,
+                    email: '',
+                    cs_ch: 'line'
+                }
+                const view = {
+                    shop: that.shopname || '',
+                    time: that.comeTime,
+                    menu: (that.orderItem && that.orderItem.title) || '',
+                    price: (that.orderItem && that.orderItem.price) || '',
+                    staff: (that.staff && that.staff.name) || '',
+                    appoint_price: (that.staff && that.staff.appoint_price) || '',
+                    image: that.firstImage(that.orderItem && that.orderItem.image),
+                    name: that.name,
+                    phone: that.phone,
+                    remark: that.text
+                }
+                csLineDraft({ sid: that.query.sid * 1, data: { order: order, view: view } }).then((res) => {
+                    if (res && res.code == 200 && res.data && res.data.liff_url) {
+                        try { uni.setStorageSync('cs_ch_pick', 'line') } catch (e) {}
+                        // [カスタムエイド 2026-11-04 追記9] パソコン:同じ画面で LINE のログインに進む。戻り先は LINE の中と同じ画面(pages/liff/liff。?d= に cs_lt が付いて戻る)
+                        if (that.linePc) { that.goLineLogin(res.data.d); return }
+                        that.watchLine(res.data.d) // [カスタムエイド 2026-11-04 追記6]
+                        // #ifdef H5
+                        window.location.href = res.data.liff_url
+                        // #endif
+                        setTimeout(() => { that.isSubmitting = false }, 3000)
+                    } else {
+                        that.isSubmitting = false
+                        uni.showToast({ title: (res && res.message) || 'LINE を開けませんでした', icon: 'none' })
+                    }
+                }).catch(() => {
+                    that.isSubmitting = false
+                    uni.showToast({ title: 'LINE を開けませんでした', icon: 'none' })
+                })
+            },
+            // [カスタムエイド 2026-11-04 追記9] パソコン:LINE のログインの住所をもらって開く
+            goLineLogin(d) {
+                let that = this
+                let back = ''
+                // #ifdef H5
+                back = window.location.origin + '/reserve/pages/liff/liff?d=' + d
+                // #endif
+                csLineAuth(that.query.sid * 1, back).then((r) => {
+                    if (r && r.code == 200 && r.data && r.data.url) {
+                        // #ifdef H5
+                        window.location.href = r.data.url
+                        // #endif
+                        setTimeout(() => { that.isSubmitting = false }, 3000)
+                    } else {
+                        that.isSubmitting = false
+                        uni.showToast({ title: (r && r.message) || 'LINE を開けませんでした', icon: 'none' })
+                    }
+                }).catch(() => {
+                    that.isSubmitting = false
+                    uni.showToast({ title: 'LINE を開けませんでした', icon: 'none' })
+                })
+            },
+            // [カスタムエイド 2026-11-04 追記6] LINE の中で予約が終わったら(戻ってきたとき・3秒ごと・30分まで)、予約完了の画面に進む
+            watchLine(d) {
+                let that = this
+                that.lineD = d
+                that.lineUntil = Date.now() + 30 * 60 * 1000
+                if (that.lineTimer) clearInterval(that.lineTimer)
+                that.lineTimer = setInterval(() => { that.checkLine() }, 3000)
+                // #ifdef H5
+                if (!that._lineVis) { that._lineVis = () => { if (document.visibilityState == 'visible') that.checkLine() }; document.addEventListener('visibilitychange', that._lineVis) }
+                // #endif
+            },
+            stopLine() {
+                if (this.lineTimer) { clearInterval(this.lineTimer); this.lineTimer = null }
+                // #ifdef H5
+                if (this._lineVis) { document.removeEventListener('visibilitychange', this._lineVis); this._lineVis = null }
+                // #endif
+            },
+            checkLine() {
+                let that = this
+                if (!that.lineD) return
+                if (Date.now() > that.lineUntil) { that.stopLine(); return }
+                csLineDoneGet(that.lineD).then((res) => {
+                    if (!(res && res.code == 200 && res.data && res.data.done == 1)) return
+                    const o = res.data.order || {}
+                    that.stopLine()
+                    that.lineD = ''
+                    uni.removeStorageSync("orderTime")
+                    uni.setStorageSync("lastOrderImage", that.firstImage(that.orderItem && that.orderItem.image))
+                    uni.removeStorageSync("orderItem")
+                    uni.setStorageSync("lastOrderEmail", '')
+                    uni.setStorageSync("lastOrderSms", '')
+                    uni.setStorageSync("lastOrderLine", res.data.bot_name || 'お店')
+                    uni.redirectTo({
+                        url:"../completed/completed?name="+o.name+"&order_no="+o.order_no+"&start_time="+o.start_time+"&amount="+o.amount+"&remark="+o.remark+"&appoint_name="+o.appoint_name+"&menu_name="+o.menu_name+"&id="+o.sid+'&phone='+o.phone+"&appoint_amount="+o.appoint_amount
+                    })
+                }).catch(() => {})
             },
             // [カスタムエイド 2026-10-30] 段階6:確認の表示で「このアドレスで予約する」を押したら予約する
             confirmMail() {
@@ -263,14 +452,18 @@
                 data.remark = that.text
                 data.phone = that.phone
                 data.name = that.name
-                data.email = that.emailClean // [カスタムエイド 2026-10-30] 段階6
+                data.email = that.pick == 'mail' ? that.emailClean : '' // [カスタムエイド 2026-10-30] 段階6
+                data.cs_ch = that.pick // [カスタムエイド 2026-11-03] 受け取り方法(mail / sms)
                 setOrder(data).then((res) => {
                     console.log(res)
                     if(res.code == 200){
                         uni.removeStorageSync("orderTime")
                         uni.setStorageSync("lastOrderImage", that.firstImage(that.orderItem && that.orderItem.image)) // [カスタムエイド 2026-10-22] 予約完了の画面でメニューの写真を出すため
                         uni.removeStorageSync("orderItem")
-                        uni.setStorageSync("lastOrderEmail", that.emailClean) // [カスタムエイド 2026-10-30] 段階6:予約完了の画面で「◯◯にお送りしました」と出すため(アドレスを URL に入れない)
+                        uni.setStorageSync("lastOrderEmail", that.pick == 'mail' ? that.emailClean : '') // [カスタムエイド 2026-10-30] 段階6:予約完了の画面で「◯◯にお送りしました」と出すため(アドレスを URL に入れない)
+                        uni.setStorageSync("lastOrderSms", that.pick == 'sms' ? that.phone : '') // [カスタムエイド 2026-11-03] SMS のとき
+                        uni.setStorageSync("lastOrderLine", '') // [カスタムエイド 2026-11-04 追記6]
+                        try { uni.setStorageSync('cs_ch_pick', that.pick) } catch (e) {} // [カスタムエイド 2026-11-03] 次の予約で同じ方法を選んだ状態に
                         uni.navigateTo({
                             url:"../completed/completed?name="+res.data.order.name+"&order_no="+res.data.order.order_no+"&start_time="+res.data.order.start_time+"&amount="+res.data.order.amount+"&remark="+res.data.order.remark+"&appoint_name="+res.data.order.appoint_name+"&menu_name="+res.data.order.menu_name+"&id="+res.data.order.sid+'&phone='+res.data.order.phone+"&appoint_amount="+res.data.order.appoint_amount
                         })
@@ -549,4 +742,32 @@
     .rc-card {
         box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
     }
+    /* [カスタムエイド 2026-11-03] 受け取り方法のボタン・お客様情報(見出しと欄の間 5px・項目の間 18px・ボタンと「お名前」の間 30px) */
+    .rc-fcard { padding: 36rpx 32rpx !important; display: flex; flex-direction: column; }
+    .rc-fcard > view + view, .rc-fcard > view + .rc-fg, .rc-fcard .rc-fg + .rc-fg, .rc-fcard .rc-fg + .rc-fnote { margin-top: 36rpx; }
+    .rc-flab { font-size: 26rpx; font-weight: 600; color: #1D1D1F; display: flex; align-items: center; }
+    .rc-flab-ch { margin-bottom: 0; font-size: 30rpx; font-weight: 700; } /* [カスタムエイド 2026-11-04] 坂本さん:文字を約2px大きく・少し太く */
+    .rc-b-req { font-size: 20rpx; font-weight: 700; color: #FFFFFF; background: #D93025; border-radius: 8rpx; padding: 2rpx 10rpx; margin-left: 12rpx; line-height: 1.6; }
+    .rc-fg { display: flex; flex-direction: column; }
+    .rc-fg .rc-fin { margin-top: 10rpx; }
+    .rc-fin { height: 88rpx; padding: 0 24rpx; border: 1px solid #D2D2D7; border-radius: 20rpx; background: #FFFFFF; font-size: 30rpx; color: #1D1D1F; }
+    .rc-fnote { font-size: 24rpx; color: #6E6E73; line-height: 1.6; margin-top: 24rpx !important; }
+    /* [カスタムエイド 2026-11-04] 坂本さん:見出しとボタンの間を半分(52→26rpx)・ボタンの高さを約1.5倍(中の絵と文字も大きく)・ボタンとお名前の間を2倍(60→120rpx) */
+    .rc-chs { display: flex; flex-direction: column; margin-bottom: 84rpx; }
+    .rc-fcard > .rc-chs { margin-top: 26rpx; }
+    .rc-ch-note { font-size: 28rpx; color: #515154; line-height: 1.6; background: #E6F4EA; border-radius: 20rpx; padding: 20rpx 24rpx; margin-bottom: 40rpx; } /* [カスタムエイド 2026-11-04 追記9] */
+    .rc-chb { display: flex; align-items: center; border-radius: 28rpx; padding: 36rpx 28rpx; border: 3rpx solid; background: #FFFFFF; font-size: 36rpx; font-weight: 700; }
+    .rc-chb + .rc-chb { margin-top: 20rpx; }
+    .rc-chi { width: 72rpx; height: 72rpx; flex-shrink: 0; margin-right: 24rpx; }
+    .rc-cht { flex: 1; min-width: 0; }
+    .rc-ck { margin-left: 16rpx; font-size: 40rpx; }
+    .rc-chb.m { border-color: #1A73E8; color: #1A73E8; }
+    .rc-chb.m.on { background: #1A73E8; color: #FFFFFF; }
+    .rc-chb.s { border-color: #48484A; color: #48484A; }
+    .rc-chb.s.on { background: #48484A; color: #FFFFFF; }
+    /* [カスタムエイド 2026-11-04] 段階9:LINE */
+    .rc-chb.l { border-color: #06C755; color: #05A847; }
+    .rc-chb.l.on { background: #06C755; color: #FFFFFF; }
+    .rc-btn.line { background: #8BD9A9; }
+    .rc-btn.line.on { background: #06C755; }
 </style>

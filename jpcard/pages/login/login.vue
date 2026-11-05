@@ -22,6 +22,7 @@
             <view class="cs-btn-w" v-if="env == 'ios'" @click="iosLogin" hover-class="cs-btn-press" :hover-stay-time="120"><image class="cs-btn" src="../../static/icons/cs_btn_apple.png"></image></view>
             <view class="cs-btn-w" @click="getUrlGoogle" hover-class="cs-btn-press" :hover-stay-time="120"><image class="cs-btn" src="../../static/icons/cs_btn_google.png"></image></view>
             <view class="cs-btn-w" @click="getUrlLine" hover-class="cs-btn-press" :hover-stay-time="120"><image class="cs-btn" src="../../static/icons/cs_btn_line.png"></image></view>
+            <view class="cs-line-note">LINE でサインインしても、友だち追加は不要です。<br />LINE からお知らせが届くことはありません。</view><!-- [カスタムエイド 2026-11-03] LINE で通知が来るのではという不安をなくす -->
             <view class="cs-btn-w" @click="toCode" hover-class="cs-btn-press" :hover-stay-time="120"><image class="cs-btn" src="../../static/icons/cs_btn_sms.png"></image></view>
         </view>
         <view class="userAgreement">
@@ -422,4 +423,6 @@
             color: #1D1D1F;
         }
     }
+    /* [カスタムエイド 2026-11-03] LINE でサインインの下の一文 */
+    .cs-line-note { width: 540upx; font-size: 22upx; color: #6E6E73; line-height: 1.5; text-align: center; margin: -6upx 0 24upx; }
 </style>

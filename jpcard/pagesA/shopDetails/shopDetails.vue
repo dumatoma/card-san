@@ -26,10 +26,18 @@
                     <view class="img" v-if="info.card_type != 3">
                         <image :src="info.qrcode" mode=""></image>
                     </view>
+                    <!-- [カスタムエイド 2026-11-03] 他社のバーコードを表示するポイントカード:Card-San の会員バーコードの代わりに、お店が入れた他社のバーコードを出す(押しても大きくしない) -->
+                    <block v-else-if="info.cs_ext_bc_type > 0">
+                        <view class="cs-ext" v-if="info.cs_ext_bc_image">
+                            <image class="cs-ext-img" :src="info.cs_ext_bc_image" mode="aspectFit"></image>
+                            <view class="cs-ext-n">{{info.cs_ext_bc_value}}</view>
+                        </view>
+                        <view class="cs-ext-empty" v-else>バーコードはまだ登録されていません。<br />お店のスタッフにお伝えください。</view>
+                    </block>
                     <view class="img" v-else>
                         <image class="tiaoxing" :src="info.qrcode" mode=""></image>
                     </view>
-                    <view class="order-sn" v-text="groupDigits(info.member_id)" v-if="info.is_point == 0"></view>
+                    <view class="order-sn" v-text="groupDigits(info.member_id)" v-if="info.is_point == 0 && !(info.cs_ext_bc_type > 0)"></view>
                 </view>
             </view>
             <view class="cardInfo">
@@ -230,7 +238,7 @@
             </view>
         </u-popup>
         <list :caiDanShow="caiDanShow" :mid="id" :sid="sid" :tabs="tabs" @seed="seed" @selected="chooseItem"></list>
-        <view style="height: 100upx;"></view>
+        <view style="height: 150upx;"></view><!-- [カスタムエイド 2026-11-03] いちばん下のカード(特典など)の下辺が、下のメニューから約25px上になるように(100→150upx。坂本さん) -->
        <!-- <view class="mask">
             <view class="maskContent">
                 <view class="man">
@@ -1537,4 +1545,16 @@
     }
     /* [カスタムエイド 2026-10-28] 会員証を読み込めなかったとき */
     .cs-load-err { margin: 24rpx 24rpx 0; padding: 24rpx 28rpx; background: #FFF4E5; color: #8A5300; border-radius: 20rpx; font-size: 26rpx; line-height: 1.6; }
+    /* [カスタムエイド 2026-11-03] カードの影:My Card の白いカードそれぞれに(上の box-shadow: none より後ろで効かせる。坂本さん) */
+    .top-box,
+    .cardInfo,
+    .appoint,
+    .special {
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.10) !important;
+    }
+    /* [カスタムエイド 2026-11-03] 他社のバーコード */
+    .cs-ext { margin: 24rpx 0 8rpx; padding: 20rpx 16rpx 12rpx; border: 1px solid #E5E5EA; border-radius: 16rpx; background: #FFFFFF; text-align: center; }
+    .cs-ext-img { width: 100%; height: 150rpx; }
+    .cs-ext-n { font-size: 26rpx; letter-spacing: 4rpx; color: #1D1D1F; margin-top: 8rpx; }
+    .cs-ext-empty { margin: 24rpx 0 8rpx; padding: 24rpx; border-radius: 16rpx; background: #FFF4E5; color: #8A4B00; font-size: 26rpx; line-height: 1.6; text-align: center; }
 </style>

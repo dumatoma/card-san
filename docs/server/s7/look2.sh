@@ -1,0 +1,1 @@
+cd /www/wwwroot/api.card-san.jp && sed -n 15,26p app/Http/Controllers/Api/Shop/CardController.php; grep -n "middleware\|prefix('shop')" routes/api.php | head -12; grep -n "public function __construct" -A4 app/Http/Controllers/Controller.php

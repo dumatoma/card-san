@@ -1,0 +1,6 @@
+                ['type' => 'text', 'text' => '予約の詳しいページを見る', 'size' => 'lg', 'weight' => 'bold', 'color' => '#06A64C', 'align' => 'center', 'scaling' => true,
+                    'action' => ['type' => 'uri', 'label' => '予約の詳しいページを見る', 'uri' => CsSmsPage::base() . $code]]]];
+@@@
+                // [カスタムエイド 2026-11-04 追記7] 坂本さん:文を「予約の詳細はこちら」に
+                ['type' => 'text', 'text' => '予約の詳細はこちら', 'size' => 'lg', 'weight' => 'bold', 'color' => '#06A64C', 'align' => 'center', 'scaling' => true,
+                    'action' => ['type' => 'uri', 'label' => '予約の詳細はこちら', 'uri' => CsSmsPage::base() . $code]]]];

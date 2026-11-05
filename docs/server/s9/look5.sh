@@ -1,0 +1,1 @@
+cd /www/wwwroot/api.card-san.jp; php -d disable_functions= artisan route:list --columns=method,uri,middleware 2>&1 | grep -E "reserve-ch|cs/line|cs-line"; echo ===; curl -s -o /dev/null -w "%{http_code}\n" https://api.card-san.jp/api/shop/cs/line; curl -s https://api.card-san.jp/api/shop/cs/line | head -c 300; echo

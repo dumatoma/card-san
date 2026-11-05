@@ -1,0 +1,1 @@
+cd /www/wwwroot/api.card-san.jp && php -d disable_functions= artisan route:list --path=api/shop/vip --columns=method,uri,middleware; php -d disable_functions= artisan route:list --path=api/shop/cs/iap --columns=method,uri,middleware

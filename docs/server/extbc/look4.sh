@@ -1,0 +1,1 @@
+cd /www/wwwroot/api.card-san.jp && echo "### ShopMemberService"; sed -n 9,75p app/Services/ShopMemberService.php; echo "### Member MemberController"; grep -n "public function\|qrcode\|is_point\|getMemberDetail" app/Http/Controllers/Api/Member/MemberController.php | head -30

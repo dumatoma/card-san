@@ -64,6 +64,8 @@
                         </view>
                         <view class="nl-t">{{ item.title }}</view>
                         <view class="nl-c" v-if="item.content">{{ item.content }}</view>
+                        <!-- [カスタムエイド 2026-11-07] Google の最新情報の状態 -->
+                        <view class="nl-g" :class="item.gbp_state" v-if="item.gbp_state && item.gbp_state != 'removed'"><text class="nl-g-i">G</text>{{ item.gbp_state == 'processing' ? '審査中' : item.gbp_state == 'live' ? '掲載中' : item.gbp_state == 'rejected' ? '掲載されませんでした' : '出せませんでした' }}</view>
                     </view>
                 </view>
             </view>
@@ -260,6 +262,11 @@
     .nl-top { display: flex; align-items: center; justify-content: space-between; }
     .nl-date { font-size: 24rpx; color: #8A8A8E; }
     .nl-edited { margin-left: 10rpx; }
+    /* [カスタムエイド 2026-11-07] Google の最新情報の状態 */
+    .nl-g { display: inline-flex; align-items: center; font-size: 22rpx; padding: 4rpx 16rpx; border-radius: 20rpx; margin-top: 10rpx; background: #FFF4E5; color: #B06000; }
+    .nl-g.live { background: #E6F4EA; color: #137333; }
+    .nl-g.rejected, .nl-g.failed { background: #FCE8E6; color: #C5221F; }
+    .nl-g-i { font-weight: bold; font-family: Arial, sans-serif; margin-right: 8rpx; }
     .nl-pin { font-size: 22rpx; color: #FFFFFF; background: #1A73E8; border-radius: 999rpx; padding: 4rpx 18rpx; font-family: 'Hiragino Sans-W5', sans-serif; }
     .nl-t { font-size: 32rpx; color: #1D1D1F; font-family: 'Hiragino Sans-W5', sans-serif; line-height: 1.4; margin-top: 12rpx; overflow-wrap: anywhere; }
     .nl-c { font-size: 26rpx; color: #515154; line-height: 1.6; margin-top: 8rpx; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; }

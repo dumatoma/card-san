@@ -40,6 +40,39 @@
                 <view class="saleBot m" v-text="member_count"></view>
             </view>
         </view>
+        <!-- [カスタムエイド 2026-11-06] 無料お試し・解約の表示を、アイコンの下から数字の欄のすぐ下に移した -->
+        <view class="tips" v-if="shopInfo.vip.is_try != 0 && shopInfo.vips.length > 0">
+            <view class="tips_left">
+                <!-- [カスタムエイド 2026-10-18] 延長中(is_renew=1)は日数ではなく「残り◯人」(30 − 会員数)。管理WEB headerView.vue と同じ -->
+                無料お試し中：<text v-if="shopInfo.vips[0].is_renew == 1"
+                    style="color: #FC0303;font-size: 24rpx;">残り{{restMember}}人</text><text v-else
+                    style="color: #FC0303;font-size: 24rpx;">残り{{shopInfo.vips[0].end_day}}日</text>
+            </view>
+            <view class="tips_right">
+                <u-button @click="toPay" :ripple='true' type="primary " shape="circle" class="apply_btn">
+                    お申し込みはこちら</u-button>
+            </view>
+        </view>
+        <view v-if="shopInfo.vips.length > 0">
+            <view class="tips" v-if="shopInfo.vips[0].cancel_time > 0">
+                <view class="tips_left">
+                    解約終了日：<text style="color: #FC0303;">{{shopInfo.vips[0].end_time || 0}}</text>
+                </view>
+                <view class="tips_right">
+                    <u-button @click="toContinue" :ripple='true' type="primary " shape="circle" class="apply_btn"
+                        text="継続はこちら"></u-button>
+                </view>
+            </view>
+        </view>
+
+        <!-- [カスタムエイド 2026-11-06] Googleアクセス解析(最近30日の閲覧数)。連携していて、スタンダード以上のお店だけ -->
+        <view class="gstrip" :class="hasTopTips ? 'afterTips' : ''" v-if="gbpSum.show == 1" hover-class="click-hover" @click="toGbpInsights">
+            <view class="gstripL">
+                <view class="gstripT">Googleアクセス解析(最近30日の閲覧数)</view>
+                <view class="gstripV">{{ fmtNum(gbpSum.total) }}<text v-if="gbpPct !== null" :class="gbpPct >= 0 ? 'gup' : 'gdn'">{{ gbpPct >= 0 ? '↑' + gbpPct : '↓' + Math.abs(gbpPct) }}%</text></view>
+            </view>
+            <view class="gstripR">くわしく ›</view>
+        </view>
         <view class="content">
             <view class="indexItem" hover-class="click-hover" @click="scanCode">
                 <view class="itemTop">
@@ -133,30 +166,6 @@
                 </view>
             </view> -->
         </view>
-        <view class="tips" v-if="shopInfo.vip.is_try != 0 && shopInfo.vips.length > 0">
-            <view class="tips_left">
-                <!-- [カスタムエイド 2026-10-18] 延長中(is_renew=1)は日数ではなく「残り◯人」(30 − 会員数)。管理WEB headerView.vue と同じ -->
-                無料お試し中：<text v-if="shopInfo.vips[0].is_renew == 1"
-                    style="color: #FC0303;font-size: 24rpx;">残り{{restMember}}人</text><text v-else
-                    style="color: #FC0303;font-size: 24rpx;">残り{{shopInfo.vips[0].end_day}}日</text>
-            </view>
-            <view class="tips_right">
-                <u-button @click="toPay" :ripple='true' type="primary " shape="circle" class="apply_btn">
-                    お申し込みはこちら</u-button>
-            </view>
-        </view>
-        <view v-if="shopInfo.vips.length > 0">
-            <view class="tips" v-if="shopInfo.vips[0].cancel_time > 0">
-                <view class="tips_left">
-                    解約終了日：<text style="color: #FC0303;">{{shopInfo.vips[0].end_time || 0}}</text>
-                </view>
-                <view class="tips_right">
-                    <u-button @click="toContinue" :ripple='true' type="primary " shape="circle" class="apply_btn"
-                        text="継続はこちら"></u-button>
-                </view>
-            </view>
-        </view>
-
         <!-- [カスタムエイド 2026-10-21] クーポンの利用確認(バーコードを読んだとき)を、ほかのシートと同じ見た目に -->
         <u-popup :show="show" mode="bottom" round="24" @close="show = false">
             <view class="cu-sheet">
@@ -298,6 +307,7 @@
         getStaffRoomUnread
     } from "../../api/index.js";
     import { gbpReviewUnread } from "@/api/gbpContent.js"
+    import { gbpInsightsSummary } from "@/api/gbp.js" // [カスタムエイド 2026-11-06]
     import { fillRuleDaysDaily } from "@/utils/csBusiness.js" // [カスタムエイド 2026-10-22] 一部の週だけ休み(第2・第4など)の休みを先の日付まで入れる
     import mod from "@/components/mod.vue"
     import csBanner from "@/components/csNotice/csBanner.vue" // [カスタムエイド 2026-11-03]
@@ -312,6 +322,7 @@
         },
         data() {
             return {
+                gbpSum: { show: 0 }, // [カスタムエイド 2026-11-06] Googleアクセス解析(最近30日の閲覧数)
                 closeid:"",
                 showpermission:false,
                 orid:"",
@@ -385,6 +396,16 @@
         computed: {
             // [カスタムエイド 2026-10-18] 無料お試し延長中の残り人数(30 − 会員数、0未満にしない)
             restMember() { return Math.max(0, 30 - Number(this.member_count || 0)) },
+            // [カスタムエイド 2026-11-06] 数字の欄のすぐ下に、無料お試し・解約の表示が出ているか(Googleアクセス解析の行との間をそろえる)
+            hasTopTips() {
+                let s = this.shopInfo || {}, v = s.vips || []
+                return !!((s.vip && s.vip.is_try != 0 && v.length > 0) || (v.length > 0 && v[0].cancel_time > 0))
+            },
+            // [カスタムエイド 2026-11-06] 前の30日と比べた増え方(前が 0 のときは出さない)
+            gbpPct() {
+                let c = Number(this.gbpSum.total) || 0, p = Number(this.gbpSum.prev) || 0
+                return p ? Math.round((c - p) / p * 100) : null
+            },
             newMessage() {
                 return this.$store.state.newMessage;
             },
@@ -442,6 +463,7 @@
             // })
             that.admin = uni.getStorageSync("admin")
             that._csRefresh() // [カスタムエイド 2026-10-28] TOP の数(まとめて1回)
+            that.getGbpSummary() // [カスタムエイド 2026-11-06] Googleアクセス解析
             let cid = uni.getStorageSync("cid")
             getConfig().then((res) => {
                 let data = {}
@@ -762,6 +784,21 @@
                 uni.navigateTo({ url: "/pages/accounts/contract/contract" })
             },
             // [カスタムエイド 2026-11-03] ご利用状況(副管理者も見られる)
+            // [カスタムエイド 2026-11-06] TOP の「Googleアクセス解析」。1分以内に読んだばかりなら読み直さない
+            getGbpSummary() {
+                let now = Date.now()
+                if (this._gbpSumAt && now - this._gbpSumAt < 60000) return
+                this._gbpSumAt = now
+                gbpInsightsSummary().then(res => {
+                    this.gbpSum = (res && res.code == 200 && res.data) ? res.data : { show: 0 }
+                }).catch(() => { this.gbpSum = { show: 0 } })
+            },
+            toGbpInsights() {
+                uni.navigateTo({ url: '/pages/settings/gbpInsights/gbpInsights' })
+            },
+            fmtNum(n) {
+                return String(Number(n) || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+            },
             toUsage() {
                 uni.navigateTo({ url: '../accounts/usage/usage' })
             },
@@ -1437,7 +1474,7 @@
         box-shadow: 0px 0px 12upx 2upx rgba(0, 0, 0, 0.16);
         border-radius: 12upx;
         opacity: 1;
-        margin: 0 auto 40upx;
+        margin: 30upx auto 0; /* [カスタムエイド 2026-11-06] 数字の欄のすぐ下に移した(今まで 0 auto 40upx) */
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1620,7 +1657,7 @@
         display: flex;
         flex-wrap: wrap;
         box-sizing: border-box;
-        padding: 80upx 48upx 0;
+        padding: 40upx 48upx 0; /* [カスタムエイド 2026-11-06] 今まで 80upx */
         justify-content: space-between;
 
         .indexItem {
@@ -1631,7 +1668,7 @@
             border-radius: 40upx;
             box-sizing: border-box;
             padding: 26upx;
-            margin-bottom: 80upx;
+            margin-bottom: 57upx; /* [カスタムエイド 2026-11-06] 縦の間を横の間と同じに(今まで 80upx) */
             position: relative;
 
             .itemMask {
@@ -1685,10 +1722,21 @@
         }
     }
 
+    /* [カスタムエイド 2026-11-06] TOP の「Googleアクセス解析」の行 */
+    .gstrip { width: 654upx; margin: 30upx auto 0; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; padding: 18upx 30upx; border-radius: 24upx; background: #fff; box-shadow: 0px 0px 6upx rgba(0, 0, 0, 0.160784); }
+    .gstrip.afterTips { margin-top: 24upx; }
+    .gstripL { flex: 1; min-width: 0; }
+    .gstripT { font-size: 22upx; color: #86868B; }
+    .gstripV { font-size: 38upx; color: #1D1D1F; }
+    .gup { font-size: 22upx; color: #188038; margin-left: 12upx; }
+    .gdn { font-size: 22upx; color: #D93025; margin-left: 12upx; }
+    .gstripR { font-size: 24upx; color: #1a73e8; flex-shrink: 0; margin-left: 20upx; }
+
     .sales {
         display: flex;
         width: 100%;
-        height: 200upx;
+        padding: 28upx 0; /* [カスタムエイド 2026-11-06] 今まで height: 200upx。字の大きさはそのまま、上下の余白をそろえてつめた */
+        box-sizing: border-box;
         align-items: center;
         box-shadow: 0px 0px 12upx rgba(0, 0, 0, 0.160784);
         background-color: #fff;
@@ -1711,7 +1759,7 @@
                 font-weight: 400;
                 font-size: 48upx;
                 color: #007AFF;
-                margin-top: 20upx;
+                margin-top: 8upx; /* [カスタムエイド 2026-11-06] 今まで 20upx */
             }
 
             .m {

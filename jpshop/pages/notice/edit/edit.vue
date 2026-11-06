@@ -40,6 +40,14 @@
                 <view class="nt-note">オンにすると、お客様の「お知らせ」のいちばん上に、このお知らせが固定して表示されます。</view>
             </view>
 
+            <!-- [カスタムエイド 2026-11-07] Google の最新情報にも出す(Google と連携しているときだけ) -->
+            <view class="nt-card" v-if="gbpShow">
+                <view class="nt-sw">
+                    <text class="nt-sw-t">Google の最新情報にも出す</text>
+                    <u-switch :value="gbp" activeColor="#34C759" @change="gbp = !gbp"></u-switch>
+                </view>
+                <view class="nt-note">Google 検索・マップのお店の情報の「最新情報」にも出ます。写真は1枚目だけ出ます。Google で確認されてから表示されます。</view>
+            </view>
             <view class="nt-btn" :class="{ off: !(title || '').trim() }" hover-class="nt-hover" @click="sub">{{ btntext }}</view>
         </view>
 
@@ -79,6 +87,7 @@
         addNotice,
         editNotice
     } from '@/api/index.js'
+    import { gbpOverview } from '@/api/gbp.js' // [カスタムエイド 2026-11-07]
 
     const MAX_SIDE = 1280 // 写真の長い辺の上限(px)
 
@@ -97,7 +106,9 @@
                 btntext: "",
                 fk: '',
                 uploading: false,
-                sending: false
+                sending: false,
+                gbpShow: false, // [カスタムエイド 2026-11-07] Google と連携しているか
+                gbp: false // [カスタムエイド 2026-11-07] Google の最新情報にも出す
             }
         },
         onLoad(options) {
@@ -110,6 +121,7 @@
                 that.title = data.title || ''
                 that.details = data.content || ''
                 that.value = data.is_top == 1
+                that.gbp = !!data.gbp_state && data.gbp_state != 'removed' // [カスタムエイド 2026-11-07] Google に出しているお知らせ
                 that.id = data.id
                 that.titles = "お知らせ編集"
                 that.btntext = 'この内容で保存する'
@@ -119,6 +131,13 @@
             }
             getShopInfo().then((res) => {
                 if (res.code == 200) that.name = res.data.shop_info.shop_name
+            }).catch(() => {})
+            // [カスタムエイド 2026-11-07] Google と連携していれば「Google の最新情報にも出す」を出す。新しく作るときは設定(お知らせ → Google の最新情報)に合わせて最初から入れる
+            gbpOverview().then((res) => {
+                if (res && res.code == 200 && res.data && res.data.connected) {
+                    that.gbpShow = true
+                    if (that.source != 'edit') that.gbp = res.data.notice_on == 1
+                }
             }).catch(() => {})
         },
         methods: {
@@ -144,9 +163,15 @@
                     content: this.details,
                     is_top: this.value ? 1 : 0
                 }
+                if (this.gbpShow) data.gbp = this.gbp ? 1 : 0 // [カスタムエイド 2026-11-07]
                 const done = (res) => {
                     this.sending = false
                     if (res.code == 200) {
+                        // [カスタムエイド 2026-11-07] Google の結果が付いた長い文は「閉じる」まで出す
+                        if ((res.message || '').length > 12) {
+                            uni.showModal({ title: this.source == 'edit' ? '保存しました' : '投稿しました', content: res.message, showCancel: false, confirmText: '閉じる', success: () => uni.navigateBack() })
+                            return
+                        }
                         uni.showToast({ title: res.message })
                         setTimeout(() => uni.navigateBack(), 1500)
                     } else {

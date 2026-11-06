@@ -69,10 +69,10 @@
                     <view class="composer" v-if="editing == r.id" @click.stop="noop">
                         <textarea class="ta" v-model="draft" :maxlength="4096" placeholder="返信を入力..." :auto-height="true" :focus="focusTa" :show-confirm-bar="false"></textarea>
                         <view class="composerFoot">
-                            <text class="len">{{ draft.length }} / 4096</text>
+                            <text class="len" :class="{ over: byteLen(draft) > 4096 }">{{ byteLen(draft) > 4096 ? '長すぎます(日本語でおよそ1,300字まで)' : draft.length + '字' }}</text><!-- [カスタムエイド 2026-11-06] Google の上限は 4096 バイト -->
                             <view class="btns">
                                 <view class="btn" @click.stop="cancelEdit">キャンセル</view>
-                                <view class="btn send" :class="!draft.trim() || sending ? 'dis' : ''" @click.stop="send(r)">{{ sending ? '送信中...' : '送信' }}</view>
+                                <view class="btn send" :class="!draft.trim() || sending || byteLen(draft) > 4096 ? 'dis' : ''" @click.stop="send(r)">{{ sending ? '送信中...' : '送信' }}</view>
                             </view>
                         </view>
                     </view>
@@ -80,10 +80,11 @@
                     <template v-else-if="r.reply">
                         <view class="reply">
                             <view class="replyHead">
-                                <text class="replyLbl">オーナーからの返信</text>
+                                <text class="replyLbl">オーナーからの返信<text class="rState" :class="r.reply_state" v-if="r.reply_state == 'pending' || r.reply_state == 'rejected'">{{ r.reply_state == 'pending' ? 'Googleで審査中' : 'Googleに掲載されませんでした' }}</text></text><!-- [カスタムエイド 2026-11-06] 返信の審査 -->
                                 <text class="replyDate">{{ slashDate(r.reply_date) }}</text>
                             </view>
                             <view class="replyTxt">{{ r.reply }}</view>
+                            <view class="rReject" v-if="r.reply_state == 'rejected'">理由:{{ r.reply_reject || 'Google の決まりに合わないと判断された' }}。「編集」から内容を直して、もう一度送ってください。</view>
                         </view>
                         <view class="act"><view class="btn" @click.stop="edit(r)">編集</view></view>
                     </template>
@@ -211,7 +212,7 @@
             },
             send(r) {
                 let text = this.draft.trim()
-                if (this.sending || !text) return
+                if (this.sending || !text || this.byteLen(this.draft) > 4096) return
                 this.sending = true
                 let wasUnreplied = !r.reply
                 gbpReviewReply(r.id, this.draft).then(res => {
@@ -220,6 +221,8 @@
                         let d = res.data || {}
                         this.$set(r, 'reply', d.reply || this.draft)
                         this.$set(r, 'reply_date', d.reply_date || this.today())
+                        this.$set(r, 'reply_state', d.reply_state || '') // [カスタムエイド 2026-11-06] 返信の審査
+                        this.$set(r, 'reply_reject', d.reply_reject || '')
                         if (wasUnreplied) this.stats.unreplied = Math.max(0, (this.stats.unreplied || 0) - 1)
                         this.cancelEdit()
                         uni.showToast({ title: res.message || '返信しました', icon: 'none' })
@@ -231,6 +234,12 @@
                     this.sending = false
                     uni.showToast({ title: '返信できませんでした。通信状況をご確認ください', icon: 'none' })
                 })
+            },
+            // [カスタムエイド 2026-11-06] UTF-8 のバイト数(Google の返信の上限は 4096 バイト)
+            byteLen(t) {
+                let n = 0
+                for (const ch of String(t || '')) { const c = ch.codePointAt(0); n += c < 0x80 ? 1 : c < 0x800 ? 2 : c < 0x10000 ? 3 : 4 }
+                return n
             },
             // photos: URL の配列（{url} 形式も可）
             photoList(r) {
@@ -325,6 +334,11 @@
     .ta { width: 100%; min-height: 120rpx; font-size: 26rpx; background: transparent; line-height: 1.6; }
     .composerFoot { display: flex; align-items: center; justify-content: space-between; margin-top: 12rpx; }
     .len { font-size: 20rpx; color: $muted; }
+    .len.over { color: #D93025; font-weight: 600; } /* [カスタムエイド 2026-11-06] */
+    .rState { margin-left: 12rpx; font-size: 20rpx; font-weight: 600; padding: 2rpx 10rpx; border-radius: 8rpx; }
+    .rState.pending { color: #8A5A00; background: #FFF4D6; }
+    .rState.rejected { color: #B3261E; background: #FCEBEA; }
+    .rReject { margin-top: 12rpx; font-size: 22rpx; color: #B3261E; line-height: 1.6; }
     .btns { display: flex; }
 
     .reply { background: #F5F5F7; border-left: 6rpx solid #C7C7CC; border-radius: 0 16rpx 16rpx 0; padding: 20rpx 24rpx; margin-bottom: 16rpx; }

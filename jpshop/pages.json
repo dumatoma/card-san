@@ -659,6 +659,14 @@
                 "app-plus": { /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false }
             }
         }, {
+            "path": "pages/settings/gbpInsights/gbpInsights", // [カスタムエイド 2026-11-06] Google からのアクセス・検索キーワード
+            "style": {
+                "navigationStyle": "custom",
+                "navigationBarTitleText": "Googleアクセス解析",
+                "enablePullDownRefresh": false,
+                "app-plus": { "titleNView": false }
+            }
+        }, {
             "path": "pages/settings/gbpSelectLocation/gbpSelectLocation",
             "style": {
                 "navigationStyle": "custom",
@@ -856,7 +864,7 @@
             "path": "pages/accounts/sale/sale",
             "style": {
                 "navigationStyle": "custom", // [カスタムエイド 2026-10-20] 共通の見出し(20px 太字)にするため
-                "navigationBarTitleText": "販促アイテム一覧",
+                "navigationBarTitleText": "販促アイテム・設定代行", // [カスタムエイド 2026-11-05] 名前を変えた
                 "enablePullDownRefresh": false,
                 "app-plus": {
                     /* [カスタムエイド 2026-10-20] 標準の見出しを出さない(出ていると見出しが2つ重なる) */ "titleNView": false

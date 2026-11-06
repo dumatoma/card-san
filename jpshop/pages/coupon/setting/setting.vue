@@ -19,7 +19,7 @@
             <view class="ds-sum">
                 <view class="ds-sum-b">
                     <view class="ds-sum-k">配信先</view>
-                    <view class="ds-sum-v">{{ searchNumber }}<text class="ds-sum-t"> / {{ totalMember }}人</text></view>
+                    <view class="ds-sum-v" v-if="target != 'new'">{{ searchNumber }}<text class="ds-sum-t"> / {{ totalMember }}人</text></view><view class="ds-sum-v ds-sum-new" v-else>新規会員限定</view><!-- [カスタムエイド 2026-11-07] -->
                 </view>
                 <view class="ds-sum-b">
                     <view class="ds-sum-k">今月の配信数</view>
@@ -27,6 +27,20 @@
                 </view>
             </view>
 
+            <!-- [カスタムエイド 2026-11-07] 届ける人:今の会員 / 新規会員限定 -->
+            <view class="ds-card">
+                <view class="ds-h">届ける人</view>
+                <view class="ds-seg">
+                    <view :class="{ on: target != 'new' }" @click="setTarget('member')">今の会員</view>
+                    <view :class="{ on: target == 'new' }" @click="setTarget('new')">新規会員限定</view>
+                </view>
+                <block v-if="target == 'new'">
+                    <view class="ds-note">配布の期間中に、このお店の会員に初めてなった人に届きます。今の会員には届きません。お店でアプリを案内するときにも使えます。配信数は「1通」と数えます。</view>
+                    <view class="ds-note" v-if="cp.value" style="color:#1D1D1F">配布の期間 {{ dateLabel(cp.sDate) }} 〜 {{ dateLabel(cp.eDate) }}(有効期限と同じ)</view>
+                    <view class="ds-note" v-else style="color:#D93025">新規会員限定のクーポンには、有効期限(配布の期間)が必要です。前の画面で有効期限をオンにしてください。</view>
+                </block>
+            </view>
+            <block v-if="target != 'new'">
             <view class="ds-card">
                 <view class="ds-h">配信のタイミング</view>
                 <view class="ds-seg">
@@ -91,10 +105,20 @@
                     <view class="ds-cnt"><text>この条件で届く人</text><text class="ds-cnt-n">{{ counting ? '…' : searchNumber + '人' }}</text></view>
                 </view>
             </view>
+            </block>
+            <!-- [カスタムエイド 2026-11-07] Google の特典にも出す(Googleビジネス連携の「クーポン → Google の特典」がオンのとき) -->
+            <view class="ds-card" v-if="gbpShow">
+                <view class="ds-gsw">
+                    <text class="ds-h ds-h0">Google の特典にも出す</text>
+                    <u-switch :value="gbp" activeColor="#34C759" @change="gbp = !gbp"></u-switch>
+                </view>
+                <view class="ds-note">Google 検索・マップのお店の情報の「特典」に出ます。「特典を利用」を押すと、アプリで会員になってこのクーポンを受け取る案内のページが開きます。</view>
+                <view class="ds-note" v-if="gbp && !cp.value" style="color:#D93025">有効期限がないクーポンは、Google の特典に出せません。前の画面で有効期限をオンにしてください。</view>
+            </view>
         </view>
 
         <view class="ds-foot">
-            <view class="ds-btn" :class="{ off: searchNumber == 0 }" hover-class="ds-hover" @click="toConfirm">{{ btnLabel }}</view>
+            <view class="ds-btn" :class="{ off: target != 'new' && searchNumber == 0 }" hover-class="ds-hover" @click="toConfirm">{{ btnLabel }}</view>
         </view>
 
         <!-- 配信の日時(カレンダー+時刻) -->
@@ -158,6 +182,7 @@
     import { getPlatform } from '@/utils/platform.js' // [カスタムエイド 2026-10-18] 端末の種類はその場で判定(No.10)
     import csDialog from "@/components/csDialog/csDialog.vue" // [カスタムエイド 2026-10-21] 確認・お知らせ
     import csCalendar from "@/components/csCalendar/csCalendar.vue" // [カスタムエイド 2026-10-21]
+    import { gbpOverview } from "@/api/gbp.js" // [カスタムエイド 2026-11-07]
     var googlePay = uni.requireNativePlugin('sn-googlepay5');
     import {
         addCoupon,
@@ -186,6 +211,9 @@
                 pid: "",
                 cp: {}, // 配信するクーポン(作成画面で入れた内容)
                 current: 0, // 0 = 全員 / 1 = 絞り込む
+                target: 'member', // [カスタムエイド 2026-11-07] member = 今の会員 / new = 新規会員限定
+                gbpShow: false, // [カスタムエイド 2026-11-07] 「Google の特典にも出す」を出すか
+                gbp: false, // [カスタムエイド 2026-11-07] Google の特典にも出す
                 value: false, // false = すぐに配信 / true = 日時を予約
                 show6: false,
                 show7: false,
@@ -264,6 +292,7 @@
                 return this.mdLabel(addDays(this.today, -this.absentDays))
             },
             btnLabel() {
+                if (this.target == 'new') return '新規会員限定で配信する' // [カスタムエイド 2026-11-07]
                 const n = '(' + this.searchNumber + '人)'
                 // 予約の編集:保存する。すぐに配信に切り替えたときは、今すぐ配信
                 if (this.query.source == 'edit') return this.value ? ('この内容で予約を保存する' + n) : ('今すぐ配信する' + n)
@@ -278,6 +307,8 @@
                 return this.value ? '配信を予約' : 'クーポンを配信'
             },
             confirmMsg() {
+                // [カスタムエイド 2026-11-07] 新規会員限定
+                if (this.target == 'new') return '配布の期間(' + this.dateLabel(this.cp.sDate) + ' 〜 ' + this.dateLabel(this.cp.eDate) + ')に、このお店の会員に初めてなった人に届きます。今の会員には届きません。' + (this.gbpShow && this.gbp ? '\nGoogle の特典にも出します。' : '') + '\n配信しますか?'
                 const who = this.searchNumber + '人へ届きます。'
                 if (this.query.source == 'edit' && this.value) return this.whenText + '、' + who + '\nこの内容で予約を保存しますか?'
                 return this.whenText + '、' + who + '\n' + (this.value ? 'この内容で予約しますか?' : '配信しますか?')
@@ -292,10 +323,15 @@
             that.getAllmember()
             that.query = options
             that.cp = uni.getStorageSync("couponInfo") || {}
+            // [カスタムエイド 2026-11-07] Google と連携していて「クーポン → Google の特典」がオンなら、「Google の特典にも出す」を出す(最初はオフ)
+            gbpOverview().then((res) => {
+                if (res && res.code == 200 && res.data && res.data.connected && res.data.coupon_on == 1) that.gbpShow = true
+            }).catch(() => {})
             // 予約の編集:保存されている日時・絞り込みを戻す(couponDetail は作成画面で詳しい情報を入れておく)
             const timing = options.source == "edit" ? (uni.getStorageSync("couponDetail") || {}) : {}
             if (options.source == "edit") {
                 that.current = timing.receiver == 2 ? 1 : 0
+                that.gbp = timing.cs_gbp == 1 // [カスタムエイド 2026-11-07]
                 if (timing.order_time) {
                     let fullTime = String(timing.order_time).split(" ")
                     that.todayDate = fullTime[0]
@@ -467,7 +503,16 @@
                 this.showRange = false
                 this.recount()
             },
+            setTarget(v) { // [カスタムエイド 2026-11-07]
+                this.target = v
+            },
             toConfirm() {
+                // [カスタムエイド 2026-11-07] 新規会員限定・Google の特典には有効期限が必要
+                if ((this.target == 'new' || (this.gbpShow && this.gbp)) && !this.cp.value) {
+                    uni.showToast({ title: '有効期限が必要です。前の画面で有効期限をオンにしてください', icon: 'none', duration: 2500 })
+                    return
+                }
+                if (this.target == 'new') { this.value = false; this.show6 = true; return }
                 if (this.searchNumber == 0) {
                     uni.showToast({ title: '届く人がいません。条件を見直してください', icon: 'none' })
                     return
@@ -715,6 +760,8 @@
                 data.is_order = that.value == true ? 1 : 0
                 data.order_time = that.todayDate + " " + that.nowTime
                 data.receiver = that.current + 1
+                data.target = that.target == 'new' ? 'new' : '' // [カスタムエイド 2026-11-07] 新規会員限定
+                data.gbp = that.gbpShow && that.gbp ? 1 : 0 // [カスタムエイド 2026-11-07] Google の特典にも出す
                 const done = (res) => {
                     that.show6 = false
                     if (res.code == 200) {
@@ -757,6 +804,10 @@
     .ds-sum-v.over { color: #D93025; }
     .ds-sum-t { font-size: 24rpx; color: #6E6E73; font-family: 'Hiragino Sans', sans-serif; }
     .ds-card { background: #FFFFFF; border-radius: 32rpx; padding: 40rpx 32rpx; margin-bottom: 32rpx; }
+    /* [カスタムエイド 2026-11-07] */
+    .ds-gsw { display: flex; align-items: center; justify-content: space-between; }
+    .ds-h0 { margin-bottom: 0; }
+    .ds-sum-new { font-size: 32rpx; color: #E5322D; }
     .ds-h { font-size: 30rpx; color: #1D1D1F; font-family: 'Hiragino Sans-W5', sans-serif; line-height: 1.2; margin-bottom: 24rpx; }
     /* 切り替え:選んでいる方は薄い青の面+青い線+青い文字 */
     .ds-seg { display: flex; background: #F2F2F7; border-radius: 20rpx; padding: 6rpx; }

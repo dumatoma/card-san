@@ -1107,6 +1107,23 @@ $model = AdminNoticeModel::where('type', 2)->where('create_time', '>=', auth()->
 | 記録 | プロジェクト資料「CardSan_LINEで予約のお知らせ(段階9)_仕様書_20261103」「CardSan_LINE予約_サポートページと他システムからの乗り換え_決定事項_20261104」「CardSan_LINEログインの鍵と合言葉・LINE鍵のエラー文_修正記録_20261105」 |
 
 
+### 95. 2026-11-05〜11-07(管理App 1.0.63・サーバー:GBP 連携)
+
+| 項目 | 内容 |
+|---|---|
+| 版 | 管理App **1.0.63(1118)**。iOS をビルド済み。Card-San App は変更なし(1.1.27 のまま) |
+| GBP 連携の画面(管理App) | `pages/settings/gbpSetting/gbpSetting.vue`:連携できなかったときの知らせ(「閉じる」まで)、業種・住所の同期をやめた、自動同期に「メニュー」(置き換えの注意)、予約リンクのスイッチ、「Googleアクセス解析」の「見る→」、「お知らせ → Google の最新情報」「クーポン → Google の特典」、Instagram の説明 |
+| Googleアクセス解析(管理App) | 新しい画面 `pages/settings/gbpInsights/gbpInsights.vue`(閲覧数・電話をかけた・道順を調べた・ホームページを見た・検索キーワード、7日/30日/90日・先月/過去3ヶ月)、`api/gbp.js`、`pages.json` |
+| TOP 画面(管理App) | `pages/index/index.vue`:今日・今月・メンバー数の欄をつめた、無料お試し・解約の表示を数字の欄のすぐ下に、「Googleアクセス解析(最近30日の閲覧数)」の行、アイコンの縦の間を横と同じに |
+| クチコミ(管理App) | `pages/message/gbpReviews/gbpReviews.vue`:返信の審査(審査中・掲載されませんでした・理由)、返信の長さ(4096バイト) |
+| お知らせ・Instagram(管理App) | `pages/notice/edit/edit.vue`(「Google の最新情報にも出す」)・`pages/notice/notice.vue`(G 審査中・掲載中・掲載されませんでした)・`pages/settings/socialMedia/socialMedia.vue`(審査中・掲載されませんでした) |
+| クーポン(管理App) | `pages/coupon/setting/setting.vue`(届ける人:今の会員/新規会員限定、「Google の特典にも出す」)・`pages/coupon/coupon.vue`(新規会員限定・G の状態・「届いた人」) |
+| そのほか(管理App) | `pages/outAppoint/outAppoint.vue`(LINE の設定ガイドへのリンク)・`pages/accounts/sale/sale.vue`・`pages/account/account.vue`(「販促アイテム・設定代行」) |
+| サーバー(写し) | `docs/server/gbp/`:gbp_fix4(予約リンク・Place Actions API)・gbp_fix5〜6(アクセス解析・Performance API)・gbp_fix7/7b(メニュー → Google のサービス)・gbp_fix8(お知らせ → 最新情報・投稿の状態)・gbp_fix9(クーポン → 特典・新規会員限定・店舗ページのクーポンの枠、`app/Libs/CsNewMemberCoupon.php` を新しく作る)・見るだけの gbp_look2/3・gbp_test_shoponline(Foot Comfort に「オンラインで購入」リンク)。すべて本番に適用済み |
+| Google Cloud | My Business Place Actions API を有効にした(Business Profile Performance API は有効済み)。承認済みドメインの使っていない3つを消した |
+| 記録 | プロジェクト資料「CardSan_GBP連携_予約リンク・アクセス解析_修正記録(gbp_fix3〜6)_20261106」「CardSan_GBP連携_メニュー・お知らせ・クーポン_修正記録(gbp_fix7〜9)_20261107」「CardSan_GBP_Googleマップの予約ボタン_調査_20261106」 |
+
+
 ## 今後の運用ルール
 
 - 修正は「ソースを修正 → ビルドして本番に配置 → 同じ日に GitHub に反映」を1セットで行う

@@ -26,6 +26,10 @@
                     <image v-if="item.images && item.images.length" class="cl-img" :src="item.images[0]" mode="aspectFill"></image>
                     <view class="cl-b">
                         <view class="cl-chips">
+                            <!-- [カスタムエイド 2026-11-07] 新規会員限定・Google の特典の状態(左) -->
+                            <text v-if="item.cs_target == 1" class="cl-chip nw cl-chip-l">新規会員限定</text>
+                            <text v-if="item.gbp_state && item.gbp_state != 'removed'" class="cl-chip cl-chip-l" :class="'gs-' + item.gbp_state"><text class="cl-gi">G</text>{{ item.gbp_state == 'processing' ? '審査中' : item.gbp_state == 'live' ? '掲載中' : item.gbp_state == 'rejected' ? '掲載されませんでした' : '出せませんでした' }}</text>
+                            <view class="cl-sp"></view>
                             <text v-if="item.is_send == 0 && item.is_order == 1" class="cl-chip rv">予約中</text>
                             <text v-else class="cl-chip g">配信済</text>
                             <text v-if="item.is_send == 1 && item.indate == 1" class="cl-chip b">有効</text>
@@ -35,7 +39,7 @@
                         <view class="cl-p">{{ period(item) }}</view>
                         <view class="cl-no" v-if="item.number">No. <text class="cl-no-v">{{ item.number }}</text></view>
                         <view class="cl-st">
-                            <view class="cl-st-i"><text class="cl-st-k">配信数</text><text class="cl-st-v">{{ num(item.send_count) }}人</text></view>
+                            <view class="cl-st-i"><text class="cl-st-k">{{ item.cs_target == 1 ? '届いた人' : '配信数' }}</text><text class="cl-st-v">{{ num(item.send_count) }}人</text></view>
                             <view class="cl-st-i"><text class="cl-st-k">利用回数</text><text class="cl-st-v">{{ num(item.use_count) }}回</text></view>
                             <view class="cl-st-i"><text class="cl-st-k">回数制限</text><text class="cl-st-v">{{ item.count > 0 ? '1人' + item.count + '回まで' : 'なし' }}</text></view>
                             <view class="cl-st-i"><text class="cl-st-k">バーコード</text><text class="cl-st-v">{{ item.is_bar_code == 1 ? 'あり' : 'なし' }}</text></view>
@@ -215,6 +219,15 @@
     .cl-chip.b { background: rgba(26, 115, 232, 0.10); color: #1A73E8; }
     .cl-chip.rv { background: #1A73E8; color: #FFFFFF; }
     .cl-chip.x { background: #FCE8E6; color: #D93025; }
+    /* [カスタムエイド 2026-11-07] 新規会員限定・Google の特典の状態 */
+    .cl-chips { flex-wrap: wrap; align-items: center; }
+    .cl-sp { flex: 1; }
+    .cl-chip-l { margin-left: 0; margin-right: 12rpx; }
+    .cl-chip.nw { background: #E5322D; color: #FFFFFF; }
+    .cl-chip.gs-processing { background: #FFF4E5; color: #B06000; }
+    .cl-chip.gs-live { background: #E6F4EA; color: #137333; }
+    .cl-chip.gs-rejected, .cl-chip.gs-failed { background: #FCE8E6; color: #C5221F; }
+    .cl-gi { font-weight: bold; font-family: Arial, sans-serif; margin-right: 8rpx; }
     .cl-t { font-size: 32rpx; color: #1D1D1F; font-family: 'Hiragino Sans-W5', sans-serif; line-height: 1.4; overflow-wrap: anywhere; }
     .cl-p { font-size: 26rpx; color: #6E6E73; margin-top: 8rpx; }
     .cl-no { font-size: 26rpx; color: #6E6E73; margin-top: 4rpx; }

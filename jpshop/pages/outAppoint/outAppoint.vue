@@ -141,6 +141,7 @@
                 <!-- ①⑩ まだつないでいない -->
                 <block v-else>
                     <view class="ws-note">お店の LINE 公式アカウントから、予約確認・リマインダー・変更・キャンセルを送ります。<text class="ln-b">LINEビジネスアカウント</text>と、<text class="ln-b">LINE Developers</text> の設定が必要です。</view>
+                    <view class="ln-guide" hover-class="oa-hover" @click="openLineGuide">LINE とつなぐ手順を見る ›</view><!-- [カスタムエイド 2026-11-05 段階9] サポートサイトの手順書 -->
                     <view class="ln-err" v-if="lineErr">
                         <view class="ln-err-t">{{ lineErr }}</view>
                         <view>赤い欄を、LINE Developers からコピーし直してください。まだ保存していません。</view>
@@ -299,6 +300,10 @@
                         this.lineErrs = (res.data && res.data.errors) || {}
                     }
                 }).catch(() => { this.lineBusy = false; this.toast('通信できませんでした') })
+            },
+            // [カスタムエイド 2026-11-05 段階9] サポートサイト(Zendesk)の「LINE予約の設定」を、アプリの中で開く(ほかの画面と同じ helpview)
+            openLineGuide() {
+                uni.navigateTo({ url: '/pages/helpview/helpview?link=' + encodeURIComponent('https://cardsan.zendesk.com/hc/ja/articles/63992797407641') })
             },
             toLineSetting() {
                 uni.navigateTo({ url: './lineSetting' })
@@ -524,6 +529,7 @@
     /* [カスタムエイド 2026-11-04 段階9] LINE のブロック。ボタンの上の間はほかの2倍(20rpx → 40rpx) */
     .oa-body .oa-card > view.ln-gap { margin-top: 40rpx; }
     .ln-b { font-weight: 700; color: #1D1D1F; }
+    .ln-guide { font-size: 26rpx; font-weight: 600; color: #1A73E8; } /* [カスタムエイド 2026-11-05 段階9] */
     .ln-ok { font-size: 26rpx; font-weight: 700; color: #0D652D; background: #E6F4EA; border-radius: 16rpx; padding: 16rpx 20rpx; line-height: 1.6; }
     .ln-over { font-size: 24rpx; color: #B3261E; background: #FCE8E6; border-radius: 16rpx; padding: 16rpx 20rpx; line-height: 1.6; }
     .ln-over-t, .ln-err-t { font-size: 26rpx; font-weight: 700; margin-bottom: 4rpx; }

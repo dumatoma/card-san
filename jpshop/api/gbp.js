@@ -47,6 +47,20 @@ export const gbpFeatures = (data) => request({
     data: data
 })
 
+// [カスタムエイド 2026-11-06] Google からのアクセス・検索キーワード(days=7|30|90, kw=1(先月)|3(過去3ヶ月))
+export const gbpInsights = (days, kw) => request({
+    url: '/api/shop/google_business/insights?days=' + days + '&kw=' + kw,
+    method: 'get',
+    timeout: 30000
+})
+
+// [カスタムエイド 2026-11-06] TOP 画面の「Googleアクセス解析(最近30日の閲覧数)」。出さないときは show=0
+export const gbpInsightsSummary = () => request({
+    url: '/api/shop/google_business/insights_summary',
+    method: 'get',
+    timeout: 30000
+})
+
 // 今すぐ同期
 export const gbpSyncNow = () => request({
     url: '/api/shop/google_business/sync_now',

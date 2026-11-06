@@ -59,8 +59,8 @@
         <view class="settingItem" @click="toNext(5)">
             <view class="itemLeft">
                 <view class="itemName">
-                    販促アイテム
-                </view>
+                    販促アイテム・設定代行
+                </view><!-- [カスタムエイド 2026-11-05] 坂本さん:設定代行も入るので名前を変えた -->
             </view>
         </view>
         <view class="settingItem border_b" style="display: flex;justify-content: space-between;" @click="toNext(6)">

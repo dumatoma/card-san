@@ -68,7 +68,9 @@
                             <view class="postCap">{{ it.caption || '（本文なし）' }}</view>
                             <view class="postMeta">
                                 <text class="postDate">{{ dotDate(it.date) }}</text>
-                                <text class="pill done" v-if="it.status == 'synced'">転載済み</text>
+                                <text class="pill review" v-if="it.status == 'synced' && it.gbp_state == 'processing'">審査中</text><!-- [カスタムエイド 2026-11-07] -->
+                                <text class="pill ng" v-else-if="it.status == 'synced' && it.gbp_state == 'rejected'">掲載されませんでした</text>
+                                <text class="pill done" v-else-if="it.status == 'synced'">転載済み</text>
                                 <text class="pill blocked" v-else-if="it.status == 'video'">動画(転載不可)</text>
                                 <text class="pill pending" v-else>未転載</text>
                             </view>
@@ -87,7 +89,9 @@
                             <view class="postCap">{{ it.caption || '（本文なし）' }}</view>
                             <view class="postMeta">
                                 <text class="postDate">{{ dotDate(it.date) }}</text>
-                                <text class="pill done">転載済み</text>
+                                <text class="pill review" v-if="it.gbp_state == 'processing'">審査中</text><!-- [カスタムエイド 2026-11-07] -->
+                                <text class="pill ng" v-else-if="it.gbp_state == 'rejected'">掲載されませんでした</text>
+                                <text class="pill done" v-else>転載済み</text>
                             </view>
                         </view>
                     </view>
@@ -515,6 +519,8 @@
         display: inline-block; font-size: 24rpx; padding: 6rpx 16rpx; border-radius: 8rpx; white-space: nowrap;
         &.done { background: rgba(30, 126, 66, 0.2); color: $green; }
         &.blocked { background: rgba(170, 170, 170, 0.2); color: #aaa; }
+        &.review { background: #FFF4E5; color: #B06000; } /* [カスタムエイド 2026-11-07] 審査中 */
+        &.ng { background: #FCE8E6; color: #C5221F; } /* [カスタムエイド 2026-11-07] 掲載されませんでした */
         &.pending { background: rgba(26, 115, 232, 0.2); color: $blue; }
     }
 

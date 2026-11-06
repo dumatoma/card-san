@@ -31,7 +31,7 @@
                 <image class="featureIcon" :src="icons.info" mode="aspectFit"></image>
                 <view class="featureText">
                     <view class="featureTitle">基本情報</view>
-                    <view class="featureSub">営業時間・住所・業種・写真をGBPと同期</view>
+                    <view class="featureSub">営業時間・写真・メニューを Google と同期</view><!-- [カスタムエイド 2026-11-06] 業種・住所の同期はやめた / [カスタムエイド 2026-11-07] メニューを足した -->
                 </view>
                 <view v-if="info.connected" class="sw" :class="info.basic_on == 1 ? 'on' : ''" @click="toggle('basic_on')">
                     <view class="knob"></view>
@@ -76,12 +76,62 @@
                 </view>
             </view>
 
+            <!-- ===== Googleアクセス解析 ===== --><!-- [カスタムエイド 2026-11-06] 閲覧数・電話・道順・検索キーワードの画面へ -->
+            <view class="featureRow">
+                <image class="featureIcon" :src="icons.chart" mode="aspectFit"></image>
+                <view class="featureText">
+                    <view class="featureTitle">Googleアクセス解析</view>
+                    <view class="featureSub">閲覧数・電話・道順・検索キーワード</view>
+                </view>
+                <view v-if="info.connected" class="btnPostmanage" @click="toInsights">見る→</view>
+            </view>
+
+            <!-- ===== 予約リンク ===== --><!-- [カスタムエイド 2026-11-06 予約リンク] Google の「オンラインで予約」などから Card-San の予約ページを開けるようにする -->
+            <view class="featureRow">
+                <image class="featureIcon" :src="icons.book" mode="aspectFit"></image>
+                <view class="featureText">
+                    <view class="featureTitle">Google に予約リンクを出す</view>
+                    <view class="featureSub">Google 検索・マップから Card-San の予約ページへ</view>
+                </view>
+                <view v-if="info.connected" class="sw" :class="info.book_on == 1 ? 'on' : ''" @click="toggleBook">
+                    <view class="knob"></view>
+                </view>
+            </view>
+            <view class="bookPanel" v-if="info.connected && (info.book_on == 1 || info.book_msg)">
+                <view class="bookMsg" :class="info.book_on == 1 ? '' : 'ng'" v-if="info.book_msg">{{ info.book_msg }}</view>
+                <view class="autosyncNote">Google 検索のお店の情報の「オンラインで予約」などから、Card-San の予約ページを開けるようになります。表示のされ方は Google が決めます。</view>
+            </view>
+
+            <!-- ===== お知らせ → Google の最新情報 ===== --><!-- [カスタムエイド 2026-11-07] オンなら、お知らせを作るときに「Google の最新情報にも出す」が最初から入る -->
+            <view class="featureRow">
+                <image class="featureIcon" :src="icons.notice" mode="aspectFit"></image>
+                <view class="featureText">
+                    <view class="featureTitle">お知らせ → Google の最新情報</view>
+                    <view class="featureSub">お知らせを Google の最新情報にも出す</view>
+                </view>
+                <view v-if="info.connected" class="sw" :class="info.notice_on == 1 ? 'on' : ''" @click="toggle('notice_on')">
+                    <view class="knob"></view>
+                </view>
+            </view>
+
+            <!-- ===== クーポン → Google の特典 ===== --><!-- [カスタムエイド 2026-11-07] オンなら、クーポン配信設定に「Google の特典にも出す」が出る(クーポンごとに選ぶ) -->
+            <view class="featureRow">
+                <image class="featureIcon" :src="icons.coupon" mode="aspectFit"></image>
+                <view class="featureText">
+                    <view class="featureTitle">クーポン → Google の特典</view>
+                    <view class="featureSub">クーポンを Google の特典にも出せるようにする</view>
+                </view>
+                <view v-if="info.connected" class="sw" :class="info.coupon_on == 1 ? 'on' : ''" @click="toggle('coupon_on')">
+                    <view class="knob"></view>
+                </view>
+            </view>
+
             <!-- ===== Instagram×GBP投稿連動 ===== -->
             <view class="featureRow">
                 <image class="featureIcon" :src="icons.ig" mode="aspectFit"></image>
                 <view class="featureText">
                     <view class="featureTitle">Instagram×GBP投稿連動</view>
-                    <view class="featureSub">Instagramの投稿をGBPに反映</view>
+                    <view class="featureSub">Instagram の投稿を Google の最新情報にも出す</view><!-- [カスタムエイド 2026-11-07] 今まで「Instagramの投稿をGBPに反映」 -->
                 </view>
                 <view v-if="info.connected" class="sw" :class="info.ins_on == 1 ? 'on' : ''" @click="toggle('ins_on')">
                     <view class="knob"></view>
@@ -135,6 +185,22 @@
             '<rect x="3.5" y="3.5" width="19" height="19" rx="5.5" stroke="#1d1d1f" stroke-width="1.5"/>' +
             '<circle cx="13" cy="13" r="4.6" stroke="#1d1d1f" stroke-width="1.5"/><circle cx="18.3" cy="7.7" r="1.05" fill="#1d1d1f"/></svg>'),
         sync: svgUri(SYNC_SVG('#1d1d1f')),
+        // [カスタムエイド 2026-11-07] お知らせ(メガホン)・クーポン(チケット)
+        notice: svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26" fill="none">' +
+            '<path d="M4 10.5v5h3l7 4.5V6L7 10.5H4Z" stroke="#1d1d1f" stroke-width="1.5" stroke-linejoin="round"/>' +
+            '<path d="M18 9.5a5 5 0 0 1 0 7M20.5 7a8.5 8.5 0 0 1 0 12" stroke="#1d1d1f" stroke-width="1.5" stroke-linecap="round"/></svg>'),
+        coupon: svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26" fill="none">' +
+            '<path d="M3.5 8a1.5 1.5 0 0 1 1.5-1.5h16A1.5 1.5 0 0 1 22.5 8v2.5a2.5 2.5 0 0 0 0 5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18v-2.5a2.5 2.5 0 0 0 0-5V8Z" stroke="#1d1d1f" stroke-width="1.5" stroke-linejoin="round"/>' +
+            '<path d="M16 7v12" stroke="#1d1d1f" stroke-width="1.5" stroke-dasharray="2 2"/></svg>'),
+        // [カスタムエイド 2026-11-06] グラフ(Googleアクセス解析)
+        chart: svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26" fill="none">' +
+            '<path d="M4 4v18h18" stroke="#1d1d1f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<path d="M7.5 16.5l4-4.5 3.5 3 5.5-6.5" stroke="#1d1d1f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'),
+        // [カスタムエイド 2026-11-06 予約リンク] カレンダー
+        book: svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26" fill="none">' +
+            '<rect x="3.5" y="5" width="19" height="17.5" rx="3" stroke="#1d1d1f" stroke-width="1.5"/>' +
+            '<path d="M3.5 10.5h19M8.5 3v4M17.5 3v4" stroke="#1d1d1f" stroke-width="1.5" stroke-linecap="round"/>' +
+            '<path d="M9.5 16l2.4 2.4 4.6-4.6" stroke="#1d1d1f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'),
         syncOff: svgUri(SYNC_SVG('#aaaaaa')),
     }
 
@@ -149,9 +215,8 @@
                 icons: ICONS,
                 fieldList: [
                     { key: 'hours', label: '営業時間' },
-                    { key: 'address', label: '住所' },
-                    { key: 'category', label: '業種' },
-                    { key: 'photos', label: '写真' },
+                    { key: 'photos', label: '写真' }, // [カスタムエイド 2026-11-06] 業種・住所の同期はやめた(Google の業種・住所を上書きしてしまうため)
+                    { key: 'menu', label: 'メニュー' }, // [カスタムエイド 2026-11-07] Card-San のメニューを Google の「サービス」に出す
                 ],
                 loaded: false,
                 denied: '',
@@ -209,7 +274,7 @@
                 if (!d || typeof d !== 'object') return
                 let info = Object.assign({}, this.info, d)
                 if (!Array.isArray(info.sync_fields)) info.sync_fields = []
-                ;['basic_on', 'review_on', 'ins_on', 'auto_sync'].forEach(k => { info[k] = Number(info[k]) || 0 })
+                ;['basic_on', 'review_on', 'ins_on', 'auto_sync', 'book_on', 'notice_on', 'coupon_on'].forEach(k => { info[k] = Number(info[k]) || 0 }) // [カスタムエイド 2026-11-06 予約リンク] book_on
                 info.connected = !!(info.connected && info.connected != 0)
                 this.info = info
             },
@@ -288,15 +353,21 @@
                     } else if (res && res.code == 403) {
                         this.denied = this.errMsg(res)
                     } else {
-                        if (res) this.showErr(res)
+                        if (res) this.showConnectErr(this.errMsg(res)) // [カスタムエイド 2026-11-06] 長い文も読めるよう「閉じる」を押すまで出す
                         this.load()
                     }
                 }).catch(err => {
                     this.connecting = false
                     uni.hideLoading()
-                    this.catchErr(err)
+                    let r = err && err.response
+                    if (r && r.status != 403) this.showConnectErr((r.data && r.data.message) || '通信エラーが発生しました') // [カスタムエイド 2026-11-06]
+                    else this.catchErr(err)
                     this.load()
                 })
+            },
+            // [カスタムエイド 2026-11-06] 連携できなかったときの知らせ(Google の許可のチェック忘れなど、文が長いので「閉じる」を押すまで消さない)
+            showConnectErr(msg) {
+                uni.showModal({ title: '連携できませんでした', content: msg || 'エラーが発生しました', showCancel: false, confirmText: '閉じる' })
             },
             onConnected(d) {
                 if (d) this.applyData(d)
@@ -336,11 +407,54 @@
                     }
                 })
             },
+            // [カスタムエイド 2026-11-06 予約リンク] オンで Google に予約リンクを作る/オフで消す。結果は「閉じる」を押すまで出す
+            toggleBook() {
+                if (this.saving) return
+                let old = this.info.book_on
+                let val = old == 1 ? 0 : 1
+                this.info.book_on = val
+                this.saving = true
+                uni.showLoading({ title: val ? 'Google に付けています…' : 'Google から外しています…', mask: true })
+                gbpFeatures({ book_on: val }).then(res => {
+                    this.saving = false
+                    uni.hideLoading()
+                    if (res && res.code == 200) {
+                        this.applyData(res.data)
+                        let b = res.data && res.data.book_result
+                        if (b && b.msg) uni.showModal({ title: '予約リンク', content: b.msg, showCancel: false, confirmText: '閉じる' })
+                        return
+                    }
+                    this.info.book_on = old
+                    if (res) uni.showModal({ title: '予約リンク', content: this.errMsg(res), showCancel: false, confirmText: '閉じる' })
+                    this.load()
+                }).catch(err => {
+                    this.saving = false
+                    uni.hideLoading()
+                    this.info.book_on = old
+                    this.catchErr(err)
+                })
+            },
             isFieldOn(k) {
                 return (this.info.sync_fields || []).indexOf(k) > -1
             },
             toggleField(k) {
                 if (this.saving) return
+                // [カスタムエイド 2026-11-07] メニューをオンにするときは、Google のサービスが置き換わることを先に知らせる
+                if (k == 'menu' && !this.isFieldOn(k) && !this._menuOk) {
+                    uni.showModal({
+                        title: 'Google のサービスを置き換えます',
+                        content: 'Card-San のメニューを、Google のお店の情報の「サービス」に出します。\n\n・いま Google に入っているサービスは消えて、Card-San のメニューに置き換わります。\n・値段は1つの金額だけ出ます(「〜」は出ません)。\n・Card-San でメニューを消すと、Google からも消えます。\n・業種によっては、Google に出ないことがあります。',
+                        cancelText: 'やめる',
+                        confirmText: '置き換える',
+                        success: (r) => {
+                            if (!r.confirm) return
+                            this._menuOk = true
+                            this.toggleField(k)
+                            this._menuOk = false
+                        }
+                    })
+                    return
+                }
                 let old = (this.info.sync_fields || []).slice()
                 let list = this.isFieldOn(k) ? old.filter(x => x != k) : old.concat([k])
                 this.info.sync_fields = list
@@ -399,7 +513,7 @@
                         // API成功後に未連携表示へ切り替え
                         this.dcShow = false
                         this.info = Object.assign({}, this.info, {
-                            connected: false, email: '', location_title: '', basic_on: 0, review_on: 0, ins_on: 0, auto_sync: 0
+                            connected: false, email: '', location_title: '', basic_on: 0, review_on: 0, ins_on: 0, auto_sync: 0, book_on: 0, book_msg: '', notice_on: 0, coupon_on: 0 // [カスタムエイド 2026-11-06 予約リンク] / [カスタムエイド 2026-11-07]
                         })
                         uni.showToast({ title: '連携を解除しました', icon: 'none' })
                         this.load()
@@ -413,6 +527,9 @@
                 })
             },
 
+            toInsights() { // [カスタムエイド 2026-11-06]
+                uni.navigateTo({ url: '/pages/settings/gbpInsights/gbpInsights' })
+            },
             toPostManage() {
                 uni.navigateTo({ url: '/pages/settings/socialMedia/socialMedia' })
             },
@@ -693,6 +810,9 @@
     }
 
     .autosyncNote { font-size: 22rpx; color: #6E6E73; line-height: 1.6; margin: 20rpx 0 4rpx; }
+    /* [カスタムエイド 2026-11-06 予約リンク] */
+    .bookPanel { padding: 10rpx 38rpx 30rpx; border-bottom: 1px solid $border; background: #fff; }
+    .bookMsg { font-size: 25rpx; color: $text; line-height: 1.6; margin-top: 10rpx; &.ng { color: #D93025; } }
     .autosyncFooter {
         display: flex;
         align-items: center;
